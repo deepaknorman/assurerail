@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { vget, vpost, inr, shortDid } from "@/lib/venue";
+import { vget, vpost, inr, shortDid, grp, shortIN } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
 
 type Note = { id: string; poolId: string; tokenId: string; state: string; tapeHash: string; t1Aggregates: { mintableMinor?: string } };
@@ -135,8 +135,14 @@ export default function Console() {
                   <h3>DvP ({dvps.length})</h3>
                   <div className="subforms">
                     <label className="lbl">buyer DID<input className="field" value={dvpForm.buyerDid} onChange={(e) => setDvpForm({ ...dvpForm, buyerDid: e.target.value })} /></label>
-                    <label className="lbl">units (minor)<input className="field" value={dvpForm.unitsMinor} onChange={(e) => setDvpForm({ ...dvpForm, unitsMinor: e.target.value })} /></label>
-                    <label className="lbl">price (e₹ minor)<input className="field" value={dvpForm.priceMinor} onChange={(e) => setDvpForm({ ...dvpForm, priceMinor: e.target.value })} /></label>
+                    <label className="lbl">units (minor)
+                      <input className="field" inputMode="numeric" value={grp(dvpForm.unitsMinor)} onChange={(e) => setDvpForm({ ...dvpForm, unitsMinor: e.target.value.replace(/[^\d]/g, "") })} />
+                      {dvpForm.unitsMinor && <span className="hint">{shortIN(dvpForm.unitsMinor)} units</span>}
+                    </label>
+                    <label className="lbl">price (e₹ minor)
+                      <input className="field" inputMode="numeric" value={grp(dvpForm.priceMinor)} onChange={(e) => setDvpForm({ ...dvpForm, priceMinor: e.target.value.replace(/[^\d]/g, "") })} />
+                      {dvpForm.priceMinor && <span className="hint">{shortIN(dvpForm.priceMinor)} E₹</span>}
+                    </label>
                     <button className="btn btn-primary" disabled={busy !== ""} onClick={() => void act("dvp", async () => { await vpost(`/venue/notes/${note.id}/dvp`, dvpForm); await open(note.id); }, "Atomic DvP settled")}>Sell (atomic DvP)</button>
                   </div>
                   {dvps.map((d, i) => <div className="kv" key={i}><span className="k">{shortDid(d.buyerDid)} · {inr(d.units)} @ {inr(d.settlementMinor)} {d.settlementToken}</span><span className="anchor">{d.anchorRef}</span></div>)}

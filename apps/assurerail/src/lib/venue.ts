@@ -35,5 +35,37 @@ export async function vpost<T>(path: string, body?: unknown): Promise<T> {
   return j as T;
 }
 
-export const inr = (minor?: string) => (minor ? `₹${(Number(minor) / 100_00_00_000).toFixed(2)} cr` : "—");
+// ── number formatting (Indian system) ──
+const digits = (v?: string | number) => String(v ?? "").replace(/[^\d]/g, "");
+
+/**
+ * Indian digit grouping, done on the raw digit STRING (never via Number → exact at any length, and
+ * never scientific/exponential notation): "5000000000" → "5,00,00,00,000" (last 3, then pairs).
+ */
+export const grp = (v?: string | number) => {
+  const d = digits(v).replace(/^0+(?=\d)/, "");
+  if (!d) return "";
+  if (d.length <= 3) return d;
+  const last3 = d.slice(-3);
+  const head = d.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+  return `${head},${last3}`;
+};
+
+/** Compact magnitude hint (readable at a glance): ≥1 Cr → "X Cr", ≥1 L → "X L", else the grouped number. */
+export const shortIN = (v?: string | number) => {
+  const d = digits(v);
+  const n = Number(d);
+  if (!n) return "";
+  const trim = (x: number) => x.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  if (n >= 1e7) return `${trim(n / 1e7)} Cr`;
+  if (n >= 1e5) return `${trim(n / 1e5)} L`;
+  return grp(d);
+};
+
+/** Display amount: comma-grouped ₹ (Indian), full number. "5000000000" → "₹5,00,00,00,000". */
+export const inr = (v?: string | number) => {
+  const g = grp(v);
+  return g ? `₹${g}` : "—";
+};
+
 export const shortDid = (d: string) => (d && d.length > 20 ? `…${d.slice(-16)}` : d || "—");

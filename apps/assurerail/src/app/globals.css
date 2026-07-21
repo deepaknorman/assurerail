@@ -85,6 +85,7 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
 .subforms { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin-bottom: 10px; }
 .lbl { display: flex; flex-direction: column; gap: 3px; font-family: var(--arail-font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--arail-text-muted); }
 .anchor { font-family: var(--arail-font-mono); font-size: 10px; color: var(--arail-text-muted); }
+.hint { font-family: var(--arail-font-mono); font-size: 10px; color: var(--arail-accent-text); text-transform: none; letter-spacing: 0; margin-top: 3px; }
 
 .foot { border-top: 1px solid var(--arail-border-subtle); padding: 30px 0 60px; color: var(--arail-text-muted); font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 
