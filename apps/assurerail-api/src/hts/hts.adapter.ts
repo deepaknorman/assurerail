@@ -10,9 +10,18 @@ export interface MintResult {
   adapter: "DEMO" | "LIVE";
 }
 
+export interface BurnResult {
+  tokenId: string;
+  burnedSerials: number[];
+  txRef: string;
+  adapter: "DEMO" | "LIVE";
+}
+
 export interface HtsAdapter {
   readonly mode: "DEMO" | "LIVE";
   mint(tapeHash: string, units: number): Promise<MintResult>;
+  /** Retire the Note's tokens on closure/redemption (supply → 0) — the mirror of mint. */
+  burn(tokenId: string, serials: number[]): Promise<BurnResult>;
 }
 
 /** Deterministic from the tapeHash — the same tape always mints the same demo TokenId (stable demos). */
@@ -24,6 +33,10 @@ export class DemoHtsAdapter implements HtsAdapter {
     const serials = Array.from({ length: Math.max(1, Math.min(units, 25)) }, (_, i) => i + 1);
     return { tokenId: `0.0.${tokenNum}`, serials, adapter: "DEMO" };
   }
+  async burn(tokenId: string, serials: number[]): Promise<BurnResult> {
+    const h = createHash("sha256").update(`${tokenId}:burn:${serials.join(",")}`).digest("hex");
+    return { tokenId, burnedSerials: serials, txRef: `0.0.0@burn-${h.slice(0, 12)}`, adapter: "DEMO" };
+  }
 }
 
 export class LiveHtsAdapter implements HtsAdapter {
@@ -31,6 +44,10 @@ export class LiveHtsAdapter implements HtsAdapter {
   async mint(): Promise<MintResult> {
     // TODO(2c/T3-live): POST to plaza's HTS endpoint (TokenCreate + TokenMint on the operator client).
     throw new Error("LIVE HTS not enabled — plaza HTS endpoint + testnet smoke test pending (HTS_ADAPTER=live blocked)");
+  }
+  async burn(): Promise<BurnResult> {
+    // TODO(T3-live): POST to plaza's HTS TokenBurn on the operator client.
+    throw new Error("LIVE HTS burn not enabled — plaza HTS endpoint + testnet smoke test pending");
   }
 }
 

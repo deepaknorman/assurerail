@@ -20,6 +20,7 @@ import {
   type BreakGlassRecord,
   type CommitMintArgs,
   type SettleDvpArgs,
+  type CloseNoteArgs,
 } from "../mint/note.repository";
 import { PrismaService } from "./prisma.service";
 
@@ -42,6 +43,10 @@ export class PrismaMintRepository extends MintRepository {
       t1Aggregates: r.t1Aggregates,
       state: r.state,
       createdAt: r.createdAt.toISOString(),
+      burnTxRef: r.burnTxRef,
+      closeAnchorRef: r.closeAnchorRef,
+      closeReason: r.closeReason,
+      redeemedAt: r.redeemedAt ? r.redeemedAt.toISOString() : null,
     };
   }
   private toMintLog(r: PMintLog): MintLogRecord {
@@ -273,6 +278,27 @@ export class PrismaMintRepository extends MintRepository {
       });
       const holdings = await tx.noteHolding.findMany({ where: { noteId: args.noteId }, orderBy: { createdAt: "asc" } });
       return { dvp: this.toDvp(d), holdings: holdings.map((h) => this.toHolding(h)) };
+    });
+  }
+
+  async closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string }> {
+    return this.db.$transaction(async (tx) => {
+      // Sum the outstanding supply (what gets burned), then zero every holding, then flip the Note to
+      // REDEEMED with the burn/anchor refs — all atomic.
+      const rows = await tx.noteHolding.findMany({ where: { noteId: args.noteId }, select: { units: true } });
+      const burnedUnits = rows.reduce((s, r) => s + BigInt(r.units), 0n).toString();
+      await tx.$executeRaw`UPDATE "NoteHolding" SET "units" = '0', "updatedAt" = now() WHERE "noteId" = ${args.noteId}`;
+      const n = await tx.note.update({
+        where: { id: args.noteId },
+        data: {
+          state: "REDEEMED",
+          burnTxRef: args.burnTxRef,
+          closeAnchorRef: args.closeAnchorRef,
+          closeReason: args.closeReason,
+          redeemedAt: new Date(),
+        },
+      });
+      return { note: this.toNote(n), burnedUnits };
     });
   }
 }

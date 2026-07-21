@@ -11,6 +11,10 @@ export interface NoteRecord {
   t1Aggregates: unknown;
   state: string;
   createdAt: string;
+  burnTxRef?: string | null;
+  closeAnchorRef?: string | null;
+  closeReason?: string | null;
+  redeemedAt?: string | null;
 }
 
 export interface MintLogRecord {
@@ -88,6 +92,13 @@ export interface SettleDvpArgs {
   dvp: Omit<DvpRecord, "id" | "createdAt">;
 }
 
+export interface CloseNoteArgs {
+  noteId: string;
+  burnTxRef: string;
+  closeAnchorRef: string;
+  closeReason: string; // maturity | clean_up_call | call | amortised | manual
+}
+
 /**
  * The venue's store contract (async — the real backing is the venue's OWN Postgres). StoreModule
  * binds this token to {@link PrismaMintRepository} when DATABASE_URL is set, else to the in-memory
@@ -118,6 +129,11 @@ export abstract class MintRepository {
    * external and sequenced by the caller BEFORE this call.
    */
   abstract settleDvp(args: SettleDvpArgs): Promise<{ dvp: DvpRecord; holdings: HoldingRecord[] }>;
+  /**
+   * Closure / redemption — mint's mirror. Atomically: set the Note REDEEMED (burn + anchor refs + reason
+   * + redeemedAt) and zero every holding (supply retired). Returns the closed Note + total units burned.
+   */
+  abstract closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string }>;
 }
 
 // In-memory fallback for running the DEMO with no database (DATABASE_URL unset). Data is lost on
@@ -217,5 +233,22 @@ export class InMemoryMintRepository extends MintRepository {
     await this.adjustHolding(args.noteId, args.buyerDid, args.units);
     const dvp = await this.saveDvp(args.dvp);
     return { dvp, holdings: await this.listHoldings(args.noteId) };
+  }
+
+  async closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string }> {
+    const note = this.notes.find((n) => n.id === args.noteId);
+    if (!note) throw new Error("note not found");
+    const held = this.holdings.filter((h) => h.noteId === args.noteId);
+    const burnedUnits = held.reduce((sum, h) => sum + BigInt(h.units), 0n).toString();
+    for (const h of held) {
+      h.units = "0";
+      h.updatedAt = new Date().toISOString();
+    }
+    note.state = "REDEEMED";
+    note.burnTxRef = args.burnTxRef;
+    note.closeAnchorRef = args.closeAnchorRef;
+    note.closeReason = args.closeReason;
+    note.redeemedAt = new Date().toISOString();
+    return { note, burnedUnits };
   }
 }

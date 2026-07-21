@@ -60,6 +60,12 @@ model Note {
   state        String   @default("ISSUED") // ISSUED | ACTIVE | REDEEMED
   createdAt    DateTime @default(now())
 
+  // Closure / redemption (the mirror of mint): tokens burned, supply → 0, holdings zeroed.
+  burnTxRef      String? // HTS burn tx ref
+  closeAnchorRef String? // HCS anchor of the closure event
+  closeReason    String? // maturity | clean_up_call | call | amortised | manual
+  redeemedAt     DateTime?
+
   @@index([poolId])
 }
 

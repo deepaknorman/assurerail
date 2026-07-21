@@ -4,6 +4,7 @@ import { MintModule } from "./mint/mint.module";
 import { SurveillanceModule } from "./surveillance/surveillance.module";
 import { DvpModule } from "./dvp/dvp.module";
 import { BreakGlassModule } from "./breakglass/breakglass.module";
+import { CloseModule } from "./closure/close.module";
 import { DemoModule } from "./demo/demo.module";
 import { AuthModule } from "./auth/auth.module";
 
@@ -15,6 +16,6 @@ import { AuthModule } from "./auth/auth.module";
 const authModules = process.env.DATABASE_URL ? [AuthModule] : [];
 
 @Module({
-  imports: [TapeModule, MintModule, SurveillanceModule, DvpModule, BreakGlassModule, DemoModule, ...authModules],
+  imports: [TapeModule, MintModule, SurveillanceModule, DvpModule, BreakGlassModule, CloseModule, DemoModule, ...authModules],
 })
 export class AppModule {}
