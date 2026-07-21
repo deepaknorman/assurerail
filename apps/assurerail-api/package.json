@@ -1,0 +1,38 @@
+{
+  "name": "@code/assurerail-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AssureRail venue — securitisation & tokenisation. Separate app in the monorepo (own DB / env / ports / access management), like plaza / plaza-api. Splits to its own repo at the incorporation trigger.",
+  "scripts": {
+    "build": "prisma generate && tsc",
+    "typecheck": "prisma generate && tsc --noEmit",
+    "start": "node dist/main.js",
+    "check": "bash ../../scripts/assurerail-build-check.sh",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "test": "prisma generate && tsc && node --test \"dist/**/*.test.js\""
+  },
+  "dependencies": {
+    "@code/shared": "*",
+    "@google-cloud/recaptcha-enterprise": "^6.4.0",
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/core": "^10.4.0",
+    "@nestjs/platform-express": "^10.4.0",
+    "@nestjs/throttler": "^6.0.0",
+    "@prisma/client": "6.19.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^13.7.0",
+    "helmet": "^8.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "undici": "^6.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prisma": "6.19.3",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # AssureRail Strix daily — timeboxed, budget-capped autonomous security scan of the venue's source
-# (apps/assuredst-api/src). Threat focus: ledger integrity in the DvP settlement path, the k-anon mint
+# (apps/assurerail-api/src). Threat focus: ledger integrity in the DvP settlement path, the k-anon mint
 # gate, tape-integrity verification, CORS/authz exposure, secrets handling, and SSRF in the outbound
 # AssureLocker tape client. Fail-soft: missing CLI/key/Docker ⇒ explicit SKIP + exit 0. Secrets are read
 # at runtime, never persisted. Mirrors scripts/strix-daily.sh (AssureLocker) but venue-scoped.
@@ -27,9 +27,9 @@ export STRIX_LLM="${STRIX_MODEL:-openai/gpt-4o-mini}"
 DATE=$(date +%F)
 OUT="$RUNS_DIR/strix-$DATE.log"
 
-# Source-only target (apps/assuredst-api/src) — node_modules/dist trip strix's file streamer, and src is
+# Source-only target (apps/assurerail-api/src) — node_modules/dist trip strix's file streamer, and src is
 # the whitebox audit surface anyway.
-SCAN_TARGET="$TARGET/apps/assuredst-api/src"
+SCAN_TARGET="$TARGET/apps/assurerail-api/src"
 if [ ! -d "$SCAN_TARGET" ]; then
   echo "SKIP: scan target not found ($SCAN_TARGET) — the daily QA creates the shadow worktree before scanning (or pass an existing checkout: TARGET=/Users/DNorman/Development/Code)"; exit 0
 fi

@@ -1,7 +1,7 @@
 # AssureRail — Brand Identity Guideline (Expanded)
 
 **Status:** v1.0 — July 2026
-**Assets:** `apps/assuredst/brand/` (`logo.svg`, `logo-mark.svg`, `favicon.svg`, `tokens.css`, `fonts.md`, `README.md`)
+**Assets:** `apps/assurerail/brand/` (`logo.svg`, `logo-mark.svg`, `favicon.svg`, `tokens.css`, `fonts.md`, `README.md`)
 **Domain:** assuretok.com
 
 ---
@@ -197,7 +197,7 @@ large (≥19 px) or decorative text only.
 
 ## 6. Typography
 
-Full detail and loading snippets: `apps/assuredst/brand/fonts.md`.
+Full detail and loading snippets: `apps/assurerail/brand/fonts.md`.
 
 - **Archivo 500/600/700** — display and headings. Archival grotesque; squared
   terminals echo the mark's machining.
@@ -256,7 +256,7 @@ coins/chains/cubes/circuit imagery.
 
 ## 10. Token architecture (engineering)
 
-`apps/assuredst/brand/tokens.css`:
+`apps/assurerail/brand/tokens.css`:
 
 - **Primitives** (`--arail-harbour-*`, `--arail-verdigris-*`, `--arail-slate-*`)
   are theme-invariant and must not be consumed by components.

@@ -6,7 +6,7 @@
 #   1. Pull latest main (ff-only)
 #   2. Rebuild the venue SHADOW worktree at origin/main (isolated from local dev)
 #   3. Deps ONLINE (npm install offline-first + the venue's OWN prisma client) — only phase with egress
-#   4. NO-EGRESS build of apps/assuredst-api under macOS sandbox-exec (build-time egress = a bug)
+#   4. NO-EGRESS build of apps/assurerail-api under macOS sandbox-exec (build-time egress = a bug)
 #   5. Venue unit tests (k-anon, tape integrity) on the compiled dist
 #   6. AssureRail invariants (secrets/CORS/ledger-atomicity/segregation) on the shadow source
 #   7. scripts/security-scan-local.sh (gitleaks / trivy / semgrep)
@@ -56,13 +56,13 @@ if [ ! -d "$SHADOW/node_modules/@nestjs" ]; then
   echo "seeding shadow node_modules from main…"; rsync -a "$REPO/node_modules/" "$SHADOW/node_modules/" 2>/dev/null
 fi
 step "Shadow deps (npm install, offline-first)" bash -c "cd '$SHADOW' && npm install --prefer-offline --no-audit --no-fund"
-step "Venue prisma client" bash -c "cd '$SHADOW' && npx prisma generate --schema apps/assuredst-api/prisma/schema.prisma"
+step "Venue prisma client" bash -c "cd '$SHADOW' && npx prisma generate --schema apps/assurerail-api/prisma/schema.prisma"
 
 # ── 4. NO-EGRESS build ───────────────────────────────────────────────────────
-step "NO-EGRESS build — venue api (tsc)" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$SHADOW/apps/assuredst-api' && npx tsc"
+step "NO-EGRESS build — venue api (tsc)" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$SHADOW/apps/assurerail-api' && npx tsc"
 
 # ── 5. venue unit tests (compiled dist) ──────────────────────────────────────
-step "Venue unit tests (k-anon, tape integrity)" bash -c "cd '$SHADOW/apps/assuredst-api' && node --test 'dist/**/*.test.js'"
+step "Venue unit tests (k-anon, tape integrity)" bash -c "cd '$SHADOW/apps/assurerail-api' && node --test 'dist/**/*.test.js'"
 
 # ── 6. venue invariants (secrets / CORS / ledger atomicity / segregation) ────
 step "AssureRail invariants" bash -c "cd '$SHADOW' && node '$REPO/scripts/check-assurerail-invariants.mjs'"

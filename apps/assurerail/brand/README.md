@@ -84,7 +84,7 @@ revolutionary*. Numbers do the persuading; set them in IBM Plex Mono:
 
 ```tsx
 // app/layout.tsx
-import "@/../apps/assuredst/brand/tokens.css"; // or copy into app/styles
+import "@/../apps/assurerail/brand/tokens.css"; // or copy into app/styles
 // fonts: see fonts.md (next/font wiring)
 <body className="arail">…</body>
 ```

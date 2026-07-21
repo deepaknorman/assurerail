@@ -21,20 +21,20 @@ step "shell syntax (bash -n)" bash -c 'rc=0; for f in "'"$ROOT"'"/scripts/assure
 
 # 2. prisma schema is valid (dummy DATABASE_URL — validation checks structure, not a live DB, and the
 #    gate runs from repo root without the venue's .env)
-step "prisma validate (venue schema)" bash -c 'DATABASE_URL="postgresql://validate:validate@localhost:5432/validate" npx prisma validate --schema "'"$ROOT"'/apps/assuredst-api/prisma/schema.prisma"'
+step "prisma validate (venue schema)" bash -c 'DATABASE_URL="postgresql://validate:validate@localhost:5432/validate" npx prisma validate --schema "'"$ROOT"'/apps/assurerail-api/prisma/schema.prisma"'
 
 # 3. static invariants — security / segregation / ledger atomicity
 step "AssureRail invariants" node scripts/check-assurerail-invariants.mjs
 
 # 4. venue API build — NO-EGRESS when sandbox-exec is available (build-time phone-home = a finding)
 if command -v sandbox-exec >/dev/null 2>&1; then
-  step "NO-EGRESS build — venue api" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$ROOT/apps/assuredst-api' && npm run build"
+  step "NO-EGRESS build — venue api" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$ROOT/apps/assurerail-api' && npm run build"
 else
-  step "build — venue api" bash -c "cd '$ROOT/apps/assuredst-api' && npm run build"
+  step "build — venue api" bash -c "cd '$ROOT/apps/assurerail-api' && npm run build"
 fi
 
 # 5. venue unit tests
-step "venue unit tests" bash -c "cd '$ROOT/apps/assuredst-api' && npm test"
+step "venue unit tests" bash -c "cd '$ROOT/apps/assurerail-api' && npm test"
 
 # 6. standalone web build (online — next/font egress is a known standing item)
 if [ "${ARAIL_CHECK_SKIP_WEB:-0}" = "1" ]; then

@@ -1,0 +1,134 @@
+// AssureRail's OWN database — ring-fenced from AssureLocker (segregation primitive). Holds only the
+// venue's records: no borrower PII / T2 ever lands here (only tape T0 commitments + T1 aggregates),
+// plus the venue's own users/sessions/roles. Its client is generated to a NAMED output so it can
+// never collide with AssureLocker's control/data clients.
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/@prisma/assurerail-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────── venue identity & access ───────────────────────────────
+// The venue's OWN user records. Identity is GATED on an existing AssureLocker DigiKYC DID
+// (verify-once, reference the DID — never copy PII here). Roles are the venue's own (VENUE_ROLES).
+model VenueUser {
+  id          String   @id
+  firebaseUid String?  @unique // set on first Firebase (AssureRail project) login
+  did         String? // AssureLocker DigiKYC DID — the identity gate; a reference, never PII
+  email       String   @unique
+  displayName String?
+  role        String   @default("INVESTOR") // ISSUER | DESK | INVESTOR | TRUSTEE | REGULATOR
+  isAdmin     Boolean  @default(false) // platform admin
+  allowlisted Boolean  @default(false) // KYC allow-list gate (real onboarding is Trigger-1)
+  status      String   @default("PENDING") // PENDING | ACTIVE | SUSPENDED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions VenueSession[]
+
+  @@index([did])
+}
+
+/// A venue session (passkey / Firebase login), kept for audit + revocation.
+model VenueSession {
+  id         String    @id
+  userId     String
+  user       VenueUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime?
+  userAgent  String?
+  ip         String?
+
+  @@index([userId])
+}
+
+// ─────────────────────────────── venue records ───────────────────────────────
+/// A minted AssurePool Note — provenance traces back to the AssureLocker tape via tapeHash/manifestHash.
+model Note {
+  id           String   @id
+  poolId       String
+  tapeHash     String // integrity link to the exact tape consumed
+  manifestHash String
+  tokenId      String // HTS token id (DEMO fake or real 0.0.x)
+  serials      Json // minted serials
+  t1Aggregates Json // structural/aggregate snapshot at mint (no PII)
+  state        String   @default("ISSUED") // ISSUED | ACTIVE | REDEEMED
+  createdAt    DateTime @default(now())
+
+  @@index([poolId])
+}
+
+/// Allow-listed holder positions in a Note (KYC-gated allow-list; real onboarding is Trigger-1).
+model NoteHolding {
+  id        String   @id
+  noteId    String
+  holderDid String
+  units     String // minor units held
+  createdAt DateTime @default(now()) // stable acquisition order (listHoldings orders by this, not the mutable updatedAt)
+  updatedAt DateTime @updatedAt @default(now())
+
+  @@index([noteId])
+  @@unique([noteId, holderDid])
+}
+
+/// Append-only mint audit: what tape was consumed, the k-anon result, lock ref, HTS tx, actor.
+model MintLog {
+  id          String   @id
+  poolId      String
+  tapeHash    String
+  kAnonPassed Boolean
+  kAnonDetail Json
+  lockRef     String
+  htsTxRef    String? // HTS tx / token ref (blank on a blocked attempt)
+  actor       String // system:tokenco
+  createdAt   DateTime @default(now())
+
+  @@index([poolId])
+}
+
+/// Per-cycle surveillance mirror pulled from AssureLocker, anchored via plaza HCS (2c).
+model SurveillanceMirror {
+  id        String   @id
+  noteId    String
+  period    String // YYYY-MM
+  verdict   Json
+  anchorRef String? // topicId#sequenceNumber (HCS)
+  createdAt DateTime @default(now())
+
+  @@index([noteId])
+  @@unique([noteId, period])
+}
+
+/// Atomic delivery-vs-payment record — asset units (issuer→buyer) settled against the settlement token.
+model Dvp {
+  id              String   @id
+  noteId          String
+  sellerDid       String
+  buyerDid        String
+  units           String // minor
+  settlementMinor String
+  settlementToken String
+  settlementRef   String
+  anchorRef       String // topicId#sequenceNumber (HCS)
+  actor           String
+  createdAt       DateTime @default(now())
+
+  @@index([noteId])
+}
+
+/// Regulator break-glass ACCESS event (the venue anchors who-saw-what-when; T2/PII stays at AssureLocker).
+model BreakGlass {
+  id            String   @id
+  noteId        String
+  regulatorDid  String
+  lawfulPurpose String
+  anchorRef     String // topicId#sequenceNumber (HCS)
+  createdAt     DateTime @default(now())
+
+  @@index([noteId])
+}
