@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="arail-mark-title" class="arail-mark">
+  <title id="arail-mark-title">AssureRail mark — the Interlock</title>
+  <style>
+    /* Recolour hooks: set --arail-logo-ink / --arail-logo-accent on any ancestor
+       (tokens.css defines both per theme). Falls back to built-in light/dark. */
+    .arail-mark { --_ink: #0E2836; --_accent: #157A63; }
+    @media (prefers-color-scheme: dark) {
+      .arail-mark { --_ink: #E8EEF3; --_accent: #4EC9AB; }
+    }
+    .arail-mark .mk-a { fill: var(--arail-logo-ink, var(--_ink)); }
+    .arail-mark .mk-b { fill: var(--arail-logo-accent, var(--_accent)); }
+  </style>
+
+  <!-- Two congruent counterpart pieces (180-degree rotational symmetry), joined by a
+       4-unit stepped seam into one sealed 48-unit square. Asset leg = ink, payment leg = accent. -->
+  <path class="mk-a" d="M22 56 H8 V8 H38 V24 H30 V36 H22 Z"/>
+  <path class="mk-b" d="M42 8 H56 V56 H26 V40 H34 V28 H42 Z"/>
+</svg>

@@ -1,0 +1,24 @@
+{
+  "name": "@code/assurerail",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AssureRail — standalone web app for the securitisation & tokenisation venue (own brand/auth/DB/domain). Consumes the venue API.",
+  "scripts": {
+    "dev": "next dev -p 3007",
+    "build": "next build",
+    "start": "next start -p 3007",
+    "clean": "rm -rf .next"
+  },
+  "dependencies": {
+    "lucide-react": "^0.575.0",
+    "next": "^16.2.10",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.3.0"
+  }
+}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AssureRail" class="arail-favicon">
+  <style>
+    /* Favicon variant of the Interlock: full-bleed square, seam widened to 6 units
+       so the keyway stays legible at 16 px (renders ~1.5 px). Theme-aware. */
+    .arail-favicon { --_a: #0E2836; --_b: #157A63; }
+    @media (prefers-color-scheme: dark) {
+      .arail-favicon { --_a: #E8EEF3; --_b: #4EC9AB; }
+    }
+  </style>
+  <path fill="var(--_a)" d="M21 60 H4 V4 H37 V23 H29 V35 H21 Z"/>
+  <path fill="var(--_b)" d="M43 4 H60 V60 H27 V41 H35 V29 H43 Z"/>
+</svg>
