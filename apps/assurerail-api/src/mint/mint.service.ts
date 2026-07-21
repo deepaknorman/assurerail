@@ -5,12 +5,14 @@ import { TapeService } from "../tape/tape.service";
 import { selectHtsAdapter } from "../hts/hts.adapter";
 import { checkKAnon } from "./kanon";
 import { MintRepository } from "./note.repository";
+import { VenueEventBus } from "../events/venue-events";
 
 @Injectable()
 export class MintService {
   constructor(
     private readonly tape: TapeService,
     private readonly repo: MintRepository,
+    private readonly events: VenueEventBus,
   ) {}
 
   /** The mint flow: verified + mint-ready tape → k-anon gate → HTS mint → Note + MintLog. */
@@ -45,6 +47,7 @@ export class MintService {
       issuerUnits: BigInt(tape.aggregates.mintableMinor),
     });
     audit("mint.issued", { poolId, tokenId: mintRes.tokenId, serials: mintRes.serials.length, adapter: mintRes.adapter });
+    this.events.emit("note.minted", { noteId: note.id, poolId, tokenId: mintRes.tokenId, mintableMinor: String(tape.aggregates.mintableMinor) });
     return { note, kanon: kanon.detail, adapter: mintRes.adapter };
   }
 }

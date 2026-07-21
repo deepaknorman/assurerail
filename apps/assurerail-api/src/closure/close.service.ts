@@ -3,6 +3,7 @@ import { audit } from "../common/audit";
 import { MintRepository } from "../mint/note.repository";
 import { selectHtsAdapter } from "../hts/hts.adapter";
 import { selectHcsAdapter } from "../surveillance/hcs.adapter";
+import { VenueEventBus } from "../events/venue-events";
 
 export interface CloseInput {
   reason?: string; // maturity | clean_up_call | call | amortised | manual
@@ -12,7 +13,10 @@ const VALID_REASONS = ["maturity", "clean_up_call", "call", "amortised", "manual
 
 @Injectable()
 export class CloseService {
-  constructor(private readonly repo: MintRepository) {}
+  constructor(
+    private readonly repo: MintRepository,
+    private readonly events: VenueEventBus,
+  ) {}
 
   /**
    * Close / redeem a Note — mint's mirror. Burns the HTS tokens (supply → 0), zeroes every holding, sets
@@ -40,6 +44,7 @@ export class CloseService {
     // Atomic: zero holdings + flip REDEEMED with the burn/anchor refs.
     const { note: closed, burnedUnits } = await this.repo.closeNote({ noteId, burnTxRef: burn.txRef, closeAnchorRef: anchorRef, closeReason: reason });
     audit("note.closed", { noteId, tokenId: note.tokenId, reason, burnedUnits, burnTxRef: burn.txRef, anchorRef, adapter: burn.adapter });
+    this.events.emit("note.closed", { noteId, tokenId: note.tokenId, reason, burnedUnits, burnTxRef: burn.txRef });
 
     return {
       note: closed,

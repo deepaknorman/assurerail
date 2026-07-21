@@ -138,3 +138,72 @@ model BreakGlass {
 
   @@index([noteId])
 }
+
+/// Uploaded document (closing docs / pool files). Bytes held inline (DEMO); MinIO/S3 at scale.
+model Document {
+  id          String   @id
+  filename    String
+  contentType String
+  size        Int
+  noteId      String?
+  uploadedBy  String?
+  data        Bytes
+  createdAt   DateTime @default(now())
+
+  @@index([noteId])
+}
+
+/// A pool submitted via the data-feed ingress endpoint (a lender/aggregator pushing a pool to mint).
+model IngestedPool {
+  id        String   @id
+  poolId    String   @unique
+  source    String
+  spec      Json
+  minted    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+/// Append-only usage meter for billing (one row per billable lifecycle event).
+model BillingEvent {
+  id         String   @id
+  type       String // mint | dvp | close
+  noteId     String?
+  unitsMinor String?
+  actor      String?
+  createdAt  DateTime @default(now())
+
+  @@index([type])
+}
+
+/// Webhook subscription (partner egress). `events` is a JSON array of event names or ["*"].
+model WebhookSubscription {
+  id        String   @id
+  url       String
+  secret    String
+  events    Json
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+/// Webhook delivery attempt log.
+model WebhookDelivery {
+  id             String   @id
+  subscriptionId String
+  event          String
+  statusCode     Int
+  ok             Boolean
+  createdAt      DateTime @default(now())
+
+  @@index([subscriptionId])
+}
+
+/// Append-only event log (lifecycle events) — powers the support/ops dashboard.
+model EventLog {
+  id        String   @id
+  event     String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([createdAt])
+}

@@ -5,6 +5,7 @@ import { config } from "../config";
 import { InsufficientUnitsError, MintRepository, type DvpRecord, type HoldingRecord } from "../mint/note.repository";
 import { selectHcsAdapter } from "../surveillance/hcs.adapter";
 import { selectSettlementAdapter } from "../settlement/settlement.adapter";
+import { VenueEventBus } from "../events/venue-events";
 
 export interface DvpInput {
   buyerDid: string;
@@ -14,7 +15,10 @@ export interface DvpInput {
 
 @Injectable()
 export class DvpService {
-  constructor(private readonly repo: MintRepository) {}
+  constructor(
+    private readonly repo: MintRepository,
+    private readonly events: VenueEventBus,
+  ) {}
 
   /**
    * Atomic delivery-vs-payment. Asset units (issuer→buyer) and the settlement token (buyer→issuer)
@@ -73,6 +77,7 @@ export class DvpService {
       throw e;
     }
     audit("dvp.settled", { noteId, buyer: input.buyerDid, units: input.unitsMinor, token: config.settlementToken, adapter: settlement.adapter });
+    this.events.emit("dvp.settled", { noteId, buyer: input.buyerDid, units: input.unitsMinor, price: input.priceMinor, token: config.settlementToken });
     return { dvp: result.dvp, settlement, holdings: result.holdings };
   }
 

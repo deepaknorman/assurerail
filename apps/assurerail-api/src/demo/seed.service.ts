@@ -1,6 +1,18 @@
 import { Injectable, Logger, type OnApplicationBootstrap } from "@nestjs/common";
 import { MintRepository } from "../mint/note.repository";
-import { DemoService } from "./demo.service";
+import { DemoService, type SeedTarget } from "./demo.service";
+
+// A varied demo portfolio — different lenders/sectors and lifecycle states — so the console looks real.
+const SEED_POOLS: { id: string; target: SeedTarget }[] = [
+  { id: "HDFC-MSME-2026Q2", target: "redeemed" },
+  { id: "ICICI-RETAIL-2026Q2", target: "traded" },
+  { id: "AXIS-HOUSING-2026Q1", target: "traded" },
+  { id: "SBI-AGRI-2026Q2", target: "active" },
+  { id: "KOTAK-VEHICLE-2026Q2", target: "issued" },
+  { id: "BAJAJ-MSME-2026Q1", target: "redeemed" },
+  { id: "YESBANK-RETAIL-2026Q1", target: "active" },
+  { id: "IDFC-VEHICLE-2026Q2", target: "traded" },
+];
 
 // Idempotent boot seed: run a couple of pools through the full loop (mint → surveillance → DvP) so the
 // console has data. Gating:
@@ -34,12 +46,12 @@ export class SeedService implements OnApplicationBootstrap {
       return;
     }
 
-    for (const pool of ["POOL-DEMO-1", "POOL-DEMO-2"]) {
+    for (const p of SEED_POOLS) {
       try {
-        await this.demo.run(pool, "did:web:demo-buyer");
-        this.log.log(`seeded ${pool}`);
+        const r = await this.demo.seedPool(p.id, p.target);
+        this.log.log(`seeded ${p.id} → ${r.state}`);
       } catch (e) {
-        this.log.warn(`seed ${pool} failed: ${(e as Error).message}`);
+        this.log.warn(`seed ${p.id} failed: ${(e as Error).message}`);
       }
     }
   }

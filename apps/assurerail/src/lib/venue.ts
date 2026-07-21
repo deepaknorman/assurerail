@@ -80,3 +80,25 @@ export const inr = (v?: string | number) => {
 };
 
 export const shortDid = (d: string) => (d && d.length > 20 ? `…${d.slice(-16)}` : d || "—");
+
+export async function vdelete<T>(path: string): Promise<T> {
+  const r = await fetch(`${VENUE_BASE}${path}`, { method: "DELETE", headers: { ...(await authHeaders()) } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j as { message?: string }).message || `${path} → ${r.status}`);
+  return j as T;
+}
+
+/** Authenticated file download (CSV/report/document) — attaches the Bearer, then saves the blob. */
+export async function vdownload(path: string, filename: string): Promise<void> {
+  const r = await fetch(`${VENUE_BASE}${path}`, { headers: { ...(await authHeaders()) } });
+  if (!r.ok) throw new Error(`${path} → ${r.status}`);
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

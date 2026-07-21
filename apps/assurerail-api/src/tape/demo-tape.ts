@@ -1,18 +1,38 @@
 // A self-consistent synthetic tape so the venue runs standalone (no AssureLocker). Built with the
-// SAME shared builder AssureLocker uses (@code/shared), so independent verification PASSES on it.
+// SAME shared builder AssureLocker uses (@code/shared), so independent verification PASSES on it. The
+// pool VARIES deterministically by poolId (loan count / sizes / vintage / quality) so the portfolio
+// looks real — while always clearing the k-anon floor (value ≥ ~₹16.6 Cr, seasoned, concentration <50%).
+import { createHash } from "node:crypto";
 import { CoLending } from "@code/shared";
 import type { AssurePoolTape } from "./tape.types";
 
 export function buildDemoTape(poolId: string): AssurePoolTape {
-  const loans: CoLending.TapeInputLoan[] = [
-    { loanRef: `${poolId}-L1`, verdict: "ELIGIBLE", overridden: false, disbursedMinor: "12000000000", originationDate: "2025-01-10", classificationBucket: "STANDARD" },
-    { loanRef: `${poolId}-L2`, verdict: "ELIGIBLE", overridden: false, disbursedMinor: "9000000000", originationDate: "2025-02-01", classificationBucket: "STANDARD" },
-    { loanRef: `${poolId}-L3`, verdict: "WARNING", overridden: false, disbursedMinor: "6000000000", originationDate: "2025-02-15", classificationBucket: "STANDARD" },
-    { loanRef: `${poolId}-L4`, verdict: "HARD_EXCLUDE", overridden: false, disbursedMinor: "5000000000", originationDate: "2025-03-01", classificationBucket: "NPA" },
-  ];
+  const h = createHash("sha256").update(poolId).digest();
+  const pick = (i: number) => h[i % h.length]; // 0..255, deterministic
+
+  const n = 6 + (pick(0) % 6); // 6..11 loans → largest-loan concentration stays well under 50%
+  const loans: CoLending.TapeInputLoan[] = [];
+  for (let i = 0; i < n; i++) {
+    const sizeCr = 4 + (pick(i + 1) % 9); // ₹4–12 Cr
+    const disbursedMinor = String(sizeCr * 1_000_000_000); // ₹1 Cr = 1e9 paise
+    const month = 6 + (pick(i + 20) % 7); // 2024-06 .. 2024-12 → well-seasoned at the 2026-06 cutoff
+    const q = pick(i + 40) % 100;
+    const bucket = q < 88 ? "STANDARD" : q < 96 ? "SMA-1" : "NPA";
+    const verdict = bucket === "NPA" ? "HARD_EXCLUDE" : bucket === "SMA-1" ? "WARNING" : "ELIGIBLE";
+    loans.push({
+      loanRef: `${poolId}-L${i + 1}`,
+      verdict,
+      overridden: false,
+      disbursedMinor,
+      originationDate: `2024-${String(month).padStart(2, "0")}-15`,
+      classificationBucket: bucket,
+    });
+  }
+  const eligible = loans.filter((l) => l.verdict === "ELIGIBLE").length;
+
   return CoLending.buildAssurePoolTape(
-    { poolId, claId: "DEMO-CLA", cutoffDate: "2026-06-30", manifestHash: "sha256:demo-manifest", frozenAt: "2026-07-01T00:00:00Z" },
+    { poolId, claId: "DEMO-CLA", cutoffDate: "2026-06-30", manifestHash: `sha256:demo-${poolId}`, frozenAt: "2026-07-01T00:00:00Z" },
     loans,
-    { state: "CONFIRMED", reference: "cbslock_demo", loanCount: 3 },
+    { state: "CONFIRMED", reference: `cbslock_${poolId}`, loanCount: eligible },
   );
 }

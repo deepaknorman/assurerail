@@ -6,17 +6,34 @@ import { DvpModule } from "./dvp/dvp.module";
 import { BreakGlassModule } from "./breakglass/breakglass.module";
 import { CloseModule } from "./closure/close.module";
 import { DemoModule } from "./demo/demo.module";
+import { ReportsModule } from "./reports/reports.module";
+import { EventsModule } from "./events/venue-events";
+import { MetricsModule } from "./platform/metrics.module";
 import { AuthModule } from "./auth/auth.module";
 import { AdminModule } from "./admin/admin.module";
+import { PlatformModule } from "./platform/platform.module";
 
-// AssureRail venue root module. Tape (2a) → Mint (2b) → Surveillance (2c) → DvP + BreakGlass (T4);
-// DemoModule (T5) chains the whole loop. AuthModule (P2) is registered ONLY in DB mode (auth needs
-// VenueUser persistence); with no DATABASE_URL the venue runs open in the ephemeral DEMO.
-// NOTE: rate limiting is enforced at the Caddy reverse proxy (a proxied venue); an app-level
-// @nestjs/throttler layer is a deferred parity follow-up (Reflector DI clash in this workspace).
-const authModules = process.env.DATABASE_URL ? [AuthModule, AdminModule] : [];
+// AssureRail venue root module. Tape (2a) → Mint (2b) → Surveillance (2c) → DvP + BreakGlass (T4) →
+// Closure (burn). DemoModule chains the whole loop. Reports/Metrics/Events run in both modes.
+// AuthModule + AdminModule + PlatformModule are registered ONLY in DB mode (they need venue Postgres);
+// with no DATABASE_URL the venue runs open in the ephemeral DEMO. EventsModule is @Global (the bus is
+// always available so mint/dvp/close can emit); the persistent sink lives in PlatformModule (DB only).
+// NOTE: rate limiting is enforced at the Caddy reverse proxy (a proxied venue).
+const dbModules = process.env.DATABASE_URL ? [AuthModule, AdminModule, PlatformModule] : [];
 
 @Module({
-  imports: [TapeModule, MintModule, SurveillanceModule, DvpModule, BreakGlassModule, CloseModule, DemoModule, ...authModules],
+  imports: [
+    TapeModule,
+    MintModule,
+    SurveillanceModule,
+    DvpModule,
+    BreakGlassModule,
+    CloseModule,
+    DemoModule,
+    ReportsModule,
+    EventsModule,
+    MetricsModule,
+    ...dbModules,
+  ],
 })
 export class AppModule {}

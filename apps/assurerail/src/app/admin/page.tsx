@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { vget, vpost, vpatch, shortDid } from "@/lib/venue";
+import { vget, vpost, vpatch, vdelete, inr, shortDid } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
 
 type User = { id: string; email: string; displayName: string | null; did: string | null; role: string; isAdmin: boolean; allowlisted: boolean; status: string };
@@ -15,7 +15,13 @@ type Status = {
   roles: string[];
   counts: { notes: number; issued: number; active: number; redeemed: number };
 };
+type Overview = { health: string; notes: { total: number; byState: Record<string, number> }; events: number; documents: number; webhooks: { failedDeliveries: number }; uptimeSec: number };
+type Statement = { period: string; currency: string; events: number; lines: { type: string; count: number; rateMinor: number; amountMinor: number }[]; totalMinor: number };
+type Webhook = { id: string; url: string; events: string[]; active: boolean; createdAt: string; secret?: string };
+type Delivery = { id: string; subscriptionId: string; event: string; statusCode: number; ok: boolean; createdAt: string };
+type EventRow = { id: string; event: string; createdAt: string };
 const STATUSES = ["PENDING", "ACTIVE", "SUSPENDED"];
+const rupeesFromMinor = (m: number) => inr(Math.round(m / 100));
 
 export default function Admin() {
   const { loading, firebaseUser, venueUser, needsOnboarding, logout } = useAuth();
@@ -26,19 +32,70 @@ export default function Admin() {
   const [ok, setOk] = useState("");
   const [busy, setBusy] = useState("");
   const [inv, setInv] = useState({ email: "", role: "INVESTOR" });
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [statement, setStatement] = useState<Statement | null>(null);
+  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [newHook, setNewHook] = useState("");
+  const [newSecret, setNewSecret] = useState("");
 
   const isAdmin = !!venueUser?.isAdmin;
   const ready = !loading && !!firebaseUser && !!venueUser && !needsOnboarding;
 
   const load = useCallback(async () => {
     try {
-      const [u, s] = await Promise.all([vget<User[]>("/venue/admin/users"), vget<Status>("/venue/admin/status")]);
+      const [u, s, ov, st, wh, dl, ev] = await Promise.all([
+        vget<User[]>("/venue/admin/users"),
+        vget<Status>("/venue/admin/status"),
+        vget<Overview>("/venue/support/overview").catch(() => null),
+        vget<Statement>("/venue/billing/statement").catch(() => null),
+        vget<Webhook[]>("/venue/webhooks").catch(() => []),
+        vget<Delivery[]>("/venue/webhooks/deliveries?limit=10").catch(() => []),
+        vget<EventRow[]>("/venue/support/events?limit=12").catch(() => []),
+      ]);
       setUsers(u);
       setStatus(s);
+      setOverview(ov);
+      setStatement(st);
+      setWebhooks(wh);
+      setDeliveries(dl);
+      setEvents(ev);
     } catch (e) {
       setErr((e as Error).message);
     }
   }, []);
+
+  async function subscribeHook() {
+    if (!/^https?:\/\//.test(newHook)) { setErr("Enter a valid http(s) URL"); return; }
+    setBusy("hook");
+    setErr("");
+    setOk("");
+    try {
+      const s = await vpost<Webhook>("/venue/webhooks", { url: newHook, events: ["*"] });
+      setNewSecret(s.secret ?? "");
+      setNewHook("");
+      await load();
+      setOk("Webhook added — copy the signing secret now (shown once)");
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy("");
+    }
+  }
+  async function removeHook(id: string) {
+    setBusy(id);
+    setErr("");
+    try {
+      await vdelete(`/venue/webhooks/${id}`);
+      await load();
+      setOk("Webhook removed");
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy("");
+    }
+  }
 
   useEffect(() => {
     if (loading) return;
@@ -123,6 +180,70 @@ export default function Admin() {
             <div className="kv"><span className="k">notes</span><span className="v">{status.counts.notes} · {status.counts.active} active · {status.counts.redeemed} redeemed</span></div>
           </div>
         )}
+
+        {overview && (
+          <div className="panel">
+            <h3>Operations</h3>
+            <div className="ops-grid">
+              <div className="ops-stat"><span className="ops-n">{overview.notes.total}</span><span className="ops-l">notes</span></div>
+              <div className="ops-stat"><span className="ops-n">{overview.events.toLocaleString("en-IN")}</span><span className="ops-l">events</span></div>
+              <div className="ops-stat"><span className="ops-n">{overview.documents}</span><span className="ops-l">documents</span></div>
+              <div className={`ops-stat ${overview.webhooks.failedDeliveries > 0 ? "ops-warn" : ""}`}><span className="ops-n">{overview.webhooks.failedDeliveries}</span><span className="ops-l">failed hooks</span></div>
+              <div className="ops-stat"><span className="ops-n">{Math.round(overview.uptimeSec / 60)}m</span><span className="ops-l">uptime</span></div>
+            </div>
+            {events.length > 0 && (
+              <div className="evlog">
+                {events.map((e) => (
+                  <div className="evrow" key={e.id}><span className="evname mono">{e.event}</span><span className="meta">{new Date(e.createdAt).toLocaleString("en-IN")}</span></div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {statement && (
+          <div className="panel">
+            <h3>Billing · usage to date</h3>
+            <p className="tier-note">Illustrative per-event metering (subscription + minimum allowances apply commercially; reuse is lender-scoped).</p>
+            <div className="utable">
+              <div className="utable-head" style={{ gridTemplateColumns: "1fr 80px 120px 140px" }}><span>Event</span><span>Count</span><span>Rate</span><span>Amount</span></div>
+              {statement.lines.map((l) => (
+                <div className="utable-row" key={l.type} style={{ gridTemplateColumns: "1fr 80px 120px 140px" }}>
+                  <span className="uemail">{l.type}</span><span>{l.count}</span><span className="mono">{rupeesFromMinor(l.rateMinor)}</span><span className="mono">{rupeesFromMinor(l.amountMinor)}</span>
+                </div>
+              ))}
+              {statement.lines.length === 0 && <p className="meta">No billable events yet.</p>}
+            </div>
+            <div className="kv" style={{ marginTop: 10 }}><span className="k">Total ({statement.events} events)</span><span className="v mono" style={{ fontWeight: 700 }}>{rupeesFromMinor(statement.totalMinor)}</span></div>
+          </div>
+        )}
+
+        <div className="panel">
+          <h3>Webhooks · partner egress</h3>
+          <p className="tier-note">HMAC-SHA256 signed (header <code>x-arail-signature</code>) on note.minted / dvp.settled / note.closed. Subscribe with <code>*</code> for all events.</p>
+          <div className="subforms">
+            <label className="lbl" style={{ flex: 1 }}>endpoint URL<input className="field" type="url" placeholder="https://partner.example/hooks/arail" value={newHook} onChange={(e) => setNewHook(e.target.value)} /></label>
+            <button className="btn btn-primary" disabled={busy !== "" || !newHook} onClick={() => void subscribeHook()}>{busy === "hook" ? "…" : "Add"}</button>
+          </div>
+          {newSecret && <div className="msg ok">Signing secret (copy now — shown once): <code className="mono">{newSecret}</code></div>}
+          <div className="utable" style={{ marginTop: 10 }}>
+            {webhooks.map((w) => (
+              <div className="utable-row" key={w.id} style={{ gridTemplateColumns: "1fr 120px 60px" }}>
+                <span className="uemail mono">{w.url}</span>
+                <span className="meta">{Array.isArray(w.events) ? w.events.join(",") : "*"}</span>
+                <button className="linkish" disabled={busy === w.id} onClick={() => void removeHook(w.id)}>remove</button>
+              </div>
+            ))}
+            {webhooks.length === 0 && <p className="meta">No subscriptions.</p>}
+          </div>
+          {deliveries.length > 0 && (
+            <div className="evlog" style={{ marginTop: 10 }}>
+              {deliveries.map((d) => (
+                <div className="evrow" key={d.id}><span className="evname mono">{d.event} → {d.statusCode}{d.ok ? " ✓" : " ✗"}</span><span className="meta">{new Date(d.createdAt).toLocaleString("en-IN")}</span></div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="panel">
           <h3>Invite user</h3>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { vget, vpost, inr, shortDid, grp, shortIN } from "@/lib/venue";
+import { vget, vpost, vdownload, inr, shortDid, grp, shortIN } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
 
 type Note = {
@@ -45,6 +45,7 @@ export default function Console() {
   const [dvps, setDvps] = useState<Dvp[]>([]);
   const [bg, setBg] = useState<Bg[]>([]);
   const [underlying, setUnderlying] = useState<Underlying | null>(null);
+  const [docs, setDocs] = useState<{ id: string; filename: string; contentType: string; size: number }[]>([]);
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
@@ -77,22 +78,37 @@ export default function Console() {
     setErr("");
     const n = notes.find((x) => x.id === id);
     try {
-      const [h, s, d, b, u] = await Promise.all([
+      const [h, s, d, b, u, dc] = await Promise.all([
         vget<Holding[]>(`/venue/notes/${id}/holdings`),
         vget<Surv[]>(`/venue/notes/${id}/surveillance`),
         vget<Dvp[]>(`/venue/notes/${id}/dvp`),
         vget<Bg[]>(`/venue/notes/${id}/break-glass`),
         n ? vget<Underlying>(`/venue/tape/${encodeURIComponent(n.poolId)}/underlying`) : Promise.resolve(null),
+        vget<{ id: string; filename: string; contentType: string; size: number }[]>(`/venue/documents?noteId=${encodeURIComponent(id)}`).catch(() => []),
       ]);
       setHoldings(h);
       setSurv(s);
       setDvps(d);
       setBg(b);
       setUnderlying(u);
+      setDocs(dc);
     } catch (e) {
       setErr((e as Error).message);
     }
   }, [notes]);
+
+  async function uploadDoc(file: File, noteId: string) {
+    const contentBase64 = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
+      r.onerror = () => reject(new Error("could not read file"));
+      r.readAsDataURL(file);
+    });
+    await act("upload", async () => {
+      await vpost("/venue/documents", { filename: file.name, contentType: file.type || "application/octet-stream", contentBase64, noteId });
+      await open(noteId);
+    }, "Document uploaded");
+  }
 
   async function act(label: string, fn: () => Promise<unknown>, okMsg?: string) {
     setBusy(label);
@@ -254,6 +270,25 @@ export default function Console() {
                   <h3>Holdings ({holdings.length})</h3>
                   {holdings.map((h) => <div className="kv" key={h.holderDid}><span className="k">{shortDid(h.holderDid)}</span><span className="v">{inr(h.units)}</span></div>)}
                   {holdings.length === 0 && <p className="meta">—</p>}
+                </div>
+
+                <div className="panel">
+                  <h3>Documents &amp; reports</h3>
+                  <div className="row" style={{ gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                    <button className="btn" disabled={busy !== ""} onClick={() => void act("csv", () => vdownload(`/venue/notes/${note.id}/export.csv`, `note-${note.id}.csv`), "Downloaded")}>Note report (CSV)</button>
+                    <label className="btn" style={{ cursor: "pointer" }}>
+                      {busy === "upload" ? "Uploading…" : "Upload document"}
+                      <input type="file" style={{ display: "none" }} accept=".pdf,.csv,.json,.png,.jpg,.jpeg,.xlsx" disabled={busy !== ""}
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadDoc(f, note.id); e.target.value = ""; }} />
+                    </label>
+                  </div>
+                  {docs.map((d) => (
+                    <div className="kv" key={d.id}>
+                      <span className="k">{d.filename} <span className="meta">· {(d.size / 1024).toFixed(0)} KB</span></span>
+                      <button className="linkish" onClick={() => void act("dl", () => vdownload(`/venue/documents/${d.id}/download`, d.filename), "Downloaded")}>download</button>
+                    </div>
+                  ))}
+                  {docs.length === 0 && <p className="meta">No documents — offer docs, trustee letters and financials attach here.</p>}
                 </div>
 
                 {surv.length > 0 && (

@@ -150,3 +150,16 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
   .hero, .pillars, .split { grid-template-columns: 1fr; }
   .hero-mark { max-width: 240px; }
 }
+
+/* ── admin: ops / billing / webhooks panels ── */
+.ops-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px; margin: 4px 0 12px; }
+.ops-stat { border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm); background: var(--arail-bg-raised); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.ops-stat.ops-warn { border-color: var(--arail-warning-border); background: var(--arail-warning-bg); }
+.ops-n { font-family: var(--arail-font-mono); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 700; color: var(--arail-text-primary); }
+.ops-warn .ops-n { color: var(--arail-warning-text); }
+.ops-l { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--arail-text-muted); }
+.evlog { border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm); overflow: hidden; }
+.evrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 12px; border-bottom: 1px solid var(--arail-border-subtle); font-size: 13px; }
+.evrow:last-child { border-bottom: none; }
+.evrow .evname { color: var(--arail-text-primary); font-size: 12px; }
+.evrow .meta { font-size: 11px; color: var(--arail-text-muted); white-space: nowrap; }
