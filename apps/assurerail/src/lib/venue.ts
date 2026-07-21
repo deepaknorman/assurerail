@@ -63,6 +63,17 @@ export const shortIN = (v?: string | number) => {
 };
 
 /** Display amount: comma-grouped ₹ (Indian), full number. "5000000000" → "₹5,00,00,00,000". */
+export async function vpatch<T>(path: string, body?: unknown): Promise<T> {
+  const r = await fetch(`${VENUE_BASE}${path}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify(body ?? {}),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j as { message?: string }).message || `${path} → ${r.status}`);
+  return j as T;
+}
+
 export const inr = (v?: string | number) => {
   const g = grp(v);
   return g ? `₹${g}` : "—";

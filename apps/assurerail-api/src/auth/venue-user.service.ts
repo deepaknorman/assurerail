@@ -64,4 +64,37 @@ export class VenueUserService {
     });
     return this.toDto(u);
   }
+
+  // ── admin module ──
+  async listUsers(): Promise<VenueUserDto[]> {
+    const rows = await this.db.venueUser.findMany({ orderBy: { createdAt: "asc" } });
+    return rows.map((u) => this.toDto(u));
+  }
+
+  /** Admin: set a user's role / status / allow-list. */
+  async adminUpdate(id: string, patch: { role?: string; status?: string; allowlisted?: boolean }): Promise<VenueUserDto> {
+    const data: { role?: string; status?: string; allowlisted?: boolean } = {};
+    if (patch.role !== undefined) data.role = patch.role;
+    if (patch.status !== undefined) data.status = patch.status;
+    if (patch.allowlisted !== undefined) data.allowlisted = patch.allowlisted;
+    const u = await this.db.venueUser.update({ where: { id }, data });
+    return this.toDto(u);
+  }
+
+  /**
+   * Admin: pre-register a user by email + role (allow-listed, PENDING). On their first Firebase login,
+   * resolveFromToken adopts this row by email, so they arrive with the assigned role already set.
+   */
+  async invite(email: string, role: string, displayName?: string): Promise<VenueUserDto> {
+    const e = email.toLowerCase();
+    const existing = await this.db.venueUser.findUnique({ where: { email: e } });
+    if (existing) {
+      const u = await this.db.venueUser.update({ where: { id: existing.id }, data: { role, allowlisted: true, displayName: displayName ?? existing.displayName } });
+      return this.toDto(u);
+    }
+    const u = await this.db.venueUser.create({
+      data: { id: `vu_${randomUUID()}`, email: e, displayName: displayName ?? null, role, allowlisted: true, status: "PENDING" },
+    });
+    return this.toDto(u);
+  }
 }

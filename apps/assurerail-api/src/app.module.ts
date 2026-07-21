@@ -7,13 +7,14 @@ import { BreakGlassModule } from "./breakglass/breakglass.module";
 import { CloseModule } from "./closure/close.module";
 import { DemoModule } from "./demo/demo.module";
 import { AuthModule } from "./auth/auth.module";
+import { AdminModule } from "./admin/admin.module";
 
 // AssureRail venue root module. Tape (2a) → Mint (2b) → Surveillance (2c) → DvP + BreakGlass (T4);
 // DemoModule (T5) chains the whole loop. AuthModule (P2) is registered ONLY in DB mode (auth needs
 // VenueUser persistence); with no DATABASE_URL the venue runs open in the ephemeral DEMO.
 // NOTE: rate limiting is enforced at the Caddy reverse proxy (a proxied venue); an app-level
 // @nestjs/throttler layer is a deferred parity follow-up (Reflector DI clash in this workspace).
-const authModules = process.env.DATABASE_URL ? [AuthModule] : [];
+const authModules = process.env.DATABASE_URL ? [AuthModule, AdminModule] : [];
 
 @Module({
   imports: [TapeModule, MintModule, SurveillanceModule, DvpModule, BreakGlassModule, CloseModule, DemoModule, ...authModules],

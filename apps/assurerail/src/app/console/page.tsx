@@ -140,6 +140,7 @@ export default function Console() {
           <Link href="/"><img src="/logo.svg" alt="AssureRail" className="brand-logo" /></Link>
           <nav className="row" style={{ gap: 16 }}>
             <Link href="/">Home</Link>
+            {venueUser.isAdmin && <Link href="/admin">Admin</Link>}
             <span className="user-chip">{venueUser.email}{venueUser.isAdmin ? " · admin" : venueUser.role ? ` · ${venueUser.role}` : ""}</span>
             <button className="linkish" onClick={() => { void logout(); router.replace("/login"); }}>Sign out</button>
           </nav>
