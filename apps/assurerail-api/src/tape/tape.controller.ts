@@ -1,5 +1,6 @@
 import { Controller, Get, Param } from "@nestjs/common";
 import { TapeService } from "./tape.service";
+import { buildAnonymisedStrat } from "./underlying";
 import { config } from "../config";
 import { Public } from "../auth/public.decorator";
 import { Roles, ALL_ROLES } from "../auth/roles.decorator";
@@ -27,5 +28,12 @@ export class TapeController {
       lock: tape.lock,
       verification, // ok / mintReady / reasons
     };
+  }
+
+  /** Anonymised loan-level "underlying" (T1.5) — strat tables, PII-free. Full T2 = regulator break-glass. */
+  @Roles(...ALL_ROLES)
+  @Get("venue/tape/:poolId/underlying")
+  underlying(@Param("poolId") poolId: string) {
+    return buildAnonymisedStrat(poolId);
   }
 }

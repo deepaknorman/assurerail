@@ -87,6 +87,36 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
 .anchor { font-family: var(--arail-font-mono); font-size: 10px; color: var(--arail-text-muted); }
 .hint { font-family: var(--arail-font-mono); font-size: 10px; color: var(--arail-accent-text); text-transform: none; letter-spacing: 0; margin-top: 3px; }
 
+/* ── lifecycle pipeline stepper ── */
+.pipeline { display: flex; margin: 4px 0 18px; padding: 16px 10px 12px; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-md); background: var(--arail-bg-surface); overflow-x: auto; }
+.stage { display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; flex: 1; min-width: 74px; text-align: center; }
+.stage .connector { position: absolute; top: 13px; right: 50%; width: 100%; height: 2px; background: var(--arail-border-strong); z-index: 0; }
+.stage.done .connector, .stage.current .connector { background: var(--arail-accent-text); }
+.stage-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--arail-font-mono); font-size: 12px; font-weight: 600; z-index: 1; border: 2px solid var(--arail-border-strong); background: var(--arail-bg-raised); color: var(--arail-text-muted); }
+.stage.done .stage-dot { background: var(--arail-accent-text); border-color: var(--arail-accent-text); color: var(--arail-action-accent-fg); }
+.stage.current .stage-dot { border-color: var(--arail-accent-text); color: var(--arail-accent-text); box-shadow: 0 0 0 3px color-mix(in srgb, var(--arail-accent-text) 20%, transparent); }
+.stage-label { font-size: 12px; font-weight: 600; color: var(--arail-text-secondary); }
+.stage.done .stage-label, .stage.current .stage-label { color: var(--arail-text-primary); }
+.stage-hint { font-family: var(--arail-font-mono); font-size: 9px; color: var(--arail-text-muted); max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── contextual action cards ── */
+.action-card { border: 1px solid var(--arail-border-strong); border-left: 3px solid var(--arail-accent-text); border-radius: var(--arail-radius-md); background: var(--arail-bg-surface); padding: 14px 16px; margin-bottom: 12px; }
+.action-card.closed { border-left-color: var(--arail-text-muted); }
+.stage-lead { font-size: 13px; line-height: 1.55; color: var(--arail-text-secondary); margin: 0 0 12px; }
+.stage-lead b { color: var(--arail-text-primary); font-weight: 600; }
+.btn-danger { background: var(--arail-error-bg); color: var(--arail-error-text); border-color: var(--arail-error-border); }
+.reason-select { cursor: pointer; }
+.pill.redeemed { background: color-mix(in srgb, var(--arail-text-muted) 24%, transparent); color: var(--arail-text-secondary); }
+/* ── anonymised underlying (T1.5) strat tables ── */
+.strat { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.strat-tbl { border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm); overflow: hidden; }
+.strat-tbl h4 { font-family: var(--arail-font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--arail-text-muted); margin: 0; padding: 8px 10px; background: var(--arail-bg-raised); }
+.strat-row { display: flex; align-items: center; gap: 8px; padding: 5px 10px; font-size: 12px; }
+.strat-row .sk { flex: 1; color: var(--arail-text-secondary); }
+.strat-bar { height: 6px; border-radius: 3px; background: var(--arail-accent-text); opacity: .5; }
+.strat-row .sv { font-family: var(--arail-font-mono); font-size: 10px; color: var(--arail-text-muted); min-width: 34px; text-align: right; }
+.tier-note { font-size: 11px; color: var(--arail-text-muted); line-height: 1.5; margin: 2px 0 10px; }
+
 .foot { border-top: 1px solid var(--arail-border-subtle); padding: 30px 0 60px; color: var(--arail-text-muted); font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 
 /* ── auth (login / onboard) ── */
