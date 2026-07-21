@@ -10,6 +10,7 @@
     "clean": "rm -rf .next"
   },
   "dependencies": {
+    "firebase": "^12.11.0",
     "lucide-react": "^0.575.0",
     "next": "^16.2.10",
     "react": "^18.2.0",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
 
 // Wire the self-hosted brand faces to the CSS variables tokens.css already references
 // (var(--font-archivo) / var(--font-inter) / var(--font-plex-mono)).
@@ -16,7 +17,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} ${inter.variable} ${plex.variable}`}>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

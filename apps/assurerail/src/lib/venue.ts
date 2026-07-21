@@ -1,17 +1,33 @@
-// Client for the AssureRail venue API. Standalone origin (its own deploy); DEMO endpoints are
-// unauthenticated for now (auth lands in P2).
+// Client for the AssureRail venue API. Standalone origin (its own deploy). Authenticated calls attach
+// the current Firebase ID token as a Bearer; the venue API verifies it (P2). Public endpoints (health,
+// /venue/auth/session) accept it opportunistically.
+import { auth } from "./firebase";
+
 export const VENUE_BASE = (process.env.NEXT_PUBLIC_ASSURERAIL_VENUE_URL || "http://localhost:3006").replace(/\/$/, "");
 
+async function authHeaders(): Promise<Record<string, string>> {
+  try {
+    const u = auth.currentUser;
+    if (!u) return {};
+    return { authorization: `Bearer ${await u.getIdToken()}` };
+  } catch {
+    return {};
+  }
+}
+
 export async function vget<T>(path: string): Promise<T> {
-  const r = await fetch(`${VENUE_BASE}${path}`);
-  if (!r.ok) throw new Error(`${path} → ${r.status}`);
+  const r = await fetch(`${VENUE_BASE}${path}`, { headers: { ...(await authHeaders()) } });
+  if (!r.ok) {
+    const j = (await r.json().catch(() => ({}))) as { message?: string };
+    throw new Error(j.message || `${path} → ${r.status}`);
+  }
   return r.json() as Promise<T>;
 }
 
 export async function vpost<T>(path: string, body?: unknown): Promise<T> {
   const r = await fetch(`${VENUE_BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
     body: JSON.stringify(body ?? {}),
   });
   const j = await r.json().catch(() => ({}));

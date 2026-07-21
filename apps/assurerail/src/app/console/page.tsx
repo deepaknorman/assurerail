@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { vget, vpost, inr, shortDid } from "@/lib/venue";
+import { useAuth } from "@/lib/auth-context";
 
 type Note = { id: string; poolId: string; tokenId: string; state: string; tapeHash: string; t1Aggregates: { mintableMinor?: string } };
 type Holding = { holderDid: string; units: string };
@@ -11,6 +13,8 @@ type Dvp = { buyerDid: string; units: string; settlementMinor: string; settlemen
 type Bg = { regulatorDid: string; lawfulPurpose: string; anchorRef: string };
 
 export default function Console() {
+  const { loading: authLoading, firebaseUser, venueUser, needsOnboarding, logout } = useAuth();
+  const router = useRouter();
   const [notes, setNotes] = useState<Note[]>([]);
   const [sel, setSel] = useState<string | null>(null);
   const [holdings, setHoldings] = useState<Holding[]>([]);
@@ -25,7 +29,15 @@ export default function Console() {
   const [bgForm, setBgForm] = useState({ regulatorDid: "did:web:sebi", lawfulPurpose: "supervisory review of pool composition" });
 
   const load = useCallback(async () => { try { setNotes(await vget<Note[]>("/venue/notes")); } catch (e) { setErr((e as Error).message); } }, []);
-  useEffect(() => { void load(); }, [load]);
+
+  // Auth gate: redirect unauthenticated / un-onboarded users; load venue data only once ready.
+  const ready = !authLoading && !!firebaseUser && !!venueUser && !needsOnboarding;
+  useEffect(() => {
+    if (authLoading) return;
+    if (!firebaseUser) router.replace("/login");
+    else if (needsOnboarding) router.replace("/onboard");
+  }, [authLoading, firebaseUser, needsOnboarding, router]);
+  useEffect(() => { if (ready) void load(); }, [ready, load]);
 
   const open = useCallback(async (id: string) => {
     setSel(id); setErr("");
@@ -47,13 +59,25 @@ export default function Console() {
 
   const note = notes.find((n) => n.id === sel);
 
+  if (!ready || !venueUser) {
+    return (
+      <main className="wrap" style={{ padding: "96px 0", textAlign: "center" }}>
+        <p className="meta">{authLoading ? "Loading…" : "Redirecting…"}</p>
+      </main>
+    );
+  }
+
   return (
     <>
       <header className="topbar">
         <div className="wrap row">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <Link href="/"><img src="/logo.svg" alt="AssureRail" className="brand-logo" /></Link>
-          <nav><Link href="/">Home</Link></nav>
+          <nav className="row" style={{ gap: 16 }}>
+            <Link href="/">Home</Link>
+            <span className="user-chip">{venueUser.email}{venueUser.isAdmin ? " · admin" : venueUser.role ? ` · ${venueUser.role}` : ""}</span>
+            <button className="linkish" onClick={() => { void logout(); router.replace("/login"); }}>Sign out</button>
+          </nav>
         </div>
       </header>
 

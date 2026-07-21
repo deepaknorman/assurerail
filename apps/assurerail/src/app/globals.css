@@ -88,6 +88,22 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
 
 .foot { border-top: 1px solid var(--arail-border-subtle); padding: 30px 0 60px; color: var(--arail-text-muted); font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 
+/* ── auth (login / onboard) ── */
+.auth-wrap { display: flex; justify-content: center; padding: 64px 0 96px; }
+.auth-card { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 12px; padding: 30px; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-lg, 14px); background: var(--arail-bg-surface); }
+.auth-card h1 { font-family: var(--arail-font-display); font-size: 24px; margin: 0; }
+.auth-sub { color: var(--arail-text-secondary); font-size: 14px; margin: 0 0 4px; }
+.auth-card .field { padding: 10px 12px; font-size: 14px; }
+.auth-card .btn { justify-content: center; padding: 11px 16px; }
+.btn-google { background: var(--arail-bg-raised); border: 1px solid var(--arail-border-strong); color: var(--arail-text-primary); }
+.auth-or { display: flex; align-items: center; gap: 12px; color: var(--arail-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--arail-border-subtle); }
+.linkish { background: none; border: none; color: var(--arail-accent-text); font: inherit; font-size: 13px; cursor: pointer; padding: 2px; text-align: center; }
+.linkish:hover { text-decoration: underline; }
+.auth-fine { color: var(--arail-text-muted); font-size: 11px; line-height: 1.5; margin: 6px 0 0; }
+.opt { color: var(--arail-text-muted); text-transform: none; letter-spacing: 0; }
+.user-chip { font-family: var(--arail-font-mono); font-size: 11px; color: var(--arail-text-secondary); padding: 4px 10px; border: 1px solid var(--arail-border-subtle); border-radius: 999px; }
+
 @media (max-width: 820px) {
   .hero, .pillars, .split { grid-template-columns: 1fr; }
   .hero-mark { max-width: 240px; }
