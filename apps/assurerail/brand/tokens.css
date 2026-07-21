@@ -1,0 +1,321 @@
+/* ============================================================================
+ * AssureRail — Design Tokens v1.0
+ * ----------------------------------------------------------------------------
+ * Drop into a Next.js app: import "./tokens.css" in the root layout.
+ * Load fonts separately — see fonts.md (Archivo / Inter / IBM Plex Mono).
+ *
+ * Theming model:
+ *   - :root                        = light (default)
+ *   - [data-theme="dark"]          = explicit dark (app toggle)
+ *   - @media (prefers-color-scheme)= OS dark, unless [data-theme="light"] forces light
+ *
+ * All colour pairs used for text meet WCAG AA (most exceed 7:1). Measured ratios
+ * are documented in docs/design/AssureRail_Brand.md.
+ * ========================================================================== */
+
+:root {
+  /* ==========================================================
+   * PRIMITIVES — do not use directly in components; use the
+   * semantic tokens further down. Primitives never change with
+   * theme; semantic tokens do.
+   * ========================================================== */
+
+  /* Harbour — deep petrol blue. The brand core: still water, deep draft. */
+  --arail-harbour-50:  #EDF4F7;
+  --arail-harbour-100: #CFE0E7;
+  --arail-harbour-200: #A3C4D0;
+  --arail-harbour-300: #6FA3B5;
+  --arail-harbour-400: #3E7F97;
+  --arail-harbour-500: #1B5F78;
+  --arail-harbour-600: #164B5F;
+  --arail-harbour-700: #123647;
+  --arail-harbour-800: #0E2836;
+  --arail-harbour-900: #0A1C27;
+  --arail-harbour-950: #071219;
+
+  /* Verdigris — the settlement accent. The colour of bronze built to last. */
+  --arail-verdigris-50:  #EEFBF7;
+  --arail-verdigris-100: #DDF5EE;
+  --arail-verdigris-200: #B6EBDD;
+  --arail-verdigris-300: #83DCC5;
+  --arail-verdigris-400: #4EC9AB;
+  --arail-verdigris-500: #1E9478;
+  --arail-verdigris-600: #157A63;
+  --arail-verdigris-700: #11604E;
+  --arail-verdigris-800: #0F4237;
+  --arail-verdigris-900: #0B2E27;
+
+  /* Slate — cool, faintly petrol-tinted neutrals. */
+  --arail-slate-0:   #FFFFFF;
+  --arail-slate-50:  #F6F8FA;
+  --arail-slate-100: #ECF0F3;
+  --arail-slate-200: #DDE4E9;
+  --arail-slate-300: #C2CDD5;
+  --arail-slate-400: #9AAAB6;
+  --arail-slate-500: #748895;
+  --arail-slate-600: #566B79;
+  --arail-slate-700: #40525F;
+  --arail-slate-800: #2B3B46;
+  --arail-slate-900: #1A2831;
+  --arail-slate-950: #0F1922;
+
+  /* ==========================================================
+   * TYPOGRAPHY
+   * next/font users: the --font-* vars are injected by next/font
+   * (see fonts.md); the literal family names are the fallback.
+   * ========================================================== */
+  --arail-font-display: var(--font-archivo, "Archivo"), "Inter", ui-sans-serif,
+    system-ui, -apple-system, "Segoe UI", sans-serif;
+  --arail-font-sans: var(--font-inter, "Inter"), ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+  --arail-font-mono: var(--font-plex-mono, "IBM Plex Mono"), ui-monospace,
+    SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type scale — 16px root. Sizes pair with their line-heights. */
+  --arail-text-2xs: 0.6875rem;   --arail-leading-2xs: 1rem;      /* 11/16 dense tables   */
+  --arail-text-xs:  0.75rem;     --arail-leading-xs:  1.125rem;  /* 12/18 captions       */
+  --arail-text-sm:  0.8125rem;   --arail-leading-sm:  1.25rem;   /* 13/20 desk UI        */
+  --arail-text-md:  0.875rem;    --arail-leading-md:  1.375rem;  /* 14/22 default UI     */
+  --arail-text-base: 1rem;       --arail-leading-base: 1.5rem;   /* 16/24 body copy      */
+  --arail-text-lg:  1.125rem;    --arail-leading-lg:  1.625rem;  /* 18/26 lede           */
+  --arail-text-xl:  1.25rem;     --arail-leading-xl:  1.75rem;   /* 20/28 h4             */
+  --arail-text-2xl: 1.5rem;      --arail-leading-2xl: 2rem;      /* 24/32 h3             */
+  --arail-text-3xl: 1.875rem;    --arail-leading-3xl: 2.375rem;  /* 30/38 h2             */
+  --arail-text-4xl: 2.375rem;    --arail-leading-4xl: 2.75rem;   /* 38/44 h1             */
+  --arail-text-5xl: 3rem;        --arail-leading-5xl: 3.375rem;  /* 48/54 display        */
+  --arail-text-6xl: 3.75rem;     --arail-leading-6xl: 4rem;      /* 60/64 hero           */
+
+  --arail-weight-regular: 400;
+  --arail-weight-medium: 500;
+  --arail-weight-semibold: 600;
+  --arail-weight-bold: 700;
+
+  --arail-tracking-display: -0.015em; /* Archivo >= 30px            */
+  --arail-tracking-heading: -0.005em; /* Archivo 20-30px            */
+  --arail-tracking-body: 0;
+  --arail-tracking-label: 0.08em;     /* uppercase labels, Inter    */
+  --arail-tracking-mono: 0;
+
+  /* Figures: always tabular in tables, tickers, and statements. */
+  --arail-numeric-tabular: "tnum" 1, "lnum" 1;
+
+  /* ==========================================================
+   * SHAPE, ELEVATION, FOCUS, MOTION
+   * Sharp radii by design: this is settlement infrastructure,
+   * not a consumer app.
+   * ========================================================== */
+  --arail-radius-xs: 2px;
+  --arail-radius-sm: 4px;
+  --arail-radius-md: 6px;
+  --arail-radius-lg: 8px;
+  --arail-radius-pill: 999px;
+
+  --arail-shadow-sm: 0 1px 2px rgb(10 28 39 / 0.08);
+  --arail-shadow-md: 0 4px 12px rgb(10 28 39 / 0.10);
+
+  --arail-ring-width: 2px;
+  --arail-ring-offset: 2px;
+
+  --arail-motion-fast: 120ms;
+  --arail-motion-base: 180ms;
+  --arail-motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ==========================================================
+   * SEMANTIC — LIGHT (default)
+   * ========================================================== */
+  color-scheme: light;
+
+  /* Surfaces */
+  --arail-bg-page: var(--arail-slate-0);
+  --arail-bg-alt: var(--arail-slate-50);
+  --arail-bg-surface: var(--arail-slate-0);
+  --arail-bg-raised: var(--arail-slate-0);
+  --arail-bg-inset: var(--arail-slate-100);
+  --arail-bg-inverse: var(--arail-harbour-900);
+
+  /* Borders */
+  --arail-border-subtle: var(--arail-slate-200);
+  --arail-border-strong: var(--arail-slate-300);
+
+  /* Text */
+  --arail-text-primary: var(--arail-slate-950);   /* 16.8:1 on white          */
+  --arail-text-secondary: var(--arail-slate-700); /*  8.1:1 on white          */
+  --arail-text-muted: var(--arail-slate-500);     /*  3.7:1 — >=19px/large or
+                                                   decorative text only     */
+  --arail-text-inverse: var(--arail-slate-0);
+
+  /* Interactive */
+  --arail-action-primary-bg: var(--arail-harbour-600);
+  --arail-action-primary-bg-hover: var(--arail-harbour-700);
+  --arail-action-primary-bg-active: var(--arail-harbour-800);
+  --arail-action-primary-fg: var(--arail-slate-0);      /* 9.5:1 on harbour-600 */
+  --arail-action-accent-bg: var(--arail-verdigris-600);
+  --arail-action-accent-bg-hover: var(--arail-verdigris-700);
+  --arail-action-accent-bg-active: var(--arail-verdigris-800);
+  --arail-action-accent-fg: var(--arail-slate-0);       /* 5.3:1 on verdigris-600 */
+  --arail-link: var(--arail-harbour-600);               /* 9.5:1 on white       */
+  --arail-link-hover: var(--arail-harbour-700);
+  --arail-accent-text: var(--arail-verdigris-600);      /* 5.3:1 on white       */
+  --arail-focus-ring: var(--arail-verdigris-500);
+
+  /* Semantic status: -text is AA on bg-page; pair -bg with -text. */
+  --arail-success-text: #1C7A46;   /* 5.4:1 */
+  --arail-success-bg: #E4F5EB;
+  --arail-success-border: #A7DFC0;
+  --arail-warning-text: #8A5A12;   /* 5.9:1 */
+  --arail-warning-bg: #FAF0DC;
+  --arail-warning-border: #E5C990;
+  --arail-error-text: #B42B3A;     /* 6.3:1 */
+  --arail-error-bg: #FBE9EB;
+  --arail-error-border: #EFB3BA;
+  --arail-info-text: #1F5F9E;      /* 6.6:1 */
+  --arail-info-bg: #E7F0FA;
+  --arail-info-border: #A8C9E8;
+
+  /* Logo recolour hooks — inline SVG logos follow the app theme. */
+  --arail-logo-ink: var(--arail-harbour-800);
+  --arail-logo-accent: var(--arail-verdigris-600);
+}
+
+/* ============================================================
+ * SEMANTIC — DARK (explicit toggle)
+ * Trading-desk surface: deep petrol-black, never pure black.
+ * ========================================================== */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --arail-bg-page: #0B141C;
+  --arail-bg-alt: #081019;
+  --arail-bg-surface: #101C26;
+  --arail-bg-raised: #16242F;
+  --arail-bg-inset: #0E1822;
+  --arail-bg-inverse: var(--arail-slate-50);
+
+  --arail-border-subtle: #23343F;
+  --arail-border-strong: #334855;
+
+  --arail-text-primary: #E8EEF3;    /* 15.9:1 on bg-page              */
+  --arail-text-secondary: #A9BAC6;  /*  9.5:1 on bg-page              */
+  --arail-text-muted: #7C909D;      /*  5.5:1 on bg-page              */
+  --arail-text-inverse: var(--arail-slate-950);
+
+  --arail-action-primary-bg: var(--arail-verdigris-400);
+  --arail-action-primary-bg-hover: var(--arail-verdigris-300);
+  --arail-action-primary-bg-active: #3DBA9C;
+  --arail-action-primary-fg: var(--arail-harbour-950);  /* 9.2:1 on verdigris-400 */
+  --arail-action-accent-bg: var(--arail-verdigris-400);
+  --arail-action-accent-bg-hover: var(--arail-verdigris-300);
+  --arail-action-accent-bg-active: #3DBA9C;
+  --arail-action-accent-fg: var(--arail-harbour-950);
+  --arail-link: var(--arail-verdigris-400);             /* 9.2:1 on bg-page       */
+  --arail-link-hover: var(--arail-verdigris-300);
+  --arail-accent-text: var(--arail-verdigris-400);
+  --arail-focus-ring: var(--arail-verdigris-400);
+
+  --arail-success-text: #57C98B;   /* 9.1:1 */
+  --arail-success-bg: #11291C;
+  --arail-success-border: #1E4A31;
+  --arail-warning-text: #E3B25E;   /* 9.7:1 */
+  --arail-warning-bg: #2E2410;
+  --arail-warning-border: #574321;
+  --arail-error-text: #EE7C86;     /* 7.1:1 */
+  --arail-error-bg: #321418;
+  --arail-error-border: #5C242B;
+  --arail-info-text: #7CB5EA;      /* 8.7:1 */
+  --arail-info-bg: #12253A;
+  --arail-info-border: #24466B;
+
+  --arail-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.50);
+  --arail-shadow-md: 0 6px 16px rgb(0 0 0 / 0.55);
+
+  --arail-logo-ink: #E8EEF3;
+  --arail-logo-accent: var(--arail-verdigris-400);
+}
+
+/* ============================================================
+ * SEMANTIC — DARK (OS preference, unless light is forced)
+ * Keep in sync with the [data-theme="dark"] block above.
+ * ========================================================== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --arail-bg-page: #0B141C;
+    --arail-bg-alt: #081019;
+    --arail-bg-surface: #101C26;
+    --arail-bg-raised: #16242F;
+    --arail-bg-inset: #0E1822;
+    --arail-bg-inverse: var(--arail-slate-50);
+
+    --arail-border-subtle: #23343F;
+    --arail-border-strong: #334855;
+
+    --arail-text-primary: #E8EEF3;
+    --arail-text-secondary: #A9BAC6;
+    --arail-text-muted: #7C909D;
+    --arail-text-inverse: var(--arail-slate-950);
+
+    --arail-action-primary-bg: var(--arail-verdigris-400);
+    --arail-action-primary-bg-hover: var(--arail-verdigris-300);
+    --arail-action-primary-bg-active: #3DBA9C;
+    --arail-action-primary-fg: var(--arail-harbour-950);
+    --arail-action-accent-bg: var(--arail-verdigris-400);
+    --arail-action-accent-bg-hover: var(--arail-verdigris-300);
+    --arail-action-accent-bg-active: #3DBA9C;
+    --arail-action-accent-fg: var(--arail-harbour-950);
+    --arail-link: var(--arail-verdigris-400);
+    --arail-link-hover: var(--arail-verdigris-300);
+    --arail-accent-text: var(--arail-verdigris-400);
+    --arail-focus-ring: var(--arail-verdigris-400);
+
+    --arail-success-text: #57C98B;
+    --arail-success-bg: #11291C;
+    --arail-success-border: #1E4A31;
+    --arail-warning-text: #E3B25E;
+    --arail-warning-bg: #2E2410;
+    --arail-warning-border: #574321;
+    --arail-error-text: #EE7C86;
+    --arail-error-bg: #321418;
+    --arail-error-border: #5C242B;
+    --arail-info-text: #7CB5EA;
+    --arail-info-bg: #12253A;
+    --arail-info-border: #24466B;
+
+    --arail-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.50);
+    --arail-shadow-md: 0 6px 16px rgb(0 0 0 / 0.55);
+
+    --arail-logo-ink: #E8EEF3;
+    --arail-logo-accent: var(--arail-verdigris-400);
+  }
+}
+
+/* ============================================================
+ * BASELINE APPLICATION (optional, safe defaults)
+ * ========================================================== */
+:where(body.arail) {
+  background: var(--arail-bg-page);
+  color: var(--arail-text-primary);
+  font-family: var(--arail-font-sans);
+  font-size: var(--arail-text-base);
+  line-height: var(--arail-leading-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(.arail) :focus-visible {
+  outline: var(--arail-ring-width) solid var(--arail-focus-ring);
+  outline-offset: var(--arail-ring-offset);
+}
+
+/* Figures in tables, tickers, and statements: always tabular. */
+:where(.arail-figures) {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: var(--arail-numeric-tabular);
+}
+
+/* Token IDs, hashes, ISINs, serials: mono, never wrapped mid-value. */
+:where(.arail-id) {
+  font-family: var(--arail-font-mono);
+  font-size: 0.9em;
+  letter-spacing: var(--arail-tracking-mono);
+  overflow-wrap: anywhere;
+}
