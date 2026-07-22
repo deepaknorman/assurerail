@@ -1,0 +1,91 @@
+# AssureRail venue — self-contained container stack (its OWN Postgres, ring-fenced from AssureLocker).
+#
+#   docker compose -f docker-compose.assurerail.yml up --build
+#
+# Ports on the host:  api → 3006, web → 3007, db → 5442 (5432 inside; 5442 avoids clashing with the
+# AssureLocker dev Postgres on 5432). Secrets are supplied at runtime, never baked into images:
+#   - copy real values into a root .env (docker compose auto-loads it for ${VAR} interpolation), or
+#   - drop apps/assurerail-api/.env.docker for API server secrets (FIREBASE_ADMIN_CONFIG, ASSURELOCKER_API_KEY…).
+# All adapters default to DEMO, so the stack runs end-to-end with zero external credentials.
+
+name: assurerail
+
+services:
+  assurerail-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: assurerail
+      POSTGRES_PASSWORD: ${ASSURERAIL_DB_PASSWORD:-assurerail_dev}
+      POSTGRES_DB: assurerail_venue
+    volumes:
+      - assurerail-db-data:/var/lib/postgresql/data
+    ports:
+      - "5442:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assurerail -d assurerail_venue"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  assurerail-api:
+    build:
+      context: .
+      dockerfile: apps/assurerail-api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      assurerail-db:
+        condition: service_healthy
+    environment:
+      # Prod-grade by default. In production the API refuses to boot without FIREBASE_ADMIN_CONFIG (no
+      # open venue in prod — see src/main.ts). For a credential-free local spin-up, override with
+      # `NODE_ENV=development docker compose -f docker-compose.assurerail.yml up` (boots in demo auth).
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: "3006"
+      DATABASE_URL: "postgresql://assurerail:${ASSURERAIL_DB_PASSWORD:-assurerail_dev}@assurerail-db:5432/assurerail_venue?connection_limit=10&pool_timeout=10"
+      # Adapters — DEMO by default (deterministic, no external calls).
+      TAPE_SOURCE: ${TAPE_SOURCE:-demo}
+      HTS_ADAPTER: ${HTS_ADAPTER:-demo}
+      HCS_ANCHOR: ${HCS_ANCHOR:-demo}
+      SETTLEMENT_ADAPTER: ${SETTLEMENT_ADAPTER:-demo}
+      SETTLEMENT_TOKEN: ${SETTLEMENT_TOKEN:-eRupee}
+      SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
+      # DigiKYC gate stays demo unless ASSURELOCKER_API_KEY + DIGIKYC_STATUS_SERVICE_SECRET are provided.
+    # Optional server secrets (never committed). Object form → the file is optional.
+    env_file:
+      - path: ./apps/assurerail-api/.env.docker
+        required: false
+    # Apply migrations before boot, then start the server.
+    command: ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+    ports:
+      - "3006:3006"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3006/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 45s
+
+  assurerail-web:
+    build:
+      context: .
+      dockerfile: apps/assurerail/Dockerfile
+      args:
+        # NEXT_PUBLIC_* are build-time (inlined). Structural identifiers default inside the Dockerfile;
+        # the two high-entropy values (Firebase apiKey + reCAPTCHA site key) have no default — supply them
+        # via root .env to enable auth/captcha. All are public-by-design but never hardcoded in a tracked file.
+        NEXT_PUBLIC_ASSURERAIL_VENUE_URL: ${NEXT_PUBLIC_ASSURERAIL_VENUE_URL:-http://localhost:3006}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}
+    restart: unless-stopped
+    depends_on:
+      - assurerail-api
+    environment:
+      NODE_ENV: production
+      PORT: "3007"
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "3007:3007"
+
+volumes:
+  assurerail-db-data:
