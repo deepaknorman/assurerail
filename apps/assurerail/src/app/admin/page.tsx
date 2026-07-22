@@ -22,6 +22,8 @@ type Statement = { period: string; currency: string; events: number; lines: { ty
 type Webhook = { id: string; url: string; events: string[]; active: boolean; createdAt: string; secret?: string };
 type Delivery = { id: string; subscriptionId: string; event: string; statusCode: number; ok: boolean; createdAt: string };
 type EventRow = { id: string; event: string; createdAt: string };
+type OpsHealth = { status: string; open: number; critical: number; killSwitch: boolean; agentMode: string; lastSweepAt: string | null };
+type OpsFinding = { id: string; checkKey: string; severity: string; status: string; scopeType: string; scopeRef: string | null; summary: string; seenCount: number; lastSeenAt: string };
 const STATUSES = ["PENDING", "ACTIVE", "SUSPENDED"];
 const rupeesFromMinor = (m: number) => inr(Math.round(m / 100));
 
@@ -39,6 +41,8 @@ export default function Admin() {
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [opsHealth, setOpsHealth] = useState<OpsHealth | null>(null);
+  const [opsFindings, setOpsFindings] = useState<OpsFinding[]>([]);
   const [newHook, setNewHook] = useState("");
   const [newSecret, setNewSecret] = useState("");
 
@@ -48,7 +52,7 @@ export default function Admin() {
 
   const load = useCallback(async () => {
     try {
-      const [u, s, ov, st, wh, dl, ev] = await Promise.all([
+      const [u, s, ov, st, wh, dl, ev, oh, of] = await Promise.all([
         vget<User[]>("/venue/admin/users"),
         vget<Status>("/venue/admin/status"),
         vget<Overview>("/venue/support/overview").catch(() => null),
@@ -56,6 +60,8 @@ export default function Admin() {
         vget<Webhook[]>("/venue/webhooks").catch(() => []),
         vget<Delivery[]>("/venue/webhooks/deliveries?limit=10").catch(() => []),
         vget<EventRow[]>("/venue/support/events?limit=12").catch(() => []),
+        vget<OpsHealth>("/venue/ops/health").catch(() => null),
+        vget<OpsFinding[]>("/venue/ops/findings?status=OPEN").catch(() => []),
       ]);
       setUsers(u);
       setStatus(s);
@@ -64,10 +70,39 @@ export default function Admin() {
       setWebhooks(wh);
       setDeliveries(dl);
       setEvents(ev);
+      setOpsHealth(oh);
+      setOpsFindings(of);
     } catch (e) {
       setErr((e as Error).message);
     }
   }, []);
+
+  async function runSweep() {
+    setBusy("ops");
+    setErr("");
+    setOk("");
+    try {
+      const r = await vpost<{ open: number; created: number; resolved: number }>("/venue/ops/run");
+      await load();
+      setOk(`Sweep done — ${r.open} open (${r.created} new, ${r.resolved} resolved)`);
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy("");
+    }
+  }
+  async function toggleKill() {
+    setBusy("ops");
+    setErr("");
+    try {
+      await vpatch("/venue/ops/control", { killSwitch: !opsHealth?.killSwitch });
+      await load();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy("");
+    }
+  }
 
   async function subscribeHook() {
     if (!/^https?:\/\//.test(newHook)) { setErr("Enter a valid http(s) URL"); return; }
@@ -211,6 +246,41 @@ export default function Admin() {
             )}
           </div>
         )}
+
+        <div className="panel">
+          <h3>Integrity &amp; ops
+            <span style={{ float: "right", display: "flex", gap: 12 }}>
+              <button className="linkish" disabled={busy !== ""} onClick={() => void runSweep()}>{busy === "ops" ? "…" : "Run checks now"}</button>
+              {isSuperAdmin && <button className="linkish" disabled={busy !== ""} onClick={() => void toggleKill()} style={{ color: opsHealth?.killSwitch ? "var(--arail-warning-text)" : undefined }}>{opsHealth?.killSwitch ? "Resume ops" : "Halt (kill-switch)"}</button>}
+            </span>
+          </h3>
+          <p className="tier-note">Deterministic, read-only reconciliation of the money path — supply conservation, mint↔burn symmetry, billing/event parity, k-anon non-bypass, and the audit hash-chain. Runs on a schedule; run it on demand here.</p>
+          {opsHealth && (
+            <div className="row" style={{ gap: 10, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
+              <span className={`pill ${opsHealth.status === "ok" ? "pill-ok" : "pill-warn"}`}>{opsHealth.status === "ok" ? "✓ all clear" : opsHealth.status}</span>
+              <span className="pill">{opsHealth.open} open</span>
+              {opsHealth.critical > 0 && <span className="pill pill-warn">{opsHealth.critical} critical</span>}
+              {opsHealth.killSwitch && <span className="pill pill-warn">⚠ kill-switch ON</span>}
+              {opsHealth.lastSweepAt && <span className="meta">last swept {new Date(opsHealth.lastSweepAt).toLocaleString("en-IN")}</span>}
+            </div>
+          )}
+          {opsFindings.length === 0 ? (
+            <p className="meta">No open findings — the ledger, billing and audit trail all reconcile.</p>
+          ) : (
+            <div className="actlog">
+              {opsFindings.map((fd) => (
+                <div className="actrow" key={fd.id}>
+                  <div className="act-main">
+                    <span className={`tag ${fd.severity === "CRITICAL" ? "tag-gov" : ""}`}>{fd.severity}</span>
+                    <span className="act-ev mono">{fd.checkKey}</span>
+                    {fd.scopeRef && <span className="act-note">{fd.scopeRef}</span>}
+                  </div>
+                  <div className="act-meta"><span>{fd.summary}</span></div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {statement && (
           <div className="panel">

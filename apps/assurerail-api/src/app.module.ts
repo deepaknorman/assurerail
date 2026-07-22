@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { ScheduleModule } from "@nestjs/schedule";
 import { TapeModule } from "./tape/tape.module";
 import { MintModule } from "./mint/mint.module";
 import { SurveillanceModule } from "./surveillance/surveillance.module";
@@ -14,6 +15,7 @@ import { AuthModule } from "./auth/auth.module";
 import { AdminModule } from "./admin/admin.module";
 import { PlatformModule } from "./platform/platform.module";
 import { SecurityModule } from "./security/security.module";
+import { OpsModule } from "./ops/ops.module";
 
 // AssureRail venue root module. Tape (2a) → Mint (2b) → Surveillance (2c) → DvP + BreakGlass (T4) →
 // Closure (burn). DemoModule chains the whole loop. Reports/Metrics/Events run in both modes.
@@ -21,10 +23,11 @@ import { SecurityModule } from "./security/security.module";
 // with no DATABASE_URL the venue runs open in the ephemeral DEMO. EventsModule is @Global (the bus is
 // always available so mint/dvp/close can emit); the persistent sink lives in PlatformModule (DB only).
 // NOTE: rate limiting is enforced at the Caddy reverse proxy (a proxied venue).
-const dbModules = process.env.DATABASE_URL ? [AuthModule, AdminModule, PlatformModule, SecurityModule] : [];
+const dbModules = process.env.DATABASE_URL ? [AuthModule, AdminModule, PlatformModule, SecurityModule, OpsModule] : [];
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     TapeModule,
     MintModule,
     SurveillanceModule,

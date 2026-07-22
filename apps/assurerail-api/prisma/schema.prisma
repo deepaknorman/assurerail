@@ -283,3 +283,37 @@ model MfaEnrollment {
   @@unique([firebaseUid, method])
   @@index([firebaseUid])
 }
+
+// ─────────────────────────────── agentic ops (Crawl) ───────────────────────────────
+/// A detected integrity/health break — the ops blackboard, deduped by fingerprint while OPEN. Populated
+/// by the deterministic IntegrityEngine + LivenessSentinel; the read-only foundation of agentic ops.
+model OpsFinding {
+  id          String    @id @default(cuid())
+  source      String // integrity | sentinel
+  checkKey    String
+  fingerprint String    @unique // sha256(checkKey|scopeRef) — one open finding per (check, subject)
+  severity    String // INFO | WARN | CRITICAL
+  status      String    @default("OPEN") // OPEN | RESOLVED
+  scopeType   String // NOTE | GLOBAL | LEDGER | AUDIT | BILLING
+  scopeRef    String?
+  summary     String
+  observed    Json?
+  expected    Json?
+  seenCount   Int       @default(1)
+  firstSeenAt DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  @@index([status])
+  @@index([checkKey])
+}
+
+/// Out-of-band ops control plane (singleton): kill-switch + autonomy mode + sweep/heartbeat markers.
+model OpsControl {
+  id              String    @id @default("singleton")
+  agentMode       String    @default("observe") // observe | suggest | act
+  killSwitch      Boolean   @default(false)
+  lastSweepAt     DateTime?
+  lastFindingCount Int      @default(0)
+  updatedAt       DateTime  @updatedAt
+}
