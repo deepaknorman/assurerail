@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { vget, vpost, vpatch, vdelete, inr, shortDid } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
+import { VenueHeader } from "@/components/VenueHeader";
 
 type User = { id: string; email: string; displayName: string | null; did: string | null; role: string; isAdmin: boolean; allowlisted: boolean; status: string };
 type Status = {
@@ -24,7 +24,7 @@ const STATUSES = ["PENDING", "ACTIVE", "SUSPENDED"];
 const rupeesFromMinor = (m: number) => inr(Math.round(m / 100));
 
 export default function Admin() {
-  const { loading, firebaseUser, venueUser, needsOnboarding, logout } = useAuth();
+  const { loading, firebaseUser, venueUser, needsOnboarding } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [status, setStatus] = useState<Status | null>(null);
@@ -149,17 +149,7 @@ export default function Admin() {
 
   return (
     <>
-      <header className="topbar">
-        <div className="wrap row">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <Link href="/"><img src="/logo.svg" alt="AssureRail" className="brand-logo" /></Link>
-          <nav className="row" style={{ gap: 16 }}>
-            <Link href="/console">Console</Link>
-            <span className="user-chip">{venueUser.email} · admin</span>
-            <button className="linkish" onClick={() => { void logout(); router.replace("/login"); }}>Sign out</button>
-          </nav>
-        </div>
-      </header>
+      <VenueHeader />
 
       <main className="wrap">
         <div className="console-head">

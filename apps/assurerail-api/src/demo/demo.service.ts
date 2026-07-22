@@ -3,6 +3,7 @@ import { MintService } from "../mint/mint.service";
 import { SurveillanceService } from "../surveillance/surveillance.service";
 import { DvpService } from "../dvp/dvp.service";
 import { CloseService } from "../closure/close.service";
+import { DEMO_BUYER_DIDS } from "../common/constants";
 
 export type SeedTarget = "issued" | "active" | "traded" | "redeemed";
 
@@ -21,7 +22,7 @@ export class DemoService {
    * Drive a pool to a target lifecycle state — used to seed a VARIED portfolio (some ISSUED, some ACTIVE,
    * some traded, some REDEEMED). Deterministic tape per poolId (buildDemoTape) makes each pool differ.
    */
-  async seedPool(poolId: string, target: SeedTarget, buyers: string[] = ["did:web:hdfc", "did:web:icici", "did:web:axis-mf"]) {
+  async seedPool(poolId: string, target: SeedTarget, buyers: string[] = DEMO_BUYER_DIDS) {
     const minted = await this.mint.mint(poolId);
     const noteId = minted.note.id;
     if (target === "issued") return { poolId, state: "ISSUED" };
@@ -42,7 +43,7 @@ export class DemoService {
     return { poolId, state: "REDEEMED" };
   }
 
-  async run(poolId: string, buyerDid = "did:web:demo-buyer") {
+  async run(poolId: string, buyerDid = DEMO_BUYER_DIDS[0]) {
     // 1) verify tape → k-anon → mint
     const minted = await this.mint.mint(poolId);
     const noteId = minted.note.id;

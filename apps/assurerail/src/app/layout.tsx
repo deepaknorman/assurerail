@@ -17,6 +17,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} ${inter.variable} ${plex.variable}`}>
+      <head>
+        {/* Apply the persisted theme before paint (no flash); "system" leaves data-theme unset. */}
+        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('arail-theme');if(t&&t!=='system')document.documentElement.setAttribute('data-theme',t);}catch(e){}" }} />
+      </head>
       <body>
         <AuthProvider>{children}</AuthProvider>
       </body>

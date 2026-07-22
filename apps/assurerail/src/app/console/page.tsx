@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { vget, vpost, vdownload, inr, shortDid, grp, shortIN } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
+import { VenueHeader } from "@/components/VenueHeader";
 
 type Note = {
   id: string;
@@ -35,7 +35,7 @@ const CLOSE_REASONS = [
 ];
 
 export default function Console() {
-  const { loading: authLoading, firebaseUser, venueUser, needsOnboarding, logout } = useAuth();
+  const { loading: authLoading, firebaseUser, venueUser, needsOnboarding } = useAuth();
   const router = useRouter();
 
   const [notes, setNotes] = useState<Note[]>([]);
@@ -50,10 +50,11 @@ export default function Console() {
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
   const [pool, setPool] = useState("POOL-DEMO-1");
-  const [dvpForm, setDvpForm] = useState({ buyerDid: "did:web:hdfc", unitsMinor: "5000000000", priceMinor: "5100000000" });
+  const [dvpForm, setDvpForm] = useState({ buyerDid: "did:web:IND:institution:27AAACH1925Q1ZK-hdfc-bank", unitsMinor: "5000000000", priceMinor: "5100000000" });
   const [closeReason, setCloseReason] = useState("clean_up_call");
+  const [amortMinor, setAmortMinor] = useState("");
   const [showBg, setShowBg] = useState(false);
-  const [bgForm, setBgForm] = useState({ regulatorDid: "did:web:sebi", lawfulPurpose: "supervisory review of pool composition" });
+  const [bgForm, setBgForm] = useState({ regulatorDid: "did:web:ind.id.assurelocker.com:regulator:sebi-001", lawfulPurpose: "supervisory review of pool composition" });
 
   const load = useCallback(async () => {
     try {
@@ -150,18 +151,7 @@ export default function Console() {
 
   return (
     <>
-      <header className="topbar">
-        <div className="wrap row">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <Link href="/"><img src="/logo.svg" alt="AssureRail" className="brand-logo" /></Link>
-          <nav className="row" style={{ gap: 16 }}>
-            <Link href="/">Home</Link>
-            {venueUser.isAdmin && <Link href="/admin">Admin</Link>}
-            <span className="user-chip">{venueUser.email}{venueUser.isAdmin ? " · admin" : venueUser.role ? ` · ${venueUser.role}` : ""}</span>
-            <button className="linkish" onClick={() => { void logout(); router.replace("/login"); }}>Sign out</button>
-          </nav>
-        </div>
-      </header>
+      <VenueHeader />
 
       <main className="wrap">
         <div className="console-head">
@@ -238,6 +228,17 @@ export default function Console() {
                           {dvpForm.priceMinor && <span className="hint">{shortIN(dvpForm.priceMinor)} E₹</span>}
                         </label>
                         <button className="btn btn-primary" disabled={busy !== ""} onClick={() => void act("dvp", async () => { await vpost(`/venue/notes/${note.id}/dvp`, dvpForm); await open(note.id); }, "Atomic DvP settled")}>Sell (atomic DvP)</button>
+                      </div>
+                    </div>
+
+                    <div className="action-card">
+                      <p className="stage-lead"><b>Amortise (pro-rata).</b> When the pool repays principal, every holder is paid down <b>pro-rata</b> (units burned = cash returned, at par), with exact conservation. If this retires the last unit, the Note auto-closes. A governed action.</p>
+                      <div className="subforms">
+                        <label className="lbl">principal repaid (minor)
+                          <input className="field" inputMode="numeric" value={grp(amortMinor)} onChange={(e) => setAmortMinor(e.target.value.replace(/[^\d]/g, ""))} placeholder="0" />
+                          {amortMinor && <span className="hint">{shortIN(amortMinor)}</span>}
+                        </label>
+                        <button className="btn btn-primary" disabled={busy !== "" || !amortMinor} onClick={() => void act("amort", async () => { await vpost(`/venue/notes/${note.id}/amortise`, { principalMinor: amortMinor }); setAmortMinor(""); await open(note.id); await load(); }, "Amortised pro-rata")}>{busy === "amort" ? "Amortising…" : "Amortise"}</button>
                       </div>
                     </div>
 
