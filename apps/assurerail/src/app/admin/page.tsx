@@ -6,13 +6,15 @@ import { vget, vpost, vpatch, vdelete, inr, shortDid } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
 import { VenueHeader } from "@/components/VenueHeader";
 
-type User = { id: string; email: string; displayName: string | null; did: string | null; role: string; isAdmin: boolean; allowlisted: boolean; status: string };
+type User = { id: string; email: string; displayName: string | null; did: string | null; role: string; isAdmin: boolean; platformRole: string | null; entityRole: string | null; entityDid: string | null; allowlisted: boolean; status: string };
 type Status = {
   store: string;
   adapters: { tape: string; hts: string; hcs: string; settlement: string };
   digikycGate: string;
   recaptchaEnforce: boolean;
   roles: string[];
+  entityRoles: string[];
+  platformRoles: string[];
   counts: { notes: number; issued: number; active: number; redeemed: number };
 };
 type Overview = { health: string; notes: { total: number; byState: Record<string, number> }; events: number; documents: number; webhooks: { failedDeliveries: number }; uptimeSec: number };
@@ -41,6 +43,7 @@ export default function Admin() {
   const [newSecret, setNewSecret] = useState("");
 
   const isAdmin = !!venueUser?.isAdmin;
+  const isSuperAdmin = venueUser?.platformRole === "SUPERADMIN";
   const ready = !loading && !!firebaseUser && !!venueUser && !needsOnboarding;
 
   const load = useCallback(async () => {
@@ -121,6 +124,22 @@ export default function Admin() {
       setBusy("");
     }
   }
+
+  // SUPERADMIN only — grant/revoke a platform role (make/unmake an admin or superadmin).
+  async function setPlatformRole(id: string, platformRole: string | null) {
+    setBusy(id);
+    setErr("");
+    setOk("");
+    try {
+      await vpatch(`/venue/admin/users/${id}/platform-role`, { platformRole });
+      await load();
+      setOk("Platform role updated");
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy("");
+    }
+  }
   async function invite() {
     setBusy("invite");
     setErr("");
@@ -146,6 +165,8 @@ export default function Admin() {
   }
 
   const ROLES = status?.roles ?? ["ISSUER", "DESK", "INVESTOR", "TRUSTEE", "REGULATOR"];
+  const EROLES = status?.entityRoles ?? ["ORGADMIN", "MANAGER", "OPERATOR"];
+  const PROLES = status?.platformRoles ?? ["SUPERADMIN", "ADMIN"];
 
   return (
     <>
@@ -246,16 +267,31 @@ export default function Admin() {
         </div>
 
         <div className="panel">
-          <h3>Users ({users.length})</h3>
-          <div className="utable">
-            <div className="utable-head"><span>Email</span><span>Role</span><span>Status</span><span>Allow</span><span>DID</span></div>
+          <h3>Users &amp; roles ({users.length})</h3>
+          <p className="tier-note">Function role gates venue actions. Entity role (ORGADMIN / MANAGER / OPERATOR) is an org&rsquo;s own-staff authority. Platform role (ADMIN / SUPERADMIN) is our staff — only a superadmin can grant it.</p>
+          <div className="ucards">
             {users.map((u) => (
-              <div className="utable-row" key={u.id}>
-                <span className="uemail">{u.email}{u.isAdmin && <span className="tag">admin</span>}</span>
-                <select className="field mini" value={u.role} disabled={busy === u.id} onChange={(e) => void patchUser(u.id, { role: e.target.value })}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>
-                <select className="field mini" value={u.status} disabled={busy === u.id} onChange={(e) => void patchUser(u.id, { status: e.target.value })}>{STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}</select>
-                <button className={`toggle ${u.allowlisted ? "on" : ""}`} disabled={busy === u.id} onClick={() => void patchUser(u.id, { allowlisted: !u.allowlisted })} title="allow-listed">{u.allowlisted ? "✓" : "—"}</button>
-                <span className="anchor">{u.did ? shortDid(u.did) : "—"}</span>
+              <div className="ucard" key={u.id}>
+                <div className="ucard-top">
+                  <span className="uemail">{u.email}
+                    {u.platformRole && <span className="tag tag-plat">{u.platformRole}</span>}
+                    {u.entityRole && <span className="tag">{u.entityRole}</span>}
+                  </span>
+                  <span className="anchor" title={u.did ?? ""}>{u.did ? shortDid(u.did) : "no DID"}</span>
+                </div>
+                <div className="ucard-controls">
+                  <label className="ctl"><span>Function</span><select className="field mini" value={u.role} disabled={busy === u.id} onChange={(e) => void patchUser(u.id, { role: e.target.value })}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select></label>
+                  <label className="ctl"><span>Entity role</span><select className="field mini" value={u.entityRole ?? ""} disabled={busy === u.id} onChange={(e) => void patchUser(u.id, { entityRole: e.target.value })}><option value="">—</option>{EROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select></label>
+                  <label className="ctl"><span>Status</span><select className="field mini" value={u.status} disabled={busy === u.id} onChange={(e) => void patchUser(u.id, { status: e.target.value })}>{STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
+                  <label className="ctl"><span>Allow-list</span><button className={`toggle ${u.allowlisted ? "on" : ""}`} disabled={busy === u.id} onClick={() => void patchUser(u.id, { allowlisted: !u.allowlisted })}>{u.allowlisted ? "✓ yes" : "— no"}</button></label>
+                  {isSuperAdmin && <label className="ctl"><span>Platform</span><select className="field mini" value={u.platformRole ?? ""} disabled={busy === u.id} onChange={(e) => void setPlatformRole(u.id, e.target.value || null)}><option value="">—</option>{PROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select></label>}
+                </div>
+                {u.entityRole && (
+                  <label className="ctl-wide"><span>Entity (org) DID</span>
+                    <input className="field mini" defaultValue={u.entityDid ?? ""} placeholder="did:web:IND:institution:…" disabled={busy === u.id}
+                      onBlur={(e) => { const v = e.target.value.trim(); if (v !== (u.entityDid ?? "")) void patchUser(u.id, { entityDid: v || null }); }} />
+                  </label>
+                )}
               </div>
             ))}
             {users.length === 0 && <p className="meta">No users yet.</p>}

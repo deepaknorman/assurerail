@@ -4,6 +4,16 @@
 export const VENUE_ROLES = ["ISSUER", "DESK", "INVESTOR", "TRUSTEE", "REGULATOR"] as const;
 export type VenueRole = (typeof VENUE_ROLES)[number];
 
+// Platform tier — our own staff (mirrors plaza SUPER_ADMIN/ADMIN). SUPERADMIN acts directly; ADMIN can
+// manage entity users but not other platform staff. Bootstrapped out-of-band via the seed-admin script.
+export const PLATFORM_ROLES = ["SUPERADMIN", "ADMIN"] as const;
+export type PlatformRole = (typeof PLATFORM_ROLES)[number];
+
+// Entity tier — a lender/issuer org's own staff (mirrors AssureLocker's InstitutionMembership, simplified
+// to three). ORGADMIN assigns roles to their team; MANAGER runs operations; OPERATOR acts in the app.
+export const ENTITY_ROLES = ["ORGADMIN", "MANAGER", "OPERATOR"] as const;
+export type EntityRole = (typeof ENTITY_ROLES)[number];
+
 export type VenueAction = "MINT" | "HOLD" | "VIEW" | "BREAK_GLASS";
 
 const MATRIX: Record<VenueRole, VenueAction[]> = {

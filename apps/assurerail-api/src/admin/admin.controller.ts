@@ -1,27 +1,34 @@
 import { BadRequestException, Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
-import { AdminOnly } from "../auth/roles.decorator";
+import { AdminOnly, SuperAdminOnly } from "../auth/roles.decorator";
 import { VenueUserService } from "../auth/venue-user.service";
 import { MintRepository } from "../mint/note.repository";
-import { VENUE_ROLES } from "../access/roles";
+import { VENUE_ROLES, ENTITY_ROLES, PLATFORM_ROLES } from "../access/roles";
 import { config } from "../config";
 import { audit } from "../common/audit";
 
 const ROLES: readonly string[] = VENUE_ROLES;
+const EROLES: readonly string[] = ENTITY_ROLES;
+const PROLES: readonly string[] = PLATFORM_ROLES;
 const STATUSES = ["PENDING", "ACTIVE", "SUSPENDED"];
 
 interface UpdateUserBody {
   role?: string;
   status?: string;
   allowlisted?: boolean;
+  entityRole?: string | null;
+  entityDid?: string | null;
 }
 interface InviteBody {
   email?: string;
   role?: string;
   displayName?: string;
 }
+interface PlatformRoleBody {
+  platformRole?: string | null; // SUPERADMIN | ADMIN | null (clear)
+}
 
-// Admin module — user access management + a system panel. Class-level @AdminOnly ⇒ every route requires
-// req.user.isAdmin (env allowlist VENUE_ADMIN_EMAILS + emailVerified, or VenueUser.isAdmin).
+// Admin module. Class-level @AdminOnly ⇒ every route requires a platform admin (SUPERADMIN or ADMIN).
+// The platform-role assignment route is further gated @SuperAdminOnly (only a superadmin makes admins).
 @AdminOnly()
 @Controller("venue/admin")
 export class AdminController {
@@ -35,12 +42,34 @@ export class AdminController {
     return this.users.listUsers();
   }
 
+  /** Set function role / status / allow-list + entity RBAC (org + entity role). NOT platformRole. */
   @Patch("users/:id")
   async updateUser(@Param("id") id: string, @Body() body: UpdateUserBody) {
     if (body.role !== undefined && !ROLES.includes(body.role)) throw new BadRequestException(`role must be one of: ${ROLES.join(", ")}`);
     if (body.status !== undefined && !STATUSES.includes(body.status)) throw new BadRequestException(`status must be one of: ${STATUSES.join(", ")}`);
-    const u = await this.users.adminUpdate(id, body);
-    audit("admin.user.updated", { id, ...body });
+    if (body.entityRole != null && body.entityRole !== "" && !EROLES.includes(body.entityRole)) {
+      throw new BadRequestException(`entityRole must be one of: ${EROLES.join(", ")}`);
+    }
+    // whitelist — platformRole is unreachable from this admin-tier route
+    const u = await this.users.adminUpdate(id, {
+      role: body.role,
+      status: body.status,
+      allowlisted: body.allowlisted,
+      entityRole: body.entityRole,
+      entityDid: body.entityDid,
+    });
+    audit("admin.user.updated", { id, role: body.role, status: body.status, entityRole: body.entityRole });
+    return u;
+  }
+
+  /** SUPERADMIN only — grant/revoke a platform role (make/unmake an admin or superadmin). */
+  @SuperAdminOnly()
+  @Patch("users/:id/platform-role")
+  async setPlatformRole(@Param("id") id: string, @Body() body: PlatformRoleBody) {
+    const pr = body.platformRole || null;
+    if (pr !== null && !PROLES.includes(pr)) throw new BadRequestException(`platformRole must be one of: ${PROLES.join(", ")} (or null to clear)`);
+    const u = await this.users.adminUpdate(id, { platformRole: pr });
+    audit("admin.platformRole.set", { id, platformRole: pr });
     return u;
   }
 
@@ -62,6 +91,8 @@ export class AdminController {
       digikycGate: (process.env.DIGIKYC_GATE ?? (config.assureLockerApiKey ? "live" : "demo")).toLowerCase(),
       recaptchaEnforce: process.env.RECAPTCHA_ENFORCE === "true",
       roles: ROLES,
+      entityRoles: EROLES,
+      platformRoles: PROLES,
       counts: {
         notes: notes.length,
         issued: notes.filter((n) => n.state === "ISSUED").length,

@@ -21,8 +21,15 @@ model VenueUser {
   did         String? // AssureLocker DigiKYC DID — the identity gate; a reference, never PII
   email       String   @unique
   displayName String?
-  role        String   @default("INVESTOR") // ISSUER | DESK | INVESTOR | TRUSTEE | REGULATOR
-  isAdmin     Boolean  @default(false) // platform admin
+  role        String   @default("INVESTOR") // function role: ISSUER | DESK | INVESTOR | TRUSTEE | REGULATOR
+  isAdmin     Boolean  @default(false) // platform admin (true iff platformRole set) — kept for the guard bypass
+
+  // Platform tier — our own staff (mirrors plaza SUPER_ADMIN/ADMIN). Null for non-platform users.
+  platformRole String? // SUPERADMIN | ADMIN
+  // Entity tier — a lender/issuer org assigns roles to its own staff (mirrors AssureLocker membership).
+  entityDid  String? // the org this user acts for (their entity/institution DID)
+  entityRole String? // ORGADMIN | MANAGER | OPERATOR
+
   allowlisted Boolean  @default(false) // KYC allow-list gate (real onboarding is Trigger-1)
   status      String   @default("PENDING") // PENDING | ACTIVE | SUSPENDED
   createdAt   DateTime @default(now())
@@ -31,6 +38,7 @@ model VenueUser {
   sessions VenueSession[]
 
   @@index([did])
+  @@index([entityDid])
 }
 
 /// A venue session (passkey / Firebase login), kept for audit + revocation.

@@ -21,6 +21,9 @@ export interface VenueUser {
   did: string | null;
   role: string;
   isAdmin: boolean;
+  platformRole?: string | null; // SUPERADMIN | ADMIN | null
+  entityDid?: string | null;
+  entityRole?: string | null; // ORGADMIN | MANAGER | OPERATOR | null
   allowlisted: boolean;
   status: string; // PENDING | ACTIVE | SUSPENDED
   emailVerified?: boolean;

@@ -10,6 +10,9 @@ export interface VenueUserDto {
   did: string | null;
   role: string;
   isAdmin: boolean;
+  platformRole: string | null; // SUPERADMIN | ADMIN | null
+  entityDid: string | null;
+  entityRole: string | null; // ORGADMIN | MANAGER | OPERATOR | null
   allowlisted: boolean;
   status: string; // PENDING | ACTIVE | SUSPENDED
 }
@@ -21,11 +24,16 @@ export class VenueUserService {
 
   private toDto(u: {
     id: string; firebaseUid: string | null; email: string; displayName: string | null;
-    did: string | null; role: string; isAdmin: boolean; allowlisted: boolean; status: string;
+    did: string | null; role: string; isAdmin: boolean; platformRole: string | null;
+    entityDid: string | null; entityRole: string | null; allowlisted: boolean; status: string;
   }): VenueUserDto {
     return {
       id: u.id, firebaseUid: u.firebaseUid, email: u.email, displayName: u.displayName,
-      did: u.did, role: u.role, isAdmin: u.isAdmin, allowlisted: u.allowlisted, status: u.status,
+      did: u.did, role: u.role,
+      // a user is a platform admin iff they hold a platformRole (keep the isAdmin column in sync too)
+      isAdmin: u.isAdmin || !!u.platformRole,
+      platformRole: u.platformRole, entityDid: u.entityDid, entityRole: u.entityRole,
+      allowlisted: u.allowlisted, status: u.status,
     };
   }
 
@@ -71,12 +79,25 @@ export class VenueUserService {
     return rows.map((u) => this.toDto(u));
   }
 
-  /** Admin: set a user's role / status / allow-list. */
-  async adminUpdate(id: string, patch: { role?: string; status?: string; allowlisted?: boolean }): Promise<VenueUserDto> {
-    const data: { role?: string; status?: string; allowlisted?: boolean } = {};
+  /**
+   * Admin: set a user's function role / status / allow-list, and (RBAC) their entity role/org. The
+   * platformRole is handled here too but the CONTROLLER restricts it to superadmins (@SuperAdminOnly);
+   * setting platformRole keeps the isAdmin column in sync.
+   */
+  async adminUpdate(
+    id: string,
+    patch: { role?: string; status?: string; allowlisted?: boolean; platformRole?: string | null; entityRole?: string | null; entityDid?: string | null },
+  ): Promise<VenueUserDto> {
+    const data: Record<string, unknown> = {};
     if (patch.role !== undefined) data.role = patch.role;
     if (patch.status !== undefined) data.status = patch.status;
     if (patch.allowlisted !== undefined) data.allowlisted = patch.allowlisted;
+    if (patch.platformRole !== undefined) {
+      data.platformRole = patch.platformRole || null;
+      data.isAdmin = !!patch.platformRole; // sync the guard-bypass flag with the platform role
+    }
+    if (patch.entityRole !== undefined) data.entityRole = patch.entityRole || null;
+    if (patch.entityDid !== undefined) data.entityDid = patch.entityDid || null;
     const u = await this.db.venueUser.update({ where: { id }, data });
     return this.toDto(u);
   }

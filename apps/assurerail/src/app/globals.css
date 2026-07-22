@@ -253,3 +253,15 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
   .console-head h1 { font-size: 24px; }
   .set-row { align-items: flex-start; }
 }
+
+/* ── admin user cards (RBAC: function / entity / platform roles) ── */
+.ucards { display: flex; flex-direction: column; gap: 10px; }
+.ucard { border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm, 8px); padding: 12px 14px; background: var(--arail-bg-raised); }
+.ucard-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.ucard-top .uemail { font-size: 14px; font-weight: 600; color: var(--arail-text-primary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; word-break: break-word; }
+.tag-plat { background: var(--arail-accent-text); color: var(--arail-action-accent-fg); }
+.ucard-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px 12px; }
+.ctl, .ctl-wide { display: flex; flex-direction: column; gap: 3px; }
+.ctl > span, .ctl-wide > span { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--arail-text-muted); }
+.ctl-wide { margin-top: 10px; }
+.ctl-wide .field { width: 100%; }
