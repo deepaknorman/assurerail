@@ -5,6 +5,7 @@ import { SurveillanceModule } from "./surveillance/surveillance.module";
 import { DvpModule } from "./dvp/dvp.module";
 import { BreakGlassModule } from "./breakglass/breakglass.module";
 import { CloseModule } from "./closure/close.module";
+import { AmortiseModule } from "./amortise/amortise.module";
 import { DemoModule } from "./demo/demo.module";
 import { ReportsModule } from "./reports/reports.module";
 import { EventsModule } from "./events/venue-events";
@@ -29,6 +30,7 @@ const dbModules = process.env.DATABASE_URL ? [AuthModule, AdminModule, PlatformM
     DvpModule,
     BreakGlassModule,
     CloseModule,
+    AmortiseModule,
     DemoModule,
     ReportsModule,
     EventsModule,

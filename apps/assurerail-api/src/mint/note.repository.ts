@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
+import { allocateAmortisation, type AmortiseAllocation } from "../amortise/amortise-math";
 
 export interface NoteRecord {
   id: string;
@@ -115,6 +116,14 @@ export interface CloseNoteArgs {
   outbox: OutboxWrite;
 }
 
+export interface AmortiseNoteArgs {
+  noteId: string;
+  principalMinor: string; // principal repaid this cycle (burned pro-rata, distributed pro-rata)
+  burnTxRef: string; // partial HTS burn ref (or full-burn ref if this paydown retires the note)
+  anchorRef: string; // HCS anchor of the amortisation event
+  outbox: OutboxWrite;
+}
+
 /**
  * The venue's store contract (async — the real backing is the venue's OWN Postgres). StoreModule
  * binds this token to {@link PrismaMintRepository} when DATABASE_URL is set, else to the in-memory
@@ -159,6 +168,15 @@ export abstract class MintRepository {
    * total units burned, and the EventLog id.
    */
   abstract closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string; eventLogId: string }>;
+  /**
+   * Partial pro-rata amortisation (pass-through). Atomically: compute each holder's pro-rata share of
+   * the principal paydown (integer-exact conservation), debit their units (guarded — never negative),
+   * write the outbox, and — if this paydown retires the last unit — auto-close the Note REDEEMED
+   * (reason "amortised"). Allocation is computed from the holdings read INSIDE the tx, so it's consistent
+   * under concurrency. Returns the Note, the per-holder allocations, whether it fully amortised, and the
+   * EventLog id.
+   */
+  abstract amortiseNote(args: AmortiseNoteArgs): Promise<{ note: NoteRecord; allocations: AmortiseAllocation[]; fullyAmortised: boolean; eventLogId: string }>;
 }
 
 // In-memory fallback for running the DEMO with no database (DATABASE_URL unset). Data is lost on
@@ -282,5 +300,27 @@ export class InMemoryMintRepository extends MintRepository {
     note.closeReason = args.closeReason;
     note.redeemedAt = new Date().toISOString();
     return { note, burnedUnits, eventLogId: `evt_${randomUUID()}` };
+  }
+
+  async amortiseNote(args: AmortiseNoteArgs): Promise<{ note: NoteRecord; allocations: AmortiseAllocation[]; fullyAmortised: boolean; eventLogId: string }> {
+    const note = this.notes.find((n) => n.id === args.noteId);
+    if (!note) throw new Error("note not found");
+    const held = this.holdings.filter((h) => h.noteId === args.noteId && BigInt(h.units) > 0n);
+    const alloc = allocateAmortisation(held.map((h) => ({ holderDid: h.holderDid, units: h.units })), args.principalMinor);
+    for (const a of alloc.allocations) {
+      const h = this.holdings.find((x) => x.noteId === args.noteId && x.holderDid === a.holderDid);
+      if (h) {
+        h.units = a.unitsAfter;
+        h.updatedAt = new Date().toISOString();
+      }
+    }
+    if (alloc.fullyAmortised) {
+      note.state = "REDEEMED";
+      note.burnTxRef = args.burnTxRef;
+      note.closeAnchorRef = args.anchorRef;
+      note.closeReason = "amortised";
+      note.redeemedAt = new Date().toISOString();
+    }
+    return { note, allocations: alloc.allocations, fullyAmortised: alloc.fullyAmortised, eventLogId: `evt_${randomUUID()}` };
   }
 }

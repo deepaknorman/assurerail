@@ -1,7 +1,7 @@
 // The mint rail. DEMO fakes a TokenId/serials deterministically (no testnet, no operator account).
 // LIVE calls plaza's HTS endpoint (the Hedera operator lives in plaza — the venue holds no ledger
 // keys); fail-closed until that endpoint exists AND the deferred live testnet smoke test passes.
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { config } from "../config";
 
 export interface MintResult {
@@ -22,6 +22,8 @@ export interface HtsAdapter {
   mint(tapeHash: string, units: number): Promise<MintResult>;
   /** Retire the Note's tokens on closure/redemption (supply → 0) — the mirror of mint. */
   burn(tokenId: string, serials: number[]): Promise<BurnResult>;
+  /** Retire a PARTIAL amount of supply (by value) on amortisation — supply decreases by amountMinor. */
+  burnAmount(tokenId: string, amountMinor: string): Promise<BurnResult>;
 }
 
 /** Deterministic from the tapeHash — the same tape always mints the same demo TokenId (stable demos). */
@@ -37,6 +39,12 @@ export class DemoHtsAdapter implements HtsAdapter {
     const h = createHash("sha256").update(`${tokenId}:burn:${serials.join(",")}`).digest("hex");
     return { tokenId, burnedSerials: serials, txRef: `0.0.0@burn-${h.slice(0, 12)}`, adapter: "DEMO" };
   }
+  async burnAmount(tokenId: string, amountMinor: string): Promise<BurnResult> {
+    // Partial (value) burn — no specific serials retired in the value model; a unique tx ref per burn.
+    const nonce = randomBytes(6).toString("hex");
+    const h = createHash("sha256").update(`${tokenId}:amort:${amountMinor}:${nonce}`).digest("hex");
+    return { tokenId, burnedSerials: [], txRef: `0.0.0@amort-${h.slice(0, 12)}`, adapter: "DEMO" };
+  }
 }
 
 export class LiveHtsAdapter implements HtsAdapter {
@@ -48,6 +56,10 @@ export class LiveHtsAdapter implements HtsAdapter {
   async burn(): Promise<BurnResult> {
     // TODO(T3-live): POST to plaza's HTS TokenBurn on the operator client.
     throw new Error("LIVE HTS burn not enabled — plaza HTS endpoint + testnet smoke test pending");
+  }
+  async burnAmount(): Promise<BurnResult> {
+    // TODO(T3-live): POST to plaza's HTS TokenBurn (partial amount) on the operator client.
+    throw new Error("LIVE HTS partial burn not enabled — plaza HTS endpoint + testnet smoke test pending");
   }
 }
 

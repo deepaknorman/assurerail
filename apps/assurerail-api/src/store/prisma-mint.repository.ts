@@ -21,8 +21,10 @@ import {
   type CommitMintArgs,
   type SettleDvpArgs,
   type CloseNoteArgs,
+  type AmortiseNoteArgs,
   type OutboxWrite,
 } from "../mint/note.repository";
+import { allocateAmortisation, type AmortiseAllocation } from "../amortise/amortise-math";
 import { PrismaService } from "./prisma.service";
 
 // Prisma-backed store over the venue's OWN Postgres. Ids keep the human-readable `note_…`/`dvp_…`
@@ -347,6 +349,31 @@ export class PrismaMintRepository extends MintRepository {
       };
       const eventLogId = await this.writeOutbox(tx, outbox, args.noteId);
       return { note: this.toNote(n), burnedUnits, eventLogId };
+    });
+  }
+
+  async amortiseNote(args: AmortiseNoteArgs): Promise<{ note: NoteRecord; allocations: AmortiseAllocation[]; fullyAmortised: boolean; eventLogId: string }> {
+    return this.db.$transaction(async (tx) => {
+      // Allocate from holdings read IN-TX (consistent under concurrency); pure integer-exact pro-rata.
+      const held = await tx.noteHolding.findMany({ where: { noteId: args.noteId }, orderBy: { createdAt: "asc" } });
+      const positive = held.filter((h) => BigInt(h.units) > 0n);
+      const alloc = allocateAmortisation(positive.map((h) => ({ holderDid: h.holderDid, units: h.units })), args.principalMinor);
+      // Guarded per-holder debit — never below the allocated share (defence-in-depth; the allocation
+      // already can't exceed a holding, but a concurrent trade between read and write is caught here).
+      for (const a of alloc.allocations) {
+        if (BigInt(a.amortised) === 0n) continue;
+        const affected = await tx.$executeRaw`
+          UPDATE "NoteHolding"
+          SET "units" = ("units"::numeric - ${a.amortised}::numeric)::text, "updatedAt" = now()
+          WHERE "noteId" = ${args.noteId} AND "holderDid" = ${a.holderDid} AND "units"::numeric >= ${a.amortised}::numeric`;
+        if (affected !== 1) throw new InsufficientUnitsError(`holder ${a.holderDid} has insufficient units for amortisation on note ${args.noteId}`);
+      }
+      // If this paydown retired the last unit, auto-close REDEEMED (reason "amortised"); else stay ACTIVE.
+      const n = alloc.fullyAmortised
+        ? await tx.note.update({ where: { id: args.noteId }, data: { state: "REDEEMED", burnTxRef: args.burnTxRef, closeAnchorRef: args.anchorRef, closeReason: "amortised", redeemedAt: new Date() } })
+        : await tx.note.findUniqueOrThrow({ where: { id: args.noteId } });
+      const eventLogId = await this.writeOutbox(tx, args.outbox, args.noteId);
+      return { note: this.toNote(n), allocations: alloc.allocations, fullyAmortised: alloc.fullyAmortised, eventLogId };
     });
   }
 }
