@@ -239,3 +239,47 @@ model AuditLog {
   @@index([noteId])
   @@index([createdAt])
 }
+
+// ─────────────────────────────── account security (passkey + MFA) ───────────────────────────────
+/// WebAuthn passkey credential (venue-own; hardware-backed sign-in). Owner is the Firebase uid.
+model WebAuthnCredential {
+  id           String    @id @default(cuid())
+  firebaseUid  String
+  credentialId String    @unique // base64url
+  publicKey    Bytes
+  counter      BigInt    @default(0)
+  deviceType   String?
+  backedUp     Boolean   @default(false)
+  transports   String[]  @default([])
+  name         String? // user label
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  @@index([firebaseUid])
+}
+
+/// Short-lived WebAuthn challenge (registration/authentication). No FK (anon login challenges allowed).
+model WebAuthnChallenge {
+  id          String   @id @default(cuid())
+  firebaseUid String // owner ("anon" for discoverable login)
+  challenge   String   @unique
+  type        String // registration | authentication
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([firebaseUid])
+}
+
+/// MFA enrollment — TOTP (authenticator app) primary. One row per (uid, method).
+model MfaEnrollment {
+  id          String    @id @default(cuid())
+  firebaseUid String
+  method      String // TOTP
+  secret      String? // TOTP shared secret (base32)
+  verified    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  verifiedAt  DateTime?
+
+  @@unique([firebaseUid, method])
+  @@index([firebaseUid])
+}

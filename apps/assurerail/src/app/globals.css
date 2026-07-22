@@ -265,3 +265,7 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
 .ctl > span, .ctl-wide > span { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--arail-text-muted); }
 .ctl-wide { margin-top: 10px; }
 .ctl-wide .field { width: 100%; }
+
+/* ── TOTP setup panel ── */
+.totp-setup { margin-top: 12px; padding: 16px; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm, 8px); background: var(--arail-bg-raised); }
+.totp-setup .sr-sub { margin: 0 0 8px; }
