@@ -108,6 +108,12 @@ export abstract class MintRepository {
   abstract saveNote(n: Omit<NoteRecord, "id" | "createdAt">): Promise<NoteRecord>;
   abstract saveMintLog(m: Omit<MintLogRecord, "id" | "createdAt">): Promise<MintLogRecord>;
   abstract listNotes(): Promise<NoteRecord[]>;
+  /**
+   * Index-only note tally by state ({ ISSUED, ACTIVE, REDEEMED, total }). The cheap path for /metrics
+   * and dashboards — never hydrates the multi-KB t1Aggregates blob per row (a full listNotes() scan on
+   * every scrape is both a scaling bottleneck and, on the @Public /metrics endpoint, a DoS amplifier).
+   */
+  abstract countNotesByState(): Promise<Record<string, number>>;
   abstract getNote(id: string): Promise<NoteRecord | undefined>;
   abstract updateNoteState(id: string, state: string): Promise<void>;
   abstract saveSurveillance(rec: Omit<SurveillanceRecord, "id" | "createdAt">): Promise<SurveillanceRecord>;
@@ -159,6 +165,11 @@ export class InMemoryMintRepository extends MintRepository {
   }
   async listNotes(): Promise<NoteRecord[]> {
     return this.notes;
+  }
+  async countNotesByState(): Promise<Record<string, number>> {
+    const out: Record<string, number> = { ISSUED: 0, ACTIVE: 0, REDEEMED: 0, total: this.notes.length };
+    for (const n of this.notes) out[n.state] = (out[n.state] ?? 0) + 1;
+    return out;
   }
   async getNote(id: string): Promise<NoteRecord | undefined> {
     return this.notes.find((n) => n.id === id);

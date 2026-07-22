@@ -124,6 +124,17 @@ export class PrismaMintRepository extends MintRepository {
     return rows.map((r) => this.toNote(r));
   }
 
+  // Index-only aggregate — reads the `state` column, never hydrates t1Aggregates. See the abstract doc.
+  async countNotesByState(): Promise<Record<string, number>> {
+    const grouped = await this.db.note.groupBy({ by: ["state"], _count: { _all: true } });
+    const out: Record<string, number> = { ISSUED: 0, ACTIVE: 0, REDEEMED: 0, total: 0 };
+    for (const g of grouped) {
+      out[g.state] = g._count._all;
+      out.total += g._count._all;
+    }
+    return out;
+  }
+
   async getNote(id: string): Promise<NoteRecord | undefined> {
     const r = await this.db.note.findUnique({ where: { id } });
     return r ? this.toNote(r) : undefined;
