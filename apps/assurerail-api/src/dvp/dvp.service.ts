@@ -6,6 +6,7 @@ import { InsufficientUnitsError, MintRepository, type DvpRecord, type HoldingRec
 import { selectHcsAdapter } from "../surveillance/hcs.adapter";
 import { selectSettlementAdapter } from "../settlement/settlement.adapter";
 import { VenueEventBus } from "../events/venue-events";
+import { AuditService } from "../store/audit.service";
 
 export interface DvpInput {
   buyerDid: string;
@@ -18,6 +19,7 @@ export class DvpService {
   constructor(
     private readonly repo: MintRepository,
     private readonly events: VenueEventBus,
+    private readonly auditSvc: AuditService,
   ) {}
 
   /**
@@ -82,7 +84,9 @@ export class DvpService {
       if (e instanceof InsufficientUnitsError) throw new BadRequestException(`issuer holds insufficient units (concurrent trade?) — ${e.message}`);
       throw e;
     }
-    audit("dvp.settled", { noteId, buyer: input.buyerDid, units: input.unitsMinor, token: config.settlementToken, adapter: settlement.adapter });
+    const auditDetail = { noteId, buyer: input.buyerDid, units: input.unitsMinor, token: config.settlementToken, adapter: settlement.adapter };
+    audit("dvp.settled", auditDetail);
+    await this.auditSvc.append({ actor: "system:tokenco", event: "dvp.settled", detail: auditDetail, noteId });
     this.events.emit("dvp.settled", { eventLogId: result.eventLogId, noteId, buyer: input.buyerDid, units: input.unitsMinor, price: input.priceMinor, token: config.settlementToken });
     return { dvp: result.dvp, settlement, holdings: result.holdings };
   }

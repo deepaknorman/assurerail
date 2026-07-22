@@ -4,6 +4,7 @@ import { MintRepository } from "../mint/note.repository";
 import { selectHtsAdapter } from "../hts/hts.adapter";
 import { selectHcsAdapter } from "../surveillance/hcs.adapter";
 import { VenueEventBus } from "../events/venue-events";
+import { AuditService } from "../store/audit.service";
 
 export interface CloseInput {
   reason?: string; // maturity | clean_up_call | call | amortised | manual
@@ -16,6 +17,7 @@ export class CloseService {
   constructor(
     private readonly repo: MintRepository,
     private readonly events: VenueEventBus,
+    private readonly auditSvc: AuditService,
   ) {}
 
   /**
@@ -54,7 +56,10 @@ export class CloseService {
         billing: { type: "close", actor: "system:tokenco" }, // unitsMinor = burnedUnits (filled in-tx)
       },
     });
-    audit("note.closed", { noteId, tokenId: note.tokenId, reason, burnedUnits, burnTxRef: burn.txRef, anchorRef, adapter: burn.adapter });
+    const auditDetail = { noteId, tokenId: note.tokenId, reason, burnedUnits, burnTxRef: burn.txRef, anchorRef, adapter: burn.adapter };
+    audit("note.closed", auditDetail);
+    // closure burns supply — a governed action; flag it so the audit trail marks it for anchoring once LIVE.
+    await this.auditSvc.append({ actor: "system:tokenco", event: "note.closed", detail: auditDetail, noteId, governed: true });
     this.events.emit("note.closed", { eventLogId, noteId, tokenId: note.tokenId, reason, burnedUnits, burnTxRef: burn.txRef });
 
     return {

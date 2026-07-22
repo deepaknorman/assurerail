@@ -6,6 +6,7 @@ import { selectHtsAdapter } from "../hts/hts.adapter";
 import { checkKAnon } from "./kanon";
 import { MintRepository } from "./note.repository";
 import { VenueEventBus } from "../events/venue-events";
+import { AuditService } from "../store/audit.service";
 
 @Injectable()
 export class MintService {
@@ -13,6 +14,7 @@ export class MintService {
     private readonly tape: TapeService,
     private readonly repo: MintRepository,
     private readonly events: VenueEventBus,
+    private readonly auditSvc: AuditService,
   ) {}
 
   /** The mint flow: verified + mint-ready tape → k-anon gate → HTS mint → Note + MintLog. */
@@ -54,7 +56,9 @@ export class MintService {
         billing: { type: "mint", unitsMinor: mintableMinor, actor: "system:tokenco" },
       },
     });
-    audit("mint.issued", { poolId, tokenId: mintRes.tokenId, serials: mintRes.serials.length, adapter: mintRes.adapter });
+    const auditDetail = { poolId, tokenId: mintRes.tokenId, serials: mintRes.serials.length, adapter: mintRes.adapter };
+    audit("mint.issued", auditDetail);
+    await this.auditSvc.append({ actor: "system:tokenco", event: "mint.issued", detail: auditDetail, noteId: note.id });
     this.events.emit("note.minted", { eventLogId, noteId: note.id, poolId, tokenId: mintRes.tokenId, mintableMinor });
     return { note, kanon: kanon.detail, adapter: mintRes.adapter };
   }
