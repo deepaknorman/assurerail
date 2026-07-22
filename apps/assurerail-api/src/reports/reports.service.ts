@@ -29,21 +29,23 @@ export class ReportsService {
     };
   }
 
-  /** Portfolio summary across all Notes. */
-  async portfolio() {
-    const notes = await this.repo.listNotes();
-    const byState: Record<string, number> = {};
-    let totalMintable = 0n;
-    for (const n of notes) {
-      byState[n.state] = (byState[n.state] ?? 0) + 1;
-      const agg = n.t1Aggregates as { mintableMinor?: string } | null;
-      if (agg?.mintableMinor) totalMintable += BigInt(agg.mintableMinor);
-    }
+  /**
+   * Portfolio summary. De-scanned: byState + total via an index-only count, the value total via a DB-side
+   * SUM (no per-note t1Aggregates hydration), and the items list is PAGINATED (never the whole table).
+   */
+  async portfolio(limit = 50, offset = 0) {
+    const [counts, totalMintableMinor, page] = await Promise.all([
+      this.repo.countNotesByState(),
+      this.repo.sumMintableMinor(),
+      this.repo.listNotesPage(limit, offset),
+    ]);
+    const { total, ...byState } = counts;
     return {
-      notes: notes.length,
+      notes: total ?? 0,
       byState,
-      totalMintableMinor: totalMintable.toString(),
-      items: notes.map((n) => ({ id: n.id, poolId: n.poolId, tokenId: n.tokenId, state: n.state, mintableMinor: (n.t1Aggregates as { mintableMinor?: string } | null)?.mintableMinor ?? null })),
+      totalMintableMinor,
+      items: page.map((n) => ({ id: n.id, poolId: n.poolId, tokenId: n.tokenId, state: n.state, mintableMinor: (n.t1Aggregates as { mintableMinor?: string } | null)?.mintableMinor ?? null })),
+      page: { limit, offset, returned: page.length },
       generatedAt: new Date().toISOString(),
     };
   }

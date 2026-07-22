@@ -139,6 +139,10 @@ export abstract class MintRepository {
    * every scrape is both a scaling bottleneck and, on the @Public /metrics endpoint, a DoS amplifier).
    */
   abstract countNotesByState(): Promise<Record<string, number>>;
+  /** DB-side sum of t1Aggregates.mintableMinor across all notes (no per-row JS hydration). */
+  abstract sumMintableMinor(): Promise<string>;
+  /** A bounded page of notes (for the portfolio list view — never the whole table). */
+  abstract listNotesPage(limit: number, offset: number): Promise<NoteRecord[]>;
   abstract getNote(id: string): Promise<NoteRecord | undefined>;
   abstract updateNoteState(id: string, state: string): Promise<void>;
   abstract saveSurveillance(rec: Omit<SurveillanceRecord, "id" | "createdAt">): Promise<SurveillanceRecord>;
@@ -207,6 +211,17 @@ export class InMemoryMintRepository extends MintRepository {
     const out: Record<string, number> = { ISSUED: 0, ACTIVE: 0, REDEEMED: 0, total: this.notes.length };
     for (const n of this.notes) out[n.state] = (out[n.state] ?? 0) + 1;
     return out;
+  }
+  async sumMintableMinor(): Promise<string> {
+    let s = 0n;
+    for (const n of this.notes) {
+      const m = (n.t1Aggregates as { mintableMinor?: string } | null)?.mintableMinor;
+      if (m) s += BigInt(m);
+    }
+    return s.toString();
+  }
+  async listNotesPage(limit: number, offset: number): Promise<NoteRecord[]> {
+    return this.notes.slice(offset, offset + limit);
   }
   async getNote(id: string): Promise<NoteRecord | undefined> {
     return this.notes.find((n) => n.id === id);

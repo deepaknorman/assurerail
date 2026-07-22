@@ -84,7 +84,8 @@ export class AdminController {
 
   @Get("status")
   async status() {
-    const notes = await this.repo.listNotes();
+    // De-scanned: index-only count-by-state instead of hydrating every note's t1Aggregates.
+    const counts = await this.repo.countNotesByState();
     return {
       store: process.env.DATABASE_URL ? "postgres" : "in-memory",
       adapters: { tape: config.tapeSource, hts: config.htsAdapter, hcs: config.hcsAnchor, settlement: config.settlementAdapter },
@@ -94,10 +95,10 @@ export class AdminController {
       entityRoles: EROLES,
       platformRoles: PROLES,
       counts: {
-        notes: notes.length,
-        issued: notes.filter((n) => n.state === "ISSUED").length,
-        active: notes.filter((n) => n.state === "ACTIVE").length,
-        redeemed: notes.filter((n) => n.state === "REDEEMED").length,
+        notes: counts.total ?? 0,
+        issued: counts.ISSUED ?? 0,
+        active: counts.ACTIVE ?? 0,
+        redeemed: counts.REDEEMED ?? 0,
       },
     };
   }

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res } from "@nestjs/common";
+import { Controller, Get, Param, Query, Res } from "@nestjs/common";
 import type { Response } from "express";
 import { ReportsService } from "./reports.service";
 import { Roles, ALL_ROLES } from "../auth/roles.decorator";
@@ -9,8 +9,10 @@ export class ReportsController {
 
   @Roles(...ALL_ROLES)
   @Get("reports/portfolio")
-  portfolio() {
-    return this.reports.portfolio();
+  portfolio(@Query("limit") limit?: string, @Query("offset") offset?: string) {
+    const lim = limit ? Math.min(Math.max(Number(limit) || 50, 1), 500) : 50;
+    const off = offset ? Math.max(Number(offset) || 0, 0) : 0;
+    return this.reports.portfolio(lim, off);
   }
 
   @Roles(...ALL_ROLES)

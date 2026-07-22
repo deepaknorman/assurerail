@@ -138,6 +138,16 @@ export class PrismaMintRepository extends MintRepository {
     return out;
   }
 
+  async sumMintableMinor(): Promise<string> {
+    const rows = await this.db.$queryRaw<{ sum: string | null }[]>`SELECT COALESCE(SUM((("t1Aggregates" ->> 'mintableMinor')::numeric)), 0)::text AS sum FROM "Note"`;
+    return rows[0]?.sum ?? "0";
+  }
+
+  async listNotesPage(limit: number, offset: number): Promise<NoteRecord[]> {
+    const rows = await this.db.note.findMany({ orderBy: { createdAt: "asc" }, take: Math.min(Math.max(limit, 1), 500), skip: Math.max(offset, 0) });
+    return rows.map((r) => this.toNote(r));
+  }
+
   async getNote(id: string): Promise<NoteRecord | undefined> {
     const r = await this.db.note.findUnique({ where: { id } });
     return r ? this.toNote(r) : undefined;

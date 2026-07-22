@@ -155,18 +155,19 @@ export class SupportController {
 
   @Get("overview")
   async overview() {
-    const [notes, eventCount, failedDeliveries, docCount] = await Promise.all([
-      this.repo.listNotes(),
+    // De-scanned: an index-only count-by-state instead of hydrating every note's t1Aggregates (the old
+    // full listNotes() scan). Cost is now independent of cumulative note count.
+    const [counts, eventCount, failedDeliveries, docCount] = await Promise.all([
+      this.repo.countNotesByState(),
       this.db.eventLog.count(),
       this.db.webhookDelivery.count({ where: { ok: false } }),
       this.db.document.count(),
     ]);
-    const byState: Record<string, number> = {};
-    for (const n of notes) byState[n.state] = (byState[n.state] ?? 0) + 1;
+    const { total, ...byState } = counts;
     return {
       health: "ok",
       store: "postgres",
-      notes: { total: notes.length, byState },
+      notes: { total: total ?? 0, byState },
       events: eventCount,
       documents: docCount,
       webhooks: { failedDeliveries },
