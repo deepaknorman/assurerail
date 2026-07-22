@@ -2,7 +2,7 @@
 // the adapter isolates it. The venue OPERATES the swap but holds neither leg → no custody/payment
 // licence (§11.4). DEMO simulates the settlement-token transfer; LIVE calls plaza's settlement/e₹
 // rail (fail-closed until wired).
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { Agent } from "undici";
 import { config } from "../config";
 
@@ -21,7 +21,11 @@ export interface SettlementAdapter {
 export class DemoSettlementAdapter implements SettlementAdapter {
   readonly mode = "DEMO" as const;
   async settle(fromDid: string, toDid: string, amountMinor: string, token: string): Promise<SettlementResult> {
-    const ref = createHash("sha256").update(`${fromDid}|${toDid}|${amountMinor}|${token}`).digest("hex").slice(0, 16);
+    // A settlement reference is unique PER settlement (as in a real rail) — include a nonce so two
+    // otherwise-identical trades (same buyer/seller/amount/token) don't collide. This makes the
+    // Dvp.settlementRef @unique integrity check meaningful instead of a false-collision trap.
+    const nonce = randomBytes(8).toString("hex");
+    const ref = createHash("sha256").update(`${fromDid}|${toDid}|${amountMinor}|${token}|${nonce}`).digest("hex").slice(0, 16);
     return { settlementRef: `settle_${ref}`, token, amountMinor, adapter: "DEMO" };
   }
 }

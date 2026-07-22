@@ -119,7 +119,7 @@ model Dvp {
   units           String // minor
   settlementMinor String
   settlementToken String
-  settlementRef   String
+  settlementRef   String   @unique // one settlement ref per DvP (the DEMO adapter now emits a unique ref)
   anchorRef       String // topicId#sequenceNumber (HCS)
   actor           String
   createdAt       DateTime @default(now())
@@ -165,12 +165,13 @@ model IngestedPool {
 
 /// Append-only usage meter for billing (one row per billable lifecycle event).
 model BillingEvent {
-  id         String   @id
-  type       String // mint | dvp | close
-  noteId     String?
-  unitsMinor String?
-  actor      String?
-  createdAt  DateTime @default(now())
+  id            String   @id
+  type          String // mint | dvp | close
+  noteId        String?
+  unitsMinor    String?
+  actor         String?
+  sourceEventId String?  @unique // the EventLog row this meter derives from — one bill per event (idempotent)
+  createdAt     DateTime @default(now())
 
   @@index([type])
 }
@@ -205,5 +206,28 @@ model EventLog {
   createdAt DateTime @default(now())
 
   @@index([event])
+  @@index([createdAt])
+}
+
+/// Append-only, hash-chained audit trail. Written via a single-writer/advisory-locked append so
+/// concurrent writes can't fork the chain: hash = sha256(prevHash + canonical(record)). Distinct
+/// actor namespaces (system:tokenco lifecycle vs system:tokenco-ops remediation). `detail` is redacted
+/// (hashes/row-ids, never raw holder/pool/tape data). This is the durable replacement for the old
+/// console-only audit() and the basis of the continuous-audit / governed-provenance story.
+model AuditLog {
+  id        String   @id
+  seq       Int      @unique @default(autoincrement()) // strict append order (chain position)
+  actor     String // system:tokenco | system:tokenco-ops | did:...
+  event     String
+  detail    Json
+  noteId    String?
+  governed  Boolean  @default(false)
+  prevHash  String
+  hash      String   @unique
+  anchorRef String? // HCS anchor of governed events, once LIVE
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([noteId])
   @@index([createdAt])
 }

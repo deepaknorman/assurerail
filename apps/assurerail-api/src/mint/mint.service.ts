@@ -32,7 +32,10 @@ export class MintService {
     const mintRes = await selectHtsAdapter().mint(tape.tapeHash, tape.aggregates.mintableCount);
     // Note + MintLog + the issuer's opening 100%-by-value holding commit atomically (one transaction):
     // a crash can never leave a queryable Note with no issuer holding or no mint-audit record.
-    const note = await this.repo.commitMint({
+    const mintableMinor = String(tape.aggregates.mintableMinor);
+    // The EventLog + BillingEvent are written INSIDE this transaction (transactional outbox) — durable
+    // with the mint itself, not dependent on the fire-and-forget sink.
+    const { note, eventLogId } = await this.repo.commitMint({
       note: {
         poolId,
         tapeHash: tape.tapeHash,
@@ -45,9 +48,14 @@ export class MintService {
       mintLog: { poolId, tapeHash: tape.tapeHash, kAnonPassed: true, kAnonDetail: kanon.detail, lockRef: tape.lock?.reference ?? "", htsTxRef: mintRes.tokenId, actor: "system:tokenco" },
       issuerDid: ISSUER_DID,
       issuerUnits: BigInt(tape.aggregates.mintableMinor),
+      outbox: {
+        event: "note.minted",
+        payload: { poolId, tokenId: mintRes.tokenId, mintableMinor },
+        billing: { type: "mint", unitsMinor: mintableMinor, actor: "system:tokenco" },
+      },
     });
     audit("mint.issued", { poolId, tokenId: mintRes.tokenId, serials: mintRes.serials.length, adapter: mintRes.adapter });
-    this.events.emit("note.minted", { noteId: note.id, poolId, tokenId: mintRes.tokenId, mintableMinor: String(tape.aggregates.mintableMinor) });
+    this.events.emit("note.minted", { eventLogId, noteId: note.id, poolId, tokenId: mintRes.tokenId, mintableMinor });
     return { note, kanon: kanon.detail, adapter: mintRes.adapter };
   }
 }

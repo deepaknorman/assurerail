@@ -41,10 +41,21 @@ export class CloseService {
     const anchor = await selectHcsAdapter().anchor({ event: "note_closed", noteId, tapeHash: note.tapeHash, tokenId: note.tokenId, reason, burnTxRef: burn.txRef });
     const anchorRef = `${anchor.topicId}#${anchor.sequenceNumber}`;
 
-    // Atomic: zero holdings + flip REDEEMED with the burn/anchor refs.
-    const { note: closed, burnedUnits } = await this.repo.closeNote({ noteId, burnTxRef: burn.txRef, closeAnchorRef: anchorRef, closeReason: reason });
+    // Atomic: zero holdings + flip REDEEMED with the burn/anchor refs + write the outbox (EventLog +
+    // BillingEvent) in the same tx. burnedUnits is computed in-tx and injected into the outbox by the repo.
+    const { note: closed, burnedUnits, eventLogId } = await this.repo.closeNote({
+      noteId,
+      burnTxRef: burn.txRef,
+      closeAnchorRef: anchorRef,
+      closeReason: reason,
+      outbox: {
+        event: "note.closed",
+        payload: { tokenId: note.tokenId, reason, burnTxRef: burn.txRef },
+        billing: { type: "close", actor: "system:tokenco" }, // unitsMinor = burnedUnits (filled in-tx)
+      },
+    });
     audit("note.closed", { noteId, tokenId: note.tokenId, reason, burnedUnits, burnTxRef: burn.txRef, anchorRef, adapter: burn.adapter });
-    this.events.emit("note.closed", { noteId, tokenId: note.tokenId, reason, burnedUnits, burnTxRef: burn.txRef });
+    this.events.emit("note.closed", { eventLogId, noteId, tokenId: note.tokenId, reason, burnedUnits, burnTxRef: burn.txRef });
 
     return {
       note: closed,

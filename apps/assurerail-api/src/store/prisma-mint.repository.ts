@@ -21,6 +21,7 @@ import {
   type CommitMintArgs,
   type SettleDvpArgs,
   type CloseNoteArgs,
+  type OutboxWrite,
 } from "../mint/note.repository";
 import { PrismaService } from "./prisma.service";
 
@@ -179,6 +180,32 @@ export class PrismaMintRepository extends MintRepository {
       DO UPDATE SET "units" = ("NoteHolding"."units"::numeric + ${d}::numeric)::text, "updatedAt" = now()`;
   }
 
+  /**
+   * Transactional outbox: write the EventLog row (durable ops-timeline record) and, when billable, the
+   * BillingEvent (keyed to that EventLog via sourceEventId, so a replay can't double-meter) — IN THE
+   * SAME tx as the domain write. Returns the EventLog id so the caller can relay webhooks. The noteId is
+   * injected here so the persisted payload always carries it.
+   */
+  private async writeOutbox(tx: Prisma.TransactionClient, outbox: OutboxWrite, noteId: string): Promise<string> {
+    const eventLogId = `evt_${randomUUID()}`;
+    await tx.eventLog.create({
+      data: { id: eventLogId, event: outbox.event, payload: { ...outbox.payload, noteId } as Prisma.InputJsonValue },
+    });
+    if (outbox.billing) {
+      await tx.billingEvent.create({
+        data: {
+          id: `bill_${randomUUID()}`,
+          type: outbox.billing.type,
+          noteId,
+          unitsMinor: outbox.billing.unitsMinor ?? null,
+          actor: outbox.billing.actor,
+          sourceEventId: eventLogId,
+        },
+      });
+    }
+    return eventLogId;
+  }
+
   async adjustHolding(noteId: string, holderDid: string, deltaMinor: bigint): Promise<HoldingRecord> {
     const r = await this.db.$transaction(async (tx) => {
       await this.incHolding(tx, noteId, holderDid, deltaMinor);
@@ -228,8 +255,8 @@ export class PrismaMintRepository extends MintRepository {
   }
 
   // ── atomic value-path operations (single Postgres transaction) ──
-  async commitMint(args: CommitMintArgs): Promise<NoteRecord> {
-    const created = await this.db.$transaction(async (tx) => {
+  async commitMint(args: CommitMintArgs): Promise<{ note: NoteRecord; eventLogId: string }> {
+    const { created, eventLogId } = await this.db.$transaction(async (tx) => {
       const n = await tx.note.create({
         data: {
           id: `note_${randomUUID()}`,
@@ -255,12 +282,13 @@ export class PrismaMintRepository extends MintRepository {
         },
       });
       await this.incHolding(tx, n.id, args.issuerDid, args.issuerUnits);
-      return n;
+      const eventLogId = await this.writeOutbox(tx, args.outbox, n.id);
+      return { created: n, eventLogId };
     });
-    return this.toNote(created);
+    return { note: this.toNote(created), eventLogId };
   }
 
-  async settleDvp(args: SettleDvpArgs): Promise<{ dvp: DvpRecord; holdings: HoldingRecord[] }> {
+  async settleDvp(args: SettleDvpArgs): Promise<{ dvp: DvpRecord; holdings: HoldingRecord[]; eventLogId: string }> {
     const u = args.units.toString();
     return this.db.$transaction(async (tx) => {
       // Guarded seller debit — decrements ONLY if the balance covers it (atomic; no oversell, no negative,
@@ -288,11 +316,12 @@ export class PrismaMintRepository extends MintRepository {
         },
       });
       const holdings = await tx.noteHolding.findMany({ where: { noteId: args.noteId }, orderBy: { createdAt: "asc" } });
-      return { dvp: this.toDvp(d), holdings: holdings.map((h) => this.toHolding(h)) };
+      const eventLogId = await this.writeOutbox(tx, args.outbox, args.noteId);
+      return { dvp: this.toDvp(d), holdings: holdings.map((h) => this.toHolding(h)), eventLogId };
     });
   }
 
-  async closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string }> {
+  async closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string; eventLogId: string }> {
     return this.db.$transaction(async (tx) => {
       // Sum the outstanding supply (what gets burned), then zero every holding, then flip the Note to
       // REDEEMED with the burn/anchor refs — all atomic.
@@ -309,7 +338,15 @@ export class PrismaMintRepository extends MintRepository {
           redeemedAt: new Date(),
         },
       });
-      return { note: this.toNote(n), burnedUnits };
+      // burnedUnits is computed here in-tx; inject it into the outbox payload + billing meter so the
+      // close event's persisted record carries the amount burned (the caller doesn't know it upfront).
+      const outbox: OutboxWrite = {
+        event: args.outbox.event,
+        payload: { ...args.outbox.payload, burnedUnits },
+        billing: args.outbox.billing ? { ...args.outbox.billing, unitsMinor: args.outbox.billing.unitsMinor ?? burnedUnits } : undefined,
+      };
+      const eventLogId = await this.writeOutbox(tx, outbox, args.noteId);
+      return { note: this.toNote(n), burnedUnits, eventLogId };
     });
   }
 }

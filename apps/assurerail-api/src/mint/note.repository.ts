@@ -77,11 +77,25 @@ export class InsufficientUnitsError extends Error {
   }
 }
 
+/**
+ * Transactional-outbox record — the EventLog row (and, when billable, the BillingEvent) written INSIDE
+ * the same atomic transaction as the domain write. This makes the ops timeline + revenue meter durable
+ * with the domain fact itself (a crash right after commit loses nothing), instead of depending on the
+ * fire-and-forget sink. The repo injects the noteId into the payload/meter inside the tx. The sink then
+ * RELAYS (dispatches webhooks) — it no longer writes these rows.
+ */
+export interface OutboxWrite {
+  event: string; // note.minted | dvp.settled | note.closed
+  payload: Record<string, unknown>; // repo adds noteId
+  billing?: { type: string; unitsMinor?: string; actor: string }; // metered in-tx; sourceEventId = the EventLog id
+}
+
 export interface CommitMintArgs {
   note: Omit<NoteRecord, "id" | "createdAt">;
   mintLog: Omit<MintLogRecord, "id" | "createdAt">;
   issuerDid: string;
   issuerUnits: bigint; // issuer's opening 100%-by-value holding
+  outbox: OutboxWrite;
 }
 
 export interface SettleDvpArgs {
@@ -90,6 +104,7 @@ export interface SettleDvpArgs {
   buyerDid: string;
   units: bigint;
   dvp: Omit<DvpRecord, "id" | "createdAt">;
+  outbox: OutboxWrite;
 }
 
 export interface CloseNoteArgs {
@@ -97,6 +112,7 @@ export interface CloseNoteArgs {
   burnTxRef: string;
   closeAnchorRef: string;
   closeReason: string; // maturity | clean_up_call | call | amortised | manual
+  outbox: OutboxWrite;
 }
 
 /**
@@ -127,19 +143,22 @@ export abstract class MintRepository {
   abstract listBreakGlass(noteId: string): Promise<BreakGlassRecord[]>;
 
   // ── atomic value-path operations (single DB transaction on the persistent store) ──
-  /** Note + MintLog + issuer's opening holding commit together, or not at all. */
-  abstract commitMint(args: CommitMintArgs): Promise<NoteRecord>;
+  // Each also writes its outbox (EventLog + optional BillingEvent) IN THE SAME TX and returns the
+  // EventLog id, so the sink can relay webhooks without being the first/only writer of those rows.
+  /** Note + MintLog + issuer's opening holding + outbox commit together, or not at all. */
+  abstract commitMint(args: CommitMintArgs): Promise<{ note: NoteRecord; eventLogId: string }>;
   /**
    * Atomic DvP asset leg: guarded seller-debit (throws InsufficientUnitsError if short — no negative,
-   * no oversell), buyer-credit, and the Dvp record, all in one transaction. Settlement + HCS anchor are
-   * external and sequenced by the caller BEFORE this call.
+   * no oversell), buyer-credit, the Dvp record, and the outbox, all in one transaction. Settlement +
+   * HCS anchor are external and sequenced by the caller BEFORE this call.
    */
-  abstract settleDvp(args: SettleDvpArgs): Promise<{ dvp: DvpRecord; holdings: HoldingRecord[] }>;
+  abstract settleDvp(args: SettleDvpArgs): Promise<{ dvp: DvpRecord; holdings: HoldingRecord[]; eventLogId: string }>;
   /**
    * Closure / redemption — mint's mirror. Atomically: set the Note REDEEMED (burn + anchor refs + reason
-   * + redeemedAt) and zero every holding (supply retired). Returns the closed Note + total units burned.
+   * + redeemedAt), zero every holding (supply retired), and write the outbox. Returns the closed Note,
+   * total units burned, and the EventLog id.
    */
-  abstract closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string }>;
+  abstract closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string; eventLogId: string }>;
 }
 
 // In-memory fallback for running the DEMO with no database (DATABASE_URL unset). Data is lost on
@@ -228,14 +247,16 @@ export class InMemoryMintRepository extends MintRepository {
   }
 
   // In-memory ops are already atomic (single-threaded, no await between reads and writes on our arrays).
-  async commitMint(args: CommitMintArgs): Promise<NoteRecord> {
+  // DEMO does not persist the outbox (no EventLog/BillingEvent store here, nothing queries them); we
+  // still mint an eventLogId so the return shape matches the persistent store.
+  async commitMint(args: CommitMintArgs): Promise<{ note: NoteRecord; eventLogId: string }> {
     const note = await this.saveNote(args.note);
     await this.saveMintLog(args.mintLog);
     await this.adjustHolding(note.id, args.issuerDid, args.issuerUnits);
-    return note;
+    return { note, eventLogId: `evt_${randomUUID()}` };
   }
 
-  async settleDvp(args: SettleDvpArgs): Promise<{ dvp: DvpRecord; holdings: HoldingRecord[] }> {
+  async settleDvp(args: SettleDvpArgs): Promise<{ dvp: DvpRecord; holdings: HoldingRecord[]; eventLogId: string }> {
     const seller = await this.getHolding(args.noteId, args.sellerDid);
     if (!seller || BigInt(seller.units) < args.units) {
       throw new InsufficientUnitsError(`seller holds ${seller?.units ?? "0"} < requested ${args.units}`);
@@ -243,10 +264,10 @@ export class InMemoryMintRepository extends MintRepository {
     await this.adjustHolding(args.noteId, args.sellerDid, -args.units);
     await this.adjustHolding(args.noteId, args.buyerDid, args.units);
     const dvp = await this.saveDvp(args.dvp);
-    return { dvp, holdings: await this.listHoldings(args.noteId) };
+    return { dvp, holdings: await this.listHoldings(args.noteId), eventLogId: `evt_${randomUUID()}` };
   }
 
-  async closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string }> {
+  async closeNote(args: CloseNoteArgs): Promise<{ note: NoteRecord; burnedUnits: string; eventLogId: string }> {
     const note = this.notes.find((n) => n.id === args.noteId);
     if (!note) throw new Error("note not found");
     const held = this.holdings.filter((h) => h.noteId === args.noteId);
@@ -260,6 +281,6 @@ export class InMemoryMintRepository extends MintRepository {
     note.closeAnchorRef = args.closeAnchorRef;
     note.closeReason = args.closeReason;
     note.redeemedAt = new Date().toISOString();
-    return { note, burnedUnits };
+    return { note, burnedUnits, eventLogId: `evt_${randomUUID()}` };
   }
 }
