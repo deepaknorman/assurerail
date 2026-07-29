@@ -30,8 +30,13 @@ export function buildDemoTape(poolId: string): AssurePoolTape {
   }
   const eligible = loans.filter((l) => l.verdict === "ELIGIBLE").length;
 
+  // H6: the manifest must be a genuine commitment to the published per-loan records so independent
+  // verification (verifyTape recomputes it from tape.loans) PASSES on this self-consistent demo tape.
+  // A hardcoded placeholder would now (correctly) fail the manifest-drift check.
+  const manifestHash = CoLending.computePoolManifest(loans);
+
   return CoLending.buildAssurePoolTape(
-    { poolId, claId: "DEMO-CLA", cutoffDate: "2026-06-30", manifestHash: `sha256:demo-${poolId}`, frozenAt: "2026-07-01T00:00:00Z" },
+    { poolId, claId: "DEMO-CLA", cutoffDate: "2026-06-30", manifestHash, frozenAt: "2026-07-01T00:00:00Z" },
     loans,
     { state: "CONFIRMED", reference: `cbslock_${poolId}`, loanCount: eligible },
   );
