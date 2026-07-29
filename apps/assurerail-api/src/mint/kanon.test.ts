@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildDemoTape } from "../tape/demo-tape";
+import type { TapeLoan } from "../tape/tape.types";
 import { checkKAnon } from "./kanon";
 
 test("demo pool passes k-anon (value, seasoning, concentration)", () => {
@@ -29,7 +30,7 @@ test("a sub-floor pool fails the value check", () => {
   const tape = buildDemoTape("POOL-Z");
   const small = {
     ...tape,
-    loans: tape.loans.map((l) => ({ ...l, disbursedMinor: "1000000" })),
+    loans: tape.loans.map((l: TapeLoan) => ({ ...l, disbursedMinor: "1000000" })),
     aggregates: { ...tape.aggregates, mintableMinor: "3000000" },
   };
   const r = checkKAnon(small);

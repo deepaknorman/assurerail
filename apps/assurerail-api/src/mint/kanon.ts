@@ -2,7 +2,7 @@
 // seasoned enough, and diversified enough. Pure function of the tape's T1 data (already integrity-
 // verified). Honesty carries over: an unknown input (e.g. missing origination date) is NOT treated
 // as satisfied.
-import type { AssurePoolTape } from "../tape/tape.types";
+import type { AssurePoolTape, TapeLoan } from "../tape/tape.types";
 
 export const KANON = {
   // ≈ USD 2M at a reference FX, in INR paise. Override via env for other currencies/FX.
@@ -22,7 +22,7 @@ const daysBetween = (fromIso: string, toIso: string): number =>
 
 export function checkKAnon(tape: AssurePoolTape): KAnonResult {
   const reasons: string[] = [];
-  const mintable = tape.loans.filter((l) => l.mintable);
+  const mintable = tape.loans.filter((l: TapeLoan) => l.mintable);
   const mintableMinor = BigInt(tape.aggregates.mintableMinor);
 
   // 1) value floor

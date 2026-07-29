@@ -58,7 +58,12 @@ fi
 step "Shadow deps (npm install, offline-first)" bash -c "cd '$SHADOW' && npm install --prefer-offline --no-audit --no-fund"
 step "Venue prisma client" bash -c "cd '$SHADOW' && npx prisma generate --schema apps/assurerail-api/prisma/schema.prisma"
 
-# ── 4. NO-EGRESS build ───────────────────────────────────────────────────────
+# ── 4. NO-EGRESS builds ──────────────────────────────────────────────────────
+# @code/shared must be COMPILED first: the venue imports it (tape types) and resolves it via the
+# node_modules workspace symlink → packages/shared/dist. A fresh shadow worktree has no dist (build
+# artifact, git-cleaned), so without this the venue tsc dies with TS2307 "Cannot find module
+# '@code/shared'". Egress-free — deps are already installed in phase 3. Mirrors scripts/daily-shadow-qa.sh.
+step "NO-EGRESS build — @code/shared" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$SHADOW/packages/shared' && npm run build"
 step "NO-EGRESS build — venue api (tsc)" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$SHADOW/apps/assurerail-api' && npx tsc"
 
 # ── 5. venue unit tests (compiled dist) ──────────────────────────────────────
