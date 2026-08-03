@@ -5,12 +5,13 @@ import { Agent } from "undici";
 import { config } from "../config";
 import type { AssurePoolTape } from "./tape.types";
 import { buildDemoTape } from "./demo-tape";
+import { buildReceivablesDemoTape, isReceivablesPool } from "./receivables-demo-tape";
 
 // HTTP/2-capable dispatcher. allowH2 upgrades the connection to h2 when the server negotiates it.
 const h2Dispatcher = new Agent({ allowH2: true });
 
 export async function fetchTape(poolId: string): Promise<AssurePoolTape> {
-  if (config.tapeSource === "demo") return buildDemoTape(poolId);
+  if (config.tapeSource === "demo") return isReceivablesPool(poolId) ? buildReceivablesDemoTape(poolId) : buildDemoTape(poolId);
   const url = `${config.assureLockerApiUrl}/v1/co-lending/pools/${encodeURIComponent(poolId)}/tape.json`;
   const res = await fetch(url, {
     headers: config.assureLockerApiKey ? { Authorization: `Bearer ${config.assureLockerApiKey}` } : {},

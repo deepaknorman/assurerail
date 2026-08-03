@@ -4,12 +4,14 @@ import { SurveillanceModule } from "../surveillance/surveillance.module";
 import { DvpModule } from "../dvp/dvp.module";
 import { CloseModule } from "../closure/close.module";
 import { StoreModule } from "../store/store.module";
+import { TapeModule } from "../tape/tape.module";
+import { TrusteeModule } from "../trustee/trustee.module";
 import { DemoController } from "./demo.controller";
 import { DemoService } from "./demo.service";
 import { SeedService } from "./seed.service";
 
 @Module({
-  imports: [MintModule, SurveillanceModule, DvpModule, CloseModule, StoreModule],
+  imports: [MintModule, SurveillanceModule, DvpModule, CloseModule, StoreModule, TapeModule, TrusteeModule],
   controllers: [DemoController],
   providers: [DemoService, SeedService],
 })

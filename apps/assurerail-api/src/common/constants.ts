@@ -11,3 +11,10 @@ export const DEMO_BUYER_DIDS = [
   "did:web:IND:institution:27AAACA5309Q1ZS-axis-bank",
 ];
 export const DEMO_REGULATOR_DID = "did:web:ind.id.assurelocker.com:regulator:sebi-001";
+
+// The demo trustee. In production a SEBI-registered debenture trustee stands here (e.g. IDBI
+// Trusteeship — Receivables_Pool_Tokenisation_Path.md §5.3). Until one is engaged, a placeholder
+// "Demo Trustee SPE" whose SIGNED authorisation gates each receivables-pool mint — so the demo shows
+// the mint as the TRUSTEE's issuance act, not AssureRail's (§7.4 step 2 / §8.5.3). This is the one
+// element the loan-pool demo has no equivalent for.
+export const DEMO_TRUSTEE_DID = "did:web:ind.id.assurelocker.com:entity:demo-trustee-spe";

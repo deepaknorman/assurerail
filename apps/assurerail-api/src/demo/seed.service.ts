@@ -14,6 +14,10 @@ const SEED_POOLS: { id: string; target: SeedTarget }[] = [
   { id: "IDFC-VEHICLE-2026Q2", target: "traded" },
 ];
 
+// Receivables Model-B pools ({lender}-RECV-{anchor}-{period}) — trustee-authorised primary issuance, so
+// the console shows the receivables path (with the trustee-authorisation event) alongside the loan pools.
+const RECV_SEED_POOLS = ["HDFCBANK-RECV-TATASTEEL-2026Q3", "ICICI-RECV-RELIANCE-2026Q3"];
+
 // Idempotent boot seed: run a couple of pools through the full loop (mint → surveillance → DvP) so the
 // console has data. Gating:
 //   • ephemeral in-memory store  → seed by DEFAULT (harmless; keeps the DEMO console populated)
@@ -52,6 +56,15 @@ export class SeedService implements OnApplicationBootstrap {
         this.log.log(`seeded ${p.id} → ${r.state}`);
       } catch (e) {
         this.log.warn(`seed ${p.id} failed: ${(e as Error).message}`);
+      }
+    }
+
+    for (const id of RECV_SEED_POOLS) {
+      try {
+        const r = await this.demo.runReceivablesModelB(id);
+        this.log.log(`seeded receivables ${id} → trustee-authorised mint (${r.receivablesPool.receivableCount} receivables)`);
+      } catch (e) {
+        this.log.warn(`seed receivables ${id} failed: ${(e as Error).message}`);
       }
     }
   }

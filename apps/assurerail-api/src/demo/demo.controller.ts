@@ -12,4 +12,11 @@ export class DemoController {
   run(@Param("poolId") poolId: string, @Body() body: { buyerDid?: string }) {
     return this.demo.run(poolId, body?.buyerDid);
   }
+
+  /** Model B — trustee-authorised receivables-pool primary issuance, with the full step-by-step trace. */
+  @Roles("ISSUER")
+  @Post("receivables/run/:poolId")
+  runReceivables(@Param("poolId") poolId: string, @Body() body: { buyerDid?: string }) {
+    return this.demo.runReceivablesModelB(poolId, body?.buyerDid);
+  }
 }
