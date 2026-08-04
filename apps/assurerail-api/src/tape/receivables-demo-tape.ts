@@ -56,15 +56,36 @@ function anchorFor(poolId: string, pick: (i: number) => number): { key: string; 
   return { key, name, did: anchorDid(slug) };
 }
 
-/** Deterministic seeded receivables for a pool. */
+/**
+ * Deterministic seeded receivables for a pool.
+ *
+ * MULTI-BUYER by construction. The k-anon concentration cap is measured PER OBLIGOR — for a
+ * receivable that is the BUYER who owes the invoice, not the individual invoice — so a pool whose
+ * receivables all name one anchor is 100% concentrated on that buyer and cannot pass a ≤50% cap. The
+ * pool id still names its LEAD anchor (`{lender}-RECV-{ANCHOR}-{period}`), but the book is spread
+ * across that lead plus two supporting buyers, with the lead held under the cap. Previously every
+ * seeded pool was single-anchor and only "passed" because concentration was measured per invoice.
+ */
 export function buildReceivablesRecords(poolId: string): DemoReceivable[] {
   const h = createHash("sha256").update(`recv:${poolId}`).digest();
   const pick = (i: number) => h[i % h.length]!;
-  const anchor = anchorFor(poolId, pick);
+  const lead = anchorFor(poolId, pick);
+  // Two supporting buyers, deterministically chosen and distinct from the lead.
+  const others = Object.keys(ANCHORS).filter((k) => k !== lead.key);
+  const support = [others[pick(7) % others.length]!, others[(pick(11) + 1) % others.length]!]
+    .filter((k, i, a) => a.indexOf(k) === i);
+  const buyerFor = (i: number): { did: string; name: string } => {
+    // ~40% of receivables to the lead (under the 50% cap), the rest split across the supporting buyers.
+    const key = i % 5 < 2 ? lead.key : support[i % Math.max(support.length, 1)] ?? lead.key;
+    const slug = ANCHORS[key]!;
+    const name = slug.split("-").slice(1).map((w) => w[0]!.toUpperCase() + w.slice(1)).join(" ");
+    return { did: anchorDid(slug), name };
+  };
 
-  const n = 6 + (pick(0) % 5); // 6..10 receivables → each well under the 50% concentration cap
+  const n = 8 + (pick(0) % 3); // 8..10 receivables across 3 buyers
   const out: DemoReceivable[] = [];
   for (let i = 0; i < n; i++) {
+    const buyer = buyerFor(i);
     const sizeCr = 3 + (pick(i + 1) % 7); // ₹3–9 Cr each → pool sums well past the ₹16.6 Cr floor
     const invoiceAmountMinor = String(sizeCr * 1_000_000_000); // ₹1 Cr = 1e9 paise
     // Acceptance seasoned ≥ 90d before cutoff: accept in 2025-08 .. 2025-12.
@@ -79,8 +100,8 @@ export function buildReceivablesRecords(poolId: string): DemoReceivable[] {
     out.push({
       receivableRef: `${poolId}-R${i + 1}`,
       sellerName: SELLERS[(pick(i + 3) + i) % SELLERS.length]!,
-      buyerDid: anchor.did,
-      buyerName: anchor.name,
+      buyerDid: buyer.did,
+      buyerName: buyer.name,
       irn,
       acceptanceState,
       acceptedAt,
@@ -106,6 +127,9 @@ export function buildReceivablesDemoTape(poolId: string): AssurePoolTape {
     disbursedMinor: r.invoiceAmountMinor,
     originationDate: r.acceptedAt, // seasoning is measured from acceptance for a receivable
     classificationBucket: "STANDARD",
+    // The obligor is the BUYER who owes the invoice — the party whose default the pool is exposed to.
+    // This is what the k-anon concentration cap must aggregate on.
+    obligorRef: r.buyerDid,
   }));
   const manifestHash = CoLending.computePoolManifest(entries);
   return CoLending.buildAssurePoolTape(

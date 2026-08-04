@@ -43,14 +43,23 @@ export function checkKAnon(tape: AssurePoolTape): KAnonResult {
     reasons.push(`min seasoning ${minSeasoning}d below floor ${KANON.minSeasoningDays}d`);
   }
 
-  // 3) concentration — max single position ≤ maxConcentrationBps.
-  //    NOTE: grouped by loanRef (= borrower only when one loan per borrower). TRUE single-BORROWER
-  //    concentration needs a T1 borrower-concentration aggregate from AssureLocker (borrower grouping
-  //    is T2) — follow-up. Until then this can UNDERSTATE concentration for multi-loan borrowers.
+  // 3) concentration — max single OBLIGOR ≤ maxConcentrationBps.
+  //    Aggregate by `obligorRef` (borrower for a loan pool, BUYER for a receivables pool) before
+  //    comparing, because one obligor routinely spans many entries. Grouping per entry — as this did
+  //    previously — understates concentration exactly when it matters most: a single-anchor
+  //    receivables pool is 100% concentrated on one buyer, yet per-entry grouping reported ~10–17%
+  //    and PASSED the ≤50% cap, i.e. a false PASS on the privacy gate the demo exists to prove.
+  //    Entries with no obligorRef fall back to their own loanRef (one entry = one obligor), which is
+  //    correct for legacy single-loan-per-borrower tapes and no worse than the old behaviour.
   let maxConcBps = 0;
   if (mintableMinor > 0n) {
+    const byObligor = new Map<string, bigint>();
     for (const l of mintable) {
-      const bps = Number((BigInt(l.disbursedMinor ?? "0") * 10_000n) / mintableMinor);
+      const key = l.obligorRef ?? l.loanRef;
+      byObligor.set(key, (byObligor.get(key) ?? 0n) + BigInt(l.disbursedMinor ?? "0"));
+    }
+    for (const total of byObligor.values()) {
+      const bps = Number((total * 10_000n) / mintableMinor);
       maxConcBps = Math.max(maxConcBps, bps);
     }
   }

@@ -52,7 +52,18 @@ export class ReportsService {
 
   /** Flat CSV of a Note's holdings + trades (for download). */
   csv(report: Awaited<ReturnType<ReportsService["noteReport"]>>): string {
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    // Quote-wrapping alone does NOT stop spreadsheet formula injection (CWE-1236): Excel/Sheets still
+    // evaluate a quoted cell that begins with `= + - @` (or a leading tab/CR). The cells below carry
+    // counterparty-controlled strings — holderDid, buyer, token, anchorRef — so neutralise the leading
+    // trigger first, then quote. Mirrors apps/api/src/common/csv.util.ts, including the numeric
+    // exemption so signed amounts stay numeric instead of being coerced to text.
+    const esc = (v: unknown) => {
+      let s = v == null ? "" : String(v);
+      const isPlainNumber =
+        typeof v === "number" ? Number.isFinite(v) : /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(s);
+      if (!isPlainNumber && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+      return `"${s.replace(/"/g, '""')}"`;
+    };
     const lines = ["section,party,units,price,token,anchorRef"];
     for (const h of report.holdings) lines.push([esc("holding"), esc(h.holderDid), esc(h.units), "", "", ""].join(","));
     for (const t of report.trades) lines.push([esc("trade"), esc(t.buyer), esc(t.units), esc(t.price), esc(t.token), esc(t.anchorRef)].join(","));

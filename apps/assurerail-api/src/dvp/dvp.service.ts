@@ -12,6 +12,13 @@ export interface DvpInput {
   buyerDid: string;
   unitsMinor: string; // asset units (by value) the buyer acquires
   priceMinor: string; // settlement amount the buyer pays
+  /**
+   * Selling side. Defaults to the venue's own ISSUER_DID (loan pools, where the venue holds the
+   * opening position). A trustee-authorised receivables issuance (Model B) opens its 100% holding
+   * under the TRUSTEE's DID instead — the trust is the issuer — so that flow must name the trustee
+   * here or the seller would hold nothing.
+   */
+  sellerDid?: string;
 }
 
 @Injectable()
@@ -32,19 +39,20 @@ export class DvpService {
     if (!note) throw new NotFoundException("note not found");
     if (note.state === "REDEEMED") throw new BadRequestException("note is redeemed — not tradeable");
 
+    const sellerDid = input.sellerDid?.trim() || ISSUER_DID;
     const units = BigInt(input.unitsMinor);
     if (units <= 0n) throw new BadRequestException("units must be positive");
-    if (!input.buyerDid || input.buyerDid === ISSUER_DID) throw new BadRequestException("a distinct buyer is required");
-    const available = BigInt((await this.repo.getHolding(noteId, ISSUER_DID))?.units ?? "0");
-    if (units > available) throw new BadRequestException(`issuer holds ${available} < requested ${units}`);
+    if (!input.buyerDid || input.buyerDid === sellerDid) throw new BadRequestException("a distinct buyer is required");
+    const available = BigInt((await this.repo.getHolding(noteId, sellerDid))?.units ?? "0");
+    if (units > available) throw new BadRequestException(`seller ${sellerDid} holds ${available} < requested ${units}`);
 
     // Settlement leg first (buyer → issuer). If it throws, NO asset units move (atomicity preserved).
-    const settlement = await selectSettlementAdapter().settle(input.buyerDid, ISSUER_DID, input.priceMinor, config.settlementToken);
+    const settlement = await selectSettlementAdapter().settle(input.buyerDid, sellerDid, input.priceMinor, config.settlementToken);
 
     const anchor = await selectHcsAdapter().anchor({
       event: "dvp",
       noteId,
-      seller: ISSUER_DID,
+      seller: sellerDid,
       buyer: input.buyerDid,
       units: input.unitsMinor,
       settlementMinor: input.priceMinor,
@@ -59,12 +67,12 @@ export class DvpService {
     try {
       result = await this.repo.settleDvp({
         noteId,
-        sellerDid: ISSUER_DID,
+        sellerDid,
         buyerDid: input.buyerDid,
         units,
         dvp: {
           noteId,
-          sellerDid: ISSUER_DID,
+          sellerDid,
           buyerDid: input.buyerDid,
           units: input.unitsMinor,
           settlementMinor: input.priceMinor,

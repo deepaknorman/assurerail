@@ -92,8 +92,10 @@ export class DemoService {
     const authorisation = await this.trustee.authoriseMint(poolId, tape.tapeHash, faceValueMinor);
     const authVerify = this.trustee.verify(authorisation);
 
-    // 2) mint — executes UNDER the trustee's authorisation
-    const minted = await this.mint.mint(poolId);
+    // 2) mint — executes UNDER the trustee's authorisation. The authorisation is PASSED IN and the
+    //    mint verifies it (signature + pool/tape/amount binding) before issuing; without it the mint
+    //    is refused. The Note's opening 100% holding is issued to the trustee, not to AssureRail.
+    const minted = await this.mint.mint(poolId, authorisation);
     const noteId = minted.note.id;
 
     // 3) surveillance — a buyer payment posted against the pool (receivables-shaped cycle)
@@ -103,7 +105,13 @@ export class DemoService {
     const mintable = BigInt(minted.kanon.mintableMinor);
     const units = (mintable * 30n) / 100n;
     const price = (units * 102n) / 100n;
-    const dvp = await this.dvp.execute(noteId, { buyerDid, unitsMinor: units.toString(), priceMinor: price.toString() });
+    // The trust holds the freshly issued units, so it is the selling side of the primary subscription.
+    const dvp = await this.dvp.execute(noteId, {
+      buyerDid,
+      unitsMinor: units.toString(),
+      priceMinor: price.toString(),
+      sellerDid: minted.issuerDid,
+    });
 
     const acceptanceMix = receivables.reduce<Record<string, number>>((m, r) => {
       m[r.acceptanceState] = (m[r.acceptanceState] ?? 0) + 1;
@@ -133,7 +141,7 @@ export class DemoService {
       steps: [
         { step: 1, event: "pool.assembled", label: "Receivables pool assembled & frozen", detail: { receivableCount: receivables.length, faceValueMinor, tapeHash: tape.tapeHash, verified: verification.ok } },
         { step: 2, event: "trustee.authorised_issuance", label: "Trustee authorises the issuance (BEFORE mint)", detail: { trusteeDid: authorisation.trusteeDid, authorisedAt: authorisation.authorisedAt, scheme: authorisation.scheme, signature: `${authorisation.signature.slice(0, 16)}…`, verified: authVerify.ok }, note: "The mint is the trustee's act — AssureRail is infrastructure executing the trustee's instruction, not the issuer." },
-        { step: 3, event: "note.minted", label: "Mint under trustee authorisation", detail: { noteId, tokenId: minted.note.tokenId, mintableMinor: minted.kanon.mintableMinor, kAnonPassed: true, adapter: minted.adapter } },
+        { step: 3, event: "note.minted", label: "Mint under trustee authorisation", detail: { noteId, tokenId: minted.note.tokenId, mintableMinor: minted.kanon.mintableMinor, kAnonPassed: true, adapter: minted.adapter, issuedTo: minted.issuerDid, trusteeAuthorised: minted.trusteeAuthorised }, note: "The mint is REFUSED without a verified trustee authorisation bound to this exact pool, tape and amount." },
         { step: 4, event: "surveillance.cycle", label: "Surveillance cycle — buyer payment posted", detail: { poolStatus: surveillance.poolStatus, ok: surveillance.ok, cycles: surveillance.mirrored.length } },
         { step: 5, event: "dvp.primary", label: "Primary subscription — atomic DvP", detail: { buyerDid, units: dvp.dvp.units, settlementMinor: dvp.dvp.settlementMinor, token: dvp.dvp.settlementToken, settlementRef: dvp.dvp.settlementRef }, note: "A buyer's subscription triggers settlement against freshly issued units — primary issuance, not a resale." },
       ],

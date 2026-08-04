@@ -2,7 +2,8 @@
 # AssureRail Strix daily — timeboxed, budget-capped autonomous security scan of the venue's source
 # (apps/assurerail-api/src). Threat focus: ledger integrity in the DvP settlement path, the k-anon mint
 # gate, tape-integrity verification, CORS/authz exposure, secrets handling, and SSRF in the outbound
-# AssureLocker tape client. Fail-soft: missing CLI/key/Docker ⇒ explicit SKIP + exit 0. Secrets are read
+# AssureLocker tape client. Fail-soft: missing CLI/key/Docker ⇒ explicit SKIP + exit 3 (a NON-RUN, never
+# a pass — the runner renders it ⚠ SKIP; exit 0 here would hide a scan that never ran). Secrets are read
 # at runtime, never persisted. Mirrors scripts/strix-daily.sh (AssureLocker) but venue-scoped.
 set -u
 TARGET="${1:-/Users/DNorman/Development/Code-shadow-arail}"
@@ -12,14 +13,14 @@ RUNS_DIR="$REPO/docs/qa/daily/arail/strix-runs"
 mkdir -p "$RUNS_DIR"
 
 if [ ! -x "$STRIX_BIN" ]; then
-  echo "SKIP: strix CLI not installed (expected $STRIX_BIN — python3.12 -m venv ~/.venvs/strix && ~/.venvs/strix/bin/pip install strix-agent)"; exit 0
+  echo "SKIP: strix CLI not installed (expected $STRIX_BIN — python3.12 -m venv ~/.venvs/strix && ~/.venvs/strix/bin/pip install strix-agent)"; exit 3
 fi
 if ! docker info >/dev/null 2>&1; then
-  echo "SKIP: Docker not running (strix sandboxes each target in a container)"; exit 0
+  echo "SKIP: Docker not running (strix sandboxes each target in a container)"; exit 3
 fi
 KEY=$(grep -E '^OPENAI_API_KEY=' "$REPO/apps/api/.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
 if [ -z "$KEY" ]; then
-  echo "SKIP: OPENAI_API_KEY not found in apps/api/.env"; exit 0
+  echo "SKIP: OPENAI_API_KEY not found in apps/api/.env"; exit 3
 fi
 
 export LLM_API_KEY="$KEY"
@@ -31,7 +32,7 @@ OUT="$RUNS_DIR/strix-$DATE.log"
 # the whitebox audit surface anyway.
 SCAN_TARGET="$TARGET/apps/assurerail-api/src"
 if [ ! -d "$SCAN_TARGET" ]; then
-  echo "SKIP: scan target not found ($SCAN_TARGET) — the daily QA creates the shadow worktree before scanning (or pass an existing checkout: TARGET=/Users/DNorman/Development/Code)"; exit 0
+  echo "SKIP: scan target not found ($SCAN_TARGET) — the daily QA creates the shadow worktree before scanning (or pass an existing checkout: TARGET=/Users/DNorman/Development/Code)"; exit 3
 fi
 echo "arail strix scan → ${SCAN_TARGET} · mode=${STRIX_SCAN_MODE:-quick} · model=$STRIX_LLM · budget=\$${STRIX_BUDGET_USD:-4}"
 cd "$RUNS_DIR" || exit 0

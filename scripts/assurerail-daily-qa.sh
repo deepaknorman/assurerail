@@ -28,8 +28,15 @@ mkdir -p "$REPORT_DIR"
 PASS=(); FAIL=(); SKIP=()
 hdr() { printf '\n## %s\n\n```\n' "$1" >>"$REPORT"; }
 end() { printf '```\n%s\n' "$1" >>"$REPORT"; }
-step() { local name="$1"; shift; hdr "$name"; local out; out=$(mktemp)
-  if "$@" >"$out" 2>&1; then tail -n 25 "$out" >>"$REPORT"; end "**✓ PASS — $name**"; PASS+=("$name")
+step() { # step <name> <cmd...>
+  # Exit convention (mirrors scripts/daily-shadow-qa.sh): 0 = PASS · 3 = SKIP (a missing prereq — a
+  # NON-RUN, never a pass) · other = FAIL. Without the rc=3 branch a scan that never ran (Docker down,
+  # no API key) reported a green ✓ PASS — the 2026-07-27 regression, which was fixed on the main rail
+  # but left open on this venue rail despite the AssureRail security-parity requirement.
+  local name="$1"; shift; hdr "$name"; local out rc; out=$(mktemp)
+  "$@" >"$out" 2>&1; rc=$?
+  if [ "$rc" -eq 0 ]; then tail -n 25 "$out" >>"$REPORT"; end "**✓ PASS — $name**"; PASS+=("$name")
+  elif [ "$rc" -eq 3 ]; then tail -n 25 "$out" >>"$REPORT"; end "**⚠ SKIP — $name**"; SKIP+=("$name")
   else tail -n 60 "$out" >>"$REPORT"; end "**✗ FAIL — $name**"; FAIL+=("$name"); fi
   rm -f "$out"; }
 skip() { hdr "$1"; echo "$2" >>"$REPORT"; end "**⚠ SKIP — $1**"; SKIP+=("$1"); }
@@ -96,4 +103,13 @@ fi
 } >>"$REPORT"
 
 echo "REPORT: $REPORT"
+
+# Failure + SKIP notification, and a machine-readable .status.json beside the report. A FAIL used
+# to be discoverable only by opening the markdown, and a rail that stopped running announced
+# itself purely by silence. Best-effort: never fails the run.
+node "$REPO/scripts/qa/notify-daily-status.mjs" report --rail=AssureRail --report="$REPORT" \
+  --pass=${#PASS[@]} --fail=${#FAIL[@]} --skip=${#SKIP[@]} 2>/dev/null || true
+# Heartbeat: shout if the newest report is stale (i.e. the schedule stopped firing at all).
+node "$REPO/scripts/qa/notify-daily-status.mjs" heartbeat --rail=AssureRail \
+  --dir=docs/qa/daily/arail --prefix=DAILY_ARAIL_ --max-age-days=2 2>/dev/null || true
 [ ${#FAIL[@]} -eq 0 ]
