@@ -635,6 +635,17 @@ Flag: `ARAIL_NEUTRAL_TAXONOMY_V1` read-only.
 Rollback: remove unused serialization path; no data migration.
 No scope: legal route rules and transaction UI.
 
+**PR-01 implementation checkpoint (30 August 2026):** implemented on
+`codex/assurerail-pr01-neutral-taxonomy` as a runtime-inert `src/contracts/v1` package. It includes
+the governed taxonomies, four neutral envelopes, strict canonical/digest and exact-value helpers,
+additive schema registry, an off/read-only-only flag, and lossless comparison mappings for the
+current AssurePool DA tape and AssureTransfer receivables manifest. `DEMO` is deliberately excluded
+from transaction evidence; `OTHER_APPROVED` classifiers require an `extensionProfileRef`; current
+source-specific fields remain isolated below the mapping extension object. There is no endpoint,
+database model/migration, AppModule import, write path or public-copy change. Detailed decisions and
+rejections: `docs/design/AssureRail_Neutral_Contracts_v1.md`. Executed evidence:
+`docs/qa/AssureRail_PR01_Neutral_Contract_Evidence.md`.
+
 ### PR-02 — Rail persistence foundation, inbox/outbox and idempotency
 
 **Dependencies:** PR-01
