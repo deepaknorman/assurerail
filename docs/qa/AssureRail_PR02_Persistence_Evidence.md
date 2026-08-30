@@ -1,9 +1,12 @@
 # AssureRail PR-02 persistence foundation — executed evidence
 
-**Execution date:** 30 August 2026  
-**Branch:** `codex/assurerail-pr01-neutral-taxonomy`  
+**Execution date:** 30 August 2026
+
+**Branch:** `codex/assurerail-pr01-neutral-taxonomy`
+
 **Parent baseline:** `220afb53b01d50a955b77e00b1ac8f4fccd3da78` (`origin/main` when the
-PR-02 work started)  
+PR-02 work started)
+
 **Scope:** local build, test, disposable-database and static-security evidence. This is not a
 deployment record, production approval, live-provider certification, route approval or evidence
 that DA/PTC execution is available.
