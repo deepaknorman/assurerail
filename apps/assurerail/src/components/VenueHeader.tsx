@@ -48,6 +48,7 @@ export function VenueHeader() {
   const nav = [
     { href: "/console", label: "Console" },
     { href: "/institutions", label: "Institutions" },
+    { href: "/cases", label: "Cases" },
     { href: "/activity", label: "Activity" },
     ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
     ...(isAdmin ? [{ href: "/admin/institutions", label: "Approvals" }] : []),

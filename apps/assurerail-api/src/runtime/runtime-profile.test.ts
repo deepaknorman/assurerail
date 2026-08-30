@@ -54,6 +54,8 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     participantAdmission: "off",
     routeEntitlement: "off",
     transactionCase: "off",
+    roomReadSource: "legacy",
+    roomWriteSource: "legacy",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
 });
@@ -155,6 +157,22 @@ test("[CONFIG][PR06] neutral transaction cases cannot be mislabeled demo, live o
     });
     assert.match(inspected.errors.join("\n"), /available only in REPLAY or SHADOW runtime/);
   }
+});
+
+test("[CONFIG][PR07] room reads remain legacy unless compare mode has the complete shadow foundation", () => {
+  const missingCase = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_ROOM_READ_SOURCE: "compare",
+  });
+  assert.match(missingCase.errors.join("\n"), /requires ARAIL_TRANSACTION_CASE_V1=shadow/);
+  const prematureCutover = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_ROOM_READ_SOURCE: "rail",
+  });
+  assert.match(prematureCutover.errors.join("\n"), /unavailable until the PR-08 cohort cutover gate/);
 });
 
 test("[CONFIG][SHADOW] a merely present but malformed Firebase credential is rejected", () => {

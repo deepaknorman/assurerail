@@ -10,6 +10,9 @@ export const INSTITUTION_ACTIONS = [
   "VIEW_CASE",
   "OPERATE_CASE",
   "OPERATE_ROUTE",
+  "VIEW_CASE_ROOM",
+  "OPERATE_CASE_ROOM",
+  "REVIEW_ROOM_MIGRATION",
 ] as const;
 
 export type InstitutionAction = (typeof INSTITUTION_ACTIONS)[number];
@@ -41,6 +44,8 @@ export const STEP_UP_PURPOSES = [
   "CASE_DECISION_PROPOSE",
   "CASE_DECISION_REVIEW",
   "CASE_TRANSITION",
+  "ROOM_LEGACY_IMPORT",
+  "ROOM_PARITY_REVIEW",
 ] as const;
 
 export type StepUpPurpose = (typeof STEP_UP_PURPOSES)[number];

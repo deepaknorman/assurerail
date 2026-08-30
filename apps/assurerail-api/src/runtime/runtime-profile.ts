@@ -4,6 +4,8 @@ import {
   type NeutralIngressMode,
   type ParticipantAdmissionMode,
   type RouteEntitlementMode,
+  type RoomReadSource,
+  type RoomWriteSource,
   type TransactionCaseMode,
 } from "../persistence/feature-flags";
 
@@ -38,6 +40,8 @@ export interface RuntimeEnvironmentProfile {
     participantAdmission: ParticipantAdmissionMode;
     routeEntitlement: RouteEntitlementMode;
     transactionCase: TransactionCaseMode;
+    roomReadSource: RoomReadSource;
+    roomWriteSource: RoomWriteSource;
   };
 }
 
@@ -139,6 +143,12 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   if (persistenceFlags.transactionCase === "shadow"
     && (persistenceFlags.participantAdmission !== "shadow" || persistenceFlags.neutralIngress !== "shadow")) {
     errors.push("ARAIL_TRANSACTION_CASE_V1=shadow requires participant admission and neutral ingress in shadow mode");
+  }
+  if (persistenceFlags.roomReadSource !== "legacy" && persistenceFlags.transactionCase !== "shadow") {
+    errors.push("ARAIL_ROOM_READ_SOURCE=compare|rail requires ARAIL_TRANSACTION_CASE_V1=shadow");
+  }
+  if (persistenceFlags.roomReadSource === "rail") {
+    errors.push("ARAIL_ROOM_READ_SOURCE=rail remains unavailable until the PR-08 cohort cutover gate is installed");
   }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
@@ -260,6 +270,8 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         participantAdmission: persistenceFlags.participantAdmission,
         routeEntitlement: persistenceFlags.routeEntitlement,
         transactionCase: persistenceFlags.transactionCase,
+        roomReadSource: persistenceFlags.roomReadSource,
+        roomWriteSource: persistenceFlags.roomWriteSource,
       },
     },
     errors,

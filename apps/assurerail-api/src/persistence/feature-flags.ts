@@ -18,6 +18,14 @@ export const TRANSACTION_CASE_FLAG = "ARAIL_TRANSACTION_CASE_V1" as const;
 export const TRANSACTION_CASE_VALUES = ["off", "shadow"] as const;
 export type TransactionCaseMode = (typeof TRANSACTION_CASE_VALUES)[number];
 
+export const ROOM_READ_SOURCE_FLAG = "ARAIL_ROOM_READ_SOURCE" as const;
+export const ROOM_READ_SOURCE_VALUES = ["legacy", "compare", "rail"] as const;
+export type RoomReadSource = (typeof ROOM_READ_SOURCE_VALUES)[number];
+
+export const ROOM_WRITE_SOURCE_FLAG = "ARAIL_ROOM_WRITE_SOURCE" as const;
+export const ROOM_WRITE_SOURCE_VALUES = ["legacy"] as const;
+export type RoomWriteSource = (typeof ROOM_WRITE_SOURCE_VALUES)[number];
+
 type Environment = Readonly<Record<string, string | undefined>>;
 
 function readFlag<T extends string>(
@@ -42,6 +50,8 @@ export function inspectPersistenceFlags(env: Environment): {
   participantAdmission: ParticipantAdmissionMode;
   routeEntitlement: RouteEntitlementMode;
   transactionCase: TransactionCaseMode;
+  roomReadSource: RoomReadSource;
+  roomWriteSource: RoomWriteSource;
   errors: readonly string[];
 } {
   const ingress = readFlag(env, NEUTRAL_INGRESS_FLAG, NEUTRAL_INGRESS_VALUES, "off");
@@ -49,13 +59,17 @@ export function inspectPersistenceFlags(env: Environment): {
   const admission = readFlag(env, PARTICIPANT_ADMISSION_FLAG, PARTICIPANT_ADMISSION_VALUES, "off");
   const entitlement = readFlag(env, ROUTE_ENTITLEMENT_FLAG, ROUTE_ENTITLEMENT_VALUES, "off");
   const transactionCase = readFlag(env, TRANSACTION_CASE_FLAG, TRANSACTION_CASE_VALUES, "off");
+  const roomReadSource = readFlag(env, ROOM_READ_SOURCE_FLAG, ROOM_READ_SOURCE_VALUES, "legacy");
+  const roomWriteSource = readFlag(env, ROOM_WRITE_SOURCE_FLAG, ROOM_WRITE_SOURCE_VALUES, "legacy");
   return {
     neutralIngress: ingress.value,
     durableRelay: relay.value,
     participantAdmission: admission.value,
     routeEntitlement: entitlement.value,
     transactionCase: transactionCase.value,
-    errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error]
+    roomReadSource: roomReadSource.value,
+    roomWriteSource: roomWriteSource.value,
+    errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error, roomReadSource.error, roomWriteSource.error]
       .filter((error): error is string => Boolean(error)),
   };
 }
