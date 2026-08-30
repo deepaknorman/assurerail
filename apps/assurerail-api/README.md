@@ -52,6 +52,15 @@ insecure provider transport. `DEMO` refuses live adapters; `REPLAY` and `SHADOW`
 HTS/HCS/settlement adapters. `SANDBOX` is the pre-live mode for provider test-environment mutations.
 See `src/runtime/runtime-profile.ts` and its executable tests.
 
+### Neutral contract package (PR-01)
+
+`src/contracts/v1` defines the provider-neutral DA/PTC transaction taxonomy, provenance envelopes,
+strict canonical serialization, exact money/unit values, additive schema compatibility and
+read-only AssurePool/AssureTransfer mappings. It is not imported by `AppModule`, creates no endpoint
+or database write, and defaults to `ARAIL_NEUTRAL_TAXONOMY_V1=off`; the only other accepted flag
+value is `read_only`. `DEMO` remains a runtime/test label and is intentionally invalid as canonical
+transaction evidence. See `docs/design/AssureRail_Neutral_Contracts_v1.md`.
+
 ### Endpoints
 ```
 GET  /health

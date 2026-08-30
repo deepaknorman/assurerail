@@ -77,7 +77,26 @@ else bad(`reviewed endpoint inventory must contain exactly 56 routes (found ${en
 if (has(endpointContract, "GLOBAL_VENUE") && has(endpointContract, "RESOURCE_ID_ONLY") && has(endpointContract, "AR-C01")) pass("current tenant/resource scoping gaps remain explicit in the inventory");
 else bad("endpoint inventory must retain explicit GLOBAL_VENUE/RESOURCE_ID_ONLY scope and AR-C01 linkage");
 
-// ── 4. Ledger value-path is transactional (P3 hardening must not regress) ─────
+// ── 4. PR-01 neutral contracts stay complete, provider-neutral and runtime-inert ─
+console.log("── neutral contracts v1 ──");
+const neutralTaxonomy = rd("apps/assurerail-api/src/contracts/v1/taxonomy.ts");
+const neutralSchemas = rd("apps/assurerail-api/src/contracts/v1/schema-registry.ts");
+const neutralFlag = rd("apps/assurerail-api/src/contracts/v1/feature-flag.ts");
+const neutralMappings = rd("apps/assurerail-api/src/contracts/v1/mappings.ts");
+const neutralModes = ["REPLAY", "SHADOW", "SANDBOX", "CONTROLLED_LIVE", "PRODUCTION"];
+if (neutralModes.every((mode) => has(neutralTaxonomy, `"${mode}"`)) && has(neutralTaxonomy, "runtime-only and cannot be serialized")) {
+  pass("transaction operating modes are explicit and exclude runtime-only DEMO evidence");
+} else bad("neutral operating-mode taxonomy is incomplete or has lost the DEMO evidence boundary");
+const neutralSchemaIds = ["neutral-intake", "neutral-evidence", "neutral-acknowledgement", "neutral-event"];
+if (neutralSchemaIds.every((id) => has(neutralSchemas, `assurerail.${id}`))) pass("all four neutral envelope schemas are registered");
+else bad("neutral intake/evidence/acknowledgement/event schema registry is incomplete");
+if (has(neutralFlag, '"off"') && has(neutralFlag, '"read_only"') && has(neutralFlag, "no write/enforcement mode")) pass("PR-01 flag remains off/read-only only");
+else bad("ARAIL_NEUTRAL_TAXONOMY_V1 must not gain a write/enforcement mode in PR-01");
+if (!has(appModule, "contracts/v1") && has(neutralMappings, "assurepool.frozen-da-tape") && has(neutralMappings, "assuretransfer.receivables-da")) {
+  pass("neutral mappings are source-profile adapters and remain disconnected from runtime modules");
+} else bad("PR-01 neutral contracts must stay runtime-inert with explicit source-profile mappings");
+
+// ── 5. Ledger value-path is transactional (P3 hardening must not regress) ─────
 console.log("── ledger atomicity ──");
 const dvp = rd("apps/assurerail-api/src/dvp/dvp.service.ts");
 const mint = rd("apps/assurerail-api/src/mint/mint.service.ts");
@@ -90,7 +109,7 @@ const txCount = (prismaRepo.match(/\$transaction/g) || []).length;
 if (txCount >= 3 && has(prismaRepo, "InsufficientUnitsError") && has(prismaRepo, "::numeric")) pass(`Prisma store uses $transaction (${txCount}×) + guarded atomic balance moves`);
 else bad("prisma-mint.repository must wrap value-path ops in $transaction with a guarded (::numeric) balance move");
 
-// ── 5. Database segregation (venue never touches AssureLocker's DB/client) ────
+// ── 6. Database segregation (venue never touches AssureLocker's DB/client) ────
 console.log("── database segregation ──");
 const schema = rd("apps/assurerail-api/prisma/schema.prisma");
 if (has(schema, "@prisma/assurerail-client")) pass("venue Prisma client is the isolated @prisma/assurerail-client");
@@ -104,7 +123,7 @@ const alImports = tracked.filter((f) => f.endsWith(".ts")).filter((f) => /from [
 if (alImports.length) bad(`venue imports @code/api internals: ${alImports.join(", ")}`);
 else pass("no @code/api imports in the venue (segregation intact)");
 
-// ── 6. Adapters default to DEMO; the runtime profile blocks them from live modes ─
+// ── 7. Adapters default to DEMO; the runtime profile blocks them from live modes ─
 console.log("── adapters ──");
 const cfg = rd("apps/assurerail-api/src/config.ts");
 const demoDefaults = ["tapeSource", "htsAdapter", "hcsAnchor", "settlementAdapter"].every((k) => new RegExp(`${k}[^\\n]*\\?\\?[^\\n]*"?demo"?`, "i").test(cfg) || new RegExp(`${k}.*"demo"`, "i").test(cfg));
