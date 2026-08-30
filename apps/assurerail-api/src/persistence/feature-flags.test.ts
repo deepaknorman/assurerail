@@ -13,6 +13,8 @@ test("[PR02][FLAGS] persistence paths default to inert/legacy-compatible values"
     roomWriteSource: "legacy",
     completionAcknowledgement: "off",
     legacyRoomProxy: "off",
+    externalActionSaga: "off",
+    daReplay: "off",
     errors: [],
   });
 });
@@ -28,6 +30,8 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_ROOM_WRITE_SOURCE: "RAIL",
     ARAIL_COMPLETION_ACK_V1: "SHADOW",
     ARAIL_LEGACY_ROOM_PROXY_V1: "SHADOW",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "REQUIRED",
+    ARAIL_DA_REPLAY_V1: "ALLOW-LIST",
   }), {
     neutralIngress: "shadow",
     durableRelay: "durable",
@@ -38,6 +42,8 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     roomWriteSource: "rail",
     completionAcknowledgement: "shadow",
     legacyRoomProxy: "shadow",
+    externalActionSaga: "required",
+    daReplay: "allow_list",
     errors: [],
   });
   const rejected = inspectPersistenceFlags({
@@ -50,6 +56,8 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_ROOM_WRITE_SOURCE: "rail",
     ARAIL_COMPLETION_ACK_V1: "enabled",
     ARAIL_LEGACY_ROOM_PROXY_V1: "on",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "enabled",
+    ARAIL_DA_REPLAY_V1: "enabled",
   });
   assert.equal(rejected.neutralIngress, "off");
   assert.equal(rejected.durableRelay, "legacy");
@@ -60,5 +68,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
   assert.equal(rejected.roomWriteSource, "rail");
   assert.equal(rejected.completionAcknowledgement, "off");
   assert.equal(rejected.legacyRoomProxy, "off");
-  assert.equal(rejected.errors.length, 8);
+  assert.equal(rejected.externalActionSaga, "off");
+  assert.equal(rejected.daReplay, "off");
+  assert.equal(rejected.errors.length, 10);
 });

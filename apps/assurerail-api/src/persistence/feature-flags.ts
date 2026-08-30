@@ -34,6 +34,14 @@ export const LEGACY_ROOM_PROXY_FLAG = "ARAIL_LEGACY_ROOM_PROXY_V1" as const;
 export const LEGACY_ROOM_PROXY_VALUES = ["off", "shadow"] as const;
 export type LegacyRoomProxyMode = (typeof LEGACY_ROOM_PROXY_VALUES)[number];
 
+export const EXTERNAL_ACTION_SAGA_FLAG = "ARAIL_EXTERNAL_ACTION_SAGA_V1" as const;
+export const EXTERNAL_ACTION_SAGA_VALUES = ["off", "shadow", "required"] as const;
+export type ExternalActionSagaMode = (typeof EXTERNAL_ACTION_SAGA_VALUES)[number];
+
+export const DA_REPLAY_FLAG = "ARAIL_DA_REPLAY_V1" as const;
+export const DA_REPLAY_VALUES = ["off", "allow_list"] as const;
+export type DaReplayMode = (typeof DA_REPLAY_VALUES)[number];
+
 type Environment = Readonly<Record<string, string | undefined>>;
 
 function readFlag<T extends string>(
@@ -62,6 +70,8 @@ export function inspectPersistenceFlags(env: Environment): {
   roomWriteSource: RoomWriteSource;
   completionAcknowledgement: CompletionAcknowledgementMode;
   legacyRoomProxy: LegacyRoomProxyMode;
+  externalActionSaga: ExternalActionSagaMode;
+  daReplay: DaReplayMode;
   errors: readonly string[];
 } {
   const ingress = readFlag(env, NEUTRAL_INGRESS_FLAG, NEUTRAL_INGRESS_VALUES, "off");
@@ -73,6 +83,8 @@ export function inspectPersistenceFlags(env: Environment): {
   const roomWriteSource = readFlag(env, ROOM_WRITE_SOURCE_FLAG, ROOM_WRITE_SOURCE_VALUES, "legacy");
   const completionAcknowledgement = readFlag(env, COMPLETION_ACK_FLAG, COMPLETION_ACK_VALUES, "off");
   const legacyRoomProxy = readFlag(env, LEGACY_ROOM_PROXY_FLAG, LEGACY_ROOM_PROXY_VALUES, "off");
+  const externalActionSaga = readFlag(env, EXTERNAL_ACTION_SAGA_FLAG, EXTERNAL_ACTION_SAGA_VALUES, "off");
+  const daReplay = readFlag(env, DA_REPLAY_FLAG, DA_REPLAY_VALUES, "off");
   return {
     neutralIngress: ingress.value,
     durableRelay: relay.value,
@@ -83,8 +95,11 @@ export function inspectPersistenceFlags(env: Environment): {
     roomWriteSource: roomWriteSource.value,
     completionAcknowledgement: completionAcknowledgement.value,
     legacyRoomProxy: legacyRoomProxy.value,
+    externalActionSaga: externalActionSaga.value,
+    daReplay: daReplay.value,
     errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error,
-      roomReadSource.error, roomWriteSource.error, completionAcknowledgement.error, legacyRoomProxy.error]
+      roomReadSource.error, roomWriteSource.error, completionAcknowledgement.error, legacyRoomProxy.error,
+      externalActionSaga.error, daReplay.error]
       .filter((error): error is string => Boolean(error)),
   };
 }

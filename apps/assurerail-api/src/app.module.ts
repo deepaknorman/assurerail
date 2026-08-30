@@ -54,6 +54,13 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).completionAcknowledgement !== "off"
     ? [require("./completion/source-completion.module").SourceCompletionModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
+    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+    && inspectPersistenceFlags(process.env).externalActionSaga === "required"
+    && inspectPersistenceFlags(process.env).daReplay === "allow_list"
+    ? [require("./da-replay/da-replay.module").DaReplayModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

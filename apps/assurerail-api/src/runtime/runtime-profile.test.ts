@@ -58,6 +58,8 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     roomWriteSource: "legacy",
     completionAcknowledgement: "off",
     legacyRoomProxy: "off",
+    externalActionSaga: "off",
+    daReplay: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
 });
@@ -200,6 +202,38 @@ test("[CONFIG][PR08] completion egress cannot be disguised as shadow", () => {
     ARAIL_COMPLETION_ACK_V1: "on",
   });
   assert.match(inspected.errors.join("\n"), /forbidden in SHADOW/);
+});
+
+test("[CONFIG][PR09] DA replay requires the durable saga and remains non-live", () => {
+  const missingSaga = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_DA_REPLAY_V1: "allow-list",
+  });
+  assert.match(missingSaga.errors.join("\n"), /ARAIL_EXTERNAL_ACTION_SAGA_V1=required/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "REPLAY",
+    DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required",
+    ARAIL_DA_REPLAY_V1: "allow-list",
+  });
+  assert.equal(accepted.errors.length, 0);
+  const live = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required",
+    ARAIL_DA_REPLAY_V1: "allow-list",
+  });
+  assert.match(live.errors.join("\n"), /observe-only and available only in REPLAY or SHADOW/);
+  assert.match(live.errors.join("\n"), /ARAIL_DA_REPLAY_V1 is available only/);
 });
 
 test("[CONFIG][SHADOW] a merely present but malformed Firebase credential is rejected", () => {

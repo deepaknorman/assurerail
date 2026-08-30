@@ -103,6 +103,8 @@ model Institution {
   caseFunctionAssignments CaseFunctionAssignment[]      @relation("FunctionPerformerInstitution")
   caseRoomGrants          RoomGrant[]                   @relation("RoomGrantInstitution")
   connectorSubjectMaps    ConnectorSubjectMapping[]     @relation("ConnectorSubjectInstitution")
+  authoritativeRecords    AuthoritativeRecordDeclaration[] @relation("AuthoritativeRecordkeeperInstitution")
+  reconciliationBreaks    ReconciliationBreak[]         @relation("ReconciliationBreakOwnerInstitution")
 
   @@index([status])
   @@index([applicantUserId])
@@ -642,6 +644,7 @@ model SourceReference {
   intakeSubmissions   IntakeSubmission[]
   caseRooms           CaseRoom[]
   sourceCompletions   SourceCompletion[]
+  authoritativeRecords AuthoritativeRecordDeclaration[]
 
   @@unique([providerReferenceId, sourceSystem, sourceObjectType, sourceObjectId, sourceVersion], map: "SourceReference_source_identity_key")
   @@index([payloadDigest])
@@ -791,6 +794,12 @@ model EvidenceObject {
   grants            EvidenceAccessGrant[]
   accessReceipts    EvidenceAccessReceipt[]
   retentionEvents   EvidenceRetentionEvent[]
+  sagaObservations  SagaLegObservation[]
+  recordSnapshots   AuthoritativeRecordSnapshot[]
+  daHistoricOutcomeSagas SettlementSaga[] @relation("DaHistoricOutcomeEvidence")
+  daCreditDecisionSagas  SettlementSaga[] @relation("DaCreditDecisionEvidence")
+  daExecutedDocumentSagas SettlementSaga[] @relation("DaExecutedDocumentEvidence")
+  authoritativeRecordDeclarations AuthoritativeRecordDeclaration[] @relation("DaRecordDeclarationEvidence")
 
   @@index([institutionId, transactionCaseId])
   @@index([institutionId, status])
@@ -980,6 +989,10 @@ model TransactionCase {
   roomAuthority          RoomAuthorityAssignment?
   roomAuthorityChanges   RoomAuthorityChange[]
   sourceCompletions      SourceCompletion[]
+  daReplayAuthorisation  DaReplayAuthorisation?
+  settlementSagas        SettlementSaga[]
+  authoritativeRecords   AuthoritativeRecordDeclaration[]
+  reconciliationBreaks   ReconciliationBreak[]
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
@@ -1582,6 +1595,254 @@ model SourceCompletion {
   @@unique([providerReferenceId, idempotencyKey])
   @@index([state, createdAt])
   @@index([reconciliationState, updatedAt])
+}
+
+// ───────────────── conventional DA replay and durable external-action saga (PR-09) ───────────────
+// PR-09 is intentionally OBSERVE_ONLY. These records preserve the order, expected facts, historic
+// observations, reconciliation and repair evidence without dispatching money/title/register actions.
+// Live instructions remain prohibited until a later route-specific controlled-live gate.
+
+model DaReplayAuthorisation {
+  id                    String          @id
+  transactionCaseId     String          @unique
+  transactionCase       TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  idempotencyKey        String
+  requestDigest         String
+  authorityEvidenceRef  String
+  reason                String
+  status                String          @default("PROPOSED") // PROPOSED | APPROVED | REJECTED | REVOKED
+  proposedByUserId      String
+  proposedByMandateId   String
+  proposalStepUpId      String
+  reviewedByUserId      String?
+  reviewedByMandateId   String?
+  reviewStepUpId        String?
+  reviewReason          String?
+  reviewIdempotencyKey  String?
+  reviewRequestDigest   String?
+  effectiveAt           DateTime?
+  revokedAt             DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @default(now()) @updatedAt
+
+  @@unique([transactionCaseId, idempotencyKey])
+  @@index([status, createdAt])
+}
+
+model SettlementSaga {
+  id                       String          @id
+  transactionCaseId        String
+  transactionCase          TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  sagaVersion              Int             @default(1)
+  routePackRef             String
+  routePackVersion         String
+  executionMode            String          @default("OBSERVE_ONLY") // OBSERVE_ONLY in PR-09
+  state                    String          @default("READY") // READY | EXECUTING | OBSERVED | RECONCILED | BREAK_OPEN | PAUSED | FAILED
+  idempotencyKey           String
+  requestDigest            String
+  planDigest               String
+  legalMechanism           String
+  considerationCurrency    String
+  considerationMinorUnits  String
+  considerationScale       Int
+  historicOutcomeRef       String
+  historicOutcomeDigest    String
+  historicOutcomeEvidenceObjectId String
+  historicOutcomeEvidenceObject   EvidenceObject @relation("DaHistoricOutcomeEvidence", fields: [historicOutcomeEvidenceObjectId], references: [id], onDelete: Restrict)
+  transfereeCreditDecisionEvidenceObjectId String
+  transfereeCreditDecisionEvidenceObject   EvidenceObject @relation("DaCreditDecisionEvidence", fields: [transfereeCreditDecisionEvidenceObjectId], references: [id], onDelete: Restrict)
+  executedTransferDocumentEvidenceObjectId String
+  executedTransferDocumentEvidenceObject   EvidenceObject @relation("DaExecutedDocumentEvidence", fields: [executedTransferDocumentEvidenceObjectId], references: [id], onDelete: Restrict)
+  expectedOutcome          Json
+  expectedOutcomeDigest    String
+  createdByUserId          String
+  createdByMandateId       String
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @default(now()) @updatedAt
+  reconciledAt             DateTime?
+  legs                     SettlementLeg[]
+  recordSnapshots          AuthoritativeRecordSnapshot[]
+  breaks                   ReconciliationBreak[]
+
+  @@unique([transactionCaseId, sagaVersion])
+  @@unique([transactionCaseId, idempotencyKey])
+  @@index([transactionCaseId, state])
+  @@index([state, updatedAt])
+  @@index([historicOutcomeEvidenceObjectId])
+  @@index([transfereeCreditDecisionEvidenceObjectId])
+  @@index([executedTransferDocumentEvidenceObjectId])
+}
+
+model SettlementLeg {
+  id                            String          @id
+  settlementSagaId              String
+  settlementSaga                SettlementSaga @relation(fields: [settlementSagaId], references: [id], onDelete: Restrict)
+  legKey                        String
+  legType                       String
+  sequence                      Int
+  required                      Boolean         @default(true)
+  participantOwnerInstitutionId String
+  performerClass                String
+  expected                      Json
+  expectedDigest                String
+  state                         String          @default("PLANNED") // PLANNED | OBSERVED | RECONCILED | BREAK_OPEN | PAUSED
+  currentObservationVersion     Int             @default(0)
+  reconciledByUserId            String?
+  reconciliationStepUpId        String?
+  reconciliationReason          String?
+  reconciliationIdempotencyKey  String?
+  reconciliationRequestDigest   String?
+  reconciledAt                  DateTime?
+  createdAt                     DateTime        @default(now())
+  updatedAt                     DateTime        @default(now()) @updatedAt
+  observations                  SagaLegObservation[]
+  breaks                        ReconciliationBreak[]
+
+  @@unique([settlementSagaId, legKey])
+  @@unique([settlementSagaId, sequence])
+  @@unique([settlementSagaId, reconciliationIdempotencyKey], map: "SettlementLeg_saga_reconciliation_idempotency_key")
+  @@index([settlementSagaId, state, sequence])
+}
+
+model SagaLegObservation {
+  id                  String          @id
+  settlementLegId     String
+  settlementLeg       SettlementLeg   @relation(fields: [settlementLegId], references: [id], onDelete: Restrict)
+  version             Int
+  idempotencyKey      String
+  requestDigest       String
+  observation         Json
+  observationDigest   String
+  externalReference   String
+  finalityClass       String
+  signatureStatus     String
+  evidenceObjectId    String
+  evidenceObject      EvidenceObject  @relation(fields: [evidenceObjectId], references: [id], onDelete: Restrict)
+  observedAt          DateTime
+  recordedByUserId    String
+  recordedByMandateId String
+  comparisonResult    String // MATCHED | BREAK_OPEN
+  comparison          Json
+  createdAt           DateTime        @default(now())
+  appliedRepairs      SagaRepairAction[] @relation("AppliedRepairObservation")
+
+  @@unique([settlementLegId, version])
+  @@unique([settlementLegId, idempotencyKey])
+  @@index([settlementLegId, createdAt])
+  @@index([evidenceObjectId])
+}
+
+model AuthoritativeRecordDeclaration {
+  id                        String           @id
+  transactionCaseId         String           @unique
+  transactionCase           TransactionCase  @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  recordType                String
+  authorityClass            String
+  recordkeeperInstitutionId String?
+  recordkeeperInstitution   Institution?     @relation("AuthoritativeRecordkeeperInstitution", fields: [recordkeeperInstitutionId], references: [id], onDelete: Restrict)
+  sourceReferenceId         String?
+  sourceReference           SourceReference? @relation(fields: [sourceReferenceId], references: [id], onDelete: Restrict)
+  declarationEvidenceRef    String
+  declarationEvidenceDigest String
+  declarationEvidenceObjectId String
+  declarationEvidenceObject   EvidenceObject @relation("DaRecordDeclarationEvidence", fields: [declarationEvidenceObjectId], references: [id], onDelete: Restrict)
+  routePackRef              String
+  routePackVersion          String
+  status                    String           @default("ACTIVE") // ACTIVE | SUPERSEDED | REVOKED
+  createdByUserId           String
+  createdByMandateId        String
+  createdAt                 DateTime         @default(now())
+  updatedAt                 DateTime         @default(now()) @updatedAt
+  snapshots                 AuthoritativeRecordSnapshot[]
+
+  @@index([recordkeeperInstitutionId, status])
+  @@index([sourceReferenceId])
+  @@index([declarationEvidenceObjectId])
+}
+
+model AuthoritativeRecordSnapshot {
+  id                               String                         @id
+  authoritativeRecordDeclarationId String
+  authoritativeRecordDeclaration   AuthoritativeRecordDeclaration @relation(fields: [authoritativeRecordDeclarationId], references: [id], onDelete: Restrict)
+  settlementSagaId                 String
+  settlementSaga                   SettlementSaga                 @relation(fields: [settlementSagaId], references: [id], onDelete: Restrict)
+  snapshotKind                     String // BEFORE | AFTER
+  recordReference                  String
+  payloadDigest                    String
+  evidenceObjectId                 String
+  evidenceObject                   EvidenceObject                 @relation(fields: [evidenceObjectId], references: [id], onDelete: Restrict)
+  sourceAsOfAt                     DateTime
+  recordedByUserId                 String
+  createdAt                        DateTime                       @default(now())
+
+  @@unique([settlementSagaId, snapshotKind])
+  @@index([authoritativeRecordDeclarationId, sourceAsOfAt])
+  @@index([evidenceObjectId])
+}
+
+model ReconciliationBreak {
+  id                 String          @id
+  transactionCaseId  String
+  transactionCase    TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  settlementSagaId   String
+  settlementSaga     SettlementSaga  @relation(fields: [settlementSagaId], references: [id], onDelete: Restrict)
+  settlementLegId    String?
+  settlementLeg      SettlementLeg?  @relation(fields: [settlementLegId], references: [id], onDelete: Restrict)
+  breakCode          String
+  severity           String
+  expected           Json
+  observed           Json
+  expectedDigest     String
+  observedDigest     String
+  blockedCapabilities Json
+  status             String          @default("OPEN") // OPEN | REPAIR_PROPOSED | REPAIR_IN_PROGRESS | RESOLVED
+  ownerInstitutionId String
+  ownerInstitution   Institution     @relation("ReconciliationBreakOwnerInstitution", fields: [ownerInstitutionId], references: [id], onDelete: Restrict)
+  dueAt              DateTime
+  openedByUserId     String
+  resolutionEvidenceRef    String?
+  resolutionEvidenceDigest String?
+  resolutionReason         String?
+  resolvedByUserId         String?
+  independentlyClosedByUserId String?
+  resolvedAt         DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @default(now()) @updatedAt
+  repairActions      SagaRepairAction[]
+
+  @@index([transactionCaseId, status, severity])
+  @@index([settlementSagaId, status])
+  @@index([ownerInstitutionId, status, dueAt])
+}
+
+model SagaRepairAction {
+  id                     String                 @id
+  reconciliationBreakId  String
+  reconciliationBreak    ReconciliationBreak    @relation(fields: [reconciliationBreakId], references: [id], onDelete: Restrict)
+  idempotencyKey         String
+  requestDigest          String
+  actionType             String // APPEND_CORRECTED_OBSERVATION
+  replacementObservation Json
+  reason                 String
+  authorityEvidenceRef   String
+  status                 String                 @default("PROPOSED") // PROPOSED | APPROVED | REJECTED | APPLIED
+  proposedByUserId       String
+  proposedByMandateId    String
+  proposalStepUpId       String
+  reviewedByUserId       String?
+  reviewedByMandateId    String?
+  reviewStepUpId         String?
+  reviewReason           String?
+  reviewIdempotencyKey   String?
+  reviewRequestDigest    String?
+  appliedObservationId   String?                @unique
+  appliedObservation     SagaLegObservation?    @relation("AppliedRepairObservation", fields: [appliedObservationId], references: [id], onDelete: Restrict)
+  proposedAt             DateTime               @default(now())
+  reviewedAt             DateTime?
+  appliedAt              DateTime?
+
+  @@unique([reconciliationBreakId, idempotencyKey])
+  @@index([reconciliationBreakId, status, proposedAt])
 }
 
 model MigrationReceipt {

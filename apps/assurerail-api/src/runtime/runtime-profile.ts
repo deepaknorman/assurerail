@@ -2,6 +2,8 @@ import {
   inspectPersistenceFlags,
   type CompletionAcknowledgementMode,
   type DurableRelayMode,
+  type DaReplayMode,
+  type ExternalActionSagaMode,
   type LegacyRoomProxyMode,
   type NeutralIngressMode,
   type ParticipantAdmissionMode,
@@ -46,6 +48,8 @@ export interface RuntimeEnvironmentProfile {
     roomWriteSource: RoomWriteSource;
     completionAcknowledgement: CompletionAcknowledgementMode;
     legacyRoomProxy: LegacyRoomProxyMode;
+    externalActionSaga: ExternalActionSagaMode;
+    daReplay: DaReplayMode;
   };
 }
 
@@ -165,6 +169,13 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.neutralIngress !== "shadow")) {
     errors.push("ARAIL_COMPLETION_ACK_V1=shadow|on requires transaction cases and neutral ingress in shadow mode");
   }
+  if (persistenceFlags.externalActionSaga !== "off" && persistenceFlags.transactionCase !== "shadow") {
+    errors.push("ARAIL_EXTERNAL_ACTION_SAGA_V1=shadow|required requires ARAIL_TRANSACTION_CASE_V1=shadow");
+  }
+  if (persistenceFlags.daReplay !== "off"
+    && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
+    errors.push("ARAIL_DA_REPLAY_V1=allow_list requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -173,6 +184,12 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.completionAcknowledgement === "on" && !["CONTROLLED_LIVE", "PRODUCTION"].includes(operatingMode)) {
     errors.push(`ARAIL_COMPLETION_ACK_V1=on is forbidden in ${operatingMode}; use shadow until a controlled-live case foundation is approved`);
+  }
+  if (persistenceFlags.externalActionSaga !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`PR-09 external-action sagas are observe-only and available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.daReplay !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_DA_REPLAY_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -303,6 +320,8 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         roomWriteSource: persistenceFlags.roomWriteSource,
         completionAcknowledgement: persistenceFlags.completionAcknowledgement,
         legacyRoomProxy: persistenceFlags.legacyRoomProxy,
+        externalActionSaga: persistenceFlags.externalActionSaga,
+        daReplay: persistenceFlags.daReplay,
       },
     },
     errors,

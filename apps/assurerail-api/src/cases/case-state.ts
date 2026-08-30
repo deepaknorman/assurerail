@@ -34,6 +34,7 @@ export interface CaseGuardFacts {
   readonly openPrecedentConditionCount: number;
   readonly approvedCaseDecisionCount: number;
   readonly externalSagaReady: boolean;
+  readonly externalSagaObserved: boolean;
   readonly completionReconciled: boolean;
   readonly cancellationApproved: boolean;
   readonly blockReasonPresent: boolean;
@@ -132,7 +133,7 @@ export function evaluateCaseTransition(from: CaseStatus, to: CaseStatus, facts: 
   if (to === "COMPLETION_PENDING") return decision("COMPLETION_OBSERVED_GUARD", [
     ...recoveryChecks,
     ...continuingEvidence(facts),
-    { code: "EXTERNAL_SAGA_READY", passed: facts.externalSagaReady, observed: String(facts.externalSagaReady) },
+    { code: "EXTERNAL_SAGA_OBSERVED", passed: facts.externalSagaObserved, observed: String(facts.externalSagaObserved) },
   ]);
   if (to === "COMPLETED") return decision("COMPLETION_RECONCILIATION_GUARD", [
     ...continuingEvidence(facts),

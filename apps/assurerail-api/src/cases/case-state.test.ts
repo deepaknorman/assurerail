@@ -5,7 +5,7 @@ import { evaluateCaseTransition, replayCaseTransitions, type CaseGuardFacts } fr
 const FACTS: CaseGuardFacts = {
   activePartyCount: 2, functionAssignmentCount: 3, prohibitedFunctionCount: 0,
   evidenceCount: 2, unavailableEvidenceCount: 0, openPrecedentConditionCount: 0,
-  approvedCaseDecisionCount: 1, externalSagaReady: false, completionReconciled: false,
+  approvedCaseDecisionCount: 1, externalSagaReady: false, externalSagaObserved: false, completionReconciled: false,
   cancellationApproved: false, blockReasonPresent: false, recoveryTarget: null,
 };
 
@@ -20,6 +20,8 @@ test("[PR06][STATE] the common spine is fail-closed and evidence labels cannot s
 test("[PR06][STATE] execution and completion remain blocked until later saga/reconciliation facts exist", () => {
   assert.equal(evaluateCaseTransition("APPROVED_FOR_EXECUTION", "EXECUTION_PENDING", FACTS).allowed, false);
   assert.equal(evaluateCaseTransition("APPROVED_FOR_EXECUTION", "EXECUTION_PENDING", { ...FACTS, externalSagaReady: true }).allowed, true);
+  assert.equal(evaluateCaseTransition("EXECUTION_PENDING", "COMPLETION_PENDING", { ...FACTS, externalSagaReady: true }).allowed, false);
+  assert.equal(evaluateCaseTransition("EXECUTION_PENDING", "COMPLETION_PENDING", { ...FACTS, externalSagaObserved: true }).allowed, true);
   assert.equal(evaluateCaseTransition("COMPLETION_PENDING", "COMPLETED", { ...FACTS, completionReconciled: false }).allowed, false);
   assert.equal(evaluateCaseTransition("COMPLETION_PENDING", "COMPLETED", { ...FACTS, completionReconciled: true }).allowed, true);
 });

@@ -588,7 +588,9 @@ export class CasesService {
 
   private async guardFacts(caseId: string, toStatus: CaseStatus, reason: string) {
     const now = new Date();
-    const [parties, assignments, evidence, openConditions, approvedDecisions] = await Promise.all([
+    const flags = inspectPersistenceFlags(process.env);
+    const pr09Enabled = flags.externalActionSaga === "required" && flags.daReplay === "allow_list";
+    const [parties, assignments, evidence, openConditions, approvedDecisions, saga, openSagaBreaks, incompleteSourceCompletions] = await Promise.all([
       this.db.caseParty.count({ where: { transactionCaseId: caseId, status: "ACTIVE" } }),
       this.db.caseFunctionAssignment.findMany({ where: {
         transactionCaseId: caseId,
@@ -601,18 +603,37 @@ export class CasesService {
       this.db.evidenceObject.findMany({ where: { transactionCaseId: caseId }, include: { versions: { orderBy: { version: "desc" }, take: 1 } } }),
       this.db.caseCondition.count({ where: { transactionCaseId: caseId, conditionKind: "PRECEDENT", status: "OPEN" } }),
       this.db.caseDecision.findMany({ where: { transactionCaseId: caseId, status: "APPROVED" } }),
+      pr09Enabled
+        ? this.db.settlementSaga.findFirst({
+          where: { transactionCaseId: caseId }, orderBy: { sagaVersion: "desc" },
+          include: { legs: { where: { required: true }, select: { state: true } } },
+        })
+        : Promise.resolve(null),
+      pr09Enabled
+        ? this.db.reconciliationBreak.count({ where: { transactionCaseId: caseId, status: { not: "RESOLVED" } } })
+        : Promise.resolve(0),
+      pr09Enabled
+        ? this.db.sourceCompletion.count({ where: { transactionCaseId: caseId, reconciliationState: { not: "MATCHED" } } })
+        : Promise.resolve(0),
     ]);
     const unavailable = evidence.filter((item) => {
       const latest = item.versions[0];
       return item.status !== "AVAILABLE" || !latest || latest.validationStatus !== "VALID" || Boolean(latest.expiresAt && latest.expiresAt <= now);
     }).length;
+    const requiredLegs = saga?.legs ?? [];
+    const externalSagaReady = Boolean(pr09Enabled && saga?.executionMode === "OBSERVE_ONLY"
+      && ["READY", "EXECUTING", "OBSERVED", "RECONCILED"].includes(saga.state));
+    const externalSagaObserved = Boolean(externalSagaReady && requiredLegs.length > 0
+      && requiredLegs.every((leg) => ["OBSERVED", "RECONCILED"].includes(leg.state)) && openSagaBreaks === 0);
     return {
       activePartyCount: parties, functionAssignmentCount: assignments.length,
       prohibitedFunctionCount: assignments.filter((item) => item.performer === "PROHIBITED").length,
       evidenceCount: evidence.length, unavailableEvidenceCount: unavailable,
       openPrecedentConditionCount: openConditions,
       approvedCaseDecisionCount: approvedDecisions.filter((item) => item.decisionType === "CASE_APPROVAL").length,
-      externalSagaReady: false, completionReconciled: false,
+      externalSagaReady, externalSagaObserved,
+      completionReconciled: Boolean(externalSagaObserved && saga?.state === "RECONCILED"
+        && openSagaBreaks === 0 && incompleteSourceCompletions === 0),
       cancellationApproved: approvedDecisions.some((item) => item.decisionType === "CASE_CANCELLATION"),
       blockReasonPresent: reason.length > 0,
       recoveryTarget: approvedDecisions.some((item) => item.decisionType === `CASE_RECOVERY:${toStatus}`) ? toStatus : null,
