@@ -839,6 +839,32 @@ Flags: `ARAIL_NEUTRAL_INGRESS_V1=shadow`, `ARAIL_ASSUREPOOL_ADAPTER_V1=shadow`.
 Rollback: stop neutral intake; retained objects/receipts remain exportable; legacy path stays read/write
 until cutover.
 
+**PR-05 implementation checkpoint (30 August 2026):** implemented locally on
+`codex/assurerail-pr01-neutral-taxonomy`, without push or deployment. The replay/shadow-only module
+adds certified connector registrations; provider/source references; immutable evidence and document
+versions; S3-compatible streamed SSE-KMS storage; bounded magic/type checks; ClamAV fail-closed
+quarantine; exact institution/purpose/classification grants; digested access receipts; and
+step-up-bound append-only legal-hold events. Intake can never accept a participant-supplied verified
+result: every received item begins `REVIEW_REQUIRED`, and a merely present signature remains
+`PRESENT_UNVERIFIED`.
+
+The certified profile must match the connector declaration and incoming payload. Initial adapters
+cover the existing AssurePool frozen DA tape, AssureTransfer receivables DA evidence, and a
+provider-neutral common-lender-registry snapshot; none becomes mandatory or a Rail/legal ownership
+authority. The legacy schema receives nullable compatibility links and retains existing inline bytes,
+but new neutral evidence is not published into the globally scoped legacy Note document surface
+before PR-06 case ACL and later caller cutover. `transactionCaseId` is therefore retained as an opaque
+scope reference in this checkpoint rather than falsely validated against a case that does not yet
+exist.
+
+Selected/rejected detail:
+`docs/design/AssureRail_Provider_Neutral_Evidence_And_Intake_v1.md`. Safe operation and stop:
+`docs/runbooks/AssureRail_PR05_Evidence_Intake.md`. Executed evidence:
+`docs/qa/AssureRail_PR05_Evidence_Intake_Evidence.md`. The verified evidence comprises 146 API tests,
+a disposable PostgreSQL fresh/upgrade/constraint/backup/restore rehearsal and a successful web
+production build. No live object store, scanner, provider, customer system, configured database,
+box deployment, route authority or production claim was exercised.
+
 ### PR-06 — Neutral transaction case, decisions, conditions and state engine
 
 **Dependencies:** PR-03 and PR-05
