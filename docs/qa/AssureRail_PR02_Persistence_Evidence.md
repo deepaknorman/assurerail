@@ -4,6 +4,8 @@
 
 **Branch:** `codex/assurerail-pr01-neutral-taxonomy`
 
+**Implementation commit:** `d84e67020` (`feat(assurerail): add durable persistence foundation`)
+
 **Parent baseline:** `220afb53b01d50a955b77e00b1ac8f4fccd3da78` (`origin/main` when the
 PR-02 work started)
 

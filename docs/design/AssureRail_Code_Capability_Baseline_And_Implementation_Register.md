@@ -682,7 +682,7 @@ Flags: `ARAIL_NEUTRAL_INGRESS_V1=off→shadow`;
 Rollback: stop neutral workers/ingress, retain additive rows; legacy relay remains available during
 the observation window.
 
-**PR-02 implementation checkpoint (30 August 2026):** implemented locally on
+**PR-02 implementation checkpoint (30 August 2026):** implemented at `d84e67020` on
 `codex/assurerail-pr01-neutral-taxonomy` as an additive Rail migration and DB-only runtime
 foundation. It adds the ten neutral persistence models above, same-database foreign-key integrity,
 request/inbox/external-effect idempotency, and atomic legacy lifecycle `EventLog` + billing +
