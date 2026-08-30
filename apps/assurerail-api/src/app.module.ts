@@ -37,6 +37,11 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
     ? [require("./evidence/evidence.module").EvidenceModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
+    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+    ? [require("./cases/cases.module").CasesModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

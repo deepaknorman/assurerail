@@ -303,6 +303,7 @@ export class EvidenceIntakeService {
     }
     if (!body.envelope) throw new BadRequestException("envelope is required");
     assertValidNeutralEnvelopeV1(body.envelope);
+    await this.requireCaseParticipant(institutionId, body.envelope.transactionCaseId, true);
     const profileRef = required(body.profileRef, "profileRef", 200);
     assertIntakeProfile(profileRef, body.envelope);
     const connector = await this.certifiedConnector(institutionId, body.connectorRegistrationId, profileRef, body.envelope.schemaId, body.envelope.schemaVersion);
@@ -339,6 +340,8 @@ export class EvidenceIntakeService {
       throw new BadRequestException("intake cannot self-assert an assurance result; REVIEW_REQUIRED is mandatory");
     }
     const profileRef = required(metadata.profileRef, "profileRef", 200);
+    const transactionCaseId = optional(metadata.transactionCaseId, "transactionCaseId", 160);
+    if (transactionCaseId) await this.requireCaseParticipant(institutionId, transactionCaseId, true);
     const connector = await this.certifiedConnector(institutionId, metadata.connectorRegistrationId, profileRef, metadata.schemaId, metadata.schemaVersion);
     const filename = safeFilename(metadata.filename);
     const claimedContentType = required(metadata.contentType, "contentType", 160).toLowerCase();
@@ -399,13 +402,16 @@ export class EvidenceIntakeService {
   async listEvidence(actorUserId: string, actingInstitutionId: string) {
     await this.access.requireHuman({ userId: actorUserId, institutionId: actingInstitutionId, action: "VIEW_EVIDENCE" });
     const now = new Date();
+    const caseScopeEnforced = inspectPersistenceFlags(process.env).transactionCase === "shadow";
+    const allowedCaseIds = caseScopeEnforced ? await this.allowedCaseIds(actingInstitutionId) : [];
+    const ownership: Prisma.EvidenceObjectWhereInput = { OR: [
+      { institutionId: actingInstitutionId },
+      { grants: { some: { granteeInstitutionId: actingInstitutionId, status: "ACTIVE", OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } } },
+    ] };
     return this.db.evidenceObject.findMany({
-      where: {
-        OR: [
-          { institutionId: actingInstitutionId },
-          { grants: { some: { granteeInstitutionId: actingInstitutionId, status: "ACTIVE", OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } } },
-        ],
-      },
+      where: caseScopeEnforced
+        ? { AND: [ownership, { OR: [{ transactionCaseId: null }, { transactionCaseId: { in: allowedCaseIds } }] }] }
+        : ownership,
       orderBy: { createdAt: "desc" },
       include: {
         versions: { orderBy: { version: "desc" }, take: 1, include: { documentVersion: true } },
@@ -450,6 +456,7 @@ export class EvidenceIntakeService {
     if (!grantee || grantee.status !== "ACTIVE" || grantee.admission?.status !== "ADMITTED") {
       throw new BadRequestException("grantee must be an admitted institution");
     }
+    if (evidence.transactionCaseId) await this.requireCaseParticipant(granteeInstitutionId, evidence.transactionCaseId, false);
     const expiresAt = optionalDate(body.expiresAt, "expiresAt");
     if (expiresAt && expiresAt <= new Date()) throw new BadRequestException("expiresAt must be in the future");
     const purpose = required(body.purpose, "purpose", 200);
@@ -572,6 +579,7 @@ export class EvidenceIntakeService {
           retentionUntilAt: input.retentionUntilAt, createdByUserId: input.actorUserId,
         } });
       if (!object || object.institutionId !== input.institutionId) throw new NotFoundException("evidence object not found");
+      if (object.transactionCaseId !== input.transactionCaseId) throw new ConflictException("evidence version cannot change transaction case scope");
       if (object.evidenceType !== input.evidenceType || object.classification !== input.classification || object.purpose !== input.purpose) {
         throw new ConflictException("new evidence version cannot change type, classification or purpose");
       }
@@ -628,6 +636,10 @@ export class EvidenceIntakeService {
         } });
       }
       if (object.institutionId !== input.institutionId || !family) throw new NotFoundException("document evidence object not found");
+      const requestedCaseId = optional(input.metadata.transactionCaseId, "transactionCaseId", 160);
+      if (object.transactionCaseId !== requestedCaseId || family.transactionCaseId !== requestedCaseId) {
+        throw new ConflictException("document version cannot change transaction case scope");
+      }
       if (object.evidenceType !== input.metadata.evidenceType || object.classification !== input.metadata.classification || object.purpose !== input.metadata.purpose) {
         throw new ConflictException("new document version cannot change evidence type, classification or purpose");
       }
@@ -701,7 +713,39 @@ export class EvidenceIntakeService {
         throw new NotFoundException("evidence object not found");
       }
     }
+    if (evidence.transactionCaseId) await this.requireCaseParticipant(actingInstitutionId, evidence.transactionCaseId, false);
     return evidence;
+  }
+
+  private async allowedCaseIds(institutionId: string): Promise<string[]> {
+    if (inspectPersistenceFlags(process.env).transactionCase !== "shadow") return [];
+    const cases = await this.db.transactionCase.findMany({
+      where: { OR: [
+        { ownerInstitutionId: institutionId },
+        { parties: { some: { institutionId, status: "ACTIVE" } } },
+      ] },
+      select: { id: true },
+    });
+    return cases.map((item) => item.id);
+  }
+
+  private async requireCaseParticipant(institutionId: string, transactionCaseId: string, forWrite: boolean): Promise<void> {
+    if (inspectPersistenceFlags(process.env).transactionCase !== "shadow") return;
+    const transactionCase = await this.db.transactionCase.findUnique({
+      where: { id: transactionCaseId },
+      select: {
+        ownerInstitutionId: true,
+        status: true,
+        parties: { where: { institutionId, status: "ACTIVE" }, select: { id: true }, take: 1 },
+      },
+    });
+    if (!transactionCase
+      || (transactionCase.ownerInstitutionId !== institutionId && transactionCase.parties.length === 0)) {
+      throw new NotFoundException("transaction case not found");
+    }
+    if (forWrite && !["DRAFT", "INTAKE_OPEN"].includes(transactionCase.status)) {
+      throw new ConflictException("case evidence is immutable after evidence lock");
+    }
   }
 
   private async recordAccess(evidenceObjectId: string, evidenceVersionId: string | null, actorUserId: string, actingInstitutionId: string, action: string, purpose: string) {

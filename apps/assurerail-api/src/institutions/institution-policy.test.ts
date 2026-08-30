@@ -44,6 +44,21 @@ test("[PR03][AUTHORITY] mandate scope and expiry fail closed", () => {
   assert.equal(evaluateInstitutionAuthority({ ...activeAuthority, mandateExpiresAt: NOW }).code, "MANDATE_OUTSIDE_EFFECTIVE_PERIOD");
 });
 
+test("[PR06][AUTHORITY] institution-wide authority covers proven child cases but case authority stays exact", () => {
+  assert.equal(evaluateInstitutionAuthority({
+    ...activeAuthority,
+    requestedScopeType: "TRANSACTION_CASE",
+    requestedScopeRef: "case-a",
+  }).code, "AUTHORISED");
+  assert.equal(evaluateInstitutionAuthority({
+    ...activeAuthority,
+    mandateScopeType: "TRANSACTION_CASE",
+    mandateScopeRef: "case-a",
+    requestedScopeType: "TRANSACTION_CASE",
+    requestedScopeRef: "case-b",
+  }).code, "SCOPE_REFERENCE_MISMATCH");
+});
+
 test("[PR03][EVIDENCE] provider outage does not erase retained evidence, but expiry still fails", () => {
   const retained = {
     now: NOW,

@@ -7,6 +7,8 @@ export const INSTITUTION_ACTIONS = [
   "OPERATE_CONNECTORS",
   "VIEW_EVIDENCE",
   "MANAGE_EVIDENCE",
+  "VIEW_CASE",
+  "OPERATE_CASE",
   "OPERATE_ROUTE",
 ] as const;
 
@@ -31,6 +33,14 @@ export const STEP_UP_PURPOSES = [
   "CONNECTOR_CERTIFICATION_PROPOSE",
   "CONNECTOR_CERTIFICATION_REVIEW",
   "EVIDENCE_LEGAL_HOLD_CHANGE",
+  "CASE_CREATE",
+  "CASE_VERSION_CREATE",
+  "CASE_PARTY_CHANGE",
+  "CASE_FUNCTION_ASSIGN",
+  "CASE_CONDITION_CHANGE",
+  "CASE_DECISION_PROPOSE",
+  "CASE_DECISION_REVIEW",
+  "CASE_TRANSITION",
 ] as const;
 
 export type StepUpPurpose = (typeof STEP_UP_PURPOSES)[number];
@@ -84,8 +94,12 @@ export function evaluateInstitutionAuthority(input: AuthorityPolicyInput): Polic
     return { allowed: false, code: "MANDATE_OUTSIDE_EFFECTIVE_PERIOD" };
   }
   if (input.mandateAction !== input.requestedAction) return { allowed: false, code: "ACTION_NOT_MANDATED" };
-  if (input.mandateScopeType !== input.requestedScopeType) return { allowed: false, code: "SCOPE_TYPE_MISMATCH" };
-  if (input.mandateScopeRef !== null && input.mandateScopeRef !== (input.requestedScopeRef ?? null)) {
+  // An explicitly institution-wide mandate may govern that institution's already-authorised child
+  // resources. The calling service must first prove the resource belongs to the acting institution
+  // or one of its active case-party relationships. A resource-scoped mandate never broadens this way.
+  const institutionWide = input.mandateScopeType === "INSTITUTION" && input.mandateScopeRef === null;
+  if (!institutionWide && input.mandateScopeType !== input.requestedScopeType) return { allowed: false, code: "SCOPE_TYPE_MISMATCH" };
+  if (!institutionWide && input.mandateScopeRef !== null && input.mandateScopeRef !== (input.requestedScopeRef ?? null)) {
     return { allowed: false, code: "SCOPE_REFERENCE_MISMATCH" };
   }
   return { allowed: true, code: "AUTHORISED" };

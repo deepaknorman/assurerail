@@ -98,6 +98,9 @@ model Institution {
   connectorRegistrations ConnectorRegistration[]
   evidenceObjects        EvidenceObject[]
   documentFamilies       RailDocumentFamily[]
+  ownedTransactionCases  TransactionCase[]     @relation("CaseOwnerInstitution")
+  caseParties            CaseParty[]
+  caseFunctionAssignments CaseFunctionAssignment[] @relation("FunctionPerformerInstitution")
 
   @@index([status])
   @@index([applicantUserId])
@@ -892,6 +895,221 @@ model IntakeReceipt {
   createdAt          DateTime         @default(now())
 
   @@index([institutionId, createdAt])
+  @@index([transactionCaseId, createdAt])
+}
+
+// ───────────────── neutral transaction case and governed state engine (PR-06) ───────────────
+
+model TransactionCase {
+  id                    String      @id
+  caseReference         String      @unique
+  ownerInstitutionId    String
+  ownerInstitution      Institution @relation("CaseOwnerInstitution", fields: [ownerInstitutionId], references: [id], onDelete: Restrict)
+  transactionRoute      String
+  representation        String
+  jurisdiction          String
+  marketContext         String
+  placementOrListing    String
+  lifecycleLeg          String
+  assetClass            String
+  operatingMode         String
+  routePackRef          String
+  routePackVersion      String
+  extensionProfileRef   String?
+  status                String      @default("DRAFT")
+  routeState            String      @default("NOT_STARTED")
+  currentVersion        Int         @default(1)
+  aggregateVersion      Int         @default(1)
+  creationIdempotencyKey String
+  creationRequestDigest String
+  evidenceLockedAt      DateTime?
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+  createdByUserId       String
+  createdByMandateId    String
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @default(now()) @updatedAt
+  versions              CaseVersion[]
+  parties               CaseParty[]
+  functionAssignments   CaseFunctionAssignment[]
+  conditions            CaseCondition[]
+  decisions             CaseDecision[]
+  transitions           CaseTransition[]
+  replayReceipts        CaseReplayReceipt[]
+
+  @@unique([ownerInstitutionId, creationIdempotencyKey])
+  @@index([ownerInstitutionId, status])
+  @@index([transactionRoute, representation, operatingMode, status])
+}
+
+model CaseVersion {
+  id                 String          @id
+  transactionCaseId  String
+  transactionCase    TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  version            Int
+  spec               Json
+  specDigest         String
+  reason             String
+  supersedesVersionId String?
+  createdByUserId    String
+  createdByMandateId String
+  createdAt          DateTime        @default(now())
+
+  @@unique([transactionCaseId, version])
+  @@unique([transactionCaseId, specDigest])
+}
+
+model CaseParty {
+  id                   String          @id
+  transactionCaseId    String
+  transactionCase      TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  institutionId        String
+  institution          Institution     @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  partyRole             String
+  status                String          @default("PROPOSED")
+  authorityMandateId    String?
+  appointmentId         String?
+  authorityEvidenceRef  String
+  acceptedByUserId      String?
+  acceptedAt            DateTime?
+  createdByUserId       String
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @default(now()) @updatedAt
+
+  @@unique([transactionCaseId, institutionId, partyRole])
+  @@index([institutionId, status])
+  @@index([transactionCaseId, status])
+}
+
+model CaseFunctionAssignment {
+  id                     String          @id
+  transactionCaseId      String
+  transactionCase        TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  materialFunction       String
+  performer              String
+  performerInstitutionId String?
+  performerInstitution   Institution?    @relation("FunctionPerformerInstitution", fields: [performerInstitutionId], references: [id], onDelete: Restrict)
+  appointmentId          String?
+  authorityEvidenceRef   String?
+  permissionEvidenceRef  String?
+  status                 String          @default("PROPOSED")
+  effectiveAt            DateTime?
+  expiresAt              DateTime?
+  createdByUserId        String
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @default(now()) @updatedAt
+
+  @@unique([transactionCaseId, materialFunction])
+  @@index([performerInstitutionId, status])
+}
+
+model CaseCondition {
+  id                   String          @id
+  transactionCaseId    String
+  transactionCase      TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  conditionKind        String
+  code                 String
+  description          String
+  ownerInstitutionId   String
+  dueAt                DateTime?
+  status               String          @default("OPEN")
+  evidenceObjectId     String?
+  waiverAuthorityRef   String?
+  resolutionReason     String?
+  resolvedByUserId     String?
+  resolvedAt           DateTime?
+  createdByUserId      String
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @default(now()) @updatedAt
+
+  @@unique([transactionCaseId, code])
+  @@index([transactionCaseId, status, dueAt])
+  @@index([ownerInstitutionId, status])
+}
+
+model CaseDecision {
+  id                   String          @id
+  transactionCaseId    String
+  transactionCase      TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  decisionType         String
+  proposal             Json
+  proposalDigest       String
+  rulePackRef          String
+  rulePackVersion      String
+  evidenceBundleDigest String
+  caseAggregateVersion Int
+  status               String          @default("PROPOSED")
+  reason               String
+  proposedByUserId     String
+  proposedByMandateId  String
+  proposalStepUpId     String
+  reviewedByUserId     String?
+  reviewStepUpId       String?
+  reviewReason         String?
+  effectiveAt          DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @default(now()) @updatedAt
+  approvals            CaseApproval[]
+
+  @@unique([transactionCaseId, decisionType, proposalDigest])
+  @@index([transactionCaseId, status])
+}
+
+model CaseApproval {
+  id               String       @id
+  caseDecisionId   String
+  caseDecision     CaseDecision @relation(fields: [caseDecisionId], references: [id], onDelete: Restrict)
+  outcome          String
+  checkerUserId    String
+  checkerMandateId String
+  stepUpEvidenceId String
+  reason           String
+  approvalDigest   String       @unique
+  createdAt        DateTime     @default(now())
+
+  @@unique([caseDecisionId, checkerUserId])
+}
+
+model CaseTransition {
+  id                    String          @id
+  transactionCaseId     String
+  transactionCase       TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  command               String
+  idempotencyKey        String
+  requestDigest         String
+  fromStatus            String
+  toStatus              String
+  expectedVersion       Int
+  resultingVersion      Int
+  guardResult           Json
+  evidenceBundleDigest  String
+  rulePackRef           String
+  rulePackVersion       String
+  actorUserId           String
+  actingInstitutionId   String
+  authorityMandateId    String
+  stepUpEvidenceId      String
+  transitionDigest      String          @unique
+  occurredAt            DateTime        @default(now())
+
+  @@unique([transactionCaseId, idempotencyKey])
+  @@unique([transactionCaseId, resultingVersion])
+  @@index([transactionCaseId, occurredAt])
+}
+
+model CaseReplayReceipt {
+  id                String          @id
+  transactionCaseId String
+  transactionCase   TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  aggregateVersion  Int
+  exportDigest      String
+  replayDigest      String
+  result            String
+  detail            Json
+  requestedByUserId String
+  createdAt         DateTime        @default(now())
+
+  @@unique([transactionCaseId, aggregateVersion, replayDigest])
   @@index([transactionCaseId, createdAt])
 }
 

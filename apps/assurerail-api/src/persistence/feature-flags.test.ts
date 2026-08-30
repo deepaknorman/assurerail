@@ -8,6 +8,7 @@ test("[PR02][FLAGS] persistence paths default to inert/legacy-compatible values"
     durableRelay: "legacy",
     participantAdmission: "off",
     routeEntitlement: "off",
+    transactionCase: "off",
     errors: [],
   });
 });
@@ -18,11 +19,13 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_DURABLE_RELAY_MODE: "DURABLE",
     ARAIL_PARTICIPANT_ADMISSION_V1: "SHADOW",
     ARAIL_ROUTE_ENTITLEMENT_ENFORCE: "COMPARE",
+    ARAIL_TRANSACTION_CASE_V1: "SHADOW",
   }), {
     neutralIngress: "shadow",
     durableRelay: "durable",
     participantAdmission: "shadow",
     routeEntitlement: "compare",
+    transactionCase: "shadow",
     errors: [],
   });
   const rejected = inspectPersistenceFlags({
@@ -30,10 +33,12 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_DURABLE_RELAY_MODE: "enabled",
     ARAIL_PARTICIPANT_ADMISSION_V1: "enabled",
     ARAIL_ROUTE_ENTITLEMENT_ENFORCE: "on",
+    ARAIL_TRANSACTION_CASE_V1: "enabled",
   });
   assert.equal(rejected.neutralIngress, "off");
   assert.equal(rejected.durableRelay, "legacy");
   assert.equal(rejected.participantAdmission, "off");
   assert.equal(rejected.routeEntitlement, "off");
-  assert.equal(rejected.errors.length, 4);
+  assert.equal(rejected.transactionCase, "off");
+  assert.equal(rejected.errors.length, 5);
 });

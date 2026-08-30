@@ -14,6 +14,10 @@ export const ROUTE_ENTITLEMENT_FLAG = "ARAIL_ROUTE_ENTITLEMENT_ENFORCE" as const
 export const ROUTE_ENTITLEMENT_VALUES = ["off", "compare"] as const;
 export type RouteEntitlementMode = (typeof ROUTE_ENTITLEMENT_VALUES)[number];
 
+export const TRANSACTION_CASE_FLAG = "ARAIL_TRANSACTION_CASE_V1" as const;
+export const TRANSACTION_CASE_VALUES = ["off", "shadow"] as const;
+export type TransactionCaseMode = (typeof TRANSACTION_CASE_VALUES)[number];
+
 type Environment = Readonly<Record<string, string | undefined>>;
 
 function readFlag<T extends string>(
@@ -37,18 +41,21 @@ export function inspectPersistenceFlags(env: Environment): {
   durableRelay: DurableRelayMode;
   participantAdmission: ParticipantAdmissionMode;
   routeEntitlement: RouteEntitlementMode;
+  transactionCase: TransactionCaseMode;
   errors: readonly string[];
 } {
   const ingress = readFlag(env, NEUTRAL_INGRESS_FLAG, NEUTRAL_INGRESS_VALUES, "off");
   const relay = readFlag(env, DURABLE_RELAY_FLAG, DURABLE_RELAY_VALUES, "legacy");
   const admission = readFlag(env, PARTICIPANT_ADMISSION_FLAG, PARTICIPANT_ADMISSION_VALUES, "off");
   const entitlement = readFlag(env, ROUTE_ENTITLEMENT_FLAG, ROUTE_ENTITLEMENT_VALUES, "off");
+  const transactionCase = readFlag(env, TRANSACTION_CASE_FLAG, TRANSACTION_CASE_VALUES, "off");
   return {
     neutralIngress: ingress.value,
     durableRelay: relay.value,
     participantAdmission: admission.value,
     routeEntitlement: entitlement.value,
-    errors: [ingress.error, relay.error, admission.error, entitlement.error]
+    transactionCase: transactionCase.value,
+    errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error]
       .filter((error): error is string => Boolean(error)),
   };
 }

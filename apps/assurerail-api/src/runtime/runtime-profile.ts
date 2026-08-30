@@ -4,6 +4,7 @@ import {
   type NeutralIngressMode,
   type ParticipantAdmissionMode,
   type RouteEntitlementMode,
+  type TransactionCaseMode,
 } from "../persistence/feature-flags";
 
 export const ASSURERAIL_OPERATING_MODES = [
@@ -36,6 +37,7 @@ export interface RuntimeEnvironmentProfile {
     durableRelay: DurableRelayMode;
     participantAdmission: ParticipantAdmissionMode;
     routeEntitlement: RouteEntitlementMode;
+    transactionCase: TransactionCaseMode;
   };
 }
 
@@ -134,9 +136,16 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   if (persistenceFlags.neutralIngress === "shadow" && persistenceFlags.participantAdmission !== "shadow") {
     errors.push("ARAIL_NEUTRAL_INGRESS_V1=shadow requires ARAIL_PARTICIPANT_ADMISSION_V1=shadow");
   }
+  if (persistenceFlags.transactionCase === "shadow"
+    && (persistenceFlags.participantAdmission !== "shadow" || persistenceFlags.neutralIngress !== "shadow")) {
+    errors.push("ARAIL_TRANSACTION_CASE_V1=shadow requires participant admission and neutral ingress in shadow mode");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
+  if (persistenceFlags.transactionCase === "shadow" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_TRANSACTION_CASE_V1=shadow is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
 
   const demoEndpointsEnabled = booleanValue(
     env,
@@ -250,6 +259,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         durableRelay: persistenceFlags.durableRelay,
         participantAdmission: persistenceFlags.participantAdmission,
         routeEntitlement: persistenceFlags.routeEntitlement,
+        transactionCase: persistenceFlags.transactionCase,
       },
     },
     errors,

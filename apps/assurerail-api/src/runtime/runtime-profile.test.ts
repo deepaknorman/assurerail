@@ -53,6 +53,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     durableRelay: "legacy",
     participantAdmission: "off",
     routeEntitlement: "off",
+    transactionCase: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
 });
@@ -141,6 +142,19 @@ test("[CONFIG][SHADOW] every non-demo mode requires persistent authenticated ope
   assert.match(inspected.errors.join("\n"), /FIREBASE_ADMIN_CONFIG is required in SHADOW mode/);
   assert.equal(inspected.profile.liveExternalActionsRequired, false);
   assert.equal(shouldMountDemoEndpoints({ ASSURERAIL_OPERATING_MODE: "SHADOW" }), false);
+});
+
+test("[CONFIG][PR06] neutral transaction cases cannot be mislabeled demo, live or production", () => {
+  for (const operatingMode of ["DEMO", "SANDBOX", "CONTROLLED_LIVE", "PRODUCTION"]) {
+    const inspected = inspectRuntimeEnvironment({
+      ...LIVE_ENV,
+      ASSURERAIL_OPERATING_MODE: operatingMode,
+      ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+      ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+      ARAIL_TRANSACTION_CASE_V1: "shadow",
+    });
+    assert.match(inspected.errors.join("\n"), /available only in REPLAY or SHADOW runtime/);
+  }
 });
 
 test("[CONFIG][SHADOW] a merely present but malformed Firebase credential is rejected", () => {
