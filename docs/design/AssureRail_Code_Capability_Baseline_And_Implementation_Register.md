@@ -931,6 +931,28 @@ Acceptance evidence:
 Flags: `ARAIL_ROOM_READ_SOURCE=legacy→compare`; write remains `legacy`.
 Rollback: read source returns to legacy; imported Rail records remain sealed/dark.
 
+**PR-07 implementation checkpoint (31 August 2026):** implemented locally as a compare-only,
+owner-operated migration surface. Seven additive Rail models retain passive rooms, explicitly mapped
+institution grants, exact legacy access rows, attributable messages, immutable versioned import
+snapshots, parity runs and blocking repair items. `assurecla.transfer-room-export.v1` provides a
+deterministic source builder/parser, rejects invitation tokens, verifies every original legacy hash
+and permits refresh only by exact append-only/forward-state extension. The original committed room
+ID remains explicit even if a Rail ID collision requires a new case-room ID. All three old purpose
+labels map only to `PASSIVE_DILIGENCE`; `PTC_DATA_ROOM` creates no PTC capability and commercial
+negotiation remains prohibited. Every legacy DID requires a one-to-one mapping to the case owner or
+an active case party; imported grants stay `MIGRATED_DARK` and the room stays `DARK_IMPORTED`, so
+migration creates no participant access. Root migration batches can span rooms while each retained
+room/version receives its own collision-free receipt identity.
+The provider-neutral source projection reads PR-05 retained intake evidence; AssurePool is one DA
+adapter and there is no delegated CLA/CoLending runtime call. Parity compares binding, grants,
+declarations, messages, access chain, manifest and authorisation mapping; mismatches block the room,
+and the parity runner cannot close their own break. The new case/room UI exposes import, source view,
+parity and repair only. Runtime accepts `compare` only with the PR-03/05/06 shadow foundation;
+`rail` read and every Rail room write remain unavailable until PR-08. Detailed decisions and
+rejections: `docs/design/AssureRail_Case_Room_And_Legacy_Migration_v1.md`. Operating controls:
+`docs/runbooks/AssureRail_PR07_Case_Room_Migration.md`. Executed evidence:
+`docs/qa/AssureRail_PR07_Case_Room_Evidence.md`.
+
 ### PR-08 — Room/caller cutover and AssurePool completion acknowledgement
 
 **Dependencies:** PR-07
