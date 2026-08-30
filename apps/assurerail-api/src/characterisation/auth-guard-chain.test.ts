@@ -43,7 +43,7 @@ test("[DB_MODE_GUARD_HARNESS][AUTHZ] a verified DB-mode user is attached then ch
   const auth = new AuthGuard(
     reflector({ [IS_PUBLIC_KEY]: false }) as never,
     { verifyIdToken: async () => ({ uid: "uid-test", email: activeIssuer.email, email_verified: true }) } as never,
-    { resolveFromToken: async () => activeIssuer } as never,
+    { resolveFromToken: async () => activeIssuer, resolveSession: async () => null } as never,
   );
   assert.equal(await auth.canActivate(context(req)), true);
   assert.equal(req.firebase?.uid, "uid-test");
@@ -57,7 +57,7 @@ test("[DB_MODE_GUARD_HARNESS][AUTHN] a protected endpoint rejects a missing bear
   const auth = new AuthGuard(
     reflector({ [IS_PUBLIC_KEY]: false }) as never,
     { verifyIdToken: async () => ({ uid: "never" }) } as never,
-    { resolveFromToken: async () => activeIssuer } as never,
+    { resolveFromToken: async () => activeIssuer, resolveSession: async () => null } as never,
   );
   await assert.rejects(() => auth.canActivate(context({ headers: {} })), UnauthorizedException);
 });
@@ -66,7 +66,7 @@ test("[DB_MODE_GUARD_HARNESS][PUBLIC] a public endpoint ignores an invalid optio
   const auth = new AuthGuard(
     reflector({ [IS_PUBLIC_KEY]: true }) as never,
     { verifyIdToken: async () => { throw new UnauthorizedException("fixture invalid token"); } } as never,
-    { resolveFromToken: async () => activeIssuer } as never,
+    { resolveFromToken: async () => activeIssuer, resolveSession: async () => null } as never,
   );
   assert.equal(
     await auth.canActivate(context({ headers: { authorization: "Bearer invalid-fixture-token" } })),
@@ -74,15 +74,44 @@ test("[DB_MODE_GUARD_HARNESS][PUBLIC] a public endpoint ignores an invalid optio
   );
 });
 
-test("[DB_MODE_GUARD_HARNESS][AR-C02] current entity-role gate admits a suspended/non-allowlisted matching role", () => {
+test("[DB_MODE_GUARD_HARNESS][PR03] institution context must be active and bound to the current session", async () => {
+  const req: RequestShape = {
+    headers: {
+      authorization: "Bearer fixture-token",
+      "x-assurerail-institution-id": "inst-1",
+    },
+  };
+  const auth = new AuthGuard(
+    reflector({ [IS_PUBLIC_KEY]: false }) as never,
+    { verifyIdToken: async () => ({ uid: "uid-test", email: activeIssuer.email, email_verified: true }) } as never,
+    {
+      resolveFromToken: async () => activeIssuer,
+      resolveSession: async () => ({ id: "session-1", activeInstitutionId: "inst-1" }),
+      resolveInstitutionContext: async () => ({ institutionId: "inst-1", membershipId: "member-1" }),
+    } as never,
+  );
+  assert.equal(await auth.canActivate(context(req)), true);
+  assert.equal((req.user?.activeInstitution as { institutionId?: string }).institutionId, "inst-1");
+
+  const mismatched = new AuthGuard(
+    reflector({ [IS_PUBLIC_KEY]: false }) as never,
+    { verifyIdToken: async () => ({ uid: "uid-test", email: activeIssuer.email, email_verified: true }) } as never,
+    {
+      resolveFromToken: async () => activeIssuer,
+      resolveSession: async () => ({ id: "session-1", activeInstitutionId: "inst-other" }),
+      resolveInstitutionContext: async () => ({ institutionId: "inst-1", membershipId: "member-1" }),
+    } as never,
+  );
+  await assert.rejects(() => mismatched.canActivate(context({ headers: req.headers })), ForbiddenException);
+});
+
+test("[DB_MODE_GUARD_HARNESS][PR03][AR-C02] entity-role gate rejects a suspended/non-allowlisted matching role", () => {
   const req: RequestShape = {
     user: { ...activeIssuer, status: "SUSPENDED", allowlisted: false, entityRole: "OPERATOR" },
   };
   const roles = new RolesGuard(reflector({ [ENTITY_ROLES_KEY]: ["OPERATOR"] }) as never);
 
-  // Characterises AR-C02. PR-03 must change this expectation to a ForbiddenException when the
-  // participant/mandate model replaces the simplified entity-role path.
-  assert.equal(roles.canActivate(context(req)), true);
+  assert.throws(() => roles.canActivate(context(req)), ForbiddenException);
 });
 
 test("[DB_MODE_GUARD_HARNESS][CURRENT] the function-role gate rejects the same suspended user", () => {

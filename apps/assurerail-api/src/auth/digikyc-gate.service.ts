@@ -8,9 +8,9 @@ export interface DigiKycResult {
 }
 
 /**
- * Gates venue onboarding on an EXISTING AssureLocker DigiKYC identity — the tight-coupling requirement:
- * a person must already be DigiKYC-ed (hold an ACTIVE DID) in AssureLocker before they can operate in
- * the venue. We reference the DID; we never copy PII across the boundary.
+ * First identity-provider adapter: verifies an existing AssureLocker DigiKYC identity and returns a
+ * subject reference without copying PII. IdentityBindingService owns the neutral boundary, and a
+ * successful result binds identity only; it does not admit a participant or grant a Rail action.
  *   DIGIKYC_GATE=demo  accept any plausible email, synthesise a deterministic pseudo-DID (no lookup)
  *   DIGIKYC_GATE=live  call AssureLocker with the venue's scoped credential; fail-closed on error
  * Defaults to live when ASSURELOCKER_API_KEY is set, else demo.

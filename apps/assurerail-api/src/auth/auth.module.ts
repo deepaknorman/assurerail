@@ -8,6 +8,7 @@ import { VenueUserService } from "./venue-user.service";
 import { AuthGuard } from "./auth.guard";
 import { RolesGuard } from "./roles.guard";
 import { AuthController } from "./auth.controller";
+import { IdentityBindingService } from "./identity-binding.service";
 
 // Registered ONLY in DB mode (see AppModule) — auth requires VenueUser persistence. Wires the global
 // AuthGuard (authenticate) + RolesGuard (authorize) so every route is secure-by-default; @Public() opts
@@ -19,6 +20,7 @@ import { AuthController } from "./auth.controller";
     FirebaseAdminService,
     RecaptchaService,
     DigiKycGateService,
+    IdentityBindingService,
     VenueUserService,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

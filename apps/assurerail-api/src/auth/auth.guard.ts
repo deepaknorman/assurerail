@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { IS_PUBLIC_KEY } from "./public.decorator";
 import { FirebaseAdminService } from "./firebase-admin.service";
@@ -46,7 +46,24 @@ export class AuthGuard implements CanActivate {
     const decoded = await this.firebase.verifyIdToken(token);
     const user = await this.users.resolveFromToken({ uid: decoded.uid, email: decoded.email, name: decoded.name });
     const emailVerified = decoded.email_verified === true;
+    const session = await this.users.resolveSession(user.id, token);
+    const requestedInstitution = ((req.headers as Record<string, string | undefined> | undefined)?.["x-assurerail-institution-id"] ?? "").trim();
+    const activeInstitution = requestedInstitution
+      ? await this.users.resolveInstitutionContext(user.id, requestedInstitution)
+      : null;
+    if (requestedInstitution && !activeInstitution) {
+      throw new ForbiddenException("requested institution context is not active for this user");
+    }
+    if (requestedInstitution && (!session || session.activeInstitutionId !== requestedInstitution)) {
+      throw new ForbiddenException("requested institution context is not bound to the active session");
+    }
     req.firebase = decoded;
-    req.user = { ...user, emailVerified, isAdmin: user.isAdmin || isAdminEmail(decoded.email, emailVerified) };
+    req.user = {
+      ...user,
+      emailVerified,
+      isAdmin: user.isAdmin || isAdminEmail(decoded.email, emailVerified),
+      activeInstitution,
+      session,
+    };
   }
 }

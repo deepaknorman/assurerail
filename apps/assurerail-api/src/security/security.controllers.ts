@@ -10,8 +10,8 @@ function reqUid(req: Request): string {
   if (!uid) throw new UnauthorizedException("authentication required");
   return uid;
 }
-function reqUser(req: Request): { email?: string; displayName?: string } {
-  return (req as { user?: { email?: string; displayName?: string } }).user ?? {};
+function reqUser(req: Request): { email?: string; displayName?: string; session?: { id?: string } | null } {
+  return (req as { user?: { email?: string; displayName?: string; session?: { id?: string } | null } }).user ?? {};
 }
 
 @Controller("venue/auth/mfa")
@@ -29,9 +29,9 @@ export class MfaController {
   }
 
   @Post("verify/totp")
-  verify(@Req() req: Request, @Body() b: { code?: string }) {
+  verify(@Req() req: Request, @Body() b: { code?: string; purpose?: string; institutionId?: string | null }) {
     if (!b?.code) throw new BadRequestException("code is required");
-    return this.mfa.verifyTotp(reqUid(req), b.code);
+    return this.mfa.verifyTotp(reqUid(req), b.code, b.purpose, b.institutionId, reqUser(req).session?.id);
   }
 
   @Delete(":method")

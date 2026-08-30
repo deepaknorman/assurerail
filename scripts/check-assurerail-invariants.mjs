@@ -125,7 +125,39 @@ if (has(runtimeProfile, "requires ARAIL_DURABLE_RELAY_MODE=durable") && has(runt
   pass("controlled-live/production startup requires durable relay and Vault configuration");
 } else bad("live startup must fail closed without the durable relay and Vault configuration");
 
-// ── 6. Ledger value-path is transactional (P3 hardening must not regress) ─────
+// ── 6. PR-03 institutional admission and authority remain scoped/fail-closed ─
+console.log("── institutional authority foundation ──");
+const institutionMigration = rd("apps/assurerail-api/prisma/migrations/20260830210000_assurerail_pr03_institution_authority/migration.sql");
+const institutionAccess = rd("apps/assurerail-api/src/institutions/institution-access.service.ts");
+const institutionPolicy = rd("apps/assurerail-api/src/institutions/institution-policy.ts");
+const institutionGovernance = rd("apps/assurerail-api/src/institutions/institution-governance.service.ts");
+const stepUp = rd("apps/assurerail-api/src/institutions/step-up.service.ts");
+const venueUsers = rd("apps/assurerail-api/src/auth/venue-user.service.ts");
+const rolesGuard = rd("apps/assurerail-api/src/auth/roles.guard.ts");
+const pr03Models = [
+  "Institution", "InstitutionEvidenceSnapshot", "ParticipantAdmission", "ParticipantAdmissionDecision",
+  "InstitutionMember", "AuthorityMandate", "Appointment", "RouteEntitlement",
+  "InstitutionServicePrincipal", "StepUpEvidence", "InstitutionChangeProposal",
+];
+if (pr03Models.every((model) => has(persistenceSchema, `model ${model} {`))) pass("all eleven additive PR-03 authority models are declared");
+else bad("PR-03 persistence schema is missing one or more institution/authority models");
+if (has(institutionMigration, "LEGACY_REFERENCE_ONLY") && has(institutionMigration, "NOT_ADMITTED") && !/INSERT INTO "AuthorityMandate"/.test(institutionMigration)) {
+  pass("legacy entity-role projection is reference-only and grants no admission or mandate");
+} else bad("PR-03 migration must keep legacy entity-role projections inert");
+if (has(venueUsers, "allowlisted: false") && has(venueUsers, "identityVerifiedAt: new Date()") && has(rolesGuard, "legacy entity-role access requires an active allow-listed account")) {
+  pass("identity binding is separated from legacy admission and entity-role validity is enforced");
+} else bad("identity binding must not auto-admit, and legacy entity-role access must reject invalid users");
+if (has(institutionPolicy, "EXPECTED_CROSS_CHECK_NOT_ACHIEVED") && has(institutionPolicy, "EVIDENCE_EXPIRED") && has(institutionAccess, "evaluateInstitutionAuthority")) {
+  pass("institution evidence and authority evaluations fail closed on missing achievement and expiry");
+} else bad("PR-03 evidence/authority evaluation has lost a fail-closed gate");
+if (has(stepUp, "consumedAt: null") && has(stepUp, "expiresAt: { gt: now }") && has(institutionGovernance, "maker cannot approve their own mandate proposal")) {
+  pass("governed actions use exact, expiring, single-use step-up evidence and distinct makers/checkers");
+} else bad("PR-03 step-up or maker-checker control is incomplete");
+if (has(appModule, 'participantAdmission === "shadow"') && has(institutionGovernance, "PR-03 may record only REPLAY/SHADOW entitlements")) {
+  pass("institution APIs are shadow-gated and cannot create controlled-live/production route entitlement");
+} else bad("PR-03 runtime/route-entitlement boundary is not safely gated");
+
+// ── 7. Ledger value-path is transactional (P3 hardening must not regress) ─────
 console.log("── ledger atomicity ──");
 const dvp = rd("apps/assurerail-api/src/dvp/dvp.service.ts");
 const mint = rd("apps/assurerail-api/src/mint/mint.service.ts");
@@ -138,7 +170,7 @@ const txCount = (prismaRepo.match(/\$transaction/g) || []).length;
 if (txCount >= 3 && has(prismaRepo, "InsufficientUnitsError") && has(prismaRepo, "::numeric")) pass(`Prisma store uses $transaction (${txCount}×) + guarded atomic balance moves`);
 else bad("prisma-mint.repository must wrap value-path ops in $transaction with a guarded (::numeric) balance move");
 
-// ── 7. Database segregation (venue never touches AssureLocker's DB/client) ────
+// ── 8. Database segregation (venue never touches AssureLocker's DB/client) ────
 console.log("── database segregation ──");
 const schema = rd("apps/assurerail-api/prisma/schema.prisma");
 if (has(schema, "@prisma/assurerail-client")) pass("venue Prisma client is the isolated @prisma/assurerail-client");
@@ -152,7 +184,7 @@ const alImports = tracked.filter((f) => f.endsWith(".ts")).filter((f) => /from [
 if (alImports.length) bad(`venue imports @code/api internals: ${alImports.join(", ")}`);
 else pass("no @code/api imports in the venue (segregation intact)");
 
-// ── 8. Adapters default to DEMO; the runtime profile blocks them from live modes ─
+// ── 9. Adapters default to DEMO; the runtime profile blocks them from live modes ─
 console.log("── adapters ──");
 const cfg = rd("apps/assurerail-api/src/config.ts");
 const demoDefaults = ["tapeSource", "htsAdapter", "hcsAnchor", "settlementAdapter"].every((k) => new RegExp(`${k}[^\\n]*\\?\\?[^\\n]*"?demo"?`, "i").test(cfg) || new RegExp(`${k}.*"demo"`, "i").test(cfg));

@@ -12,6 +12,7 @@ import { ReportsModule } from "./reports/reports.module";
 import { EventsModule } from "./events/venue-events";
 import { MetricsModule } from "./platform/metrics.module";
 import { shouldMountDemoEndpoints } from "./runtime/runtime-profile";
+import { inspectPersistenceFlags } from "./persistence/feature-flags";
 
 // AssureRail venue root module. Tape (2a) → Mint (2b) → Surveillance (2c) → DvP + BreakGlass (T4) →
 // Closure (burn). DemoModule chains the whole loop, but is mounted only when the explicit operating
@@ -29,6 +30,9 @@ const dbModules = process.env.DATABASE_URL ? [
   require("./platform/platform.module").PlatformModule,
   require("./security/security.module").SecurityModule,
   require("./ops/ops.module").OpsModule,
+  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    ? [require("./institutions/institutions.module").InstitutionsModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

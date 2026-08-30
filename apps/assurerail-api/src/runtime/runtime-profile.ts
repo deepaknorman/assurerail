@@ -1,4 +1,10 @@
-import { inspectPersistenceFlags, type DurableRelayMode, type NeutralIngressMode } from "../persistence/feature-flags";
+import {
+  inspectPersistenceFlags,
+  type DurableRelayMode,
+  type NeutralIngressMode,
+  type ParticipantAdmissionMode,
+  type RouteEntitlementMode,
+} from "../persistence/feature-flags";
 
 export const ASSURERAIL_OPERATING_MODES = [
   "DEMO",
@@ -28,6 +34,8 @@ export interface RuntimeEnvironmentProfile {
   features: {
     neutralIngress: NeutralIngressMode;
     durableRelay: DurableRelayMode;
+    participantAdmission: ParticipantAdmissionMode;
+    routeEntitlement: RouteEntitlementMode;
   };
 }
 
@@ -237,6 +245,8 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       features: {
         neutralIngress: persistenceFlags.neutralIngress,
         durableRelay: persistenceFlags.durableRelay,
+        participantAdmission: persistenceFlags.participantAdmission,
+        routeEntitlement: persistenceFlags.routeEntitlement,
       },
     },
     errors,

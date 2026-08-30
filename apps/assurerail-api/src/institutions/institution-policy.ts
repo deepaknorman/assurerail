@@ -1,0 +1,163 @@
+export const INSTITUTION_ACTIONS = [
+  "VIEW_INSTITUTION",
+  "ADMINISTER_MEMBERS",
+  "PROPOSE_AUTHORITY",
+  "APPROVE_AUTHORITY",
+  "MANAGE_APPOINTMENTS",
+  "OPERATE_ROUTE",
+] as const;
+
+export type InstitutionAction = (typeof INSTITUTION_ACTIONS)[number];
+
+export const STEP_UP_PURPOSES = [
+  "PARTICIPANT_ADMISSION_PROPOSE",
+  "PARTICIPANT_ADMISSION_REVIEW",
+  "MEMBER_INVITE",
+  "MEMBERSHIP_ACCEPT",
+  "MEMBERSHIP_STATUS_CHANGE",
+  "MANDATE_PROPOSE",
+  "MANDATE_REVIEW",
+  "MANDATE_STATUS_CHANGE",
+  "APPOINTMENT_PROPOSE",
+  "APPOINTMENT_ACCEPT",
+  "APPOINTMENT_STATUS_CHANGE",
+  "ROUTE_ENTITLEMENT_PROPOSE",
+  "ROUTE_ENTITLEMENT_REVIEW",
+  "ROUTE_ENTITLEMENT_STATUS_CHANGE",
+  "SERVICE_PRINCIPAL_STATUS_CHANGE",
+] as const;
+
+export type StepUpPurpose = (typeof STEP_UP_PURPOSES)[number];
+
+export interface AuthorityPolicyInput {
+  now: Date;
+  institutionStatus: string;
+  admissionStatus: string | null;
+  admissionEffectiveAt: Date | null;
+  admissionExpiresAt: Date | null;
+  memberStatus: string | null;
+  memberEffectiveAt: Date | null;
+  memberExpiresAt: Date | null;
+  mandateStatus: string | null;
+  mandateEffectiveAt: Date | null;
+  mandateExpiresAt: Date | null;
+  mandateAction: string | null;
+  mandateScopeType: string | null;
+  mandateScopeRef: string | null;
+  requestedAction: InstitutionAction;
+  requestedScopeType: string;
+  requestedScopeRef?: string | null;
+}
+
+export interface PolicyDecision {
+  allowed: boolean;
+  code: string;
+}
+
+function activeDuring(now: Date, effectiveAt: Date | null, expiresAt: Date | null): boolean {
+  return (!effectiveAt || effectiveAt.getTime() <= now.getTime())
+    && (!expiresAt || expiresAt.getTime() > now.getTime());
+}
+
+/**
+ * Pure, fail-closed human-authority evaluation. Platform employment or a legacy global role is not
+ * an input and therefore can never become participant authority through this policy.
+ */
+export function evaluateInstitutionAuthority(input: AuthorityPolicyInput): PolicyDecision {
+  if (input.institutionStatus !== "ACTIVE") return { allowed: false, code: "INSTITUTION_NOT_ACTIVE" };
+  if (input.admissionStatus !== "ADMITTED") return { allowed: false, code: "PARTICIPANT_NOT_ADMITTED" };
+  if (!activeDuring(input.now, input.admissionEffectiveAt, input.admissionExpiresAt)) {
+    return { allowed: false, code: "ADMISSION_OUTSIDE_EFFECTIVE_PERIOD" };
+  }
+  if (input.memberStatus !== "ACTIVE") return { allowed: false, code: "MEMBERSHIP_NOT_ACTIVE" };
+  if (!activeDuring(input.now, input.memberEffectiveAt, input.memberExpiresAt)) {
+    return { allowed: false, code: "MEMBERSHIP_OUTSIDE_EFFECTIVE_PERIOD" };
+  }
+  if (input.mandateStatus !== "ACTIVE") return { allowed: false, code: "MANDATE_NOT_ACTIVE" };
+  if (!activeDuring(input.now, input.mandateEffectiveAt, input.mandateExpiresAt)) {
+    return { allowed: false, code: "MANDATE_OUTSIDE_EFFECTIVE_PERIOD" };
+  }
+  if (input.mandateAction !== input.requestedAction) return { allowed: false, code: "ACTION_NOT_MANDATED" };
+  if (input.mandateScopeType !== input.requestedScopeType) return { allowed: false, code: "SCOPE_TYPE_MISMATCH" };
+  if (input.mandateScopeRef !== null && input.mandateScopeRef !== (input.requestedScopeRef ?? null)) {
+    return { allowed: false, code: "SCOPE_REFERENCE_MISMATCH" };
+  }
+  return { allowed: true, code: "AUTHORISED" };
+}
+
+export interface EvidencePolicyInput {
+  now: Date;
+  result: string;
+  signatureStatus: string;
+  expiresAt: Date;
+  crossCheckExpected: unknown;
+  crossCheckAchieved: unknown;
+}
+
+function checkNames(value: unknown, achieved: boolean): Set<string> {
+  if (Array.isArray(value)) {
+    return new Set(value.filter((entry): entry is string => typeof entry === "string" && entry.length > 0));
+  }
+  if (!value || typeof value !== "object") return new Set();
+  return new Set(Object.entries(value as Record<string, unknown>)
+    .filter(([, result]) => !achieved || result === true || result === "VERIFIED" || result === "ACHIEVED"
+      || Boolean(result && typeof result === "object"
+        && ["VERIFIED", "ACHIEVED"].includes(String((result as Record<string, unknown>).result))))
+    .map(([name]) => name));
+}
+
+/** A retained signed snapshot remains usable during provider outage, but never beyond its expiry. */
+export function evaluateInstitutionEvidence(input: EvidencePolicyInput): PolicyDecision {
+  if (input.expiresAt.getTime() <= input.now.getTime()) return { allowed: false, code: "EVIDENCE_EXPIRED" };
+  if (input.signatureStatus !== "VERIFIED") return { allowed: false, code: "SIGNATURE_NOT_VERIFIED" };
+  if (input.result !== "VERIFIED") return { allowed: false, code: "EVIDENCE_NOT_VERIFIED" };
+
+  const expected = checkNames(input.crossCheckExpected, false);
+  const achieved = checkNames(input.crossCheckAchieved, true);
+  if ([...expected].some((name) => !achieved.has(name))) {
+    return { allowed: false, code: "EXPECTED_CROSS_CHECK_NOT_ACHIEVED" };
+  }
+  return { allowed: true, code: "EVIDENCE_ACCEPTABLE" };
+}
+
+export interface RouteEntitlementPolicyInput {
+  now: Date;
+  status: string;
+  effectiveAt: Date | null;
+  expiresAt: Date | null;
+  transactionRoute: string;
+  representation: string;
+  assetClass: string;
+  lifecycleLeg: string;
+  materialFunction: string;
+  functionPerformer: string;
+  operatingModes: unknown;
+  requested: {
+    transactionRoute: string;
+    representation: string;
+    assetClass: string;
+    lifecycleLeg: string;
+    materialFunction: string;
+    operatingMode: string;
+  };
+}
+
+export function evaluateRouteEntitlement(input: RouteEntitlementPolicyInput): PolicyDecision {
+  if (input.status !== "ACTIVE" || !activeDuring(input.now, input.effectiveAt, input.expiresAt)) {
+    return { allowed: false, code: "ROUTE_ENTITLEMENT_NOT_ACTIVE" };
+  }
+  const dimensions = [
+    [input.transactionRoute, input.requested.transactionRoute],
+    [input.representation, input.requested.representation],
+    [input.assetClass, input.requested.assetClass],
+    [input.lifecycleLeg, input.requested.lifecycleLeg],
+    [input.materialFunction, input.requested.materialFunction],
+  ];
+  if (dimensions.some(([held, requested]) => held !== requested)) {
+    return { allowed: false, code: "ROUTE_DIMENSION_MISMATCH" };
+  }
+  if (input.functionPerformer === "PROHIBITED") return { allowed: false, code: "FUNCTION_PROHIBITED" };
+  const modes = Array.isArray(input.operatingModes) ? input.operatingModes : [];
+  if (!modes.includes(input.requested.operatingMode)) return { allowed: false, code: "OPERATING_MODE_NOT_ENTITLED" };
+  return { allowed: true, code: "ROUTE_ENTITLED" };
+}

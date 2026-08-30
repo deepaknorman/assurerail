@@ -1,5 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { randomUUID } from "node:crypto";
+import { ConflictException, ForbiddenException, Injectable } from "@nestjs/common";
+import { createHash, randomUUID } from "node:crypto";
+import { Prisma } from "@prisma/assurerail-client";
+import { toCanonicalValue } from "../contracts/v1";
 import { PrismaService } from "../store/prisma.service";
 
 export interface VenueUserDto {
@@ -15,6 +17,9 @@ export interface VenueUserDto {
   entityRole: string | null; // ORGADMIN | MANAGER | OPERATOR | null
   allowlisted: boolean;
   status: string; // PENDING | ACTIVE | SUSPENDED
+  identityProvider: string | null;
+  identitySubject: string | null;
+  identityVerifiedAt: Date | null;
 }
 
 // VenueUser persistence over the venue's OWN Postgres. Only registered in DB mode (auth requires it).
@@ -22,10 +27,15 @@ export interface VenueUserDto {
 export class VenueUserService {
   constructor(private readonly db: PrismaService) {}
 
+  private sessionId(idToken: string): string {
+    return `vs_${createHash("sha256").update(idToken, "utf8").digest("hex").slice(0, 40)}`;
+  }
+
   private toDto(u: {
     id: string; firebaseUid: string | null; email: string; displayName: string | null;
     did: string | null; role: string; isAdmin: boolean; platformRole: string | null;
     entityDid: string | null; entityRole: string | null; allowlisted: boolean; status: string;
+    identityProvider: string | null; identitySubject: string | null; identityVerifiedAt: Date | null;
   }): VenueUserDto {
     return {
       id: u.id, firebaseUid: u.firebaseUid, email: u.email, displayName: u.displayName,
@@ -34,6 +44,9 @@ export class VenueUserService {
       isAdmin: u.isAdmin || !!u.platformRole,
       platformRole: u.platformRole, entityDid: u.entityDid, entityRole: u.entityRole,
       allowlisted: u.allowlisted, status: u.status,
+      identityProvider: u.identityProvider,
+      identitySubject: u.identitySubject,
+      identityVerifiedAt: u.identityVerifiedAt,
     };
   }
 
@@ -64,13 +77,109 @@ export class VenueUserService {
     return u ? this.toDto(u) : null;
   }
 
-  /** Activate a user after the DigiKYC gate passes — record the AssureLocker DID (reference), allow-list. */
-  async onboard(uid: string, did: string): Promise<VenueUserDto> {
+  /** Bind identity only. Participant admission and legacy venue allow-list are separate decisions. */
+  async bindIdentity(uid: string, provider: string, subject: string): Promise<VenueUserDto> {
+    const current = await this.db.venueUser.findUnique({ where: { firebaseUid: uid } });
+    if (!current || !["PENDING", "ACTIVE"].includes(current.status)) {
+      throw new ForbiddenException("account is not eligible for identity binding");
+    }
+    if ((current.identityProvider && current.identityProvider !== provider)
+      || (current.identitySubject && current.identitySubject !== subject)) {
+      throw new ConflictException("identity is already bound to a different provider subject");
+    }
     const u = await this.db.venueUser.update({
       where: { firebaseUid: uid },
-      data: { did, status: "ACTIVE", allowlisted: true },
+      data: {
+        did: subject,
+        identityProvider: provider,
+        identitySubject: subject,
+        identityVerifiedAt: new Date(),
+        status: current.status === "PENDING" ? "ACTIVE" : current.status,
+        allowlisted: false,
+      },
     });
     return this.toDto(u);
+  }
+
+  async resolveInstitutionContext(userId: string, institutionId: string) {
+    const membership = await this.db.institutionMember.findUnique({
+      where: { institutionId_userId: { institutionId, userId } },
+      include: {
+        institution: { include: { admission: true } },
+        mandates: { where: { status: "ACTIVE" }, select: { action: true, scopeType: true, scopeRef: true, expiresAt: true } },
+      },
+    });
+    const now = new Date();
+    if (!membership || membership.status !== "ACTIVE"
+      || (membership.expiresAt && membership.expiresAt <= now)
+      || membership.institution.status !== "ACTIVE"
+      || membership.institution.admission?.status !== "ADMITTED"
+      || (membership.institution.admission.expiresAt && membership.institution.admission.expiresAt <= now)) {
+      return null;
+    }
+    return {
+      institutionId,
+      legalName: membership.institution.legalName,
+      membershipId: membership.id,
+      membershipRole: membership.membershipRole,
+      mandates: membership.mandates,
+    };
+  }
+
+  async recordSession(input: {
+    userId: string;
+    idToken: string;
+    activeInstitutionId?: string | null;
+    expiresAt?: Date | null;
+    credentialAssurance: string;
+    ip?: string | null;
+    userAgent?: string | null;
+    securityContext?: Record<string, unknown>;
+  }) {
+    const activeInstitutionId = input.activeInstitutionId?.trim() || null;
+    if (activeInstitutionId && !await this.resolveInstitutionContext(input.userId, activeInstitutionId)) {
+      throw new ForbiddenException("requested institution context is not active for this user");
+    }
+    const id = this.sessionId(input.idToken);
+    const existing = await this.db.venueSession.findUnique({ where: { id } });
+    if (existing && (existing.userId !== input.userId || existing.revokedAt)) {
+      throw new ForbiddenException("session is revoked or belongs to a different user");
+    }
+    const data = {
+      activeInstitutionId,
+      credentialAssurance: input.credentialAssurance,
+      expiresAt: input.expiresAt ?? null,
+      ip: input.ip?.slice(0, 200) || null,
+      userAgent: input.userAgent?.slice(0, 1_000) || null,
+      securityContext: toCanonicalValue(input.securityContext ?? {}) as unknown as Prisma.InputJsonValue,
+      lastSeenAt: new Date(),
+    };
+    const session = await this.db.venueSession.upsert({
+      where: { id },
+      create: { id, userId: input.userId, ...data },
+      update: data,
+    });
+    if (session.userId !== input.userId || session.revokedAt) {
+      throw new ForbiddenException("session is revoked or belongs to a different user");
+    }
+    return {
+      id: session.id,
+      activeInstitutionId: session.activeInstitutionId,
+      credentialAssurance: session.credentialAssurance,
+      expiresAt: session.expiresAt,
+    };
+  }
+
+  async resolveSession(userId: string, idToken: string) {
+    const session = await this.db.venueSession.findUnique({ where: { id: this.sessionId(idToken) } });
+    const now = new Date();
+    if (!session || session.userId !== userId || session.revokedAt || (session.expiresAt && session.expiresAt <= now)) return null;
+    return {
+      id: session.id,
+      activeInstitutionId: session.activeInstitutionId,
+      credentialAssurance: session.credentialAssurance,
+      expiresAt: session.expiresAt,
+    };
   }
 
   // ── admin module ──

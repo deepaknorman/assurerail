@@ -33,6 +33,9 @@ export class RolesGuard implements CanActivate {
     const entityRoles = this.reflector.getAllAndOverride<string[]>(ENTITY_ROLES_KEY, [ctx.getHandler(), ctx.getClass()]);
     if (entityRoles && entityRoles.length > 0) {
       if (user?.isAdmin) return true; // platform admin bypasses
+      if (user?.status !== "ACTIVE" || !user.allowlisted) {
+        throw new ForbiddenException("legacy entity-role access requires an active allow-listed account");
+      }
       if (!user?.entityRole || !entityRoles.includes(user.entityRole)) {
         throw new ForbiddenException(`requires one of the entity roles: ${entityRoles.join(", ")}`);
       }

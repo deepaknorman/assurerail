@@ -13,12 +13,12 @@ datasource db {
 }
 
 // ─────────────────────────────── venue identity & access ───────────────────────────────
-// The venue's OWN user records. Identity is GATED on an existing AssureLocker DigiKYC DID
-// (verify-once, reference the DID — never copy PII here). Roles are the venue's own (VENUE_ROLES).
+// The venue's OWN user records. Identity is bound through a provider adapter (AssureLocker DigiKYC
+// is the first adapter) and stores only a provider subject reference. Binding never grants admission.
 model VenueUser {
   id          String   @id
   firebaseUid String?  @unique // set on first Firebase (AssureRail project) login
-  did         String? // AssureLocker DigiKYC DID — the identity gate; a reference, never PII
+  did         String? // legacy provider-subject alias retained for compatibility; a reference, never PII
   email       String   @unique
   displayName String?
   role        String   @default("INVESTOR") // function role: ISSUER | DESK | INVESTOR | TRUSTEE | REGULATOR
@@ -32,10 +32,15 @@ model VenueUser {
 
   allowlisted Boolean  @default(false) // KYC allow-list gate (real onboarding is Trigger-1)
   status      String   @default("PENDING") // PENDING | ACTIVE | SUSPENDED
+  identityProvider   String?
+  identitySubject    String?
+  identityVerifiedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  sessions VenueSession[]
+  sessions               VenueSession[]
+  institutionMemberships InstitutionMember[]
+  stepUpEvidence          StepUpEvidence[]
 
   @@index([did])
   @@index([entityDid])
@@ -43,16 +48,333 @@ model VenueUser {
 
 /// A venue session (passkey / Firebase login), kept for audit + revocation.
 model VenueSession {
-  id         String    @id
-  userId     String
-  user       VenueUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime  @default(now())
-  lastSeenAt DateTime  @default(now())
-  expiresAt  DateTime?
-  userAgent  String?
-  ip         String?
+  id                    String    @id
+  userId                String
+  user                  VenueUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeInstitutionId   String?
+  credentialAssurance   String?
+  revokedAt             DateTime?
+  revocationReason      String?
+  securityContext       Json?
+  createdAt             DateTime  @default(now())
+  lastSeenAt            DateTime  @default(now())
+  expiresAt             DateTime?
+  userAgent             String?
+  ip                    String?
+  stepUpEvidence        StepUpEvidence[]
 
   @@index([userId])
+  @@index([activeInstitutionId])
+  @@index([revokedAt])
+}
+
+// ───────────────────── institution, admission and scoped authority (PR-03) ─────────────────────
+// These are Rail-local relationship/authority records. Provider identity evidence is retained as a
+// signed/digested snapshot; it does not make the provider a runtime authority over Rail membership.
+
+model Institution {
+  id                String   @id
+  legalName         String
+  institutionKind   String
+  jurisdiction      String
+  legalIdentifiers  Json
+  legacyEntityRef   String?  @unique
+  status            String   @default("APPLICANT") // APPLICANT | ACTIVE | SUSPENDED | REVOKED | LEGACY_REFERENCE_ONLY
+  applicantUserId   String
+  suspensionReason  String?
+  suspendedAt       DateTime?
+  revokedAt         DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+
+  admission         ParticipantAdmission?
+  evidenceSnapshots InstitutionEvidenceSnapshot[]
+  members           InstitutionMember[]
+  mandates          AuthorityMandate[]
+  appointments      Appointment[]
+  routeEntitlements RouteEntitlement[]
+  servicePrincipals InstitutionServicePrincipal[]
+  changeProposals   InstitutionChangeProposal[]
+
+  @@index([status])
+  @@index([applicantUserId])
+}
+
+model InstitutionEvidenceSnapshot {
+  id                     String             @id
+  institutionId          String
+  institution            Institution        @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  providerReferenceId    String?
+  providerReference      ProviderReference? @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
+  providerInstitutionRef String
+  evidenceType           String
+  schemaId               String
+  schemaVersion          String
+  payloadDigest          String
+  signatureStatus        String
+  result                 String // VERIFIED | PARTIALLY_VERIFIED | UNVERIFIED | FAILED | EXPIRED | REVIEW_REQUIRED
+  verificationMethod     String
+  independenceClass      String
+  assertions             Json
+  crossCheckExpected     Json
+  crossCheckAchieved     Json
+  qualifications         Json
+  sourceAsOfAt           DateTime
+  expiresAt              DateTime
+  supersedesSnapshotId   String?
+  storageRef             String?
+  createdByUserId        String
+  createdAt              DateTime           @default(now())
+
+  @@unique([institutionId, payloadDigest])
+  @@index([institutionId, evidenceType, sourceAsOfAt])
+  @@index([providerReferenceId])
+  @@index([expiresAt])
+}
+
+model ParticipantAdmission {
+  id                String        @id
+  institutionId     String        @unique
+  institution       Institution   @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  status            String        @default("APPLIED") // APPLIED | UNDER_REVIEW | ADMITTED | SUSPENDED | REVOKED | REJECTED | EXPIRED | NOT_ADMITTED
+  termsVersion      String
+  rulebookVersion   String
+  riskClass         String?
+  applicationDigest String
+  reviewDueAt       DateTime?
+  effectiveAt       DateTime?
+  expiresAt         DateTime?
+  suspendedAt       DateTime?
+  revokedAt         DateTime?
+  decisionReason    String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @default(now()) @updatedAt
+  decisions         ParticipantAdmissionDecision[]
+
+  @@index([status, createdAt])
+  @@index([reviewDueAt])
+}
+
+model ParticipantAdmissionDecision {
+  id                     String               @id
+  participantAdmissionId String
+  participantAdmission   ParticipantAdmission @relation(fields: [participantAdmissionId], references: [id], onDelete: Restrict)
+  decisionType           String // ADMIT | REJECT | SUSPEND | REVOKE | RECERTIFY | REINSTATE
+  fromAdmissionStatus    String
+  status                 String               @default("PENDING") // PENDING | APPROVED | REJECTED | SUPERSEDED
+  reason                 String
+  evidenceSnapshotIds    Json
+  proposedRiskClass      String?
+  proposedExpiresAt      DateTime?
+  proposedReviewDueAt    DateTime?
+  proposalDigest         String
+  proposedByUserId       String
+  proposalStepUpId       String
+  reviewedByUserId       String?
+  reviewStepUpId         String?
+  reviewNote             String?
+  proposedAt             DateTime             @default(now())
+  reviewedAt             DateTime?
+  appliedAt              DateTime?
+
+  @@index([participantAdmissionId, status])
+  @@index([proposedByUserId])
+}
+
+model InstitutionMember {
+  id                   String      @id
+  institutionId        String
+  institution          Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  userId               String
+  user                 VenueUser   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  invitedEmail         String
+  membershipRole       String      @default("MEMBER") // APPLICANT | ADMIN | MEMBER | AUDITOR | INTEGRATION_OPERATOR | LEGACY_PROJECTED
+  status               String      @default("INVITED") // INVITED | PENDING_ADMISSION | ACTIVE | SUSPENDED | REVOKED | EXPIRED | LEGACY_PROJECTED
+  invitedByUserId      String?
+  invitationDigest     String?
+  invitedAt            DateTime    @default(now())
+  acceptedAt           DateTime?
+  effectiveAt          DateTime?
+  expiresAt            DateTime?
+  suspendedAt          DateTime?
+  revokedAt            DateTime?
+  revocationReason     String?
+  legacyEntityRole     String?
+  bootstrapApprovedDecisionId String?
+  recertificationDueAt DateTime?
+  lastUsedAt           DateTime?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @default(now()) @updatedAt
+  mandates             AuthorityMandate[]
+
+  @@unique([institutionId, userId])
+  @@index([institutionId, status])
+  @@index([userId, status])
+  @@index([invitedEmail])
+}
+
+model AuthorityMandate {
+  id                   String            @id
+  institutionId        String
+  institution          Institution       @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  memberId             String
+  member               InstitutionMember @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  action               String
+  scopeType            String
+  scopeRef             String?
+  scopeKey             String
+  limits               Json
+  conditions           Json
+  delegationBasis      String
+  authorityEvidenceRef String
+  makerCheckerRequired Boolean           @default(true)
+  status               String            @default("PROPOSED") // PROPOSED | ACTIVE | REJECTED | SUPERSEDED | SUSPENDED | REVOKED | EXPIRED
+  version              Int               @default(1)
+  supersedesMandateId  String?
+  proposedByUserId     String
+  proposalStepUpId     String
+  approvedByUserId     String?
+  approvalStepUpId     String?
+  approvalReason       String?
+  effectiveAt          DateTime?
+  expiresAt            DateTime?
+  suspendedAt          DateTime?
+  revokedAt            DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @default(now()) @updatedAt
+
+  @@unique([memberId, action, scopeType, scopeKey, version])
+  @@index([institutionId, status])
+  @@index([memberId, action, status])
+  @@index([expiresAt])
+}
+
+model Appointment {
+  id                     String      @id
+  institutionId          String
+  institution            Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  transactionCaseId      String?
+  appointmentRole        String
+  appointeeInstitutionId String?
+  appointeeProviderRef   String?
+  scope                  Json
+  conflictDisclosure     Json
+  status                 String      @default("PROPOSED") // PROPOSED | ACCEPTED | ACTIVE | DECLINED | SUSPENDED | REVOKED | EXPIRED
+  proposedByUserId       String
+  proposalStepUpId       String
+  acceptedByUserId       String?
+  acceptanceStepUpId     String?
+  effectiveAt            DateTime?
+  expiresAt              DateTime?
+  suspendedAt            DateTime?
+  revokedAt              DateTime?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @default(now()) @updatedAt
+
+  @@index([institutionId, status])
+  @@index([appointeeInstitutionId, status])
+  @@index([transactionCaseId])
+}
+
+model RouteEntitlement {
+  id                String      @id
+  institutionId     String
+  institution       Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  transactionRoute  String
+  representation    String
+  assetClass        String
+  lifecycleLeg      String
+  materialFunction  String
+  functionPerformer String
+  routePackRef      String
+  permissionEvidenceRef String
+  operatingModes    Json
+  limits            Json
+  conditions        Json
+  status            String      @default("PROPOSED") // PROPOSED | ACTIVE | REJECTED | SUSPENDED | REVOKED | EXPIRED
+  proposedByUserId  String
+  proposalStepUpId  String
+  approvedByUserId  String?
+  approvalStepUpId  String?
+  approvalReason    String?
+  effectiveAt       DateTime?
+  expiresAt         DateTime?
+  suspendedAt       DateTime?
+  revokedAt         DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @default(now()) @updatedAt
+
+  @@index([institutionId, status])
+  @@index([institutionId, transactionRoute, representation, materialFunction, status], map: "RouteEntitlement_route_function_status_idx")
+  @@index([expiresAt])
+}
+
+model InstitutionServicePrincipal {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  clientId           String      @unique
+  credentialVaultRef String
+  status             String      @default("PENDING") // PENDING | ACTIVE | SUSPENDED | REVOKED | EXPIRED
+  allowedActions     Json
+  lastUsedAt         DateTime?
+  effectiveAt        DateTime?
+  expiresAt          DateTime?
+  suspendedAt        DateTime?
+  revokedAt          DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @default(now()) @updatedAt
+
+  @@index([institutionId, status])
+  @@index([expiresAt])
+}
+
+model InstitutionChangeProposal {
+  id               String      @id
+  institutionId    String
+  institution      Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  targetType       String // MEMBER | MANDATE | APPOINTMENT | ROUTE_ENTITLEMENT | SERVICE_PRINCIPAL
+  targetId         String
+  changeType       String // SUSPEND | REVOKE | REINSTATE
+  fromStatus       String
+  reason           String
+  proposalPayload  Json
+  proposalDigest   String
+  status           String      @default("PENDING") // PENDING | APPROVED | REJECTED | SUPERSEDED
+  proposedByUserId String
+  proposalStepUpId String
+  reviewedByUserId String?
+  reviewStepUpId   String?
+  reviewNote       String?
+  proposedAt       DateTime    @default(now())
+  reviewedAt       DateTime?
+  appliedAt        DateTime?
+
+  @@index([institutionId, status])
+  @@index([targetType, targetId, status])
+}
+
+model StepUpEvidence {
+  id               String    @id
+  userId           String
+  user             VenueUser @relation(fields: [userId], references: [id], onDelete: Restrict)
+  sessionId        String
+  session          VenueSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  firebaseUid      String
+  institutionId    String?
+  method           String
+  purpose          String
+  assuranceContext Json
+  evidenceDigest   String    @unique
+  issuedAt         DateTime  @default(now())
+  expiresAt        DateTime
+  consumedAt       DateTime?
+  revokedAt        DateTime?
+
+  @@index([userId, purpose, expiresAt])
+  @@index([sessionId, expiresAt])
+  @@index([institutionId, expiresAt])
+  @@index([firebaseUid])
 }
 
 // ─────────────────────────────── venue records ───────────────────────────────
@@ -279,6 +601,7 @@ model ProviderReference {
   inboxMessages     InboxMessage[]
   instructions      ExternalInstruction[]
   acknowledgements  ExternalAcknowledgement[]
+  institutionEvidence InstitutionEvidenceSnapshot[]
 
   @@unique([providerType, providerKey])
   @@index([institutionId])

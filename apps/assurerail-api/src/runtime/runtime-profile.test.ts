@@ -48,7 +48,12 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     settlement: "demo",
     digiKyc: "demo",
   });
-  assert.deepEqual(result.features, { neutralIngress: "off", durableRelay: "legacy" });
+  assert.deepEqual(result.features, {
+    neutralIngress: "off",
+    durableRelay: "legacy",
+    participantAdmission: "off",
+    routeEntitlement: "off",
+  });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
 });
 
