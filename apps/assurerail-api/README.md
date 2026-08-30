@@ -61,6 +61,28 @@ or database write, and defaults to `ARAIL_NEUTRAL_TAXONOMY_V1=off`; the only oth
 value is `read_only`. `DEMO` remains a runtime/test label and is intentionally invalid as canonical
 transaction evidence. See `docs/design/AssureRail_Neutral_Contracts_v1.md`.
 
+### Persistence and durable integration foundation (PR-02)
+
+The Rail database now has additive provider/source, immutable intake/receipt, idempotency,
+inbox/outbox, external-instruction/acknowledgement and migration-receipt records. Existing Note
+lifecycle writes commit their legacy `EventLog`, billing event and a digest-bound `OutboxMessage` in
+one Postgres transaction. This does not make the current external mint/settlement sequence safe; the
+external-action saga remains PR-09/PR-11 work.
+
+Webhook egress has three explicit modes: `legacy` (transitional in-process relay), `shadow` (durable
+fanout records with network suppression) and `durable` (claimed jobs, exponential retry,
+dead-letter/replay and stable delivery IDs). New endpoints are HTTPS/public-DNS checked at write and
+connect time, challenge-verified, and use an HMAC secret held in HashiCorp Vault KV-v2; Postgres stores
+only its opaque reference. The PR-02 migration disables every legacy subscription and clears its
+plaintext secret, so it must be re-provisioned and verified. See
+`docs/runbooks/AssureRail_PR02_Persistence_And_Relay.md`.
+
+Run the disposable database evidence rehearsal (never a configured database):
+
+```bash
+npm run db:rehearse:pr02 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health

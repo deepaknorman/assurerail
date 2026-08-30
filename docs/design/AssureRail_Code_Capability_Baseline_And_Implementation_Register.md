@@ -2,7 +2,7 @@
 
 **Status:** internal engineering execution baseline, 30 August 2026
 **Repository baseline:** deep inventory at `ad99675dec6a3c2148de9eca97d9a0891cd02b54`;
-refreshed and verified through `336fa6d62dc02df6a1eca269677a957ed74ea32b` (`origin/main` on
+refreshed and verified through `220afb53b01d50a955b77e00b1ac8f4fccd3da78` (`origin/main` on
 30 August 2026)
 **Controlling product scope:** `docs/design/AssureRail_Generic_Transfer_Infrastructure_Scope.md`
 **Purpose:** convert the agreed AssureRail product boundary into a code-level disposition and a
@@ -194,10 +194,12 @@ baseline. “Current access” describes code, not a judgement that the access i
 | `POST /venue/ingress/pools` | Issuer/desk upserts free-form spec by `poolId` | `BLOCK/COMPAT`; neutral versioned intake envelope, signed receipt and idempotency; no overwrite of evidence history |
 | `GET /venue/billing/statement` | Issuer/desk see global illustrative billing | `ADAPT`; institution/contract scope and finance reconciliation |
 | `GET /venue/billing/events` | Issuer/desk see billing events | `ADAPT`; tenant scope and correction/credit-note trail |
-| `GET /venue/webhooks` | Platform admin lists subscriptions | `ADAPT/BLOCK`; institution-owned subscriptions, secret vaulting, egress allow-list and scoped events |
-| `POST /venue/webhooks` | Platform admin subscribes arbitrary HTTP(S) URL | `BLOCK`; prevent SSRF/private-network targets, verify endpoint ownership, rotate secrets, scope tenant/events |
-| `DELETE /venue/webhooks/:id` | Platform admin removes subscription | `ADAPT`; soft revoke/effective time/audit |
-| `GET /venue/webhooks/deliveries` | Platform admin sees recent delivery attempts | `ADAPT`; tenant/event scope, attempt number and payload hash |
+| `GET /venue/webhooks` | Platform admin lists subscriptions, verification/disabled state and scope without returning secret/Vault path | `ADAPT`; institution ownership is nullable until PR-03 and list access remains platform-wide |
+| `POST /venue/webhooks` | Platform admin creates an inactive HTTPS/public-DNS-checked subscription; HMAC secret goes to Vault and is shown once | `ADAPT`; tenant authority and certified receiver policy follow PR-03/PR-12 |
+| `POST /venue/webhooks/:id/verify` | Platform admin runs a signed five-minute endpoint challenge before activation | `KEEP/ADAPT`; retain challenge and SSRF/connect-time controls, add institution authority later |
+| `DELETE /venue/webhooks/:id` | Platform admin soft-revokes subscription and retains evidence | `KEEP/ADAPT`; institution-owned revocation follows participant administration |
+| `GET /venue/webhooks/deliveries` | Platform admin sees digest/state/attempt/retry/terminal delivery evidence | `ADAPT`; tenant/event scope remains PR-03 work |
+| `POST /venue/webhooks/deliveries/:id/replay` | Platform admin re-queues a terminal durable delivery under the stable delivery ID | `KEEP/ADAPT`; maker-checker/tenant authority and replay SOP required before controlled live |
 | `GET /venue/support/events` | Platform admin reads lifecycle event log | `KEEP/ADAPT`; scoped support access and privacy-safe payload contract |
 | `GET /venue/support/overview` | Platform admin sees operational counts | `KEEP/ADAPT`; neutral cases/providers/reconciliation queues |
 | `GET /venue/ops/health` | All onboarded roles see ops status | `ADAPT`; expose appropriate participant status, keep sensitive detail admin-only |
@@ -220,9 +222,14 @@ baseline. “Current access” describes code, not a judgement that the access i
 | `Document` | Inline bytes and optional Note link | `ADAPT/BLOCK`; metadata/version/policy in DB, encrypted object store for bytes, scan/quarantine and case/evidence ownership |
 | `IngestedPool` | Mutable free-form pool spec, unique `poolId` | `COMPAT/RETIRE`; replace with immutable intake submission/version/receipt records |
 | `BillingEvent` | Usage metering from lifecycle event | `KEEP/ADAPT`; institution/contract/rate-card/correction/reconciliation fields |
-| `WebhookSubscription` | URL, plaintext secret, JSON event list | `ADAPT/BLOCK`; tenant, vault reference, endpoint verification, egress policy and rotation |
-| `WebhookDelivery` | One attempt status | `ADAPT`; durable queue, attempt number, next attempt, payload/event ID, response digest and terminal state |
-| `EventLog` | Durable lifecycle event/outbox row | `KEEP/ADAPT`; schema version, aggregate/version, tenant/case, publish state and idempotency key |
+| `WebhookSubscription` | PR-02: nullable institution scope, HTTPS endpoint, Vault reference, event list, challenge/verification, disable/revoke state; migration clears old plaintext secret | `ADAPT`; institution ownership/authority and rotation ceremony follow PR-03/PR-12 |
+| `WebhookDelivery` | PR-02: durable job with outbox link, stable delivery ID, digest, attempt, due/lock, delivered/retry/dead-letter/blocked/shadow state and response digest | `KEEP/ADAPT`; participant-scoped views and operating acceptance remain |
+| `EventLog` | Durable lifecycle event with additive schema/aggregate/tenant/case/idempotency/correlation fields | `KEEP/ADAPT`; legacy fields stay compatible and neutral case ownership becomes authoritative in PR-06 |
+| `ProviderReference`, `SourceReference` | PR-02 provider-neutral external identity/object/version/digest foundation | `KEEP/ADAPT`; connector/admission authority is not implied and follows PR-03/PR-05 |
+| `IntakeSubmission`, `IntakeReceipt`, `InboxMessage` | PR-02 immutable/deduplicated carrier and receipt foundation; no public neutral intake writer yet | `KEEP`; PR-05 supplies governed object handling and provider adapters |
+| `IdempotencyRecord`, `OutboxMessage` | PR-02 request-digest compare/replay and atomic digest-bound lifecycle fanout foundation | `KEEP/ADAPT`; neutral case command integration follows PR-06; legacy mutators retain their recorded PR-00 gaps |
+| `ExternalInstruction`, `ExternalAcknowledgement` | PR-02 idempotent requested-effect/authenticated-result persistence foundation | `KEEP`; saga execution/finality policy remains PR-09/PR-11 |
+| `MigrationReceipt` | PR-02 batch/count/digest/operator/reviewer/error-reference record | `KEEP`; each later backfill must actually issue and independently approve it |
 | `AuditLog` | Hash-chained audit row | `KEEP/ADAPT`; actor authority/tenant/case/request/evidence references and atomicity with governed commands |
 | `WebAuthnCredential` | Passkey material | `KEEP` |
 | `WebAuthnChallenge` | Short-lived passkey challenge | `KEEP/ADAPT`; enforce consumption/idempotency and ceremony purpose |
@@ -250,8 +257,9 @@ baseline. “Current access” describes code, not a judgement that the access i
 | `IntegrityEngineService` | Read-only reconciliation for Note supply, lifecycle, anchors, k-anon, billing/event/audit counts and audit chain | `KEEP/EXTRACT`; extend to neutral cases, provider receipts, settlement sagas and authoritative registers |
 | `VenueEventBus` | In-process event emitter | `KEEP` only as local notification; not a durable integration bus |
 | `EventLog`/billing write | Lifecycle event and billing row written in domain transaction | `KEEP`; strongest existing transaction pattern, generalise it |
-| `EventSinkService` | Relays in-process events to webhooks | `ADAPT/BLOCK`; a restart can lose relay work; drive delivery from durable outbox rows |
-| `WebhooksService` | HMAC delivery, 5-second timeout, one logged attempt | `ADAPT/BLOCK`; add allow-list/SSRF defence, durable retries, idempotency, backoff, dead letter and replay |
+| `EventSinkService` | PR-02: transitional in-process relay only in explicit `legacy`; shadow/durable modes leave egress to the DB worker | `COMPAT/RETIRE`; remove legacy mode after observation/cutover evidence |
+| `OutboxRelayService` | PR-02: `SKIP LOCKED` claims, two-minute stale-claim recovery, fanout, bounded backoff, dead letter and stable-ID replay; shadow suppresses network | `KEEP/ADAPT`; external receiver conformance/soak and 24x7 operating evidence remain required |
+| `WebhooksService` / egress / Vault adapter | PR-02: HTTPS-only, DNS and connect-time SSRF defence, no redirects, challenge verification, Vault KV-v2 HMAC reference, bounded response/digest | `KEEP/ADAPT`; mTLS/certification may be route/participant policy and Vault/receiver live proof is not local code evidence |
 | `AssureLocker` tape client | HTTP/2-capable `GET` by `poolId`, demo fallback | `COMPAT`; becomes the AssurePool source adapter |
 | Surveillance client | Pulls AssurePool surveillance by pool | `COMPAT/ADAPT`; provider-neutral lifecycle submission plus AssurePool adapter |
 | `HtsAdapter` | Demo works; live mint/burn methods throw TODO errors | `KEEP` as demo; `BLOCK` for live until connector, conformance, key custody and recovery tests exist |
@@ -669,9 +677,24 @@ Acceptance evidence:
 - old webhook records are migrated or disabled with an operator-visible reason; and
 - rollback leaves existing lifecycle reads/writes intact.
 
-Flags: `ARAIL_NEUTRAL_INGRESS_V1=shadow`; relay cohort flag.
+Flags: `ARAIL_NEUTRAL_INGRESS_V1=off→shadow`;
+`ARAIL_DURABLE_RELAY_MODE=legacy→shadow→durable`.
 Rollback: stop neutral workers/ingress, retain additive rows; legacy relay remains available during
 the observation window.
+
+**PR-02 implementation checkpoint (30 August 2026):** implemented locally on
+`codex/assurerail-pr01-neutral-taxonomy` as an additive Rail migration and DB-only runtime
+foundation. It adds the ten neutral persistence models above, same-database foreign-key integrity,
+request/inbox/external-effect idempotency, and atomic legacy lifecycle `EventLog` + billing +
+digest-bound outbox writes. Webhooks now use verified HTTPS/public endpoints, preflight and
+connect-time SSRF controls, Vault KV-v2 references, stable delivery IDs, durable claims/retries,
+dead-letter/replay and an egress-suppressed shadow mode. The migration deliberately disables legacy
+subscriptions and clears their plaintext secrets; re-provisioning is required. It adds two
+platform-admin endpoints (endpoint verification and terminal delivery replay), no customer/route UI,
+institution admission, transaction case, DA/PTC rule, public copy or deployment. Detailed operation,
+migration and rollback decisions: `docs/runbooks/AssureRail_PR02_Persistence_And_Relay.md`. Local
+evidence: 106/106 Rail tests; disposable Postgres fresh/upgrade/index/backup/restore rehearsal; final
+full gate and security scans are recorded separately in `docs/qa/AssureRail_PR02_Persistence_Evidence.md`.
 
 ### PR-03 — Institution, membership, mandate and participant admission
 
