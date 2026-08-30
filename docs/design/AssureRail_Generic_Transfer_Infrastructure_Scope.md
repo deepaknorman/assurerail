@@ -83,12 +83,12 @@ route-specific stages.
 
 This section records the deep repository baseline inspected on 30 August 2026 at commit
 `ad99675dec6a3c2148de9eca97d9a0891cd02b54`. Remote refs were refreshed again before PR-00
-verification; `origin/main` was then `54c6f969d35b4aefbe2f11b24a4942ae502f7ad9`. The intervening main
-delta added OVD acquisition-channel controls and co-lending demo-zone guard execution, not new Rail
-runtime files; the focused transfer-room golden suite was rerun against the refreshed baseline. The
-working branch and working tree contain additional changes, so the disposition below is an
-architecture/migration decision, not an instruction to overwrite or move files without a reviewed
-migration PR.
+verification; `origin/main` was then `336fa6d62dc02df6a1eca269677a957ed74ea32b`. The intervening main
+delta added OVD acquisition-channel controls, co-lending demo-zone guard execution and KYB audited-
+financial reconciliation—not new Rail runtime files; the focused transfer-room golden suite was rerun
+against the refreshed baseline. The working branch and working tree contain additional changes, so
+the disposition below is an architecture/migration decision, not an instruction to overwrite or move
+files without a reviewed migration PR.
 
 The co-lending and DigiKYB corrections first observed concurrently during this audit are now part of
 the merged baseline in commits `c2dc5f3d3` and `ad99675de`. They add explicit control coverage and

@@ -2,7 +2,7 @@
 
 **Status:** implemented; full local release gate passed on 2026-08-30
 
-**Code baseline verified:** `origin/main` / `54c6f969d35b4aefbe2f11b24a4942ae502f7ad9`
+**Code baseline verified:** `origin/main` / `336fa6d62dc02df6a1eca269677a957ed74ea32b`
 
 **Scope:** tests, source contracts, startup claim guards and internal documentation only
 

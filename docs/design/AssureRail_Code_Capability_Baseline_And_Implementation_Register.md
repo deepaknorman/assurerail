@@ -2,7 +2,7 @@
 
 **Status:** internal engineering execution baseline, 30 August 2026
 **Repository baseline:** deep inventory at `ad99675dec6a3c2148de9eca97d9a0891cd02b54`;
-refreshed and verified through `54c6f969d35b4aefbe2f11b24a4942ae502f7ad9` (`origin/main` on
+refreshed and verified through `336fa6d62dc02df6a1eca269677a957ed74ea32b` (`origin/main` on
 30 August 2026)
 **Controlling product scope:** `docs/design/AssureRail_Generic_Transfer_Infrastructure_Scope.md`
 **Purpose:** convert the agreed AssureRail product boundary into a code-level disposition and a
