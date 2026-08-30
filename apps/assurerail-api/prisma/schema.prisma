@@ -186,35 +186,329 @@ model BillingEvent {
 
 /// Webhook subscription (partner egress). `events` is a JSON array of event names or ["*"].
 model WebhookSubscription {
-  id        String   @id
-  url       String
-  secret    String
-  events    Json
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id                        String    @id
+  institutionId             String?
+  url                       String
+  secret                    String? // legacy only; PR-02 clears/disables old plaintext rows and never writes this field
+  secretVaultRef            String?
+  events                    Json
+  active                    Boolean   @default(false)
+  endpointStatus            String    @default("PENDING_VERIFICATION") // PENDING_VERIFICATION | VERIFIED | DISABLED | REVOKED
+  verificationChallengeHash String?
+  verificationExpiresAt     DateTime?
+  verifiedAt                DateTime?
+  disabledReason            String?
+  revokedAt                 DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @default(now()) @updatedAt
+
+  @@index([institutionId])
+  @@index([active, endpointStatus])
 }
 
-/// Webhook delivery attempt log.
+/// Durable webhook delivery job/attempt record. One stable delivery ID is reused across retries so
+/// receivers can deduplicate an ambiguous acknowledgement after a worker crash.
 model WebhookDelivery {
-  id             String   @id
-  subscriptionId String
-  event          String
-  statusCode     Int
-  ok             Boolean
-  createdAt      DateTime @default(now())
+  id              String         @id
+  subscriptionId  String
+  outboxMessageId String?
+  outboxMessage   OutboxMessage? @relation(fields: [outboxMessageId], references: [id], onDelete: Restrict)
+  event           String
+  payloadDigest   String?
+  state           String         @default("PENDING") // PENDING | IN_FLIGHT | RETRY | DELIVERED | DEAD_LETTER | BLOCKED | SHADOW_SUPPRESSED
+  attempt         Int            @default(0)
+  statusCode      Int?
+  ok              Boolean        @default(false)
+  nextAttemptAt   DateTime       @default(now())
+  lockedAt        DateTime?
+  lockOwner       String?
+  errorCode       String?
+  errorMessage    String?
+  responseDigest  String?
+  deliveredAt     DateTime?
+  terminalAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now()) @updatedAt
 
+  @@unique([outboxMessageId, subscriptionId])
   @@index([subscriptionId])
+  @@index([state, nextAttemptAt])
+  @@index([outboxMessageId])
 }
 
 /// Append-only event log (lifecycle events) — powers the support/ops dashboard.
 model EventLog {
-  id        String   @id
-  event     String
-  payload   Json
-  createdAt DateTime @default(now())
+  id                String         @id
+  event             String
+  payload           Json
+  schemaVersion     String?
+  aggregateId       String?
+  aggregateVersion  Int?
+  institutionId     String?
+  transactionCaseId String?
+  idempotencyKey    String?        @unique
+  correlationId     String?
+  causationId       String?
+  createdAt         DateTime       @default(now())
+  outboxMessage     OutboxMessage?
 
   @@index([event])
   @@index([createdAt])
+  @@index([institutionId, createdAt])
+  @@index([transactionCaseId, createdAt])
+}
+
+// ─────────────────────── neutral persistence / integration foundation ───────────────────────
+// These additive records deliberately carry nullable institution/case ownership until PR-03/PR-06
+// create the authoritative Institution and TransactionCase tables. They do not foreign-key into the
+// AssureLocker database or grant participant/route authority.
+
+model ProviderReference {
+  id                String                    @id
+  providerKey       String
+  providerType      String
+  displayName       String?
+  status            String                    @default("ACTIVE") // ACTIVE | SUSPENDED | RETIRED
+  institutionId     String?
+  transactionCaseId String?
+  metadata          Json?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @default(now()) @updatedAt
+  sourceReferences  SourceReference[]
+  intakeSubmissions IntakeSubmission[]
+  inboxMessages     InboxMessage[]
+  instructions      ExternalInstruction[]
+  acknowledgements  ExternalAcknowledgement[]
+
+  @@unique([providerType, providerKey])
+  @@index([institutionId])
+  @@index([transactionCaseId])
+}
+
+model SourceReference {
+  id                  String             @id
+  providerReferenceId String
+  providerReference   ProviderReference  @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
+  sourceSystem        String
+  sourceObjectType    String
+  sourceObjectId      String
+  sourceVersion       String
+  schemaId            String
+  schemaVersion       String
+  payloadDigest       String
+  authoritativeStatus String             @default("UNDECLARED")
+  institutionId       String?
+  transactionCaseId   String?
+  metadata            Json?
+  createdAt           DateTime           @default(now())
+  intakeSubmissions   IntakeSubmission[]
+
+  @@unique([providerReferenceId, sourceSystem, sourceObjectType, sourceObjectId, sourceVersion], map: "SourceReference_source_identity_key")
+  @@index([payloadDigest])
+  @@index([institutionId])
+  @@index([transactionCaseId])
+}
+
+model IntakeSubmission {
+  id                  String            @id
+  providerReferenceId String
+  providerReference   ProviderReference @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
+  sourceReferenceId   String?
+  sourceReference     SourceReference?  @relation(fields: [sourceReferenceId], references: [id], onDelete: Restrict)
+  institutionId       String?
+  transactionCaseId   String?
+  idempotencyKey      String
+  carrier             String
+  schemaId            String
+  schemaVersion       String
+  payloadDigest       String
+  signatureDigest     String?
+  signatureStatus     String
+  storageRef          String?
+  payload             Json?
+  validationStatus    String            @default("RECEIVED") // RECEIVED | VALID | INVALID | CONFLICT | QUARANTINED
+  validationDetail    Json?
+  receivedAt          DateTime          @default(now())
+  createdAt           DateTime          @default(now())
+  receipt             IntakeReceipt?
+
+  @@unique([providerReferenceId, idempotencyKey])
+  @@index([sourceReferenceId])
+  @@index([payloadDigest])
+  @@index([institutionId, receivedAt])
+  @@index([transactionCaseId, receivedAt])
+}
+
+model IntakeReceipt {
+  id                 String           @id
+  intakeSubmissionId String           @unique
+  intakeSubmission   IntakeSubmission @relation(fields: [intakeSubmissionId], references: [id], onDelete: Restrict)
+  status             String
+  receiptDigest      String           @unique
+  detail             Json?
+  institutionId      String?
+  transactionCaseId  String?
+  createdAt          DateTime         @default(now())
+
+  @@index([institutionId, createdAt])
+  @@index([transactionCaseId, createdAt])
+}
+
+model IdempotencyRecord {
+  id                String    @id
+  scope             String
+  key               String
+  requestDigest     String
+  status            String    @default("IN_PROGRESS") // IN_PROGRESS | COMPLETED | FAILED
+  responseDigest    String?
+  response          Json?
+  institutionId     String?
+  transactionCaseId String?
+  expiresAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+
+  @@unique([scope, key])
+  @@index([status, createdAt])
+  @@index([institutionId])
+  @@index([transactionCaseId])
+}
+
+model InboxMessage {
+  id                  String            @id
+  providerReferenceId String
+  providerReference   ProviderReference @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
+  externalMessageId   String
+  idempotencyKey      String
+  schemaId            String
+  schemaVersion       String
+  payloadDigest       String
+  payload             Json?
+  storageRef          String?
+  signatureStatus     String
+  state               String            @default("RECEIVED") // RECEIVED | PROCESSING | PROCESSED | REJECTED | CONFLICT
+  institutionId       String?
+  transactionCaseId   String?
+  processedAt         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @default(now()) @updatedAt
+
+  @@unique([providerReferenceId, externalMessageId])
+  @@unique([providerReferenceId, idempotencyKey])
+  @@index([state, createdAt])
+  @@index([payloadDigest])
+  @@index([institutionId])
+  @@index([transactionCaseId])
+}
+
+model OutboxMessage {
+  id                String            @id
+  eventLogId        String?           @unique
+  eventLog          EventLog?         @relation(fields: [eventLogId], references: [id], onDelete: Restrict)
+  event             String
+  schemaId          String
+  schemaVersion     String
+  payloadDigest     String
+  payload           Json
+  aggregateId       String?
+  aggregateVersion  Int?
+  institutionId     String?
+  transactionCaseId String?
+  idempotencyKey    String            @unique
+  correlationId     String?
+  causationId       String?
+  state             String            @default("PENDING") // PENDING | PROCESSING | FANOUT_COMPLETE | RETRY | DEAD_LETTER
+  attemptCount      Int               @default(0)
+  nextAttemptAt     DateTime          @default(now())
+  lockedAt          DateTime?
+  lockOwner         String?
+  lastError         String?
+  completedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @default(now()) @updatedAt
+  webhookDeliveries WebhookDelivery[]
+
+  @@index([state, nextAttemptAt])
+  @@index([aggregateId, aggregateVersion])
+  @@index([institutionId, createdAt])
+  @@index([transactionCaseId, createdAt])
+}
+
+model ExternalInstruction {
+  id                  String                    @id
+  providerReferenceId String
+  providerReference   ProviderReference         @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
+  instructionType     String
+  idempotencyKey      String
+  requestDigest       String
+  request             Json?
+  storageRef          String?
+  state               String                    @default("PENDING") // PENDING | SENT | ACKNOWLEDGED | AMBIGUOUS | FAILED | CANCELLED
+  institutionId       String?
+  transactionCaseId   String?
+  sentAt              DateTime?
+  terminalAt          DateTime?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @default(now()) @updatedAt
+  acknowledgements    ExternalAcknowledgement[]
+
+  @@unique([providerReferenceId, idempotencyKey])
+  @@index([state, createdAt])
+  @@index([institutionId])
+  @@index([transactionCaseId])
+}
+
+model ExternalAcknowledgement {
+  id                        String              @id
+  externalInstructionId     String
+  externalInstruction       ExternalInstruction @relation(fields: [externalInstructionId], references: [id], onDelete: Restrict)
+  providerReferenceId       String
+  providerReference         ProviderReference   @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
+  externalAcknowledgementId String
+  status                    String
+  finalityClass             String
+  responseDigest            String
+  response                  Json?
+  storageRef                String?
+  signatureStatus           String
+  acknowledgedAt            DateTime
+  institutionId             String?
+  transactionCaseId         String?
+  createdAt                 DateTime            @default(now())
+
+  @@unique([providerReferenceId, externalAcknowledgementId], map: "ExternalAck_provider_external_id_key")
+  @@unique([externalInstructionId, responseDigest], map: "ExternalAck_instruction_response_key")
+  @@index([externalInstructionId, acknowledgedAt], map: "ExternalAck_instruction_acknowledged_idx")
+  @@index([institutionId])
+  @@index([transactionCaseId])
+}
+
+model MigrationReceipt {
+  id                  String    @id
+  batchId             String
+  migrationName       String
+  sourceSystem        String
+  sourceHighWaterMark String?
+  sourceCount         Int
+  targetCount         Int
+  sourceDigest        String?
+  targetDigest        String?
+  errorObjectRef      String?
+  operatorRef         String
+  reviewerRef         String?
+  status              String    @default("STARTED") // STARTED | VERIFIED | FAILED | ROLLED_BACK
+  institutionId       String?
+  transactionCaseId   String?
+  startedAt           DateTime  @default(now())
+  completedAt         DateTime?
+  receiptDigest       String?
+  createdAt           DateTime  @default(now())
+
+  @@unique([batchId, migrationName])
+  @@index([status, startedAt])
+  @@index([institutionId])
+  @@index([transactionCaseId])
 }
 
 /// Append-only, hash-chained audit trail. Written via a single-writer/advisory-locked append so

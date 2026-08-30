@@ -4,7 +4,7 @@ import type { VenueEvent, VenueEventBus } from "../events/venue-events";
 import { EventSinkService } from "../platform/event-sink.service";
 import { WebhooksService } from "../platform/webhooks.service";
 
-test("[CURRENT_SEQUENCE][AR-H09] the event sink starts webhook dispatch without awaiting an acknowledgement", async () => {
+test("[TRANSITIONAL_LEGACY][AR-H09] legacy mode starts webhook dispatch after the durable lifecycle commit", async () => {
   let subscriber: ((event: VenueEvent) => void) | undefined;
   let dispatchStarted = false;
   let releaseDispatch: (() => void) | undefined;
@@ -24,31 +24,26 @@ test("[CURRENT_SEQUENCE][AR-H09] the event sink starts webhook dispatch without 
   assert.ok(subscriber);
   subscriber({ event: "note.minted", payload: { noteId: "note-characterisation" }, at: "2026-08-30T00:00:00.000Z" });
 
-  // The bus callback returns while delivery is still pending. This is a current-shape test: the
-  // transactional domain outbox remains durable, but there is no durable relay claim/ack here yet.
+  // Legacy mode stays available for rollback/observation. Durable/shadow mode does not subscribe
+  // this in-process path; OutboxRelayService owns the persisted work instead.
   assert.equal(dispatchStarted, true);
   releaseDispatch?.();
   await pendingDispatch;
 });
 
-test("[CURRENT_SEQUENCE][AR-H09] failed delivery and failed delivery-log persistence are both swallowed", async () => {
-  const originalFetch = globalThis.fetch;
-  let deliveryAttempted = false;
+test("[PR02][AR-H09] legacy relay refuses egress when it cannot create a delivery receipt first", async () => {
   let deliveryLogAttempted = false;
-  globalThis.fetch = async () => {
-    deliveryAttempted = true;
-    throw new Error("characterised partner outage");
-  };
-
-  try {
-    const service = new WebhooksService({
+  let egressAttempted = false;
+  const service = new WebhooksService({
       webhookSubscription: {
         findMany: async () => [{
           id: "subscription-characterisation",
           url: "https://partner.invalid/webhook",
-          secret: "test-only-placeholder",
+          secretVaultRef: "vault-kv-v2://secret/assurerail/webhooks/subscription-characterisation#hmacSecret",
           events: ["*"],
           active: true,
+          endpointStatus: "VERIFIED",
+          revokedAt: null,
         }],
       },
       webhookDelivery: {
@@ -57,14 +52,19 @@ test("[CURRENT_SEQUENCE][AR-H09] failed delivery and failed delivery-log persist
           throw new Error("characterised delivery-log outage");
         },
       },
+    } as never, {
+      get: async () => "test-only-placeholder-with-sufficient-length",
+    } as never, {
+      post: async () => {
+        egressAttempted = true;
+        return { status: 200, ok: true, body: "ok" };
+      },
     } as never);
 
-    // Current behaviour resolves even though neither the partner acknowledgement nor a durable
-    // failure receipt exists. PR-07/PR-12 must replace this with a claim/retry/dead-letter/replay path.
-    await assert.doesNotReject(() => service.dispatch("note.minted", { noteId: "note-characterisation" }));
-    assert.equal(deliveryAttempted, true);
-    assert.equal(deliveryLogAttempted, true);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+  await assert.rejects(
+    () => service.dispatch("note.minted", { noteId: "note-characterisation" }),
+    /characterised delivery-log outage/,
+  );
+  assert.equal(deliveryLogAttempted, true);
+  assert.equal(egressAttempted, false);
 });

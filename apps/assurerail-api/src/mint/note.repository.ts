@@ -79,11 +79,10 @@ export class InsufficientUnitsError extends Error {
 }
 
 /**
- * Transactional-outbox record — the EventLog row (and, when billable, the BillingEvent) written INSIDE
- * the same atomic transaction as the domain write. This makes the ops timeline + revenue meter durable
- * with the domain fact itself (a crash right after commit loses nothing), instead of depending on the
- * fire-and-forget sink. The repo injects the noteId into the payload/meter inside the tx. The sink then
- * RELAYS (dispatches webhooks) — it no longer writes these rows.
+ * Transactional-outbox record — EventLog, neutral OutboxMessage and, when billable, BillingEvent are
+ * written inside the same atomic transaction as the domain fact. The repo injects noteId/eventLogId,
+ * canonicalises the payload and records its digest. Relay selection is feature-gated between the
+ * transitional in-process path and the durable worker; neither is the first writer of the event.
  */
 export interface OutboxWrite {
   event: string; // note.minted | dvp.settled | note.closed

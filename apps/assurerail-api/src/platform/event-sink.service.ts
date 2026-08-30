@@ -1,5 +1,6 @@
 import { Injectable, Logger, type OnModuleInit } from "@nestjs/common";
 import { VenueEventBus } from "../events/venue-events";
+import { inspectPersistenceFlags } from "../persistence/feature-flags";
 import { WebhooksService } from "./webhooks.service";
 
 // The single subscriber to the VenueEventBus (DB mode). EventLog + BillingEvent are now written
@@ -11,15 +12,22 @@ import { WebhooksService } from "./webhooks.service";
 @Injectable()
 export class EventSinkService implements OnModuleInit {
   private readonly log = new Logger("EventSink");
+  private readonly relayMode = inspectPersistenceFlags(process.env).durableRelay;
   constructor(
     private readonly bus: VenueEventBus,
     private readonly webhooks: WebhooksService,
   ) {}
 
   onModuleInit(): void {
-    this.bus.on((e) => {
-      void this.webhooks.dispatch(e.event, e.payload);
-    });
-    this.log.log("subscribed to the venue event bus (relay-only; EventLog/BillingEvent are durable in-tx)");
+    if (this.relayMode === "legacy") {
+      this.bus.on((e) => {
+        void this.webhooks.dispatch(e.event, e.payload).catch((error) => {
+          this.log.warn(`legacy webhook relay failed after durable event commit: ${(error as Error).message}`);
+        });
+      });
+      this.log.warn("legacy in-process webhook relay enabled; durable outbox is recorded but not dispatched by its worker");
+      return;
+    }
+    this.log.log(`in-process webhook relay disabled; durable worker owns ${this.relayMode} fanout`);
   }
 }

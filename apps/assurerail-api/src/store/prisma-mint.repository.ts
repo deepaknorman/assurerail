@@ -25,6 +25,7 @@ import {
   type OutboxWrite,
 } from "../mint/note.repository";
 import { allocateAmortisation, type AmortiseAllocation } from "../amortise/amortise-math";
+import { sha256Digest, toCanonicalValue } from "../contracts/v1";
 import { PrismaService } from "./prisma.service";
 
 // Prisma-backed store over the venue's OWN Postgres. Ids keep the human-readable `note_…`/`dvp_…`
@@ -193,15 +194,38 @@ export class PrismaMintRepository extends MintRepository {
   }
 
   /**
-   * Transactional outbox: write the EventLog row (durable ops-timeline record) and, when billable, the
-   * BillingEvent (keyed to that EventLog via sourceEventId, so a replay can't double-meter) — IN THE
-   * SAME tx as the domain write. Returns the EventLog id so the caller can relay webhooks. The noteId is
-   * injected here so the persisted payload always carries it.
+   * Transactional outbox: write EventLog, digest-bound OutboxMessage and, when billable, BillingEvent
+   * (keyed to EventLog via sourceEventId) in the same transaction as the domain write. Returns the
+   * EventLog ID for the transitional in-process wake-up. noteId/eventLogId are injected here so the
+   * durable payload identifies both aggregate and event.
    */
   private async writeOutbox(tx: Prisma.TransactionClient, outbox: OutboxWrite, noteId: string): Promise<string> {
     const eventLogId = `evt_${randomUUID()}`;
+    const idempotencyKey = `legacy-lifecycle:${eventLogId}`;
+    const payload = toCanonicalValue({ ...outbox.payload, noteId, eventLogId }) as unknown as Prisma.InputJsonValue;
+    const payloadDigest = sha256Digest(payload);
     await tx.eventLog.create({
-      data: { id: eventLogId, event: outbox.event, payload: { ...outbox.payload, noteId } as Prisma.InputJsonValue },
+      data: {
+        id: eventLogId,
+        event: outbox.event,
+        payload,
+        schemaVersion: "1.0.0",
+        aggregateId: noteId,
+        idempotencyKey,
+      },
+    });
+    await tx.outboxMessage.create({
+      data: {
+        id: `out_${randomUUID()}`,
+        eventLogId,
+        event: outbox.event,
+        schemaId: "assurerail.legacy-lifecycle-event",
+        schemaVersion: "1.0.0",
+        payloadDigest,
+        payload,
+        aggregateId: noteId,
+        idempotencyKey,
+      },
     });
     if (outbox.billing) {
       await tx.billingEvent.create({

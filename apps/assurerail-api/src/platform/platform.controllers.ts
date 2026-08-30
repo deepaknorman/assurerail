@@ -103,6 +103,7 @@ export class BillingController {
 interface SubscribeBody {
   url?: string;
   events?: string[];
+  institutionId?: string;
 }
 
 @AdminOnly()
@@ -117,11 +118,18 @@ export class WebhooksController {
 
   @Post()
   async subscribe(@Body() body: SubscribeBody) {
-    if (!body.url || !/^https?:\/\//.test(body.url)) throw new BadRequestException("a valid http(s) url is required");
+    if (!body.url) throw new BadRequestException("a webhook url is required");
     const events = Array.isArray(body.events) && body.events.length ? body.events : ["*"];
-    const s = await this.webhooks.subscribe(body.url, events);
+    const s = await this.webhooks.subscribe(body.url, events, body.institutionId);
     audit("webhook.subscribed", { id: s.id, url: s.url, events });
     return s;
+  }
+
+  @Post(":id/verify")
+  async verify(@Param("id") id: string) {
+    const result = await this.webhooks.verify(id);
+    audit("webhook.verified", { id });
+    return result;
   }
 
   @Delete(":id")
@@ -134,6 +142,13 @@ export class WebhooksController {
   @Get("deliveries")
   deliveries(@Query("limit") limit?: string) {
     return this.webhooks.deliveries(limit ? Number(limit) : 50);
+  }
+
+  @Post("deliveries/:id/replay")
+  async replay(@Param("id") id: string) {
+    const result = await this.webhooks.replayDelivery(id);
+    audit("webhook.delivery.replayed", { id });
+    return result;
   }
 }
 
@@ -156,11 +171,13 @@ export class SupportController {
   async overview() {
     // De-scanned: an index-only count-by-state instead of hydrating every note's t1Aggregates (the old
     // full listNotes() scan). Cost is now independent of cumulative note count.
-    const [counts, eventCount, failedDeliveries, docCount] = await Promise.all([
+    const [counts, eventCount, failedDeliveries, docCount, outboxStates, deliveryStates] = await Promise.all([
       this.repo.countNotesByState(),
       this.db.eventLog.count(),
-      this.db.webhookDelivery.count({ where: { ok: false } }),
+      this.db.webhookDelivery.count({ where: { state: { in: ["DEAD_LETTER", "BLOCKED"] } } }),
       this.db.document.count(),
+      this.db.outboxMessage.groupBy({ by: ["state"], _count: { _all: true } }),
+      this.db.webhookDelivery.groupBy({ by: ["state"], _count: { _all: true } }),
     ]);
     const { total, ...byState } = counts;
     return {
@@ -169,7 +186,11 @@ export class SupportController {
       notes: { total: total ?? 0, byState },
       events: eventCount,
       documents: docCount,
-      webhooks: { failedDeliveries },
+      webhooks: {
+        failedDeliveries,
+        deliveryStates: Object.fromEntries(deliveryStates.map((row) => [row.state, row._count._all])),
+      },
+      outbox: { states: Object.fromEntries(outboxStates.map((row) => [row.state, row._count._all])) },
       uptimeSec: Math.round(process.uptime()),
     };
   }

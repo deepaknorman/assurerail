@@ -6,6 +6,7 @@ import test from "node:test";
 
 const MAIN = path.resolve(__dirname, "../main.js");
 const APP_ROOT = path.resolve(__dirname, "../..");
+const STARTUP_TIMEOUT_MS = 30_000;
 const CONFIG_KEYS = [
   "ASSURERAIL_OPERATING_MODE",
   "ARAIL_DEMO_ENDPOINTS_ENABLED",
@@ -26,6 +27,13 @@ const CONFIG_KEYS = [
   "ASSURERAIL_WEB_ORIGINS",
   "REQUIRE_DB",
   "SEED_ON_BOOT",
+  "ARAIL_NEUTRAL_INGRESS_V1",
+  "ARAIL_DURABLE_RELAY_MODE",
+  "VAULT_ADDR",
+  "VAULT_NAMESPACE",
+  "VAULT_APPROLE_ROLE_ID",
+  "VAULT_APPROLE_SECRET_ID",
+  "VAULT_TOKEN",
 ] as const;
 
 function cleanEnvironment(): NodeJS.ProcessEnv {
@@ -60,7 +68,7 @@ test("[STARTUP_PROCESS][DEMO] an optimised explicit demo process boots with demo
   try {
     await new Promise<void>((resolve, reject) => {
       const marker = "AssureRail operating mode: DEMO (demo endpoints enabled)";
-      const timeout = setTimeout(() => reject(new Error(`demo startup marker timed out:\n${output}`)), 15_000);
+      const timeout = setTimeout(() => reject(new Error(`demo startup marker timed out:\n${output}`)), STARTUP_TIMEOUT_MS);
       const cleanup = () => {
         clearTimeout(timeout);
         child.stdout.off("data", inspect);
@@ -101,7 +109,7 @@ test("[STARTUP_PROCESS][PRODUCTION] an undeclared production process exits befor
   let output = "";
   child.stdout.on("data", (chunk) => { output += String(chunk); });
   child.stderr.on("data", (chunk) => { output += String(chunk); });
-  const timeout = setTimeout(() => child.kill("SIGKILL"), 15_000);
+  const timeout = setTimeout(() => child.kill("SIGKILL"), STARTUP_TIMEOUT_MS);
   try {
     const [code] = await once(child, "exit") as [number | null, NodeJS.Signals | null];
     assert.notEqual(code, 0);

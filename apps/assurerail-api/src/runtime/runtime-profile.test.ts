@@ -29,6 +29,10 @@ const LIVE_ENV = {
   DIGIKYC_STATUS_SERVICE_SECRET: "test-only-placeholder",
   RECAPTCHA_SITE_KEY: "test-only-placeholder",
   RECAPTCHA_ENFORCE: "true",
+  ARAIL_DURABLE_RELAY_MODE: "durable",
+  VAULT_ADDR: "https://vault.invalid",
+  VAULT_APPROLE_ROLE_ID: "test-only-role-id",
+  VAULT_APPROLE_SECRET_ID: "test-only-secret-id",
 } as const;
 
 test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
@@ -44,6 +48,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     settlement: "demo",
     digiKyc: "demo",
   });
+  assert.deepEqual(result.features, { neutralIngress: "off", durableRelay: "legacy" });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
 });
 
@@ -71,8 +76,40 @@ test("[CONFIG][PRODUCTION] an undeclared production container fails closed", () 
   assert.match(inspected.errors.join("\n"), /DATABASE_URL is required/);
   assert.match(inspected.errors.join("\n"), /FIREBASE_ADMIN_CONFIG is required/);
   assert.match(inspected.errors.join("\n"), /requires live adapters/);
+  assert.match(inspected.errors.join("\n"), /ARAIL_DURABLE_RELAY_MODE=durable/);
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "production" }), false);
   assert.throws(() => assertRuntimeEnvironment({ NODE_ENV: "production" }), RuntimeConfigurationError);
+});
+
+test("[CONFIG][PR02] persistence flags reject truthy aliases and shadow mode rejects webhook egress", () => {
+  const invalid = inspectRuntimeEnvironment({
+    NODE_ENV: "development",
+    ARAIL_NEUTRAL_INGRESS_V1: "true",
+    ARAIL_DURABLE_RELAY_MODE: "on",
+  });
+  assert.match(invalid.errors.join("\n"), /ARAIL_NEUTRAL_INGRESS_V1 must be/);
+  assert.match(invalid.errors.join("\n"), /ARAIL_DURABLE_RELAY_MODE must be/);
+
+  const shadow = inspectRuntimeEnvironment({
+    NODE_ENV: "development",
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    DATABASE_URL: "postgresql:\/\/rail.invalid\/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE,
+    ARAIL_DURABLE_RELAY_MODE: "durable",
+    VAULT_ADDR: "https:\/\/vault.invalid",
+    VAULT_TOKEN: "test-only-placeholder",
+  });
+  assert.match(shadow.errors.join("\n"), /SHADOW mode forbids durable webhook egress/);
+});
+
+test("[CONFIG][PR02] controlled-live and production reject static Vault token authentication", () => {
+  const staticToken = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    VAULT_APPROLE_ROLE_ID: undefined,
+    VAULT_APPROLE_SECRET_ID: undefined,
+    VAULT_TOKEN: "test-only-static-token",
+  });
+  assert.match(staticToken.errors.join("\n"), /VAULT_TOKEN is not accepted for live operation/);
 });
 
 test("[CONFIG][PRODUCTION] database and auth do not make demo adapters or demo routes production-safe", () => {

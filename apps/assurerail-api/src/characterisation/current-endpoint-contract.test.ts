@@ -125,9 +125,9 @@ const expectedSurface = (): DiscoveredEndpoint[] =>
     `${a.path} ${a.method}`.localeCompare(`${b.path} ${b.method}`),
   );
 
-test("[SOURCE_CONTRACT][CURRENT] all 56 controller endpoints and access decorators match the reviewed inventory", () => {
+test("[SOURCE_CONTRACT][CURRENT] all 58 controller endpoints and access decorators match the reviewed inventory", () => {
   const discovered = discoverControllerSurface();
-  assert.equal(discovered.length, 56);
+  assert.equal(discovered.length, 58);
   assert.deepEqual(discovered, expectedSurface());
 });
 

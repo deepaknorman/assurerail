@@ -72,8 +72,8 @@ else bad("runtime-profile.ts is missing one or more controlled-live/production p
 console.log("── endpoint contract ──");
 const endpointContract = rd("apps/assurerail-api/src/characterisation/current-endpoint-contract.ts");
 const endpointRows = (endpointContract.match(/\be\("(?:GET|POST|PATCH|DELETE)"/g) || []).length;
-if (endpointRows === 56) pass("reviewed endpoint inventory contains exactly 56 classified routes");
-else bad(`reviewed endpoint inventory must contain exactly 56 routes (found ${endpointRows})`);
+if (endpointRows === 58) pass("reviewed endpoint inventory contains exactly 58 classified routes");
+else bad(`reviewed endpoint inventory must contain exactly 58 routes (found ${endpointRows})`);
 if (has(endpointContract, "GLOBAL_VENUE") && has(endpointContract, "RESOURCE_ID_ONLY") && has(endpointContract, "AR-C01")) pass("current tenant/resource scoping gaps remain explicit in the inventory");
 else bad("endpoint inventory must retain explicit GLOBAL_VENUE/RESOURCE_ID_ONLY scope and AR-C01 linkage");
 
@@ -96,7 +96,36 @@ if (!has(appModule, "contracts/v1") && has(neutralMappings, "assurepool.frozen-d
   pass("neutral mappings are source-profile adapters and remain disconnected from runtime modules");
 } else bad("PR-01 neutral contracts must stay runtime-inert with explicit source-profile mappings");
 
-// ── 5. Ledger value-path is transactional (P3 hardening must not regress) ─────
+// ── 5. PR-02 durability and webhook security controls remain fail-closed ─────
+console.log("── persistence foundation ──");
+const persistenceSchema = rd("apps/assurerail-api/prisma/schema.prisma");
+const persistenceMigration = rd("apps/assurerail-api/prisma/migrations/20260830190000_assurerail_pr02_persistence_foundation/migration.sql");
+const relay = rd("apps/assurerail-api/src/platform/outbox-relay.service.ts");
+const webhookEgress = rd("apps/assurerail-api/src/platform/webhook-egress.service.ts");
+const webhookVault = rd("apps/assurerail-api/src/platform/webhook-secret-vault.service.ts");
+const persistenceModels = [
+  "ProviderReference", "SourceReference", "IntakeSubmission", "IntakeReceipt", "IdempotencyRecord",
+  "InboxMessage", "OutboxMessage", "ExternalInstruction", "ExternalAcknowledgement", "MigrationReceipt",
+];
+if (persistenceModels.every((model) => has(persistenceSchema, `model ${model} {`))) pass("all ten additive PR-02 persistence models are declared");
+else bad("PR-02 persistence schema is missing one or more required additive models");
+if (has(persistenceMigration, 'UPDATE "WebhookSubscription"') && has(persistenceMigration, '"secret" = NULL') && has(persistenceMigration, "LEGACY_PLAINTEXT_SECRET_CLEARED_REPROVISION_AND_VERIFY")) {
+  pass("legacy webhook subscriptions are disabled and plaintext secrets cleared by migration");
+} else bad("PR-02 migration must fail closed for legacy webhook subscriptions and plaintext secrets");
+if (has(relay, "FOR UPDATE SKIP LOCKED") && has(relay, "DEAD_LETTER") && has(relay, 'verifiedAt: { lte: current.createdAt }')) {
+  pass("durable relay claims safely, dead-letters and excludes pre-verification history");
+} else bad("durable relay must retain safe claims, terminal failure and subscription-verification boundaries");
+if (has(webhookEgress, "assertPublicWebhookEndpoint") && has(webhookEgress, 'redirect: "manual"') && has(webhookEgress, "guardedConnectLookup")) {
+  pass("webhook egress retains public-address, redirect and DNS-rebinding controls");
+} else bad("webhook egress SSRF/rebinding controls are incomplete");
+if (has(persistenceSchema, "secretVaultRef") && has(webhookVault, "VAULT_APPROLE_ROLE_ID") && has(webhookVault, 'redirect: "error"')) {
+  pass("webhook secrets use an opaque Vault reference and redirect-safe Vault client");
+} else bad("webhook secret storage must remain Vault-backed with redirect-safe access");
+if (has(runtimeProfile, "requires ARAIL_DURABLE_RELAY_MODE=durable") && has(runtimeProfile, "VAULT_ADDR is required")) {
+  pass("controlled-live/production startup requires durable relay and Vault configuration");
+} else bad("live startup must fail closed without the durable relay and Vault configuration");
+
+// ── 6. Ledger value-path is transactional (P3 hardening must not regress) ─────
 console.log("── ledger atomicity ──");
 const dvp = rd("apps/assurerail-api/src/dvp/dvp.service.ts");
 const mint = rd("apps/assurerail-api/src/mint/mint.service.ts");
@@ -109,7 +138,7 @@ const txCount = (prismaRepo.match(/\$transaction/g) || []).length;
 if (txCount >= 3 && has(prismaRepo, "InsufficientUnitsError") && has(prismaRepo, "::numeric")) pass(`Prisma store uses $transaction (${txCount}×) + guarded atomic balance moves`);
 else bad("prisma-mint.repository must wrap value-path ops in $transaction with a guarded (::numeric) balance move");
 
-// ── 6. Database segregation (venue never touches AssureLocker's DB/client) ────
+// ── 7. Database segregation (venue never touches AssureLocker's DB/client) ────
 console.log("── database segregation ──");
 const schema = rd("apps/assurerail-api/prisma/schema.prisma");
 if (has(schema, "@prisma/assurerail-client")) pass("venue Prisma client is the isolated @prisma/assurerail-client");
@@ -123,7 +152,7 @@ const alImports = tracked.filter((f) => f.endsWith(".ts")).filter((f) => /from [
 if (alImports.length) bad(`venue imports @code/api internals: ${alImports.join(", ")}`);
 else pass("no @code/api imports in the venue (segregation intact)");
 
-// ── 7. Adapters default to DEMO; the runtime profile blocks them from live modes ─
+// ── 8. Adapters default to DEMO; the runtime profile blocks them from live modes ─
 console.log("── adapters ──");
 const cfg = rd("apps/assurerail-api/src/config.ts");
 const demoDefaults = ["tapeSource", "htsAdapter", "hcsAnchor", "settlementAdapter"].every((k) => new RegExp(`${k}[^\\n]*\\?\\?[^\\n]*"?demo"?`, "i").test(cfg) || new RegExp(`${k}.*"demo"`, "i").test(cfg));

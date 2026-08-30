@@ -1,3 +1,5 @@
+import { inspectPersistenceFlags, type DurableRelayMode, type NeutralIngressMode } from "../persistence/feature-flags";
+
 export const ASSURERAIL_OPERATING_MODES = [
   "DEMO",
   "REPLAY",
@@ -22,6 +24,10 @@ export interface RuntimeEnvironmentProfile {
     hcs: AdapterMode;
     settlement: AdapterMode;
     digiKyc: AdapterMode;
+  };
+  features: {
+    neutralIngress: NeutralIngressMode;
+    durableRelay: DurableRelayMode;
   };
 }
 
@@ -115,6 +121,8 @@ function validateFirebaseAdminConfig(env: Environment, errors: string[]): void {
  */
 export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentInspection {
   const errors: string[] = [];
+  const persistenceFlags = inspectPersistenceFlags(env);
+  errors.push(...persistenceFlags.errors);
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -159,6 +167,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     if (mutatingLiveAdapters.length > 0) {
       errors.push(`${operatingMode} mode forbids live mutating adapters: ${mutatingLiveAdapters.join(", ")}`);
     }
+    if (persistenceFlags.durableRelay === "durable") {
+      errors.push(`${operatingMode} mode forbids durable webhook egress; use ARAIL_DURABLE_RELAY_MODE=shadow`);
+    }
   }
 
   if (demoEndpointsEnabled && operatingMode !== "DEMO") {
@@ -176,6 +187,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
 
   if (liveExternalActionsRequired) {
+    if (persistenceFlags.durableRelay !== "durable") {
+      errors.push(`${operatingMode} mode requires ARAIL_DURABLE_RELAY_MODE=durable`);
+    }
     const demoAdapters = Object.entries(adapters)
       .filter(([, value]) => value !== "live")
       .map(([name]) => name);
@@ -197,6 +211,21 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     }
   }
 
+  if (persistenceFlags.durableRelay === "durable") {
+    const vaultUrl = env.VAULT_ADDR?.trim();
+    if (!vaultUrl) errors.push("VAULT_ADDR is required when ARAIL_DURABLE_RELAY_MODE=durable");
+    if (operatingMode !== "DEMO" && vaultUrl && !vaultUrl.startsWith("https://")) {
+      errors.push(`VAULT_ADDR must use https:// in ${operatingMode} mode`);
+    }
+    const hasAppRole = Boolean(env.VAULT_APPROLE_ROLE_ID?.trim() && env.VAULT_APPROLE_SECRET_ID?.trim());
+    const hasToken = Boolean(env.VAULT_TOKEN?.trim());
+    if (liveExternalActionsRequired && !hasAppRole) {
+      errors.push(`Vault AppRole credentials are required in ${operatingMode} mode; VAULT_TOKEN is not accepted for live operation`);
+    } else if (!hasAppRole && !hasToken) {
+      errors.push("Vault AppRole credentials or VAULT_TOKEN are required when ARAIL_DURABLE_RELAY_MODE=durable");
+    }
+  }
+
   return {
     profile: {
       operatingMode,
@@ -205,6 +234,10 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       authenticatedRuntimeRequired,
       liveExternalActionsRequired,
       adapters,
+      features: {
+        neutralIngress: persistenceFlags.neutralIngress,
+        durableRelay: persistenceFlags.durableRelay,
+      },
     },
     errors,
   };
