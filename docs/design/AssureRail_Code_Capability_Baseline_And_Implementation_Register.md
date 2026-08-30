@@ -980,6 +980,20 @@ Flags: cohort `ARAIL_ROOM_WRITE_SOURCE=rail`, `ARAIL_COMPLETION_ACK_V1=shadow→
 Rollback: uncut cohorts remain legacy; cut cases pause/export if a Rail-only construct prevents
 lossless legacy fallback.
 
+**PR-08 implementation checkpoint (31 August 2026):** implemented locally behind default-off or
+legacy-safe gates. Rail now has a maker-checker, versioned per-case write-authority assignment;
+idempotent active room/invitation/declaration/message/close commands; signed connector subject
+mapping; a narrow old-URL compatibility proxy; compatibility-use telemetry; provider-neutral source
+completion records; bounded durable dispatch/recovery; signed exact acknowledgement comparison; and
+independent reconciliation. AssurePool has an exact, idempotent completion receipt and a conditional
+`CONFIRMED -> COMPLETION_PENDING -> PERMANENT` lock path. Shadow completion creates evidence but no
+external mutation. The production on-book adapter remains deliberately unavailable and fails closed;
+therefore no live completion claim is made. Both additive migration rehearsals, both API typechecks,
+174 Rail tests and 34 focused central API tests passed. Design/decision detail:
+`docs/design/AssureRail_Room_Cutover_And_Source_Completion_v1.md`; operating procedure:
+`docs/runbooks/AssureRail_PR08_Room_Cutover_And_Completion.md`; executed evidence:
+`docs/qa/AssureRail_PR08_Room_Cutover_Evidence.md`. Not deployed and not pushed at this checkpoint.
+
 ### PR-09 — External-action saga and conventional DA replay adapter
 
 **Dependencies:** PR-06 and PR-08
