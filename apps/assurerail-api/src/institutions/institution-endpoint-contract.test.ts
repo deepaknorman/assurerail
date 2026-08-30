@@ -32,19 +32,22 @@ function endpoints(controller: ControllerClass) {
   }).sort((a, b) => `${a.path} ${a.method}`.localeCompare(`${b.path} ${b.method}`));
 }
 
-test("[PR03][ENDPOINTS] institutional routes are versioned and have an explicit access boundary", () => {
+test("[PR04][ENDPOINTS] institutional routes are versioned and have an explicit access boundary", () => {
   const found = [...endpoints(InstitutionController), ...endpoints(InstitutionAdminController)]
     .sort((a, b) => `${a.path} ${a.method}`.localeCompare(`${b.path} ${b.method}`));
-  assert.equal(found.length, 16);
+  assert.equal(found.length, 19);
   assert.ok(found.every((entry) => entry.path.startsWith("/v1/rail/")));
-  assert.equal(found.filter((entry) => entry.access === "PLATFORM_ADMIN").length, 4);
+  assert.equal(found.filter((entry) => entry.access === "PLATFORM_ADMIN").length, 6);
   assert.deepEqual(found.map((entry) => `${entry.method} ${entry.path}`), [
     "POST /v1/rail/admin/admission-decisions/:decisionId/review",
+    "GET /v1/rail/admin/institutions",
+    "GET /v1/rail/admin/institutions/:institutionId",
     "POST /v1/rail/admin/institutions/:institutionId/admission-decisions",
     "POST /v1/rail/admin/institutions/:institutionId/evidence",
     "POST /v1/rail/admin/route-entitlements/:entitlementId/review",
     "GET /v1/rail/institutions",
     "POST /v1/rail/institutions",
+    "GET /v1/rail/institutions/:institutionId",
     "POST /v1/rail/institutions/:institutionId/appointments",
     "POST /v1/rail/institutions/:institutionId/mandates",
     "POST /v1/rail/institutions/:institutionId/members/invitations",

@@ -62,6 +62,11 @@ export class InstitutionController {
     return this.applications.apply(actor(req), body);
   }
 
+  @Get(":institutionId")
+  workspace(@Req() req: RailRequest, @Param("institutionId") institutionId: string) {
+    return this.applications.getWorkspaceForUser(actor(req), institutionId, req.user?.activeInstitution?.institutionId);
+  }
+
   @Post(":institutionId/members/invitations")
   inviteMember(
     @Req() req: RailRequest,
@@ -164,6 +169,16 @@ export class InstitutionAdminController {
     private readonly applications: InstitutionApplicationService,
     private readonly governance: InstitutionGovernanceService,
   ) {}
+
+  @Get("institutions")
+  workQueue(@Req() req: RailRequest) {
+    return this.applications.listAdminWorkQueue(actor(req));
+  }
+
+  @Get("institutions/:institutionId")
+  workspace(@Req() req: RailRequest, @Param("institutionId") institutionId: string) {
+    return this.applications.getAdminWorkspace(actor(req), institutionId);
+  }
 
   @Post("institutions/:institutionId/evidence")
   recordEvidence(

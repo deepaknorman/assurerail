@@ -5,6 +5,7 @@ import { audit } from "../common/audit";
 import { assertSha256Digest, sha256Digest, toCanonicalValue } from "../contracts/v1";
 import { PrismaService } from "../store/prisma.service";
 import { evaluateInstitutionEvidence } from "./institution-policy";
+import { InstitutionAccessService } from "./institution-access.service";
 import { StepUpService } from "./step-up.service";
 
 const EVIDENCE_RESULTS = [
@@ -71,7 +72,11 @@ function uniqueConstraint(error: unknown): boolean {
 
 @Injectable()
 export class InstitutionApplicationService {
-  constructor(private readonly db: PrismaService, private readonly stepUp: StepUpService) {}
+  constructor(
+    private readonly db: PrismaService,
+    private readonly stepUp: StepUpService,
+    private readonly access: InstitutionAccessService,
+  ) {}
 
   async listForUser(userId: string) {
     return this.db.institutionMember.findMany({
@@ -99,6 +104,316 @@ export class InstitutionApplicationService {
       },
       orderBy: { createdAt: "asc" },
     });
+  }
+
+  async getWorkspaceForUser(userId: string, institutionId: string, activeInstitutionId?: string | null) {
+    const membership = await this.db.institutionMember.findUnique({
+      where: { institutionId_userId: { institutionId, userId } },
+      include: { institution: { include: { admission: true } } },
+    });
+    if (!membership) throw new NotFoundException("institution workspace not found");
+
+    const preAdmission = ["PENDING_ADMISSION", "INVITED"].includes(membership.status)
+      && ["APPLICANT", "ADMIN"].includes(membership.membershipRole);
+    if (preAdmission) return this.preAdmissionWorkspace(userId, institutionId, membership.id);
+    if (activeInstitutionId !== institutionId) {
+      throw new ForbiddenException("institution workspace requires the matching active session context");
+    }
+
+    const view = await this.access.evaluateHuman({
+      userId,
+      institutionId,
+      action: "VIEW_INSTITUTION",
+    });
+    if (!view.allowed) throw new ForbiddenException(`institution workspace denied: ${view.code}`);
+
+    const [adminMembers, proposeAuthority, approveAuthority, manageAppointments] = await Promise.all([
+      this.access.evaluateHuman({ userId, institutionId, action: "ADMINISTER_MEMBERS" }),
+      this.access.evaluateHuman({ userId, institutionId, action: "PROPOSE_AUTHORITY" }),
+      this.access.evaluateHuman({ userId, institutionId, action: "APPROVE_AUTHORITY" }),
+      this.access.evaluateHuman({ userId, institutionId, action: "MANAGE_APPOINTMENTS" }),
+    ]);
+    const privileged = adminMembers.allowed || proposeAuthority.allowed || approveAuthority.allowed || manageAppointments.allowed;
+    const institution = await this.db.institution.findUniqueOrThrow({
+      where: { id: institutionId },
+      select: {
+        id: true,
+        legalName: true,
+        institutionKind: true,
+        jurisdiction: true,
+        legalIdentifiers: true,
+        status: true,
+        suspensionReason: true,
+        suspendedAt: true,
+        revokedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        admission: {
+          select: {
+            id: true,
+            status: true,
+            termsVersion: true,
+            rulebookVersion: true,
+            riskClass: true,
+            reviewDueAt: true,
+            effectiveAt: true,
+            expiresAt: true,
+            decisionReason: true,
+            decisions: privileged ? {
+              orderBy: { proposedAt: "desc" },
+              select: {
+                id: true, decisionType: true, status: true, reason: true, proposedAt: true,
+                reviewedAt: true, reviewNote: true, proposedByUserId: true, reviewedByUserId: true,
+              },
+            } : false,
+          },
+        },
+        evidenceSnapshots: {
+          orderBy: { sourceAsOfAt: "desc" },
+          select: {
+            id: true, providerReferenceId: true, providerInstitutionRef: true, evidenceType: true,
+            schemaId: true, schemaVersion: true, payloadDigest: true, signatureStatus: true,
+            result: true, verificationMethod: true, independenceClass: true,
+            crossCheckExpected: true, crossCheckAchieved: true, qualifications: true,
+            sourceAsOfAt: true, expiresAt: true, supersedesSnapshotId: true, createdAt: true,
+          },
+        },
+        members: {
+          where: privileged ? undefined : { userId },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true, userId: true, invitedEmail: true, membershipRole: true, status: true,
+            effectiveAt: true, expiresAt: true, recertificationDueAt: true, suspendedAt: true,
+            revokedAt: true, revocationReason: true,
+            mandates: {
+              orderBy: [{ action: "asc" }, { version: "desc" }],
+              select: {
+                id: true, action: true, scopeType: true, scopeRef: true, limits: true,
+                conditions: true, delegationBasis: true, authorityEvidenceRef: true, status: true,
+                version: true, supersedesMandateId: true, proposedByUserId: true,
+                approvedByUserId: true, approvalReason: true, effectiveAt: true, expiresAt: true,
+              },
+            },
+          },
+        },
+        appointments: manageAppointments.allowed ? {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true, institutionId: true, transactionCaseId: true, appointmentRole: true, appointeeInstitutionId: true,
+            appointeeProviderRef: true, scope: true, conflictDisclosure: true, status: true,
+            proposedByUserId: true, acceptedByUserId: true, effectiveAt: true, expiresAt: true,
+          },
+        } : false,
+        routeEntitlements: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true, transactionRoute: true, representation: true, assetClass: true,
+            lifecycleLeg: true, materialFunction: true, functionPerformer: true, routePackRef: true,
+            permissionEvidenceRef: true, operatingModes: true, limits: true, conditions: true,
+            status: true, proposedByUserId: true, approvedByUserId: true, approvalReason: true,
+            effectiveAt: true, expiresAt: true,
+          },
+        },
+        changeProposals: privileged ? {
+          where: { status: "PENDING" },
+          orderBy: { proposedAt: "asc" },
+          select: {
+            id: true, targetType: true, targetId: true, changeType: true, fromStatus: true,
+            reason: true, status: true, proposedByUserId: true, proposedAt: true,
+          },
+        } : false,
+      },
+    });
+    const incomingAppointments = manageAppointments.allowed ? await this.db.appointment.findMany({
+      where: { appointeeInstitutionId: institutionId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, institutionId: true, transactionCaseId: true, appointmentRole: true,
+        appointeeInstitutionId: true, appointeeProviderRef: true, scope: true,
+        conflictDisclosure: true, status: true, proposedByUserId: true,
+        acceptedByUserId: true, effectiveAt: true, expiresAt: true,
+      },
+    }) : [];
+    const appointments = manageAppointments.allowed
+      ? [...institution.appointments, ...incomingAppointments.filter((incoming) => !institution.appointments.some((owned) => owned.id === incoming.id))]
+        .map((appointment) => ({
+          ...appointment,
+          direction: appointment.institutionId === institutionId ? "OUTGOING" : "INCOMING",
+        }))
+      : [];
+    return {
+      accessLevel: privileged ? "GOVERNANCE" : "SELF",
+      capabilities: {
+        view: true,
+        administerMembers: adminMembers.allowed,
+        proposeAuthority: proposeAuthority.allowed,
+        approveAuthority: approveAuthority.allowed,
+        manageAppointments: manageAppointments.allowed,
+        proposeRouteEntitlement: proposeAuthority.allowed,
+      },
+      evidenceGaps: this.evidenceGaps(institution.evidenceSnapshots, institution.admission?.status ?? null),
+      connectorReadiness: {
+        status: "AWAITING_PR05_CERTIFICATION",
+        grantsAuthority: false,
+        message: "Connector registration and certification are introduced with the neutral intake service.",
+      },
+      institution: { ...institution, appointments },
+    };
+  }
+
+  async listAdminWorkQueue(actorUserId: string) {
+    await this.requirePlatformAdmin(actorUserId);
+    const institutions = await this.db.institution.findMany({
+      orderBy: { createdAt: "asc" },
+      take: 200,
+      select: {
+        id: true, legalName: true, institutionKind: true, jurisdiction: true, status: true,
+        createdAt: true, updatedAt: true,
+        admission: {
+          select: {
+            id: true, status: true, riskClass: true, reviewDueAt: true, effectiveAt: true,
+            expiresAt: true,
+            decisions: {
+              where: { status: "PENDING" },
+              orderBy: { proposedAt: "asc" },
+              select: { id: true, decisionType: true, reason: true, proposedByUserId: true, proposedAt: true },
+            },
+          },
+        },
+        _count: { select: { evidenceSnapshots: true, members: true, routeEntitlements: true } },
+        routeEntitlements: {
+          where: { status: "PROPOSED" },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true, transactionRoute: true, representation: true, assetClass: true,
+            materialFunction: true, functionPerformer: true, operatingModes: true,
+            proposedByUserId: true, createdAt: true,
+          },
+        },
+      },
+    });
+    return {
+      institutions,
+      counts: {
+        applications: institutions.filter((entry) => ["APPLIED", "UNDER_REVIEW"].includes(entry.admission?.status ?? "")).length,
+        admissionReviews: institutions.reduce((sum, entry) => sum + (entry.admission?.decisions.length ?? 0), 0),
+        routeReviews: institutions.reduce((sum, entry) => sum + entry.routeEntitlements.length, 0),
+      },
+    };
+  }
+
+  async getAdminWorkspace(actorUserId: string, institutionId: string) {
+    await this.requirePlatformAdmin(actorUserId);
+    const institution = await this.db.institution.findUnique({
+      where: { id: institutionId },
+      include: {
+        admission: { include: { decisions: { orderBy: { proposedAt: "desc" } } } },
+        evidenceSnapshots: { orderBy: { sourceAsOfAt: "desc" } },
+        members: {
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true, userId: true, invitedEmail: true, membershipRole: true, status: true,
+            acceptedAt: true, effectiveAt: true, expiresAt: true, recertificationDueAt: true,
+          },
+        },
+        routeEntitlements: { orderBy: { createdAt: "desc" } },
+        appointments: { orderBy: { createdAt: "desc" } },
+        changeProposals: { where: { status: "PENDING" }, orderBy: { proposedAt: "asc" } },
+      },
+    });
+    if (!institution) throw new NotFoundException("institution not found");
+    return {
+      institution,
+      evidenceGaps: this.evidenceGaps(institution.evidenceSnapshots, institution.admission?.status ?? null),
+      operatorBoundary: {
+        mayReviewAdmission: true,
+        mayReviewRouteEntitlement: true,
+        mayActForInstitution: false,
+        supportImpersonationAvailable: false,
+      },
+    };
+  }
+
+  private async preAdmissionWorkspace(userId: string, institutionId: string, membershipId: string) {
+    const institution = await this.db.institution.findUniqueOrThrow({
+      where: { id: institutionId },
+      select: {
+        id: true, legalName: true, institutionKind: true, jurisdiction: true, status: true,
+        createdAt: true, updatedAt: true,
+        admission: {
+          select: {
+            status: true, termsVersion: true, rulebookVersion: true, reviewDueAt: true,
+            effectiveAt: true, expiresAt: true, decisionReason: true,
+          },
+        },
+        evidenceSnapshots: {
+          orderBy: { sourceAsOfAt: "desc" },
+          select: {
+            id: true, providerReferenceId: true, providerInstitutionRef: true, evidenceType: true,
+            schemaId: true, schemaVersion: true, payloadDigest: true, signatureStatus: true,
+            result: true, verificationMethod: true, independenceClass: true,
+            crossCheckExpected: true, crossCheckAchieved: true, qualifications: true,
+            sourceAsOfAt: true, expiresAt: true, supersedesSnapshotId: true, createdAt: true,
+          },
+        },
+        members: {
+          where: { OR: [{ id: membershipId }, { membershipRole: { in: ["APPLICANT", "ADMIN"] } }] },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true, userId: true, invitedEmail: true, membershipRole: true, status: true,
+            acceptedAt: true, expiresAt: true,
+          },
+        },
+      },
+    });
+    return {
+      accessLevel: "APPLICATION",
+      capabilities: {
+        view: true,
+        administerMembers: false,
+        proposeAuthority: false,
+        approveAuthority: false,
+        manageAppointments: false,
+        proposeRouteEntitlement: false,
+      },
+      evidenceGaps: this.evidenceGaps(institution.evidenceSnapshots, institution.admission?.status ?? null),
+      connectorReadiness: {
+        status: "NOT_AVAILABLE_PRE_ADMISSION",
+        grantsAuthority: false,
+        message: "Connector setup does not begin before participant admission.",
+      },
+      viewer: { userId, membershipId },
+      institution: { ...institution, appointments: [], routeEntitlements: [], changeProposals: [] },
+    };
+  }
+
+  private evidenceGaps(
+    evidence: readonly {
+      result: string;
+      signatureStatus: string;
+      expiresAt: Date;
+      crossCheckExpected: Prisma.JsonValue;
+      crossCheckAchieved: Prisma.JsonValue;
+    }[],
+    admissionStatus: string | null,
+  ) {
+    const acceptable = evidence.filter((snapshot) => evaluateInstitutionEvidence({
+      now: new Date(),
+      result: snapshot.result,
+      signatureStatus: snapshot.signatureStatus,
+      expiresAt: snapshot.expiresAt,
+      crossCheckExpected: snapshot.crossCheckExpected,
+      crossCheckAchieved: snapshot.crossCheckAchieved,
+    }).allowed);
+    return [
+      ...(evidence.length === 0 ? [{ code: "NO_EVIDENCE", message: "No institution evidence snapshot is recorded." }] : []),
+      ...(evidence.length > 0 && acceptable.length === 0
+        ? [{ code: "NO_CURRENT_VERIFIED_EVIDENCE", message: "No retained evidence currently passes signature, result, cross-check and expiry policy." }]
+        : []),
+      ...(!["ADMITTED", "SUSPENDED"].includes(admissionStatus ?? "")
+        ? [{ code: "NOT_ADMITTED", message: "Participant admission has not become effective." }]
+        : []),
+    ];
   }
 
   async apply(actorUserId: string, body: {

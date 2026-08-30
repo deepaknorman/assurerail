@@ -12,7 +12,7 @@ import {
   type User,
 } from "./firebase";
 import { recaptchaToken } from "./recaptcha";
-import { vpost } from "./venue";
+import { currentInstitutionContext, rememberInstitutionContext, vpost } from "./venue";
 
 export interface VenueUser {
   id: string;
@@ -28,6 +28,9 @@ export interface VenueUser {
   status: string; // PENDING | ACTIVE | SUSPENDED
   emailVerified?: boolean;
   firebaseUid?: string | null;
+  identityProvider?: string | null;
+  identitySubject?: string | null;
+  identityVerifiedAt?: string | null;
 }
 
 interface AuthState {
@@ -35,10 +38,12 @@ interface AuthState {
   firebaseUser: User | null;
   venueUser: VenueUser | null;
   needsOnboarding: boolean;
+  activeInstitutionId: string | null;
   error: string;
   loginGoogle: () => Promise<void>;
   loginEmail: (email: string, password: string, register?: boolean) => Promise<void>;
   onboard: (did?: string) => Promise<void>;
+  selectInstitution: (institutionId: string | null) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -56,21 +61,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [venueUser, setVenueUser] = useState<VenueUser | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [activeInstitutionId, setActiveInstitutionId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   // Exchange the Firebase ID token for the venue session (reCAPTCHA Enterprise-defended).
-  const establish = useCallback(async () => {
+  const establish = useCallback(async (requestedInstitutionId?: string | null) => {
     const u = auth.currentUser;
     if (!u) {
       setVenueUser(null);
       setNeedsOnboarding(false);
+      setActiveInstitutionId(null);
       return;
     }
     const idToken = await u.getIdToken();
     const rc = await recaptchaToken("LOGIN");
-    const res = await vpost<{ user: VenueUser; needsOnboarding: boolean }>("/venue/auth/session", { idToken, recaptchaToken: rc });
+    const requested = requestedInstitutionId === undefined
+      ? currentInstitutionContext()
+      : requestedInstitutionId;
+    const exchange = (institutionId: string | null) => vpost<{
+      user: VenueUser;
+      needsOnboarding: boolean;
+      session: { activeInstitutionId: string | null };
+    }>("/venue/auth/session", {
+      idToken,
+      recaptchaToken: rc,
+      activeInstitutionId: institutionId,
+    }, { institutionId: null });
+    let res;
+    try {
+      res = await exchange(requested);
+    } catch (cause) {
+      if (requestedInstitutionId !== undefined || !requested) throw cause;
+      rememberInstitutionContext(null);
+      res = await exchange(null);
+    }
     setVenueUser(res.user);
     setNeedsOnboarding(res.needsOnboarding);
+    const active = res.session.activeInstitutionId ?? null;
+    rememberInstitutionContext(active);
+    setActiveInstitutionId(active);
   }, []);
 
   useEffect(() => {
@@ -82,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         else {
           setVenueUser(null);
           setNeedsOnboarding(false);
+          setActiveInstitutionId(null);
         }
       } catch (e) {
         setError((e as Error).message);
@@ -120,15 +150,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setNeedsOnboarding(false);
   }, []);
 
+  const selectInstitution = useCallback(async (institutionId: string | null) => {
+    setError("");
+    await establish(institutionId);
+  }, [establish]);
+
   const logout = useCallback(async () => {
     await signOut(auth);
     setVenueUser(null);
     setNeedsOnboarding(false);
+    setActiveInstitutionId(null);
+    rememberInstitutionContext(null);
   }, []);
 
   const value = useMemo<AuthState>(
-    () => ({ loading, firebaseUser, venueUser, needsOnboarding, error, loginGoogle, loginEmail, onboard, logout, refresh: establish }),
-    [loading, firebaseUser, venueUser, needsOnboarding, error, loginGoogle, loginEmail, onboard, logout, establish],
+    () => ({
+      loading,
+      firebaseUser,
+      venueUser,
+      needsOnboarding,
+      activeInstitutionId,
+      error,
+      loginGoogle,
+      loginEmail,
+      onboard,
+      selectInstitution,
+      logout,
+      refresh: () => establish(),
+    }),
+    [loading, firebaseUser, venueUser, needsOnboarding, activeInstitutionId, error, loginGoogle, loginEmail, onboard, selectInstitution, logout, establish],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

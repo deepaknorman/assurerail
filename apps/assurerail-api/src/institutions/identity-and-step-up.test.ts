@@ -217,7 +217,7 @@ test("[PR03][MAKER_CHECKER] admission, mandate and entitlement makers cannot rev
         participantAdmission: { institutionId: "inst-1", institution: { applicantUserId: "maker" } },
       }),
     },
-  } as never, {} as never);
+  } as never, {} as never, {} as never);
   await assert.rejects(
     () => application.reviewDecision("maker", "decision-1", { approve: true, reviewNote: "self", stepUpEvidenceId: "sup" }, "session-1"),
     ForbiddenException,

@@ -15,7 +15,7 @@ const Gear = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const Out = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 
 export function VenueHeader() {
-  const { venueUser, firebaseUser, logout } = useAuth();
+  const { venueUser, firebaseUser, activeInstitutionId, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -47,8 +47,10 @@ export function VenueHeader() {
   const isAdmin = !!venueUser?.isAdmin;
   const nav = [
     { href: "/console", label: "Console" },
+    { href: "/institutions", label: "Institutions" },
     { href: "/activity", label: "Activity" },
     ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
+    ...(isAdmin ? [{ href: "/admin/institutions", label: "Approvals" }] : []),
   ];
   const closeAll = () => { setNotifOpen(false); setMenuOpen(false); setNavOpen(false); };
 
@@ -94,6 +96,7 @@ export function VenueHeader() {
                 <div className="m-email">{email}</div>
                 <div className="m-meta">{venueUser?.role ?? "—"}{venueUser?.isAdmin ? " · admin" : ""}</div>
                 {venueUser?.did && <div className="m-meta">{shortDid(venueUser.did)}</div>}
+                <div className="m-meta">institution: {activeInstitutionId ?? "none selected"}</div>
               </div>
               <Link href="/settings" className="menu-item" onClick={closeAll}><Gear /> Settings</Link>
               <button className="menu-item" onClick={() => { closeAll(); void logout(); router.replace("/login"); }}><Out /> Sign out</button>

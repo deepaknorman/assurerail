@@ -269,3 +269,48 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
 /* ── TOTP setup panel ── */
 .totp-setup { margin-top: 12px; padding: 16px; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm, 8px); background: var(--arail-bg-raised); }
 .totp-setup .sr-sub { margin: 0 0 8px; }
+
+/* ── institutional admission and governance ── */
+.institutional-page { padding-bottom: 72px; }
+.institution-title-row, .institution-card-head, .record-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.institution-title-row .button-row { margin-top: 2px; }
+.back-link { display: inline-block; color: var(--arail-accent-text); font-size: 12px; margin-bottom: 8px; }
+.section-title { font-size: 16px; margin: 0 0 8px; }
+.institution-grid, .institution-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.institution-card, .record-card { border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-md); padding: 15px; background: var(--arail-bg-raised); }
+.institution-card h3 { font-size: 16px; }
+.institution-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 14px; margin: 14px 0; }
+.institution-facts > div { min-width: 0; }
+.institution-facts .fact-span { grid-column: 1 / -1; }
+.institution-facts dt { color: var(--arail-text-muted); font-family: var(--arail-font-mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
+.institution-facts dd { color: var(--arail-text-primary); font-size: 12px; margin: 3px 0 0; overflow-wrap: anywhere; }
+.button-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.inline-governance-form, .governance-form { border-top: 1px solid var(--arail-border-subtle); margin-top: 14px; padding-top: 14px; }
+.inline-governance-form h4, .governance-form summary { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.governance-form summary { cursor: pointer; color: var(--arail-accent-text); }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin: 12px 0; }
+.form-grid .form-span { grid-column: 1 / -1; }
+.form-grid .field, .review-row .field { width: 100%; box-sizing: border-box; }
+textarea.field { min-height: 72px; resize: vertical; }
+.record-list { display: flex; flex-direction: column; gap: 10px; }
+.record-card .record-head { align-items: center; }
+.record-card .pill, .institution-card .pill { margin-top: 0; }
+.subrecord { border-top: 1px solid var(--arail-border-subtle); margin-top: 10px; padding-top: 10px; font-size: 12px; }
+.compact-list { display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 12px 0 0; padding: 0; }
+.compact-list li { display: flex; flex-direction: column; gap: 2px; color: var(--arail-text-secondary); font-size: 12px; }
+.compact-list strong { color: var(--arail-warning-text); font-family: var(--arail-font-mono); font-size: 10px; }
+.boundary-note { border: 1px solid var(--arail-warning-border); border-radius: var(--arail-radius-sm); background: var(--arail-warning-bg); color: var(--arail-warning-text); font-size: 12px; line-height: 1.5; padding: 10px 12px; margin-top: 10px; }
+.governance-ceremony { border-left: 3px solid var(--arail-accent-text); }
+.governance-code { max-width: 180px; }
+.review-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; margin-top: 10px; }
+.breakable { overflow-wrap: anywhere; word-break: break-word; }
+.institution-admin-layout { display: grid; grid-template-columns: minmax(240px, .7fr) minmax(0, 2fr); gap: 18px; align-items: start; }
+.institution-queue { display: flex; flex-direction: column; gap: 7px; }
+.queue-item { display: flex; flex-direction: column; gap: 3px; text-align: left; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm); background: var(--arail-bg-raised); color: var(--arail-text-primary); padding: 10px 12px; cursor: pointer; }
+.queue-item:hover, .queue-item.selected { border-color: var(--arail-accent-text); }
+.queue-item span, .queue-item small { color: var(--arail-text-muted); font-size: 11px; }
+
+@media (max-width: 760px) {
+  .institution-admin-layout, .form-grid, .review-row { grid-template-columns: 1fr; }
+  .institution-title-row { flex-direction: column; }
+}

@@ -15,7 +15,7 @@ export default function Onboard() {
   useEffect(() => {
     if (loading) return;
     if (!firebaseUser) router.replace("/login");
-    else if (venueUser && !needsOnboarding) router.replace("/console");
+    else if (venueUser && !needsOnboarding) router.replace("/institutions");
   }, [loading, firebaseUser, venueUser, needsOnboarding, router]);
 
   async function submit() {
@@ -23,7 +23,7 @@ export default function Onboard() {
     setErr("");
     try {
       await onboard(did.trim() || undefined);
-      router.replace("/console");
+      router.replace("/institutions");
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -44,14 +44,14 @@ export default function Onboard() {
       <main className="wrap auth-wrap">
         <div className="auth-card">
           <h1>Verify your identity</h1>
-          <p className="auth-sub">AssureRail requires an existing AssureLocker DigiKYC identity. We reference your DID — your personal data never crosses into the venue.</p>
+          <p className="auth-sub">Bind a verified identity before applying for or joining an institution. AssureLocker DigiKYC is the first configured provider; identity binding alone grants no participant or route access.</p>
           {(err || error) && <div className="msg err">{err || error}</div>}
 
           <label className="lbl">
-            AssureLocker DID <span className="opt">(optional in sandbox)</span>
+            Provider subject / AssureLocker DID <span className="opt">(optional in sandbox)</span>
             <input className="field" placeholder="did:web:ind.id.assurelocker.com:user:…" value={did} onChange={(e) => setDid(e.target.value)} />
           </label>
-          <button className="btn btn-primary" disabled={busy} onClick={submit}>{busy ? "Verifying…" : "Verify & continue"}</button>
+          <button className="btn btn-primary" disabled={busy} onClick={submit}>{busy ? "Binding…" : "Bind identity"}</button>
 
           <p className="auth-fine">Signed in as {venueUser?.email ?? firebaseUser?.email ?? "…"}.</p>
         </div>
