@@ -796,6 +796,22 @@ Acceptance evidence:
 
 Rollback: UI routes hidden; APIs/data remain dark and auditable.
 
+**PR-04 implementation checkpoint (30 August 2026):** implemented locally on
+`codex/assurerail-pr01-neutral-taxonomy`. Three views now preserve the PR-03 boundaries: a
+restricted application-status view, an institution-bound participant workspace whose read/action
+breadth is derived from exact mandates, and a platform admission/route-review queue with an
+explicit no-impersonation boundary. The session exchange owns active-institution selection; browser
+storage is only a requested context. Evidence displays provider/source, digest, signature, result,
+method, independence, source/as-of/expiry, expected and achieved cross-checks and qualifications
+separately. Incoming institutional appointments are visible to their appointee for independent
+acceptance. Connector readiness is deliberately labelled unavailable/awaiting PR-05 and grants no
+authority. Identity-binding copy was minimally corrected where it had falsely described
+AssureLocker DigiKYC as venue admission and routed users to the Note console. No public proposition,
+database migration, route enforcement, live capability or deployment was added. Detailed decisions
+and rejections: `docs/design/AssureRail_Institutional_Workspaces_v1.md`. Operations:
+`docs/runbooks/AssureRail_PR04_Institutional_Workspaces.md`. Executed evidence:
+`docs/qa/AssureRail_PR04_Institutional_Workspace_Evidence.md`.
+
 ### PR-05 — Evidence/document and provider-neutral intake service
 
 **Dependencies:** PR-02 and PR-03
@@ -1173,9 +1189,9 @@ The first coding tranche should be **PR-00 through PR-03**, with PR-04 UI design
 PR-03 API/authority contract stabilises. This produces a safe foundation without committing yet to
 untested DA/PTC legal mechanics.
 
-As at 30 August 2026, the PR-00 through PR-03 implementation checkpoints are present locally on the
-working branch. PR-04 has not started, no PR-03 flag is live, and nothing in these checkpoints is a
-deployment or production acceptance. The original code-shaping sign-off questions now stand as:
+As at 30 August 2026, the PR-00 through PR-04 implementation checkpoints are present locally on the
+working branch. No participant-admission or route flag is live, and nothing in these checkpoints is
+a deployment or production acceptance. The original code-shaping sign-off questions now stand as:
 
 1. **Selected:** neutral contracts are runtime-inert under
    `apps/assurerail-api/src/contracts/v1`.
@@ -1185,8 +1201,8 @@ deployment or production acceptance. The original code-shaping sign-off question
    their own expiry/risk policy fails closed. Provider-specific refresh frequency and maximum
    offline continuity remain a PR-05 operating-policy decision.
 4. **Partly selected:** PR-02 uses Vault references and a durable Postgres worker/outbox pattern.
-   Encrypted object storage, malware service and any broader job-runner choice remain PR-05/PR-06
-   decisions and may not be invented inside UI work.
+   PR-04 therefore exposes a visibly non-authoritative connector placeholder. Encrypted object
+   storage, malware service and any broader job-runner choice remain PR-05/PR-06 decisions.
 5. **Selected and tested:** explicit runtime profiles separate `DEMO`, `REPLAY`, `SHADOW`,
    `SANDBOX`, `CONTROLLED_LIVE` and `PRODUCTION`; no-DB/demo adapters/demo endpoints fail the
    production-startup contract.
