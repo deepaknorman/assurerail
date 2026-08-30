@@ -727,6 +727,51 @@ Flags: `ARAIL_PARTICIPANT_ADMISSION_V1=shadow`,
 Rollback: keep neutral admission records, return authorisation reads to legacy only in non-live
 environments; no imported evidence is deleted.
 
+**PR-03 implementation checkpoint (30 August 2026):** implemented locally at `06c39deef` on
+`codex/assurerail-pr01-neutral-taxonomy`. The change is additive and disabled by default. It adds
+the eleven Rail-owned institution/admission/authority models, 16 versioned institution APIs, a
+provider-neutral identity-binding boundary, session-bound institution context, retained evidence
+snapshots, two-person admission/mandate/status/route governance, appointments, service-principal
+policy records and exact human/route authority evaluators.
+
+Selected controls and deliberately bounded behavior:
+
+- AssureLocker DigiKYC is the first identity adapter, not an admission authority or compulsory
+  institution field. Binding an identity never sets the legacy allow-list, cannot clear a suspension
+  and cannot silently replace an existing provider subject.
+- A Rail session stores a digest-derived identifier rather than its Firebase bearer. Participant
+  requests require the header institution to match an active membership and the institution bound
+  to that exact active session.
+- TOTP step-up evidence is five-minute, single-use and bound to the exact user, session,
+  institution and closed ceremony purpose. Its consumption and the corresponding governed
+  proposal/review commit or roll back in one database transaction.
+- Admission and route review require a different active platform administrator from the maker.
+  Institution mandate and target-status changes require a different participant checker holding
+  the exact mandate. Platform employment does not become participant authority.
+- Evidence keeps provider/source, digest, signature status, result, method, independence,
+  source/as-of/expiry, qualifications and `crossCheckExpected` separate from
+  `crossCheckAchieved`; only achieved verified checks may satisfy the evidence policy.
+- Route entitlements can be recorded only for `REPLAY`/`SHADOW` and only when the compare flag is
+  explicit. `CONTROLLED_LIVE` and `PRODUCTION` are rejected by the service. A participant can
+  propose but cannot approve its own route permission.
+- A non-null mandate scope key and database partial uniqueness prevent PostgreSQL nullable-key
+  behavior or concurrent requests from leaving two proposals pending for the same exact scope.
+- Existing `entityDid/entityRole` rows migrate only to `LEGACY_REFERENCE_ONLY`, `NOT_ADMITTED` and
+  `LEGACY_PROJECTED` records. They receive no mandate or route entitlement. A matching legacy
+  entity role now also fails for a suspended or non-allowlisted account.
+
+Rejected or deferred in this checkpoint: auto-admission after identity verification; compulsory
+AssureLocker/AssurePlane/IDBI fields; participant self-grant; live route permission; PR-04 UI; PR-05
+automated/object evidence intake; PR-06 transaction cases; enforcement on the legacy Note/room/
+document/report surfaces; service-principal credential issuance; provider appointment acceptance;
+WebAuthn assertion step-up and production TOTP recovery hardening; atomic legacy hash-chain audit
+append for every governance write; public-copy change; deployment.
+
+Detailed decisions and rejections:
+`docs/design/AssureRail_Institution_Admission_And_Authority_v1.md`. Operating procedure and safe
+pause: `docs/runbooks/AssureRail_PR03_Institution_Authority.md`. Executed evidence:
+`docs/qa/AssureRail_PR03_Authority_Evidence.md`.
+
 ### PR-04 — Institutional onboarding and administration UI
 
 **Dependencies:** PR-03
@@ -1012,9 +1057,14 @@ accurately labelled:
 - CLA onboarding ran 11 suites/189 tests successfully;
 - selected institution tests ran 3 suites/35 tests, with live-API portions self-skipped because the
   API was unavailable;
-- evidence-trust tests passed eight cases; and
+- evidence-trust tests passed eight cases;
 - the PR-00 focused AssureTransfer room gate passed 26 tests; earlier wider AssureTransfer runs passed
-  its 43-case golden corpus, 30 API/room tests and two deadline-worker tests.
+  its 43-case golden corpus, 30 API/room tests and two deadline-worker tests; and
+- PR-03 passed 129/129 Rail API tests and the 26/26 transfer-room gate; a disposable Postgres
+  rehearsal proved all ten migrations, SHADOW module startup, inert legacy projection, bounded
+  relational/concurrency constraints and backup/restore; final API/web builds, invariants,
+  Gitleaks and cached-rule Semgrep checks passed. Exact environment qualifications and skipped/live
+  boundaries are retained in `docs/qa/AssureRail_PR03_Authority_Evidence.md`.
 
 These are not production acceptance because they do not yet cover a live authoritative register,
 payment provider, institutional signing authority, multi-tenant isolation, fault-injected saga,
@@ -1123,15 +1173,25 @@ The first coding tranche should be **PR-00 through PR-03**, with PR-04 UI design
 PR-03 API/authority contract stabilises. This produces a safe foundation without committing yet to
 untested DA/PTC legal mechanics.
 
-Before PR-00 starts, hold a short internal sign-off on only these code-shaping questions:
+As at 30 August 2026, the PR-00 through PR-03 implementation checkpoints are present locally on the
+working branch. PR-04 has not started, no PR-03 flag is live, and nothing in these checkpoints is a
+deployment or production acceptance. The original code-shaping sign-off questions now stand as:
 
-1. canonical package/module location for neutral contracts;
-2. Rail API version/namespace and tenant-context convention;
-3. institution snapshot versus federation refresh policy and maximum offline continuity;
-4. object storage/vault/job-runner choices already approved for the platform;
-5. exact demo/production environment invariant; and
-6. initial historic DA and PTC replay data owners, including trustee/RTA/depository evidence for the
-   PTC example.
+1. **Selected:** neutral contracts are runtime-inert under
+   `apps/assurerail-api/src/contracts/v1`.
+2. **Selected for v1:** institution APIs use `/v1/rail/...`; a participant context is the
+   session-bound `X-AssureRail-Institution-Id`, never an unverified request-body actor.
+3. **Partly selected:** retained signed snapshots remain usable through provider outage only until
+   their own expiry/risk policy fails closed. Provider-specific refresh frequency and maximum
+   offline continuity remain a PR-05 operating-policy decision.
+4. **Partly selected:** PR-02 uses Vault references and a durable Postgres worker/outbox pattern.
+   Encrypted object storage, malware service and any broader job-runner choice remain PR-05/PR-06
+   decisions and may not be invented inside UI work.
+5. **Selected and tested:** explicit runtime profiles separate `DEMO`, `REPLAY`, `SHADOW`,
+   `SANDBOX`, `CONTROLLED_LIVE` and `PRODUCTION`; no-DB/demo adapters/demo endpoints fail the
+   production-startup contract.
+6. **Still required before PR-09/PR-10:** name the historic DA and PTC replay data owners and obtain
+   the source/trustee/RTA/depository evidence pack for the PTC example.
 
 These questions affect interfaces or infrastructure choices. They do not reopen the selected
 product boundaries above.
