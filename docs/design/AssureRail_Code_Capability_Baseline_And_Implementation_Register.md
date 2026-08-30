@@ -1022,6 +1022,25 @@ Flag: `ARAIL_EXTERNAL_ACTION_SAGA_V1=required` for cohort,
 `ARAIL_DA_REPLAY_V1=allow-list`.
 Rollback: replay/shadow has no external mutation; disable cohort and export evidence.
 
+**PR-09 implementation checkpoint (31 August 2026):** implemented locally as a domestic,
+bilateral, conventional-DA `REPLAY/SHADOW` route with an `OBSERVE_ONLY` durable saga. The route has
+per-case maker-checker allow-listing; explicit transferee-owned credit-decision evidence; ordered
+document, exact consideration, transferor/transferee source, authoritative-register and required-
+notice legs; append-only signed/final observations; independent reconciliation; a critical break
+queue; maker-checker append-only repair; authoritative before/after snapshots; and JSON/CSV/stable-
+digest evidence exports. The common case engine now distinguishes saga-ready, all-legs-observed and
+fully-reconciled facts. It remains impossible to mount this adapter in controlled-live/production,
+and the module imports no settlement, HCS, HTS or external-egress adapter. All 185 Rail tests, the
+Rail build, Prisma validation and the eight-model disposable migration/upgrade/schema-drift/
+constraint/backup/restore rehearsal passed. The completed-deal-shaped fixture is explicitly
+anonymised reference data, not a real historic transaction. A real participant-authorised historic
+DA replay remains open, as does the verified-evidence promotion/provider workflow needed to supply
+`VERIFIED` evidence without manual database intervention. Design/decision detail:
+`docs/design/AssureRail_Conventional_DA_Replay_And_External_Action_Saga_v1.md`; operating procedure:
+`docs/runbooks/AssureRail_PR09_Conventional_DA_Replay.md`; executed evidence:
+`docs/qa/AssureRail_PR09_Conventional_DA_Replay_Evidence.md`. Not deployed and not pushed at this
+checkpoint. PR-10 remains untouched pending founder review.
+
 ### PR-10 — Conventional PTC replay adapter
 
 **Dependencies:** PR-06, PR-07 and the saga/reconciliation foundation of PR-09
