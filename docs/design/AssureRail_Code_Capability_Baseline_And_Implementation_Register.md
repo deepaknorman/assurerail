@@ -891,6 +891,20 @@ Acceptance evidence:
 Flag: `ARAIL_TRANSACTION_CASE_V1=shadow`.
 Rollback: no legacy writes are switched; dark cases remain exportable.
 
+**PR-06 implementation checkpoint (30 August 2026):** implemented locally behind a three-part
+participant-admission + neutral-ingress + transaction-case shadow gate, additionally restricted to
+`REPLAY/SHADOW` runtime. Nine additive Rail models now hold neutral cases, immutable versions,
+accepted institutional parties, material-function assignments, conditions, maker-checker decisions,
+optimistic/idempotent transitions and deterministic replay receipts. The 13 versioned case APIs
+derive actor/session/institution context, enforce admission/membership/mandate/case-party scope and
+require exact route entitlements. Evidence intake/read/grant now enforces case-party scope and stops
+versions after evidence lock while retaining legacy opaque identifiers when the case flag is off.
+Execution and completion facts deliberately remain unavailable until PR-09's saga/reconciliation
+foundation. Detailed selected/rejected decisions:
+`docs/design/AssureRail_Neutral_Transaction_Case_And_State_Engine_v1.md`. Operating procedure:
+`docs/runbooks/AssureRail_PR06_Transaction_Case.md`. Executed evidence:
+`docs/qa/AssureRail_PR06_Transaction_Case_Evidence.md`.
+
 ### PR-07 — Rail-owned case room and legacy backfill
 
 **Dependencies:** PR-05 and PR-06
