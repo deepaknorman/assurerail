@@ -9,8 +9,15 @@ export const INTAKE_PROFILE_IDS = [
 ] as const;
 export type IntakeProfileId = (typeof INTAKE_PROFILE_IDS)[number];
 
+export const INTEGRATION_PROFILE_IDS = [
+  ...INTAKE_PROFILE_IDS,
+  "assurerail.legacy-room-proxy.v1",
+  "assurepool.completion-ack.v1",
+] as const;
+export type IntegrationProfileId = (typeof INTEGRATION_PROFILE_IDS)[number];
+
 export interface ConnectorSchemaProfile {
-  readonly profileRef: IntakeProfileId;
+  readonly profileRef: IntegrationProfileId;
   readonly schemaId: string;
   readonly schemaVersion: string;
 }
@@ -34,11 +41,11 @@ export function parseConnectorSchemaProfiles(value: unknown): ConnectorSchemaPro
   const profiles = value.map((entry, index) => {
     const candidate = object(entry, `schemaProfiles[${index}]`);
     const profileRef = nonEmpty(candidate.profileRef, `schemaProfiles[${index}].profileRef`);
-    if (!INTAKE_PROFILE_IDS.includes(profileRef as IntakeProfileId)) {
+    if (!INTEGRATION_PROFILE_IDS.includes(profileRef as IntegrationProfileId)) {
       throw new BadRequestException(`unsupported schemaProfiles[${index}].profileRef`);
     }
     return {
-      profileRef: profileRef as IntakeProfileId,
+      profileRef: profileRef as IntegrationProfileId,
       schemaId: nonEmpty(candidate.schemaId, `schemaProfiles[${index}].schemaId`),
       schemaVersion: nonEmpty(candidate.schemaVersion, `schemaProfiles[${index}].schemaVersion`),
     };

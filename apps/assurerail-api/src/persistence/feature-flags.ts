@@ -23,8 +23,16 @@ export const ROOM_READ_SOURCE_VALUES = ["legacy", "compare", "rail"] as const;
 export type RoomReadSource = (typeof ROOM_READ_SOURCE_VALUES)[number];
 
 export const ROOM_WRITE_SOURCE_FLAG = "ARAIL_ROOM_WRITE_SOURCE" as const;
-export const ROOM_WRITE_SOURCE_VALUES = ["legacy"] as const;
+export const ROOM_WRITE_SOURCE_VALUES = ["legacy", "rail"] as const;
 export type RoomWriteSource = (typeof ROOM_WRITE_SOURCE_VALUES)[number];
+
+export const COMPLETION_ACK_FLAG = "ARAIL_COMPLETION_ACK_V1" as const;
+export const COMPLETION_ACK_VALUES = ["off", "shadow", "on"] as const;
+export type CompletionAcknowledgementMode = (typeof COMPLETION_ACK_VALUES)[number];
+
+export const LEGACY_ROOM_PROXY_FLAG = "ARAIL_LEGACY_ROOM_PROXY_V1" as const;
+export const LEGACY_ROOM_PROXY_VALUES = ["off", "shadow"] as const;
+export type LegacyRoomProxyMode = (typeof LEGACY_ROOM_PROXY_VALUES)[number];
 
 type Environment = Readonly<Record<string, string | undefined>>;
 
@@ -52,6 +60,8 @@ export function inspectPersistenceFlags(env: Environment): {
   transactionCase: TransactionCaseMode;
   roomReadSource: RoomReadSource;
   roomWriteSource: RoomWriteSource;
+  completionAcknowledgement: CompletionAcknowledgementMode;
+  legacyRoomProxy: LegacyRoomProxyMode;
   errors: readonly string[];
 } {
   const ingress = readFlag(env, NEUTRAL_INGRESS_FLAG, NEUTRAL_INGRESS_VALUES, "off");
@@ -61,6 +71,8 @@ export function inspectPersistenceFlags(env: Environment): {
   const transactionCase = readFlag(env, TRANSACTION_CASE_FLAG, TRANSACTION_CASE_VALUES, "off");
   const roomReadSource = readFlag(env, ROOM_READ_SOURCE_FLAG, ROOM_READ_SOURCE_VALUES, "legacy");
   const roomWriteSource = readFlag(env, ROOM_WRITE_SOURCE_FLAG, ROOM_WRITE_SOURCE_VALUES, "legacy");
+  const completionAcknowledgement = readFlag(env, COMPLETION_ACK_FLAG, COMPLETION_ACK_VALUES, "off");
+  const legacyRoomProxy = readFlag(env, LEGACY_ROOM_PROXY_FLAG, LEGACY_ROOM_PROXY_VALUES, "off");
   return {
     neutralIngress: ingress.value,
     durableRelay: relay.value,
@@ -69,7 +81,10 @@ export function inspectPersistenceFlags(env: Environment): {
     transactionCase: transactionCase.value,
     roomReadSource: roomReadSource.value,
     roomWriteSource: roomWriteSource.value,
-    errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error, roomReadSource.error, roomWriteSource.error]
+    completionAcknowledgement: completionAcknowledgement.value,
+    legacyRoomProxy: legacyRoomProxy.value,
+    errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error,
+      roomReadSource.error, roomWriteSource.error, completionAcknowledgement.error, legacyRoomProxy.error]
       .filter((error): error is string => Boolean(error)),
   };
 }

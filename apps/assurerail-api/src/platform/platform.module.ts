@@ -28,6 +28,6 @@ import { ActivityController } from "./activity.controller";
     DocumentsService,
     IngressService,
   ],
-  exports: [IngressService],
+  exports: [IngressService, WebhookEgressService],
 })
 export class PlatformModule {}

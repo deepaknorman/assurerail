@@ -24,8 +24,8 @@ type Comparison = { dimension: string; matched: boolean; expected: unknown; obse
 
 function enabled(): void {
   const flags = inspectPersistenceFlags(process.env);
-  if (flags.transactionCase !== "shadow" || flags.roomReadSource !== "compare" || flags.roomWriteSource !== "legacy") {
-    throw new ForbiddenException("Rail room comparison is disabled; legacy remains the only write authority");
+  if (flags.transactionCase !== "shadow" || flags.roomReadSource === "legacy") {
+    throw new ForbiddenException("Rail room migration reads are disabled");
   }
 }
 

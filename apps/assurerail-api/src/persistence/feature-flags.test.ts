@@ -11,6 +11,8 @@ test("[PR02][FLAGS] persistence paths default to inert/legacy-compatible values"
     transactionCase: "off",
     roomReadSource: "legacy",
     roomWriteSource: "legacy",
+    completionAcknowledgement: "off",
+    legacyRoomProxy: "off",
     errors: [],
   });
 });
@@ -23,7 +25,9 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_ROUTE_ENTITLEMENT_ENFORCE: "COMPARE",
     ARAIL_TRANSACTION_CASE_V1: "SHADOW",
     ARAIL_ROOM_READ_SOURCE: "COMPARE",
-    ARAIL_ROOM_WRITE_SOURCE: "LEGACY",
+    ARAIL_ROOM_WRITE_SOURCE: "RAIL",
+    ARAIL_COMPLETION_ACK_V1: "SHADOW",
+    ARAIL_LEGACY_ROOM_PROXY_V1: "SHADOW",
   }), {
     neutralIngress: "shadow",
     durableRelay: "durable",
@@ -31,7 +35,9 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     routeEntitlement: "compare",
     transactionCase: "shadow",
     roomReadSource: "compare",
-    roomWriteSource: "legacy",
+    roomWriteSource: "rail",
+    completionAcknowledgement: "shadow",
+    legacyRoomProxy: "shadow",
     errors: [],
   });
   const rejected = inspectPersistenceFlags({
@@ -42,6 +48,8 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_TRANSACTION_CASE_V1: "enabled",
     ARAIL_ROOM_READ_SOURCE: "direct",
     ARAIL_ROOM_WRITE_SOURCE: "rail",
+    ARAIL_COMPLETION_ACK_V1: "enabled",
+    ARAIL_LEGACY_ROOM_PROXY_V1: "on",
   });
   assert.equal(rejected.neutralIngress, "off");
   assert.equal(rejected.durableRelay, "legacy");
@@ -49,6 +57,8 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
   assert.equal(rejected.routeEntitlement, "off");
   assert.equal(rejected.transactionCase, "off");
   assert.equal(rejected.roomReadSource, "legacy");
-  assert.equal(rejected.roomWriteSource, "legacy");
-  assert.equal(rejected.errors.length, 7);
+  assert.equal(rejected.roomWriteSource, "rail");
+  assert.equal(rejected.completionAcknowledgement, "off");
+  assert.equal(rejected.legacyRoomProxy, "off");
+  assert.equal(rejected.errors.length, 8);
 });

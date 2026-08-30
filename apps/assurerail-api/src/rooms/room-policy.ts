@@ -2,6 +2,12 @@ export const ROOM_PURPOSES = ["PASSIVE_DILIGENCE", "COMMERCIAL_NEGOTIATION"] as 
 export const PASSIVE_ROOM_POLICY_VERSION = "assurerail.room.passive-diligence.v1";
 export const DARK_IMPORTED_GRANT_STATUS = "MIGRATED_DARK" as const;
 export const COMMERCIAL_REDACTION_MARKER = "[redacted:commercial]";
+export const ROOM_DECLARATION_TEXT_VERSION = "assurerail.room-declaration.v1";
+export const ROOM_RELIANCE_TEXT_VERSION = "assurerail.room-reliance.v1";
+export const ROOM_DECLARATION_TEXT =
+  "I confirm that I act for the named institution and seek access only for transaction diligence under the recorded case purpose, authority and confidentiality controls.";
+export const ROOM_RELIANCE_TEXT =
+  "Evidence and recomputed controls do not replace the participant's own credit, legal, regulatory or operational diligence and do not constitute an offer, recommendation, price or assurance of completion.";
 
 const COMMERCIAL_KEY = /(price|pricing|bid|bids|yield|quote|coupon|term[_-]?sheet|discount[_-]?rate|spread|margin)/i;
 const COMMERCIAL_TOKENS = new Set(["rate", "apr", "irr", "roi", "wac", "wal", "spread", "margin"]);

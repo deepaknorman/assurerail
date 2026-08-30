@@ -102,6 +102,7 @@ model Institution {
   caseParties             CaseParty[]
   caseFunctionAssignments CaseFunctionAssignment[]      @relation("FunctionPerformerInstitution")
   caseRoomGrants          RoomGrant[]                   @relation("RoomGrantInstitution")
+  connectorSubjectMaps    ConnectorSubjectMapping[]     @relation("ConnectorSubjectInstitution")
 
   @@index([status])
   @@index([applicantUserId])
@@ -615,6 +616,7 @@ model ProviderReference {
   institutionEvidence    InstitutionEvidenceSnapshot[]
   connectorRegistrations ConnectorRegistration[]
   evidenceVersions       EvidenceVersion[]
+  sourceCompletions      SourceCompletion[]
 
   @@unique([providerType, providerKey])
   @@index([institutionId])
@@ -639,6 +641,7 @@ model SourceReference {
   createdAt           DateTime           @default(now())
   intakeSubmissions   IntakeSubmission[]
   caseRooms           CaseRoom[]
+  sourceCompletions   SourceCompletion[]
 
   @@unique([providerReferenceId, sourceSystem, sourceObjectType, sourceObjectId, sourceVersion], map: "SourceReference_source_identity_key")
   @@index([payloadDigest])
@@ -680,11 +683,11 @@ model IntakeSubmission {
 // ───────────────── provider-neutral evidence, documents and certified connectors (PR-05) ───────────────
 
 model ConnectorRegistration {
-  id                  String                   @id
+  id                  String                    @id
   institutionId       String
-  institution         Institution              @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  institution         Institution               @relation(fields: [institutionId], references: [id], onDelete: Restrict)
   providerReferenceId String?
-  providerReference   ProviderReference?       @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
+  providerReference   ProviderReference?        @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
   connectorKey        String
   connectorType       String
   displayName         String
@@ -692,17 +695,52 @@ model ConnectorRegistration {
   endpoint            String?
   schemaProfiles      Json
   credentialVaultRef  String?
-  status              String                   @default("PENDING_CERTIFICATION") // PENDING_CERTIFICATION | CERTIFIED_SHADOW | SUSPENDED | REVOKED
+  status              String                    @default("PENDING_CERTIFICATION") // PENDING_CERTIFICATION | CERTIFIED_SHADOW | SUSPENDED | REVOKED
   createdByUserId     String
   suspendedAt         DateTime?
   revokedAt           DateTime?
-  createdAt           DateTime                 @default(now())
-  updatedAt           DateTime                 @default(now()) @updatedAt
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @default(now()) @updatedAt
   certifications      ConnectorCertification[]
+  subjectMappings     ConnectorSubjectMapping[]
+  sourceCompletions   SourceCompletion[]
 
   @@unique([institutionId, connectorKey])
   @@index([institutionId, status])
   @@index([providerReferenceId])
+}
+
+model ConnectorSubjectMapping {
+  id                      String                @id
+  connectorRegistrationId String
+  connectorRegistration   ConnectorRegistration @relation(fields: [connectorRegistrationId], references: [id], onDelete: Restrict)
+  externalSubjectRef      String
+  subjectType             String // INSTITUTION_DID | OTHER_APPROVED
+  institutionId           String
+  institution             Institution           @relation("ConnectorSubjectInstitution", fields: [institutionId], references: [id], onDelete: Restrict)
+  allowedActions          Json
+  scopeType               String
+  scopeRef                String?
+  authorityEvidenceRef    String
+  proposalDigest          String                @unique
+  status                  String                @default("PROPOSED") // PROPOSED | ACTIVE | REJECTED | SUSPENDED | REVOKED | EXPIRED
+  version                 Int                   @default(1)
+  supersedesMappingId     String?
+  proposedByUserId        String
+  proposalStepUpId        String
+  approvedByUserId        String?
+  approvalStepUpId        String?
+  approvalReason          String?
+  effectiveAt             DateTime?
+  expiresAt               DateTime?
+  suspendedAt             DateTime?
+  revokedAt               DateTime?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @default(now()) @updatedAt
+
+  @@unique([connectorRegistrationId, externalSubjectRef, version], map: "ConnectorSubjectMapping_connector_subject_version_key")
+  @@index([connectorRegistrationId, externalSubjectRef, status], map: "ConnectorSubjectMapping_connector_subject_status_idx")
+  @@index([institutionId, status])
 }
 
 model ConnectorCertification {
@@ -939,6 +977,9 @@ model TransactionCase {
   transitions            CaseTransition[]
   replayReceipts         CaseReplayReceipt[]
   rooms                  CaseRoom[]
+  roomAuthority          RoomAuthorityAssignment?
+  roomAuthorityChanges   RoomAuthorityChange[]
+  sourceCompletions      SourceCompletion[]
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
@@ -1119,65 +1160,137 @@ model CaseReplayReceipt {
 // ───────────────── Rail-owned case rooms and sealed legacy evidence (PR-07) ───────────────
 
 model CaseRoom {
-  id                   String             @id
-  transactionCaseId    String
-  transactionCase      TransactionCase    @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
-  purpose              String // PASSIVE_DILIGENCE; commercial negotiation remains prohibited in PR-07
-  policyVersion        String
-  sourceReferenceId    String?
-  sourceReference      SourceReference?   @relation(fields: [sourceReferenceId], references: [id], onDelete: Restrict)
-  sourceManifestDigest String?
-  status               String             @default("DARK_IMPORTED") // DARK_IMPORTED | OPEN | CLOSED | WITHDRAWN | BLOCKED
-  aggregateVersion     Int                @default(1)
-  legacyRoomId         String?            @unique
-  legacyPoolId         String?
-  legacyClaId          String?
-  legacyPurpose        String?
-  legacySourceSystem   String?
-  legacySourceVersion  String?
-  openedAt             DateTime?
-  closedAt             DateTime?
-  createdByUserId      String
-  createdByMandateId   String
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @default(now()) @updatedAt
-  grants               RoomGrant[]
-  accessEvents         RoomAccessEvent[]
-  messages             RoomMessage[]
-  legacyImports        LegacyRoomImport[]
+  id                     String             @id
+  transactionCaseId      String
+  transactionCase        TransactionCase    @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  purpose                String // PASSIVE_DILIGENCE; commercial negotiation remains prohibited in PR-07
+  policyVersion          String
+  sourceReferenceId      String?
+  sourceReference        SourceReference?   @relation(fields: [sourceReferenceId], references: [id], onDelete: Restrict)
+  sourceManifestDigest   String?
+  status                 String             @default("DARK_IMPORTED") // DARK_IMPORTED | OPEN | CLOSED | WITHDRAWN | BLOCKED
+  aggregateVersion       Int                @default(1)
+  creationIdempotencyKey String?
+  creationRequestDigest  String?
+  closeIdempotencyKey    String?
+  closeRequestDigest     String?
+  closeReason            String?
+  legacyRoomId           String?            @unique
+  legacyPoolId           String?
+  legacyClaId            String?
+  legacyPurpose          String?
+  legacySourceSystem     String?
+  legacySourceVersion    String?
+  openedAt               DateTime?
+  closedAt               DateTime?
+  createdByUserId        String
+  createdByMandateId     String
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @default(now()) @updatedAt
+  grants                 RoomGrant[]
+  accessEvents           RoomAccessEvent[]
+  messages               RoomMessage[]
+  legacyImports          LegacyRoomImport[]
 
+  @@unique([transactionCaseId, creationIdempotencyKey], map: "CaseRoom_case_creation_idempotency_key")
+  @@unique([transactionCaseId, closeIdempotencyKey], map: "CaseRoom_case_close_idempotency_key")
   @@index([transactionCaseId, status])
   @@index([sourceReferenceId])
 }
 
 model RoomGrant {
-  id                     String      @id
-  caseRoomId             String
-  caseRoom               CaseRoom    @relation(fields: [caseRoomId], references: [id], onDelete: Restrict)
-  granteeInstitutionId   String
-  granteeInstitution     Institution @relation("RoomGrantInstitution", fields: [granteeInstitutionId], references: [id], onDelete: Restrict)
-  purpose                String
-  classification         String
-  status                 String      @default("PROPOSED") // PROPOSED | ACTIVE | REVOKED | EXPIRED | MIGRATED_DARK
-  declarationTextVersion String
-  relianceTextVersion    String
-  declarationDigest      String?
-  declarationAt          DateTime?
-  relianceAcceptedAt     DateTime?
-  expiresAt              DateTime?
-  legacyInviteId         String?
-  legacyTransfereeDid    String?
-  legacyStatus           String?
-  grantedByUserId        String
-  revokedByUserId        String?
-  revokedAt              DateTime?
-  createdAt              DateTime    @default(now())
-  updatedAt              DateTime    @default(now()) @updatedAt
+  id                       String      @id
+  caseRoomId               String
+  caseRoom                 CaseRoom    @relation(fields: [caseRoomId], references: [id], onDelete: Restrict)
+  granteeInstitutionId     String
+  granteeInstitution       Institution @relation("RoomGrantInstitution", fields: [granteeInstitutionId], references: [id], onDelete: Restrict)
+  purpose                  String
+  classification           String
+  status                   String      @default("PROPOSED") // PROPOSED | ACTIVE | REVOKED | EXPIRED | MIGRATED_DARK
+  grantVersion             Int         @default(1)
+  invitationIdempotencyKey String?
+  invitationRequestDigest  String?
+  invitationDigest         String?     @unique
+  invitationExpiresAt      DateTime?
+  declarationTextVersion   String
+  relianceTextVersion      String
+  declarationDigest        String?
+  declarationAt            DateTime?
+  relianceAcceptedAt       DateTime?
+  expiresAt                DateTime?
+  legacyInviteId           String?
+  legacyTransfereeDid      String?
+  legacyStatus             String?
+  grantedByUserId          String
+  grantedByMandateId       String?
+  acceptedByUserId         String?
+  acceptedByMandateId      String?
+  acceptedAt               DateTime?
+  acceptanceIdempotencyKey String?
+  acceptanceRequestDigest  String?
+  revokedByUserId          String?
+  revokedAt                DateTime?
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @default(now()) @updatedAt
 
   @@unique([caseRoomId, granteeInstitutionId, purpose])
   @@unique([caseRoomId, legacyInviteId])
+  @@unique([caseRoomId, invitationIdempotencyKey], map: "RoomGrant_room_invitation_idempotency_key")
+  @@unique([caseRoomId, acceptanceIdempotencyKey], map: "RoomGrant_room_acceptance_idempotency_key")
   @@index([granteeInstitutionId, status])
   @@index([caseRoomId, status])
+}
+
+model RoomAuthorityAssignment {
+  id                       String                @id
+  transactionCaseId        String                @unique
+  transactionCase          TransactionCase       @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  writeSource              String                @default("LEGACY") // LEGACY | RAIL
+  state                    String                @default("ACTIVE") // ACTIVE | PAUSED
+  cohortRef                String?
+  legacyCompatibilityUntil DateTime?
+  version                  Int                   @default(1)
+  lastChangeId             String?               @unique
+  allocatedByUserId        String
+  allocatedByMandateId     String
+  allocatedAt              DateTime              @default(now())
+  updatedAt                DateTime              @default(now()) @updatedAt
+  changes                  RoomAuthorityChange[]
+
+  @@index([writeSource, state, cohortRef])
+}
+
+model RoomAuthorityChange {
+  id                       String                   @id
+  transactionCaseId        String
+  transactionCase          TransactionCase          @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  assignmentId             String?
+  assignment               RoomAuthorityAssignment? @relation(fields: [assignmentId], references: [id], onDelete: Restrict)
+  command                  String // ALLOCATE_RAIL | PAUSE_RAIL | RESUME_RAIL | RETURN_LEGACY
+  expectedVersion          Int
+  fromWriteSource          String
+  fromState                String
+  toWriteSource            String
+  toState                  String
+  cohortRef                String?
+  legacyCompatibilityUntil DateTime?
+  reason                   String
+  authorityEvidenceRef     String
+  proposalDigest           String
+  status                   String                   @default("PENDING") // PENDING | APPROVED | REJECTED | SUPERSEDED
+  proposedByUserId         String
+  proposedByMandateId      String
+  proposalStepUpId         String
+  approvedByUserId         String?
+  approvedByMandateId      String?
+  approvalStepUpId         String?
+  reviewNote               String?
+  proposedAt               DateTime                 @default(now())
+  reviewedAt               DateTime?
+  appliedAt                DateTime?
+
+  @@unique([transactionCaseId, proposalDigest])
+  @@index([transactionCaseId, status, proposedAt])
 }
 
 model RoomAccessEvent {
@@ -1202,20 +1315,23 @@ model RoomAccessEvent {
 }
 
 model RoomMessage {
-  id                  String   @id
-  caseRoomId          String
-  caseRoom            CaseRoom @relation(fields: [caseRoomId], references: [id], onDelete: Restrict)
-  authorUserId        String?
-  authorInstitutionId String?
-  authorReference     String
-  authorRole          String
-  messageKind         String
-  body                String
-  bodyDigest          String
-  legacyMessageId     String?  @unique
-  occurredAt          DateTime
-  createdAt           DateTime @default(now())
+  id                    String   @id
+  caseRoomId            String
+  caseRoom              CaseRoom @relation(fields: [caseRoomId], references: [id], onDelete: Restrict)
+  authorUserId          String?
+  authorInstitutionId   String?
+  authorReference       String
+  authorRole            String
+  messageKind           String
+  body                  String
+  bodyDigest            String
+  messageIdempotencyKey String?
+  messageRequestDigest  String?
+  legacyMessageId       String?  @unique
+  occurredAt            DateTime
+  createdAt             DateTime @default(now())
 
+  @@unique([caseRoomId, messageIdempotencyKey], map: "RoomMessage_room_message_idempotency_key")
   @@index([caseRoomId, occurredAt])
 }
 
@@ -1376,6 +1492,11 @@ model ExternalInstruction {
   request             Json?
   storageRef          String?
   state               String                    @default("PENDING") // PENDING | SENT | ACKNOWLEDGED | AMBIGUOUS | FAILED | CANCELLED
+  attemptCount        Int                       @default(0)
+  nextAttemptAt       DateTime                  @default(now())
+  lockedAt            DateTime?
+  lockOwner           String?
+  lastError           String?
   institutionId       String?
   transactionCaseId   String?
   sentAt              DateTime?
@@ -1383,9 +1504,10 @@ model ExternalInstruction {
   createdAt           DateTime                  @default(now())
   updatedAt           DateTime                  @default(now()) @updatedAt
   acknowledgements    ExternalAcknowledgement[]
+  sourceCompletion    SourceCompletion?
 
   @@unique([providerReferenceId, idempotencyKey])
-  @@index([state, createdAt])
+  @@index([state, nextAttemptAt])
   @@index([institutionId])
   @@index([transactionCaseId])
 }
@@ -1407,12 +1529,59 @@ model ExternalAcknowledgement {
   institutionId             String?
   transactionCaseId         String?
   createdAt                 DateTime            @default(now())
+  sourceCompletionFinal     SourceCompletion?   @relation("SourceCompletionFinalAcknowledgement")
 
   @@unique([providerReferenceId, externalAcknowledgementId], map: "ExternalAck_provider_external_id_key")
   @@unique([externalInstructionId, responseDigest], map: "ExternalAck_instruction_response_key")
   @@index([externalInstructionId, acknowledgedAt], map: "ExternalAck_instruction_acknowledged_idx")
   @@index([institutionId])
   @@index([transactionCaseId])
+}
+
+model SourceCompletion {
+  id                       String                   @id
+  transactionCaseId        String
+  transactionCase          TransactionCase          @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  sourceReferenceId        String
+  sourceReference          SourceReference          @relation(fields: [sourceReferenceId], references: [id], onDelete: Restrict)
+  providerReferenceId      String
+  providerReference        ProviderReference        @relation(fields: [providerReferenceId], references: [id], onDelete: Restrict)
+  connectorRegistrationId  String
+  connectorRegistration    ConnectorRegistration    @relation(fields: [connectorRegistrationId], references: [id], onDelete: Restrict)
+  completionKind           String
+  idempotencyKey           String
+  requestDigest            String
+  completionEvidenceRef    String
+  completionEvidenceDigest String
+  expectedSourceObjectId   String
+  expectedSourceVersion    String
+  expectedManifestDigest   String
+  expectedLockReference    String?
+  dispatchMode             String // SHADOW | ON
+  state                    String                   @default("PENDING") // PENDING | SHADOW_RECORDED | DISPATCHING | ACKNOWLEDGED | RECONCILED | BREAK_OPEN | FAILED | PAUSED
+  externalInstructionId    String                   @unique
+  externalInstruction      ExternalInstruction      @relation(fields: [externalInstructionId], references: [id], onDelete: Restrict)
+  finalAcknowledgementId   String?                  @unique
+  finalAcknowledgement     ExternalAcknowledgement? @relation("SourceCompletionFinalAcknowledgement", fields: [finalAcknowledgementId], references: [id], onDelete: Restrict)
+  observedSourceObjectId   String?
+  observedSourceState      String?
+  observedSourceVersion    String?
+  observedManifestDigest   String?
+  observedLockReference    String?
+  reconciliationState      String                   @default("PENDING")
+  breakCode                String?
+  breakDetail              Json?
+  initiatedByUserId        String
+  initiatedByMandateId     String
+  reconciledByUserId       String?
+  reconciledAt             DateTime?
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @default(now()) @updatedAt
+
+  @@unique([transactionCaseId, sourceReferenceId])
+  @@unique([providerReferenceId, idempotencyKey])
+  @@index([state, createdAt])
+  @@index([reconciliationState, updatedAt])
 }
 
 model MigrationReceipt {

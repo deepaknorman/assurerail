@@ -1,6 +1,8 @@
 import {
   inspectPersistenceFlags,
+  type CompletionAcknowledgementMode,
   type DurableRelayMode,
+  type LegacyRoomProxyMode,
   type NeutralIngressMode,
   type ParticipantAdmissionMode,
   type RouteEntitlementMode,
@@ -42,6 +44,8 @@ export interface RuntimeEnvironmentProfile {
     transactionCase: TransactionCaseMode;
     roomReadSource: RoomReadSource;
     roomWriteSource: RoomWriteSource;
+    completionAcknowledgement: CompletionAcknowledgementMode;
+    legacyRoomProxy: LegacyRoomProxyMode;
   };
 }
 
@@ -147,14 +151,28 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   if (persistenceFlags.roomReadSource !== "legacy" && persistenceFlags.transactionCase !== "shadow") {
     errors.push("ARAIL_ROOM_READ_SOURCE=compare|rail requires ARAIL_TRANSACTION_CASE_V1=shadow");
   }
-  if (persistenceFlags.roomReadSource === "rail") {
-    errors.push("ARAIL_ROOM_READ_SOURCE=rail remains unavailable until the PR-08 cohort cutover gate is installed");
+  if (persistenceFlags.roomWriteSource === "rail" && persistenceFlags.transactionCase !== "shadow") {
+    errors.push("ARAIL_ROOM_WRITE_SOURCE=rail requires ARAIL_TRANSACTION_CASE_V1=shadow");
+  }
+  if (persistenceFlags.roomReadSource === "rail" && persistenceFlags.roomWriteSource !== "rail") {
+    errors.push("ARAIL_ROOM_READ_SOURCE=rail requires the PR-08 case allocation gate and ARAIL_ROOM_WRITE_SOURCE=rail");
+  }
+  if (persistenceFlags.legacyRoomProxy === "shadow"
+    && (persistenceFlags.roomReadSource !== "rail" || persistenceFlags.roomWriteSource !== "rail")) {
+    errors.push("ARAIL_LEGACY_ROOM_PROXY_V1=shadow requires Rail room read/write capability; each case still needs an approved allocation");
+  }
+  if (persistenceFlags.completionAcknowledgement !== "off"
+    && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.neutralIngress !== "shadow")) {
+    errors.push("ARAIL_COMPLETION_ACK_V1=shadow|on requires transaction cases and neutral ingress in shadow mode");
   }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
   if (persistenceFlags.transactionCase === "shadow" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_TRANSACTION_CASE_V1=shadow is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.completionAcknowledgement === "on" && !["CONTROLLED_LIVE", "PRODUCTION"].includes(operatingMode)) {
+    errors.push(`ARAIL_COMPLETION_ACK_V1=on is forbidden in ${operatingMode}; use shadow until a controlled-live case foundation is approved`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -256,6 +274,17 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     }
   }
 
+  if (persistenceFlags.legacyRoomProxy === "shadow" || persistenceFlags.completionAcknowledgement === "on") {
+    const vaultUrl = env.VAULT_ADDR?.trim();
+    if (!vaultUrl) errors.push("VAULT_ADDR is required for signed connector traffic");
+    if (operatingMode !== "DEMO" && vaultUrl && !vaultUrl.startsWith("https://")) {
+      errors.push(`VAULT_ADDR must use https:// for signed connector traffic in ${operatingMode} mode`);
+    }
+    const hasAppRole = Boolean(env.VAULT_APPROLE_ROLE_ID?.trim() && env.VAULT_APPROLE_SECRET_ID?.trim());
+    const hasToken = Boolean(env.VAULT_TOKEN?.trim());
+    if (!hasAppRole && !hasToken) errors.push("Vault AppRole credentials or VAULT_TOKEN are required for signed connector traffic");
+  }
+
   return {
     profile: {
       operatingMode,
@@ -272,6 +301,8 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         transactionCase: persistenceFlags.transactionCase,
         roomReadSource: persistenceFlags.roomReadSource,
         roomWriteSource: persistenceFlags.roomWriteSource,
+        completionAcknowledgement: persistenceFlags.completionAcknowledgement,
+        legacyRoomProxy: persistenceFlags.legacyRoomProxy,
       },
     },
     errors,

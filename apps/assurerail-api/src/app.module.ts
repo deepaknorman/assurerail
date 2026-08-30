@@ -45,8 +45,14 @@ const dbModules = process.env.DATABASE_URL ? [
   ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
     && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
     && inspectPersistenceFlags(process.env).transactionCase === "shadow"
-    && inspectPersistenceFlags(process.env).roomReadSource === "compare"
+    && inspectPersistenceFlags(process.env).roomReadSource !== "legacy"
     ? [require("./rooms/rooms.module").RoomsModule]
+    : []),
+  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
+    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+    && inspectPersistenceFlags(process.env).completionAcknowledgement !== "off"
+    ? [require("./completion/source-completion.module").SourceCompletionModule]
     : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];

@@ -56,6 +56,8 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     transactionCase: "off",
     roomReadSource: "legacy",
     roomWriteSource: "legacy",
+    completionAcknowledgement: "off",
+    legacyRoomProxy: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
 });
@@ -159,20 +161,45 @@ test("[CONFIG][PR06] neutral transaction cases cannot be mislabeled demo, live o
   }
 });
 
-test("[CONFIG][PR07] room reads remain legacy unless compare mode has the complete shadow foundation", () => {
+test("[CONFIG][PR07] room compare reads require the complete shadow foundation", () => {
   const missingCase = inspectRuntimeEnvironment({
     ASSURERAIL_OPERATING_MODE: "SHADOW",
     ARAIL_ROOM_READ_SOURCE: "compare",
   });
   assert.match(missingCase.errors.join("\n"), /requires ARAIL_TRANSACTION_CASE_V1=shadow/);
-  const prematureCutover = inspectRuntimeEnvironment({
+});
+
+test("[CONFIG][PR08] Rail room cutover requires write capability, case allocation remains a database gate", () => {
+  const readWithoutWrite = inspectRuntimeEnvironment({
     ASSURERAIL_OPERATING_MODE: "SHADOW",
     ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
     ARAIL_NEUTRAL_INGRESS_V1: "shadow",
     ARAIL_TRANSACTION_CASE_V1: "shadow",
     ARAIL_ROOM_READ_SOURCE: "rail",
   });
-  assert.match(prematureCutover.errors.join("\n"), /unavailable until the PR-08 cohort cutover gate/);
+  assert.match(readWithoutWrite.errors.join("\n"), /ARAIL_ROOM_WRITE_SOURCE=rail/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_ROOM_READ_SOURCE: "rail",
+    ARAIL_ROOM_WRITE_SOURCE: "rail",
+  });
+  assert.equal(accepted.errors.length, 0);
+});
+
+test("[CONFIG][PR08] completion egress cannot be disguised as shadow", () => {
+  const inspected = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_COMPLETION_ACK_V1: "on",
+  });
+  assert.match(inspected.errors.join("\n"), /forbidden in SHADOW/);
 });
 
 test("[CONFIG][SHADOW] a merely present but malformed Firebase credential is rejected", () => {
