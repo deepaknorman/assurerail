@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { StoreModule } from "../store/store.module";
-import { MetricsController } from "./platform.controllers";
+import { MetricsController } from "./metrics.controller";
 import { HealthController } from "./health.controller";
 
 // Always-on Prometheus scrape endpoint (/metrics, @Public) + liveness/readiness (/healthz, /readyz).

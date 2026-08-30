@@ -1,19 +1,35 @@
-# @code/assurerail-api — AssureRail venue
+# @code/assurerail-api — existing AssureRail tokenised-DA slice
 
-Securitisation & tokenisation venue. A **separate app inside the monorepo** (like `plaza`/`plaza-api`):
-its own DB, env, ports (**api :3006**, web :3007), access management, screens, APIs. Consumes
-AssureLocker's frozen **AssurePool tape** and mints/administers the **AssurePool Note**.
+> **PRODUCT SCOPE AMENDED — 30 August 2026.** The canonical target is
+> `docs/design/AssureRail_Generic_Transfer_Infrastructure_Scope.md`: provider-neutral DA/PTC
+> infrastructure supporting conventional and authorised-tokenised modes. This application is the
+> existing tokenised-DA/Note implementation and a candidate adapter/kernel source, not the complete
+> generic product. Its AssurePool-tape, Note, issuer, trustee, HTS and DvP assumptions are not
+> automatically valid for PTC or conventional routes. Do not add PTC by renaming the existing Note
+> flow; follow the as-built disposition and staged migration in that scope before route work.
 
-## Separation model (see AssurePool_Securitisation_Tokenisation_Path.md §15)
-- **The code never leaves this repo.** At the incorporation trigger, AssureRail (the legal entity)
-  **licenses the running software** from AssureLocker (its TSP) for a recurring fee + support &
-  maintenance, and runs its own separately-deployed instance (own infra/DB/creds). No repo fork.
-- **Runtime coupling = the tape API over HTTP/2** (`GET /v1/co-lending/pools/:id/tape.json`) — the
-  venue never reaches into AssureLocker's DB. Same-repo, still API-coupled (like `api` ↔ `plaza-api`).
-- Segregation anchored on **function / conflict-of-interest / segregation-of-duties**, not regime.
-- Holds **no ledger keys** (mint goes via plaza) and **no borrower PII (T2)**.
+Current implementation: a permissioned **tokenised-DA demo/application slice**. It is a **separate
+app inside the monorepo** (like `plaza`/`plaza-api`) with its own DB, env, ports (**api :3006**, web
+:3007), access management, screens and APIs. Its existing demo path consumes an AssureLocker frozen
+**AssurePool tape** and mints/administers an object named the **AssurePool Note**. That name and the
+trustee-related demo code do not constitute PTC support; they are current-code facts to re-baseline,
+not the generic intake or instrument contract.
 
-## Build sequence
+## Current deployment/separation assumptions — not final corporate architecture
+
+- The app already has its own database, environment, ports and access surface. Preserve that useful
+  isolation while the final company, IP licence, funding and outsourcing structure is decided.
+- The **current live-source coupling** is the AssurePool tape API over HTTP/2
+  (`GET /v1/co-lending/pools/:id/tape.json`); that is one adapter, not the target Rail intake
+  contract. Stage 1 adds provider-neutral file/API intake and provider-exit continuity.
+- The current code does not reach into the AssureLocker database. Future integrations must also use
+  versioned, authenticated contracts and retain enough signed evidence for Rail continuity.
+- Segregation must be anchored on function, appointments, access, fees, decisions, reconciliation
+  and incident accountability; a company or division label cannot provide it by itself.
+- The current slice holds no ledger keys (mint goes via plaza) and is designed not to hold borrower
+  PII (T2). Those controls must survive generalisation.
+
+## Historical tokenised-DA build sequence
 - **2a (done)** — scaffold + tape client with **independent integrity verification** (recompute
   `tapeHash` via `@code/shared`; trust the math not the transport) + mint-readiness gate (lock must be
   CONFIRMED) + ring-fenced data model + own access management.
@@ -26,6 +42,16 @@ npm run build --workspace=@code/assurerail-api
 npm test  --workspace=@code/assurerail-api      # tape integrity + mint-readiness
 npm start --workspace=@code/assurerail-api      # http://localhost:3006
 ```
+
+Runtime evidence is explicit: `ASSURERAIL_OPERATING_MODE` is one of `DEMO`, `REPLAY`, `SHADOW`,
+`SANDBOX`, `CONTROLLED_LIVE`, or `PRODUCTION`. `NODE_ENV` only controls Node/framework optimisation.
+The current container/Hetzner demonstration therefore runs `NODE_ENV=production` with
+`ASSURERAIL_OPERATING_MODE=DEMO`. Every non-demo mode requires the persistent store and Firebase
+auth; controlled-live/production additionally refuse demo routes/adapters, fail-soft reCAPTCHA and
+insecure provider transport. `DEMO` refuses live adapters; `REPLAY` and `SHADOW` refuse live mutating
+HTS/HCS/settlement adapters. `SANDBOX` is the pre-live mode for provider test-environment mutations.
+See `src/runtime/runtime-profile.ts` and its executable tests.
+
 ### Endpoints
 ```
 GET  /health
@@ -47,3 +73,17 @@ curl -sX POST http://localhost:3006/venue/demo/run/POOL-DEMO-1 -H 'content-type:
 `TAPE_SOURCE=live` + `ASSURELOCKER_API_URL/_KEY` switches to the real `tape.json` (HTTP/2).
 `HTS_ADAPTER` / `HCS_ANCHOR` / `SETTLEMENT_ADAPTER=live` are gated until the plaza endpoints +
 deferred live testnet smoke test land.
+
+## Next generic-infrastructure sequence
+
+1. **Stage 1A:** adapt/extract existing institution, membership/SAML, maker-checker, evidence-case
+   and connector-certification controls; add Rail-local participant, mandate, appointment and
+   route-entitlement records.
+2. **Stage 1B:** add a neutral transaction case/room and migrate the tested room currently under
+   `apps/api/src/co-lending`, preserving an AssurePool adapter and legacy compatibility.
+3. **Stage 1C:** add neutral evidence/state/document/reconciliation/deadline services and replay one
+   completed conventional DA and one completed conventional PTC.
+4. Keep this Note/mint/DvP path behind the tokenised-representation adapter boundary throughout.
+
+The detailed file disposition, migration rules, onboarding acceptance tests and rejected shortcuts
+are in `docs/design/AssureRail_Generic_Transfer_Infrastructure_Scope.md` §§0.2–0.3 and 9.

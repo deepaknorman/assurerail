@@ -8,13 +8,15 @@ deploy. The container stack preserves that: a dedicated `postgres:16` volume, no
 AssureLocker stack, DEMO adapters by default (**no external *integration* credentials** — Hedera / Setu /
 GSTN etc. all stubbed).
 
-**Auth is the one exception.** In `NODE_ENV=production` the API refuses to boot without
-`FIREBASE_ADMIN_CONFIG` (no open venue in prod — `src/main.ts`). Two ways to run:
+Authentication follows the explicit operating mode, not `NODE_ENV`. Every non-demo mode refuses to
+boot without `FIREBASE_ADMIN_CONFIG` and the venue database; `DEMO` may run with the in-memory store
+and unconfigured Firebase. Two ways to run the current demo:
 
-- **Prod / demo box** (default): provide `FIREBASE_ADMIN_CONFIG` (+ the other server secrets) via
-  `apps/assurerail-api/.env.docker`. This is the real Hetzner path.
-- **Credential-free local spin-up**: `NODE_ENV=development docker compose -f docker-compose.assurerail.yml up`
-  — boots in demo auth, needs no secrets, exercises the full stack (migrate + seed + all endpoints).
+- **Optimised demo box** (default): `NODE_ENV=production` plus
+  `ASSURERAIL_OPERATING_MODE=DEMO`. This is the current Hetzner demonstration path and is not
+  production evidence.
+- **Credential-free local spin-up**: use the supplied compose defaults. It declares `DEMO`, needs no
+  external credentials, and exercises the demo stack (migrate + seed + demo endpoints).
 
 ---
 
@@ -72,11 +74,20 @@ docker build -f apps/assurerail/Dockerfile     -t assurerail-web .
 Nothing secret is baked into an image. Two supply channels:
 
 1. **Root `.env`** — `docker compose` auto-loads it for `${VAR}` interpolation. Used for
-   `ASSURERAIL_DB_PASSWORD`, adapter flips (`HTS_ADAPTER=live` …), and the web build args.
+   `ASSURERAIL_DB_PASSWORD`, the explicit `ASSURERAIL_OPERATING_MODE`, adapter flips
+   (`HTS_ADAPTER=live` …), and the web build args.
 2. **`apps/assurerail-api/.env.docker`** (optional, git-ignored) — API server secrets loaded via
    `env_file`: `FIREBASE_ADMIN_CONFIG`, `ASSURELOCKER_API_KEY`, `DIGIKYC_STATUS_SERVICE_SECRET`,
    `CODE_ISSUER_PQ_SECRET_KEY`, `WEBAUTHN_RP_ID`, `WEBAUTHN_ORIGIN`, etc. The file is **optional** — the
    stack runs without it (everything stays DEMO / disabled).
+
+`NODE_ENV` and the AssureRail operating mode are deliberately separate. The supplied compose stack
+uses an optimised Node process with `ASSURERAIL_OPERATING_MODE=DEMO` and
+`ARAIL_DEMO_ENDPOINTS_ENABLED=true`. An undeclared production container resolves to `PRODUCTION` and
+will refuse to start without persistent storage, authentication and non-demo external adapters. Do
+not set a live/production label merely to change performance settings. `DEMO` also refuses any live
+adapter, while `REPLAY` and `SHADOW` refuse the live HTS, HCS and settlement adapters. `SANDBOX` is the
+only pre-live mode that may deliberately exercise mutating provider test environments.
 
 ### Web is build-time, not run-time
 
@@ -90,9 +101,9 @@ image, not just a restart.
 
 ### Adapters (all DEMO by default)
 
-`TAPE_SOURCE`, `HTS_ADAPTER`, `HCS_ANCHOR`, `SETTLEMENT_ADAPTER` — flip to `live` in the root `.env` only
-once the corresponding integration is provisioned (they fail closed if creds are absent). See
-`apps/assurerail-api/.env.example`.
+`TAPE_SOURCE`, `HTS_ADAPTER`, `HCS_ANCHOR`, `SETTLEMENT_ADAPTER`, `DIGIKYC_GATE` — flip to `live` only
+in a compatible explicit mode and once the corresponding integration is provisioned. See
+`apps/assurerail-api/.env.example`. A mode/configuration mismatch fails before Nest starts.
 
 ---
 

@@ -11,19 +11,26 @@ import { DemoModule } from "./demo/demo.module";
 import { ReportsModule } from "./reports/reports.module";
 import { EventsModule } from "./events/venue-events";
 import { MetricsModule } from "./platform/metrics.module";
-import { AuthModule } from "./auth/auth.module";
-import { AdminModule } from "./admin/admin.module";
-import { PlatformModule } from "./platform/platform.module";
-import { SecurityModule } from "./security/security.module";
-import { OpsModule } from "./ops/ops.module";
+import { shouldMountDemoEndpoints } from "./runtime/runtime-profile";
 
 // AssureRail venue root module. Tape (2a) → Mint (2b) → Surveillance (2c) → DvP + BreakGlass (T4) →
-// Closure (burn). DemoModule chains the whole loop. Reports/Metrics/Events run in both modes.
+// Closure (burn). DemoModule chains the whole loop, but is mounted only when the explicit operating
+// profile is DEMO and ARAIL_DEMO_ENDPOINTS_ENABLED resolves true. Reports/Metrics/Events run in both.
 // AuthModule + AdminModule + PlatformModule are registered ONLY in DB mode (they need venue Postgres);
 // with no DATABASE_URL the venue runs open in the ephemeral DEMO. EventsModule is @Global (the bus is
 // always available so mint/dvp/close can emit); the persistent sink lives in PlatformModule (DB only).
 // NOTE: rate limiting is enforced at the Caddy reverse proxy (a proxied venue).
-const dbModules = process.env.DATABASE_URL ? [AuthModule, AdminModule, PlatformModule, SecurityModule, OpsModule] : [];
+// Keep the DB-only imports genuinely lazy. Importing Admin/Platform eagerly also loads the generated
+// Prisma client, whose dependency chain may load a local .env before this condition is evaluated. That
+// made a credential-free DEMO accidentally look DB-configured and then fail dependency assembly.
+const dbModules = process.env.DATABASE_URL ? [
+  require("./auth/auth.module").AuthModule,
+  require("./admin/admin.module").AdminModule,
+  require("./platform/platform.module").PlatformModule,
+  require("./security/security.module").SecurityModule,
+  require("./ops/ops.module").OpsModule,
+] : [];
+const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 
 @Module({
   imports: [
@@ -35,7 +42,7 @@ const dbModules = process.env.DATABASE_URL ? [AuthModule, AdminModule, PlatformM
     BreakGlassModule,
     CloseModule,
     AmortiseModule,
-    DemoModule,
+    ...demoModules,
     ReportsModule,
     EventsModule,
     MetricsModule,

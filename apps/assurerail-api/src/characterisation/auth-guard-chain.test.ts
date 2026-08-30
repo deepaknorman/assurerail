@@ -1,0 +1,112 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { ForbiddenException, UnauthorizedException, type ExecutionContext } from "@nestjs/common";
+import { AuthGuard } from "../auth/auth.guard";
+import { IS_PUBLIC_KEY } from "../auth/public.decorator";
+import { RolesGuard } from "../auth/roles.guard";
+import { ADMIN_KEY, ENTITY_ROLES_KEY, ROLES_KEY, SUPERADMIN_KEY } from "../auth/roles.decorator";
+
+type Metadata = Record<string, unknown>;
+type RequestShape = { headers?: Record<string, string | undefined>; user?: Record<string, unknown>; firebase?: Record<string, unknown> };
+
+function reflector(metadata: Metadata) {
+  return {
+    getAllAndOverride: <T>(key: string): T | undefined => metadata[key] as T | undefined,
+  };
+}
+
+function context(req: RequestShape): ExecutionContext {
+  return {
+    switchToHttp: () => ({ getRequest: () => req }),
+    getHandler: () => function handler() {},
+    getClass: () => class Controller {},
+  } as unknown as ExecutionContext;
+}
+
+const activeIssuer = {
+  id: "vu-test",
+  firebaseUid: "uid-test",
+  email: "issuer@example.invalid",
+  displayName: "Test Issuer",
+  did: "did:test:issuer",
+  role: "ISSUER",
+  isAdmin: false,
+  platformRole: null,
+  entityDid: "did:test:institution",
+  entityRole: "OPERATOR",
+  allowlisted: true,
+  status: "ACTIVE",
+};
+
+test("[DB_MODE_GUARD_HARNESS][AUTHZ] a verified DB-mode user is attached then checked for active function role", async () => {
+  const req: RequestShape = { headers: { authorization: "Bearer fixture-token" } };
+  const auth = new AuthGuard(
+    reflector({ [IS_PUBLIC_KEY]: false }) as never,
+    { verifyIdToken: async () => ({ uid: "uid-test", email: activeIssuer.email, email_verified: true }) } as never,
+    { resolveFromToken: async () => activeIssuer } as never,
+  );
+  assert.equal(await auth.canActivate(context(req)), true);
+  assert.equal(req.firebase?.uid, "uid-test");
+  assert.equal(req.user?.status, "ACTIVE");
+
+  const roles = new RolesGuard(reflector({ [ROLES_KEY]: ["ISSUER"] }) as never);
+  assert.equal(roles.canActivate(context(req)), true);
+});
+
+test("[DB_MODE_GUARD_HARNESS][AUTHN] a protected endpoint rejects a missing bearer token", async () => {
+  const auth = new AuthGuard(
+    reflector({ [IS_PUBLIC_KEY]: false }) as never,
+    { verifyIdToken: async () => ({ uid: "never" }) } as never,
+    { resolveFromToken: async () => activeIssuer } as never,
+  );
+  await assert.rejects(() => auth.canActivate(context({ headers: {} })), UnauthorizedException);
+});
+
+test("[DB_MODE_GUARD_HARNESS][PUBLIC] a public endpoint ignores an invalid optional bearer token", async () => {
+  const auth = new AuthGuard(
+    reflector({ [IS_PUBLIC_KEY]: true }) as never,
+    { verifyIdToken: async () => { throw new UnauthorizedException("fixture invalid token"); } } as never,
+    { resolveFromToken: async () => activeIssuer } as never,
+  );
+  assert.equal(
+    await auth.canActivate(context({ headers: { authorization: "Bearer invalid-fixture-token" } })),
+    true,
+  );
+});
+
+test("[DB_MODE_GUARD_HARNESS][AR-C02] current entity-role gate admits a suspended/non-allowlisted matching role", () => {
+  const req: RequestShape = {
+    user: { ...activeIssuer, status: "SUSPENDED", allowlisted: false, entityRole: "OPERATOR" },
+  };
+  const roles = new RolesGuard(reflector({ [ENTITY_ROLES_KEY]: ["OPERATOR"] }) as never);
+
+  // Characterises AR-C02. PR-03 must change this expectation to a ForbiddenException when the
+  // participant/mandate model replaces the simplified entity-role path.
+  assert.equal(roles.canActivate(context(req)), true);
+});
+
+test("[DB_MODE_GUARD_HARNESS][CURRENT] the function-role gate rejects the same suspended user", () => {
+  const req: RequestShape = {
+    user: { ...activeIssuer, status: "SUSPENDED", allowlisted: false },
+  };
+  const roles = new RolesGuard(reflector({ [ROLES_KEY]: ["ISSUER"] }) as never);
+  assert.throws(() => roles.canActivate(context(req)), ForbiddenException);
+});
+
+test("[DB_MODE_GUARD_HARNESS][CURRENT] platform admin and superadmin gates remain distinct", () => {
+  const admin = { ...activeIssuer, isAdmin: true, platformRole: "ADMIN" };
+  assert.equal(
+    new RolesGuard(reflector({ [ADMIN_KEY]: true }) as never).canActivate(context({ user: admin })),
+    true,
+  );
+  assert.throws(
+    () => new RolesGuard(reflector({ [SUPERADMIN_KEY]: true }) as never).canActivate(context({ user: admin })),
+    ForbiddenException,
+  );
+  assert.equal(
+    new RolesGuard(reflector({ [SUPERADMIN_KEY]: true }) as never).canActivate(
+      context({ user: { ...admin, platformRole: "SUPERADMIN" } }),
+    ),
+    true,
+  );
+});

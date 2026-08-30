@@ -37,10 +37,12 @@ services:
       assurerail-db:
         condition: service_healthy
     environment:
-      # Prod-grade by default. In production the API refuses to boot without FIREBASE_ADMIN_CONFIG (no
-      # open venue in prod — see src/main.ts). For a credential-free local spin-up, override with
-      # `NODE_ENV=development docker compose -f docker-compose.assurerail.yml up` (boots in demo auth).
+      # NODE_ENV controls runtime optimisation; the explicit AssureRail mode controls evidence and
+      # allowed capabilities. This compose stack is an isolated DEMO even though the Node build is
+      # optimised. CONTROLLED_LIVE/PRODUCTION fail closed on demo adapters/routes and missing auth.
       NODE_ENV: ${NODE_ENV:-production}
+      ASSURERAIL_OPERATING_MODE: ${ASSURERAIL_OPERATING_MODE:-DEMO}
+      ARAIL_DEMO_ENDPOINTS_ENABLED: ${ARAIL_DEMO_ENDPOINTS_ENABLED:-true}
       PORT: "3006"
       DATABASE_URL: "postgresql://assurerail:${ASSURERAIL_DB_PASSWORD:-assurerail_dev}@assurerail-db:5432/assurerail_venue?connection_limit=10&pool_timeout=10"
       # Adapters — DEMO by default (deterministic, no external calls).
@@ -48,6 +50,7 @@ services:
       HTS_ADAPTER: ${HTS_ADAPTER:-demo}
       HCS_ANCHOR: ${HCS_ANCHOR:-demo}
       SETTLEMENT_ADAPTER: ${SETTLEMENT_ADAPTER:-demo}
+      DIGIKYC_GATE: ${DIGIKYC_GATE:-demo}
       SETTLEMENT_TOKEN: ${SETTLEMENT_TOKEN:-eRupee}
       SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
       # DigiKYC gate stays demo unless ASSURELOCKER_API_KEY + DIGIKYC_STATUS_SERVICE_SECRET are provided.

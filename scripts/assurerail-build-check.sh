@@ -36,14 +36,19 @@ fi
 # 5. venue unit tests
 step "venue unit tests" bash -c "cd '$ROOT/apps/assurerail-api' && npm test"
 
-# 6. standalone web build (online — next/font egress is a known standing item)
+# 6. AssureTransfer room golden tests — preserve the existing frozen-pool, reliance, disclosure,
+#    hash-chain, redaction, dossier and revocation behaviour while capability is mapped into Rail.
+#    This is deliberately a focused suite, not the full AssureLocker API test corpus.
+step "AssureTransfer room golden characterisation" bash -c "cd '$ROOT/apps/api' && npx jest --runInBand --runTestsByPath test/transfer-room.test.ts"
+
+# 7. standalone web build (online — next/font egress is a known standing item)
 if [ "${ARAIL_CHECK_SKIP_WEB:-0}" = "1" ]; then
   ylw "── build — venue web (apps/assurerail) ──"; ylw "  ⚠ skipped (ARAIL_CHECK_SKIP_WEB=1)"
 else
   step "build — venue web (apps/assurerail)" bash -c "cd '$ROOT/apps/assurerail' && (npx next build --no-lint 2>/dev/null || npx next build)"
 fi
 
-# 7. fast secret scan on outgoing commits (reuse AssureLocker's local scanner; optional tool)
+# 8. fast secret scan on outgoing commits (reuse AssureLocker's local scanner; optional tool)
 if [ -x "$ROOT/scripts/security-scan-local.sh" ]; then
   soft "secret scan (gitleaks --quick)" "$ROOT/scripts/security-scan-local.sh" --quick
 else

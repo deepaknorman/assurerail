@@ -1,8 +1,11 @@
 # AssureRail PR-00 — Characterisation and Evidence Record
 
-**Status:** implemented; full local release gate passed on 2026-08-30  
-**Code baseline reviewed:** `origin/main` / `ad99675dec6a3c2148de9eca97d9a0891cd02b54`  
-**Scope:** tests, source contracts, startup claim guards and internal documentation only  
+**Status:** implemented; full local release gate passed on 2026-08-30
+
+**Code baseline verified:** `origin/main` / `54c6f969d35b4aefbe2f11b24a4942ae502f7ad9`
+
+**Scope:** tests, source contracts, startup claim guards and internal documentation only
+
 **No scope:** no new route model, transaction UI, customer-facing copy, tenant model or lifecycle fix
 
 ## 1. Why PR-00 exists

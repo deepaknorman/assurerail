@@ -41,7 +41,43 @@ const main = rd("apps/assurerail-api/src/main.ts");
 if (has(main, "ASSURERAIL_CORS_ANY") && has(main, "origin: origins.length ? origins : false")) pass("CORS defaults to an allowlist (wildcard only behind an explicit opt-in)");
 else bad("CORS default is not a strict allowlist (main.ts must gate `origin:true` behind ASSURERAIL_CORS_ANY)");
 
-// ── 3. Ledger value-path is transactional (P3 hardening must not regress) ─────
+// NODE_ENV is only a Node/framework optimisation choice. The venue's evidence and capability boundary
+// is the explicit AssureRail mode; production must never be inferred merely because a demo build is
+// optimised, and an undeclared production process must fail closed.
+const appModule = rd("apps/assurerail-api/src/app.module.ts");
+const runtimeProfile = rd("apps/assurerail-api/src/runtime/runtime-profile.ts");
+const metricsModule = rd("apps/assurerail-api/src/platform/metrics.module.ts");
+if (has(main, "assertRuntimeEnvironment(process.env)")) pass("startup validates the explicit AssureRail operating mode before boot");
+else bad("main.ts must call assertRuntimeEnvironment(process.env) before creating the Nest app");
+if (has(appModule, "shouldMountDemoEndpoints(process.env)") && has(appModule, "...demoModules")) pass("DemoModule is conditionally assembled from the validated mode contract");
+else bad("AppModule must conditionally mount DemoModule via shouldMountDemoEndpoints");
+if (has(metricsModule, 'from "./metrics.controller"') && !has(metricsModule, 'from "./platform.controllers"')) pass("always-on metrics does not eagerly import the DB-only platform bundle");
+else bad("MetricsModule must import the isolated metrics.controller, not the DB-only platform.controllers bundle");
+const requiredModes = ["DEMO", "REPLAY", "SHADOW", "SANDBOX", "CONTROLLED_LIVE", "PRODUCTION"];
+if (requiredModes.every((mode) => has(runtimeProfile, `"${mode}"`))) pass("all six reviewed operating/evidence modes are declared");
+else bad("runtime-profile.ts is missing one or more reviewed AssureRail operating modes");
+const productionPreconditions = [
+  "DATABASE_URL",
+  "FIREBASE_ADMIN_CONFIG",
+  "ASSURELOCKER_API_KEY",
+  "DIGIKYC_STATUS_SERVICE_SECRET",
+  "RECAPTCHA_SITE_KEY",
+  "RECAPTCHA_ENFORCE",
+  "ASSURELOCKER_API_URL must use https://",
+];
+if (productionPreconditions.every((needle) => has(runtimeProfile, needle))) pass("controlled-live/production preconditions remain fail-closed");
+else bad("runtime-profile.ts is missing one or more controlled-live/production preconditions");
+
+// ── 3. Reviewed controller surface remains exact ──────────────────────────────
+console.log("── endpoint contract ──");
+const endpointContract = rd("apps/assurerail-api/src/characterisation/current-endpoint-contract.ts");
+const endpointRows = (endpointContract.match(/\be\("(?:GET|POST|PATCH|DELETE)"/g) || []).length;
+if (endpointRows === 56) pass("reviewed endpoint inventory contains exactly 56 classified routes");
+else bad(`reviewed endpoint inventory must contain exactly 56 routes (found ${endpointRows})`);
+if (has(endpointContract, "GLOBAL_VENUE") && has(endpointContract, "RESOURCE_ID_ONLY") && has(endpointContract, "AR-C01")) pass("current tenant/resource scoping gaps remain explicit in the inventory");
+else bad("endpoint inventory must retain explicit GLOBAL_VENUE/RESOURCE_ID_ONLY scope and AR-C01 linkage");
+
+// ── 4. Ledger value-path is transactional (P3 hardening must not regress) ─────
 console.log("── ledger atomicity ──");
 const dvp = rd("apps/assurerail-api/src/dvp/dvp.service.ts");
 const mint = rd("apps/assurerail-api/src/mint/mint.service.ts");
@@ -54,7 +90,7 @@ const txCount = (prismaRepo.match(/\$transaction/g) || []).length;
 if (txCount >= 3 && has(prismaRepo, "InsufficientUnitsError") && has(prismaRepo, "::numeric")) pass(`Prisma store uses $transaction (${txCount}×) + guarded atomic balance moves`);
 else bad("prisma-mint.repository must wrap value-path ops in $transaction with a guarded (::numeric) balance move");
 
-// ── 4. Database segregation (venue never touches AssureLocker's DB/client) ────
+// ── 5. Database segregation (venue never touches AssureLocker's DB/client) ────
 console.log("── database segregation ──");
 const schema = rd("apps/assurerail-api/prisma/schema.prisma");
 if (has(schema, "@prisma/assurerail-client")) pass("venue Prisma client is the isolated @prisma/assurerail-client");
@@ -68,11 +104,11 @@ const alImports = tracked.filter((f) => f.endsWith(".ts")).filter((f) => /from [
 if (alImports.length) bad(`venue imports @code/api internals: ${alImports.join(", ")}`);
 else pass("no @code/api imports in the venue (segregation intact)");
 
-// ── 5. Adapters fail-closed / default to DEMO ─────────────────────────────────
+// ── 6. Adapters default to DEMO; the runtime profile blocks them from live modes ─
 console.log("── adapters ──");
 const cfg = rd("apps/assurerail-api/src/config.ts");
 const demoDefaults = ["tapeSource", "htsAdapter", "hcsAnchor", "settlementAdapter"].every((k) => new RegExp(`${k}[^\\n]*\\?\\?[^\\n]*"?demo"?`, "i").test(cfg) || new RegExp(`${k}.*"demo"`, "i").test(cfg));
-if (demoDefaults) pass("all external adapters default to DEMO (no accidental live calls without config)");
+if (demoDefaults) pass("all external adapters default to DEMO (the runtime profile separately forbids them in live modes)");
 else bad("config.ts must default tapeSource/htsAdapter/hcsAnchor/settlementAdapter to 'demo'");
 
 console.log("");
