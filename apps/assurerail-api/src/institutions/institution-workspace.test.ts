@@ -23,6 +23,7 @@ function service(input: {
       findMany: async () => input.institutions ?? [],
     },
     appointment: { findMany: async () => [] },
+    connectorRegistration: { groupBy: async () => [] },
     venueUser: {
       findUnique: async () => input.admin ? { id: "admin-1", status: "ACTIVE", platformRole: "ADMIN" } : null,
     },

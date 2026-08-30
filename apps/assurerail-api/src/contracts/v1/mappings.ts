@@ -44,6 +44,14 @@ export interface AssurePoolMappingContextV1 extends NeutralMappingContextV1 {
   readonly assetClass: AssetClass;
 }
 
+export interface CommonLenderRegistrySnapshotV1 {
+  readonly registryId: string;
+  readonly registryVersion: string;
+  readonly asOfAt: string;
+  readonly records: readonly CanonicalObject[];
+  readonly declaredQualifications: readonly string[];
+}
+
 function sourceRecord(value: unknown): CanonicalObject {
   const converted = toCanonicalValue(value);
   if (!converted || typeof converted !== "object" || Array.isArray(converted)) throw new Error("source record must be a JSON object");
@@ -184,6 +192,67 @@ export function mapAssureTransferToNeutralIntake(
       placementOrListing: context.placementOrListing,
       lifecycleLeg: context.lifecycleLeg,
       assetClass: "TRADE_RECEIVABLE",
+      operatingMode: context.operatingMode,
+      extensionProfileRef: context.extensionProfileRef,
+      routePack: context.routePack,
+      legalRecord: context.legalRecord,
+    },
+    payload,
+  });
+  assertValidNeutralEnvelopeV1(envelope);
+  return envelope;
+}
+
+/** Lenders may collectively maintain this provider-neutral source; Rail records it but does not own its facts. */
+export function mapCommonLenderRegistryToNeutralIntake(
+  snapshot: CommonLenderRegistrySnapshotV1,
+  context: NeutralMappingContextV1 & { readonly assetClass: AssetClass },
+): NeutralIntakeEnvelopeV1 {
+  if (!snapshot.registryId.trim() || !snapshot.registryVersion.trim()) throw new Error("common registry identity and version are required");
+  const original = sourceRecord(snapshot);
+  const recordsDigest = sha256Digest(snapshot.records);
+  const payload = sourceRecord({
+    normalized: { recordCount: snapshot.records.length, recordsDigest },
+    extensions: {
+      profileId: "common-lender-registry.v1",
+      profileVersion: "1.0.0",
+      registryVersion: snapshot.registryVersion,
+      sourceRecord: original,
+    },
+  });
+  const envelope = buildNeutralIntakeEnvelope({
+    envelopeId: context.envelopeId,
+    transactionCaseId: context.transactionCaseId,
+    provider: context.provider,
+    source: {
+      providerInstitutionRef: context.provider.institutionRef,
+      sourceSystemRef: context.sourceSystemRef,
+      sourceObjectType: "COMMON_LENDER_REGISTRY_SNAPSHOT",
+      sourceObjectRef: snapshot.registryId,
+      sourceSchemaId: "common-lender-registry",
+      sourceSchemaVersion: snapshot.registryVersion,
+      sourcePayloadDigest: sha256Digest(original),
+      authorityClass: "EVIDENTIARY",
+    },
+    asOfAt: snapshot.asOfAt,
+    expiresAt: null,
+    qualifications: snapshot.declaredQualifications.map((text, index) => ({
+      code: `REGISTRY_DECLARED_QUALIFICATION_${index + 1}`,
+      severity: "LIMITATION" as const,
+      text,
+      evidenceRef: null,
+    })),
+    signature: context.signature,
+    idempotencyKey: context.idempotencyKey,
+    receivedAt: context.receivedAt,
+    transaction: {
+      transactionRoute: "DA",
+      representation: context.representation,
+      jurisdiction: context.jurisdiction,
+      marketContext: context.marketContext,
+      placementOrListing: context.placementOrListing,
+      lifecycleLeg: context.lifecycleLeg,
+      assetClass: context.assetClass,
       operatingMode: context.operatingMode,
       extensionProfileRef: context.extensionProfileRef,
       routePack: context.routePack,

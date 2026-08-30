@@ -166,7 +166,8 @@ export default function InstitutionWorkspacePage() {
           <article className="panel"><h2 className="section-title">Connector readiness</h2>
             <span className="pill pill-warn">{workspace.connectorReadiness.status}</span>
             <p className="tier-note">{workspace.connectorReadiness.message}</p>
-            <p className="boundary-note">This status grants no institutional or route authority. Certification arrives with PR-05.</p>
+            <p className="boundary-note">Connector certification is limited to replay/shadow intake and grants no institutional, route or transaction authority.</p>
+            {contextActive && <Link className="btn btn-secondary" href={`/institutions/${encodeURIComponent(institutionId)}/evidence`}>Open connectors and evidence</Link>}
           </article>
         </section>
 
@@ -213,7 +214,7 @@ export default function InstitutionWorkspacePage() {
           </div><button className="btn btn-primary" disabled={!!busy || !totp || !invite.email} onClick={() => void act("invite", "MEMBER_INVITE", `/v1/rail/institutions/${encodeURIComponent(institutionId)}/members/invitations`, { ...invite, expiresAt: optionalIso(invite.expiresAt) })}>{busy === "invite" ? "Recording…" : "Record invitation"}</button></details>}
           {workspace.capabilities.proposeAuthority && <details className="governance-form"><summary>Propose a mandate</summary><div className="form-grid">
             <label className="lbl">Member<select className="field" value={mandate.memberId} onChange={(event) => setMandate({ ...mandate, memberId: event.target.value })}><option value="">Select…</option>{inst.members.filter((m) => m.status === "ACTIVE").map((m) => <option value={m.id} key={m.id}>{m.invitedEmail}</option>)}</select></label>
-            <label className="lbl">Action<select className="field" value={mandate.action} onChange={(event) => setMandate({ ...mandate, action: event.target.value })}>{["VIEW_INSTITUTION","ADMINISTER_MEMBERS","PROPOSE_AUTHORITY","APPROVE_AUTHORITY","MANAGE_APPOINTMENTS","OPERATE_CONNECTORS","VIEW_EVIDENCE","CREATE_CASE","OPERATE_CASE"].map((v) => <option key={v}>{v}</option>)}</select></label>
+            <label className="lbl">Action<select className="field" value={mandate.action} onChange={(event) => setMandate({ ...mandate, action: event.target.value })}>{["VIEW_INSTITUTION","ADMINISTER_MEMBERS","PROPOSE_AUTHORITY","APPROVE_AUTHORITY","MANAGE_APPOINTMENTS","OPERATE_CONNECTORS","VIEW_EVIDENCE","MANAGE_EVIDENCE","OPERATE_ROUTE"].map((v) => <option key={v}>{v}</option>)}</select></label>
             <label className="lbl">Scope type<input className="field" value={mandate.scopeType} onChange={(event) => setMandate({ ...mandate, scopeType: event.target.value })} /></label>
             <label className="lbl">Scope reference <span className="opt">optional</span><input className="field" value={mandate.scopeRef} onChange={(event) => setMandate({ ...mandate, scopeRef: event.target.value })} /></label>
             <label className="lbl">Delegation basis<input className="field" value={mandate.delegationBasis} onChange={(event) => setMandate({ ...mandate, delegationBasis: event.target.value })} /></label>

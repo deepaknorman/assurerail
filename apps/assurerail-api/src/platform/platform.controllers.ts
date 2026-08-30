@@ -48,6 +48,7 @@ export class DocumentsController {
   @Get(":id/download")
   async download(@Param("id") id: string, @Res() res: Response) {
     const d = await this.docs.download(id);
+    if (!d.data) throw new BadRequestException("document bytes are held by the neutral evidence service; use its receipt-logged download route");
     res.setHeader("Content-Type", d.contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${d.filename.replace(/[^\w.-]/g, "_")}"`);
     res.send(Buffer.from(d.data));

@@ -4,7 +4,7 @@ import { CoLending } from "@code/shared";
 import { canonicalSerialize, sha256Digest, toCanonicalValue, type CanonicalObject } from "./canonical";
 import { absentSignature } from "./envelopes";
 import { inspectNeutralTaxonomyFlag } from "./feature-flag";
-import { mapAssurePoolTapeToNeutralIntake, mapAssureTransferToNeutralIntake } from "./mappings";
+import { mapAssurePoolTapeToNeutralIntake, mapAssureTransferToNeutralIntake, mapCommonLenderRegistryToNeutralIntake } from "./mappings";
 
 const CONTEXT = {
   envelopeId: "env_mapping_01",
@@ -120,4 +120,22 @@ test("[PR01][FLAG] the package is off by default and can only be enabled read-on
   const rejected = inspectNeutralTaxonomyFlag({ ARAIL_NEUTRAL_TAXONOMY_V1: "write" });
   assert.equal(rejected.value, "off");
   assert.match(rejected.error ?? "", /no write\/enforcement mode/);
+});
+
+test("[PR05][MAPPING][COMMON_REGISTRY] lender registry data remains an evidentiary provider snapshot", () => {
+  const snapshot = {
+    registryId: "lender-consortium-registry-01",
+    registryVersion: "2026-08-30.1",
+    asOfAt: "2026-08-30T10:00:00Z",
+    records: [toCanonicalValue({ lenderAssetRef: "asset-01", status: "CURRENT" }) as CanonicalObject],
+    declaredQualifications: ["Coverage is limited to contributing lenders."],
+  };
+  const envelope = mapCommonLenderRegistryToNeutralIntake(snapshot, {
+    ...CONTEXT, envelopeId: "env_registry_01", idempotencyKey: "registry:01", assetClass: "TRADE_RECEIVABLE",
+  });
+  assert.equal(envelope.source.sourceObjectType, "COMMON_LENDER_REGISTRY_SNAPSHOT");
+  assert.equal(envelope.source.authorityClass, "EVIDENTIARY");
+  assert.equal((envelope.payload.normalized as CanonicalObject).recordCount, 1);
+  assert.equal((envelope.payload.extensions as CanonicalObject).profileId, "common-lender-registry.v1");
+  assert.match(envelope.qualifications[0].text, /contributing lenders/);
 });

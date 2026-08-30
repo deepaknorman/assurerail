@@ -241,6 +241,13 @@ export class InstitutionApplicationService {
           direction: appointment.institutionId === institutionId ? "OUTGOING" : "INCOMING",
         }))
       : [];
+    const connectors = await this.db.connectorRegistration.groupBy({
+      by: ["status"],
+      where: { institutionId },
+      _count: { _all: true },
+    });
+    const connectorCount = connectors.reduce((sum, entry) => sum + entry._count._all, 0);
+    const certifiedCount = connectors.find((entry) => entry.status === "CERTIFIED_SHADOW")?._count._all ?? 0;
     return {
       accessLevel: privileged ? "GOVERNANCE" : "SELF",
       capabilities: {
@@ -253,9 +260,13 @@ export class InstitutionApplicationService {
       },
       evidenceGaps: this.evidenceGaps(institution.evidenceSnapshots, institution.admission?.status ?? null),
       connectorReadiness: {
-        status: "AWAITING_PR05_CERTIFICATION",
+        status: certifiedCount > 0 ? "CERTIFIED_SHADOW" : connectorCount > 0 ? "PENDING_CERTIFICATION" : "NOT_REGISTERED",
         grantsAuthority: false,
-        message: "Connector registration and certification are introduced with the neutral intake service.",
+        message: certifiedCount > 0
+          ? `${certifiedCount} of ${connectorCount} connector registrations have a current replay/shadow certification.`
+          : connectorCount > 0
+            ? `${connectorCount} connector registrations exist; none has a current replay/shadow certification.`
+            : "No provider-neutral connector is registered for this institution.",
       },
       institution: { ...institution, appointments },
     };

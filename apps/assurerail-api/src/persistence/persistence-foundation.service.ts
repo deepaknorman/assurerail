@@ -124,6 +124,18 @@ export class PersistenceFoundationService {
     return { responseDigest };
   }
 
+  async failIdempotentCommand(recordId: string, requestDigest: string, detail: unknown): Promise<void> {
+    await this.db.idempotencyRecord.updateMany({
+      where: { id: recordId, requestDigest, status: "IN_PROGRESS" },
+      data: {
+        status: "FAILED",
+        response: json({ error: detail }),
+        responseDigest: sha256Digest({ error: detail }),
+        completedAt: new Date(),
+      },
+    });
+  }
+
   async persistIntake(
     providerReferenceId: string,
     carrier: string,

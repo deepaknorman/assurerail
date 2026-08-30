@@ -131,6 +131,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   const errors: string[] = [];
   const persistenceFlags = inspectPersistenceFlags(env);
   errors.push(...persistenceFlags.errors);
+  if (persistenceFlags.neutralIngress === "shadow" && persistenceFlags.participantAdmission !== "shadow") {
+    errors.push("ARAIL_NEUTRAL_INGRESS_V1=shadow requires ARAIL_PARTICIPANT_ADMISSION_V1=shadow");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;

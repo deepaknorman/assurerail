@@ -59,6 +59,28 @@ export async function vpost<T>(path: string, body?: unknown, options: VenueReque
   return j as T;
 }
 
+export async function vpostRaw<T>(
+  path: string,
+  body: Blob,
+  metadata: Record<string, unknown>,
+  options: VenueRequestOptions = {},
+): Promise<T> {
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(metadata))))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const r = await fetch(`${VENUE_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "x-assurerail-document-metadata": encoded,
+      ...(await authHeaders(options)),
+    },
+    body,
+  });
+  const result = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((result as { message?: string }).message || `${path} → ${r.status}`);
+  return result as T;
+}
+
 // ── number formatting (Indian system) ──
 const digits = (v?: string | number) => String(v ?? "").replace(/[^\d]/g, "");
 

@@ -13,11 +13,13 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:rehearse:pr02": "bash ../../scripts/assurerail-pr02-db-rehearsal.sh",
     "db:rehearse:pr03": "bash ../../scripts/assurerail-pr03-db-rehearsal.sh",
+    "db:rehearse:pr05": "bash ../../scripts/assurerail-pr05-db-rehearsal.sh",
     "seed:admin": "node dist/seed-admin.js",
     "test": "prisma generate && tsc && node --test \"dist/**/*.test.js\""
   },
   "dependencies": {
     "@code/shared": "*",
+    "@aws-sdk/client-s3": "^3.1052.0",
     "@google-cloud/recaptcha-enterprise": "^6.4.0",
     "@nestjs/common": "^10.4.0",
     "@nestjs/core": "^10.4.0",
