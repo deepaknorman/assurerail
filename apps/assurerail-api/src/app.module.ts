@@ -61,6 +61,9 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).daReplay === "allow_list"
     ? [require("./da-replay/da-replay.module").DaReplayModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).internalRbac !== "off"
+    ? [require("./internal-access/internal-access.module").InternalAccessModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

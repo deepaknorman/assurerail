@@ -207,6 +207,28 @@ test("[PR03][STEP_UP] participant ceremony cannot cross the session's institutio
   );
 });
 
+test("[OP01][STEP_UP] internal-control ceremony is identity-bound and cannot run in a participant context", async () => {
+  const customerContext = new StepUpService({
+    venueUser: { findUnique: async () => ({ ...userRow, status: "ACTIVE", identityVerifiedAt: new Date() }) },
+    venueSession: { findUnique: async () => ({ id: "session-1", userId: "vu-1", activeInstitutionId: "inst-1", revokedAt: null, expiresAt: null }) },
+    stepUpEvidence: { create: async () => { throw new Error("must not create"); } },
+  } as never);
+  await assert.rejects(
+    () => customerContext.issue({ firebaseUid: "uid-1", sessionId: "session-1", purpose: "INTERNAL_ROLE_PROPOSE", method: "TOTP" }),
+    ForbiddenException,
+  );
+
+  const unbound = new StepUpService({
+    venueUser: { findUnique: async () => ({ ...userRow, status: "ACTIVE", identityVerifiedAt: null }) },
+    venueSession: { findUnique: async () => ({ id: "session-1", userId: "vu-1", activeInstitutionId: null, revokedAt: null, expiresAt: null }) },
+    stepUpEvidence: { create: async () => { throw new Error("must not create"); } },
+  } as never);
+  await assert.rejects(
+    () => unbound.issue({ firebaseUid: "uid-1", sessionId: "session-1", purpose: "PRIVILEGED_ACCESS_REQUEST", method: "TOTP" }),
+    ForbiddenException,
+  );
+});
+
 test("[PR03][MAKER_CHECKER] admission, mandate and entitlement makers cannot review themselves", async () => {
   const application = new InstitutionApplicationService({
     participantAdmissionDecision: {

@@ -52,6 +52,7 @@ export function VenueHeader() {
     { href: "/activity", label: "Activity" },
     ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
     ...(isAdmin ? [{ href: "/admin/institutions", label: "Approvals" }] : []),
+    ...(venueUser?.platformRole === "SUPERADMIN" ? [{ href: "/admin/access", label: "Access" }] : []),
   ];
   const closeAll = () => { setNotifOpen(false); setMenuOpen(false); setNavOpen(false); };
 

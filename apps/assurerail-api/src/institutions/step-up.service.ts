@@ -33,9 +33,16 @@ export class StepUpService {
     if (!session || session.userId !== user.id || session.revokedAt || (session.expiresAt && session.expiresAt <= now)) {
       throw new ForbiddenException("active session required for step-up");
     }
-    const platformPurpose = input.purpose.startsWith("PARTICIPANT_ADMISSION_")
+    const internalPurpose = input.purpose.startsWith("INTERNAL_") || input.purpose.startsWith("PRIVILEGED_ACCESS_");
+    const platformPurpose = internalPurpose || input.purpose.startsWith("PARTICIPANT_ADMISSION_")
       || input.purpose === "ROUTE_ENTITLEMENT_REVIEW"
       || input.purpose === "MEMBERSHIP_ACCEPT";
+    if (internalPurpose && session.activeInstitutionId !== null) {
+      throw new ForbiddenException("internal-control step-up requires a session with no active participant institution");
+    }
+    if (internalPurpose && (user.status !== "ACTIVE" || !user.identityVerifiedAt)) {
+      throw new ForbiddenException("an active identity-bound account is required for internal-control step-up");
+    }
     if (!platformPurpose && session.activeInstitutionId !== (input.institutionId ?? null)) {
       throw new ForbiddenException("step-up institution must match the active session context");
     }

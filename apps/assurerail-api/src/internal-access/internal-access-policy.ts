@@ -59,7 +59,7 @@ export type InternalPermission = (typeof INTERNAL_PERMISSIONS)[number];
 export const INTERNAL_SCOPE_TYPES = ["GLOBAL", "OPERATING_UNIT", "ENVIRONMENT", "CASE", "SUPPORT_TICKET"] as const;
 export type InternalScopeType = (typeof INTERNAL_SCOPE_TYPES)[number];
 
-export const INTERNAL_ASSIGNMENT_STATUSES = ["PROPOSED", "ACTIVE", "SUSPENDED", "EXPIRED", "REVOKED", "SUPERSEDED"] as const;
+export const INTERNAL_ASSIGNMENT_STATUSES = ["PROPOSED", "ACTIVE", "REJECTED", "SUSPENDED", "EXPIRED", "REVOKED", "SUPERSEDED"] as const;
 export type InternalAssignmentStatus = (typeof INTERNAL_ASSIGNMENT_STATUSES)[number];
 
 export const PRIVILEGED_ACCESS_STATUSES = ["REQUESTED", "APPROVED", "ACTIVE", "DENIED", "EXPIRED", "REVOKED", "CLOSED"] as const;
@@ -156,8 +156,16 @@ function activeDuring(now: Date, effectiveAt: Date | null, expiresAt: Date | nul
     && (!expiresAt || expiresAt.getTime() > now.getTime());
 }
 
-function isInternalRole(role: string): role is InternalRole {
+export function isInternalRole(role: string): role is InternalRole {
   return (INTERNAL_ROLES as readonly string[]).includes(role);
+}
+
+export function isInternalPermission(permission: string): permission is InternalPermission {
+  return (INTERNAL_PERMISSIONS as readonly string[]).includes(permission);
+}
+
+export function isInternalScopeType(scopeType: string): scopeType is InternalScopeType {
+  return (INTERNAL_SCOPE_TYPES as readonly string[]).includes(scopeType);
 }
 
 /**
@@ -187,11 +195,13 @@ export function evaluateInternalAssignment(input: InternalAssignmentPolicyInput)
 export function evaluateIndependentApproval(input: {
   actorUserId: string;
   proposerUserId: string;
+  subjectUserId?: string | null;
   priorExecutorUserId?: string | null;
   requiresIndependentExecutor?: boolean;
 }): InternalPolicyDecision {
   if (!input.actorUserId) return { allowed: false, code: "INTERNAL_ACTOR_REQUIRED" };
   if (input.actorUserId === input.proposerUserId) return { allowed: false, code: "SELF_APPROVAL_PROHIBITED" };
+  if (input.subjectUserId && input.actorUserId === input.subjectUserId) return { allowed: false, code: "SUBJECT_CANNOT_APPROVE_OWN_ASSIGNMENT" };
   if (input.requiresIndependentExecutor && input.actorUserId === input.priorExecutorUserId) {
     return { allowed: false, code: "EXECUTOR_CANNOT_INDEPENDENTLY_REVIEW" };
   }

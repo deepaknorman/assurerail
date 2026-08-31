@@ -73,6 +73,7 @@ test("[OP01][RBAC] global reporting does not make a viewer a customer-data or op
 
 test("[OP01][RBAC] maker-checker prevents self approval and self reconciliation closure", () => {
   assert.equal(evaluateIndependentApproval({ actorUserId: "u1", proposerUserId: "u1" }).code, "SELF_APPROVAL_PROHIBITED");
+  assert.equal(evaluateIndependentApproval({ actorUserId: "u2", proposerUserId: "u1", subjectUserId: "u2" }).code, "SUBJECT_CANNOT_APPROVE_OWN_ASSIGNMENT");
   assert.equal(evaluateIndependentApproval({
     actorUserId: "u2", proposerUserId: "u1", priorExecutorUserId: "u2", requiresIndependentExecutor: true,
   }).code, "EXECUTOR_CANNOT_INDEPENDENTLY_REVIEW");

@@ -242,6 +242,18 @@ surprises; expired/suspended assignments fail immediately; prohibition of self-a
 denied object reads without elevation; no internal role satisfies external case authority; and full
 audit/elevation event integrity.
 
+**OP-01a implementation checkpoint (1 September 2026):** the versioned role/permission vocabulary,
+scope/effective-date evaluator, additive persistence migration, step-up ceremony boundary, bootstrap
+assignment/elevation APIs and migration rehearsal are implemented. The module mounts only when
+`ARAIL_INTERNAL_RBAC_V1` is explicitly `shadow` or `enforce`; its default is `off`. While in `shadow`,
+the assignment-management APIs remain behind the legacy superadmin bootstrap guard so that the first
+independent control-plane assignments can be created. No legacy role is migrated or granted, no
+customer object is exposed by these APIs, and no role-specific operational UI or enforcement/cutover
+is claimed by this checkpoint. The `/admin/access` bootstrap governance workspace is available only
+to that legacy superadmin and is not an assertion that the new roles are enforced. OP-01b expands the
+staff workspaces; OP-01c replaces the bootstrap guard only after actual assignment coverage, session
+revocation and emergency rehearsal evidence exist.
+
 ---
 
 ## 9. Deliberately rejected shortcuts
