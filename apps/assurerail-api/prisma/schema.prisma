@@ -41,6 +41,9 @@ model VenueUser {
   sessions               VenueSession[]
   institutionMemberships InstitutionMember[]
   stepUpEvidence         StepUpEvidence[]
+  internalRoleAssignments InternalRoleAssignment[]
+  privilegedAccessRequests PrivilegedAccessRequest[]
+  internalAccessEvents     InternalAccessEvent[]
 
   @@index([did])
   @@index([entityDid])
@@ -66,6 +69,103 @@ model VenueSession {
   @@index([userId])
   @@index([activeInstitutionId])
   @@index([revokedAt])
+}
+
+// ───────────────────── internal staff control plane (OP-01) ─────────────────────
+// These assignments are intentionally not InstitutionMember/Mandate/Appointment records. A Rail
+// employee's internal job function cannot become customer or transaction authority by sharing a user ID.
+model InternalRoleAssignment {
+  id                  String    @id
+  userId              String
+  user                VenueUser @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role                String    // SUPERADMIN | SYSADMIN | SECURITY_ADMIN | ORGADMIN | MANAGER | …
+  scopeType           String    // GLOBAL | OPERATING_UNIT | ENVIRONMENT | CASE | SUPPORT_TICKET
+  scopeRef            String?
+  scopeKey            String    // canonical `${scopeType}:${scopeRef ?? "*"}` — avoids NULL uniqueness gaps
+  status              String    @default("PROPOSED") // PROPOSED | ACTIVE | SUSPENDED | EXPIRED | REVOKED | SUPERSEDED
+  version             Int       @default(1)
+  reason              String
+  evidenceRef         String?
+  proposalDigest      String    @unique
+  proposedByUserId    String
+  proposalStepUpId    String?
+  approvedByUserId    String?
+  approvalStepUpId    String?
+  approvalReason      String?
+  effectiveAt         DateTime?
+  expiresAt           DateTime?
+  suspendedAt         DateTime?
+  revokedAt           DateTime?
+  supersedesId        String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  accessEvents        InternalAccessEvent[]
+
+  @@unique([userId, role, scopeKey, version])
+  @@index([userId, status, expiresAt])
+  @@index([role, status, scopeType, scopeRef])
+  @@index([proposedByUserId, createdAt])
+}
+
+// A bounded support/incident/recovery exception. It adds one requested permission at one scope for a
+// short period; it is not a second, invisible administrator account and does not carry case authority.
+model PrivilegedAccessRequest {
+  id                  String    @id
+  userId              String
+  user                VenueUser @relation(fields: [userId], references: [id], onDelete: Restrict)
+  requestedPermission String
+  scopeType           String
+  scopeRef            String?
+  scopeKey            String
+  status              String    @default("REQUESTED") // REQUESTED | APPROVED | ACTIVE | DENIED | EXPIRED | REVOKED | CLOSED
+  reason              String
+  ticketRef           String
+  riskClass           String
+  requestedAt         DateTime  @default(now())
+  startsAt            DateTime?
+  expiresAt           DateTime?
+  requestedByUserId   String
+  requestStepUpId     String?
+  approvedByUserId    String?
+  approvalStepUpId    String?
+  approvalReason      String?
+  deniedByUserId      String?
+  deniedAt            DateTime?
+  revokedByUserId     String?
+  revokedAt           DateTime?
+  closedAt            DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  accessEvents        InternalAccessEvent[]
+
+  @@index([userId, status, expiresAt])
+  @@index([status, scopeType, scopeRef])
+  @@index([ticketRef])
+}
+
+// Append-only receipt for role/elevation decisions and every privileged access use. No arbitrary JSON
+// overwrite is permitted; event payload is canonical/digested by the service layer.
+model InternalAccessEvent {
+  id                       String                  @id
+  userId                   String
+  user                     VenueUser               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  internalRoleAssignmentId String?
+  internalRoleAssignment   InternalRoleAssignment? @relation(fields: [internalRoleAssignmentId], references: [id], onDelete: Restrict)
+  privilegedAccessRequestId String?
+  privilegedAccessRequest   PrivilegedAccessRequest? @relation(fields: [privilegedAccessRequestId], references: [id], onDelete: Restrict)
+  eventType                String
+  permission               String?
+  scopeType                String?
+  scopeRef                 String?
+  requestId                String?
+  reason                   String?
+  payloadDigest            String
+  occurredAt               DateTime                @default(now())
+
+  @@index([userId, occurredAt])
+  @@index([internalRoleAssignmentId, occurredAt])
+  @@index([privilegedAccessRequestId, occurredAt])
+  @@index([eventType, occurredAt])
 }
 
 // ───────────────────── institution, admission and scoped authority (PR-03) ─────────────────────
