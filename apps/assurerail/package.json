@@ -7,7 +7,8 @@
     "dev": "next dev -p 3007",
     "build": "next build",
     "start": "next start -p 3007",
-    "clean": "rm -rf .next"
+    "clean": "rm -rf .next",
+    "check:pr18": "node scripts/pr18-customer-workspace-check.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^8.3.7",
