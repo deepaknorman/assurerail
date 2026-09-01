@@ -1419,6 +1419,25 @@ suspension/termination and full customer evidence/data exit. Commercial calculat
 contract-scoped with exact money, effective dating and maker-checker. Pricing never changes route
 authority, legal record, evidence result or completion state.
 
+**PR-20 implementation checkpoint (2 September 2026):** implemented for review under EX-27; not
+deployed or activated. Institution-scoped contracts, customer acceptance, effective-dated rate
+cards, exact route/representation/leg fee rules, idempotent source-event metering, maker-checker
+statement issuance and credits, shadow cohorts, service/SLA escalation, operational reviews and a
+digest-bound customer exit package are now durable. AssureRail pricing is not fixed-fee by
+assumption: the exact rule engine supports fixed, per-unit and notional-basis-point terms. The
+agreed conventional/tokenised PTC examples are tested at 30/50 bps but remain contract-configurable,
+not global defaults. Currency and scale are explicit. Renewal and reinstatement require new
+customer acceptance; draft/rejected internal commercial records and stale evidence grants are
+excluded from customer views/exports. Commercial services invoke no transaction, settlement,
+token, authoritative-record, evidence-result or completion command. The API suite passed 290/290
+with zero skipped; the web build generated `/workspace/operations`; and 26 migrations plus
+uniqueness, restrictive history, schema parity and backup/restore passed. Real customer, finance,
+tax/GST, statement reconciliation, SLA/support, security and exit evidence remain open. The flag
+defaults off, is shadow-only and has no live capability ID. Design:
+`docs/design/AssureRail_Customer_Operations_And_Commercial_Admin_PR20.md`; evidence:
+`docs/qa/AssureRail_PR20_Customer_Operations_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR20_Deployer_Handoff.md`.
+
 PR-13–PR-20 are product build stages, not blanket launch approvals. Each separately defines flags,
 implemented capability IDs, rollback/safe-pause, internal evidence and open external gates. Public
 web copy, SEO, articles and inbound campaigns follow the accepted capability registry and are not

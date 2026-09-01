@@ -252,6 +252,23 @@ with:
 npm run db:rehearse:pr19 --workspace=@code/assurerail-api
 ```
 
+### Customer operations and commercial administration (PR-20)
+
+PR-20 adds shadow-only contracts/customer acceptance, effective-dated rate cards, exact usage
+metering, maker-checker statements and credits, implementation cohorts, service/SLA escalation,
+operational reviews and a digest-bound customer evidence/data exit. Pricing is contract-scoped and
+supports fixed, per-unit and notional-basis-point terms; the 30-bps conventional PTC and 50-bps
+tokenised PTC examples are tests, not hard-coded defaults. Commercial records cannot mutate route
+authority, evidence, ownership, reconciliation or completion.
+
+`ARAIL_CUSTOMER_OPERATIONS_V1=shadow` requires PR-19 integration shadow, participant admission and
+internal RBAC, and is valid only in `REPLAY`/`SHADOW`. It defaults off and has no live capability ID.
+See `docs/design/AssureRail_Customer_Operations_And_Commercial_Admin_PR20.md` and rehearse with:
+
+```bash
+npm run db:rehearse:pr20 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health
