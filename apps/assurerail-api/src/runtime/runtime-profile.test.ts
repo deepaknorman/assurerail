@@ -41,6 +41,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
   assert.equal(result.demoEndpointsEnabled, true);
   assert.equal(result.persistentStoreRequired, false);
   assert.equal(result.authenticatedRuntimeRequired, false);
+  assert.deepEqual(result.activation, { manifestId: null, manifestDigest: null, capabilityIds: [] });
   assert.deepEqual(result.adapters, {
     tape: "demo",
     hts: "demo",
@@ -301,7 +302,7 @@ test("[CONFIG][PR11] tokenised DA requires the durable saga and remains non-live
   assert.match(live.errors.join("\n"), /ARAIL_TOKENISED_DA_V1 is available only/);
 });
 
-test("[CONFIG][OP01c] internal RBAC enforcement cannot be enabled before cutover evidence exists", () => {
+test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {
   const shadow = inspectRuntimeEnvironment({
     NODE_ENV: "development",
     ARAIL_INTERNAL_RBAC_V1: "shadow",
@@ -314,10 +315,15 @@ test("[CONFIG][OP01c] internal RBAC enforcement cannot be enabled before cutover
     ARAIL_INTERNAL_RBAC_V1: "enforce",
   });
   assert.equal(enforce.profile.features.internalRbac, "enforce");
-  assert.match(enforce.errors.join("\n"), /reserved but unavailable until OP-01c assignment coverage/);
+  assert.doesNotMatch(enforce.errors.join("\n"), /reserved but unavailable/);
+  const liveWithoutEnforcement = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    ARAIL_INTERNAL_RBAC_V1: "shadow",
+  });
+  assert.match(liveWithoutEnforcement.errors.join("\n"), /requires ARAIL_INTERNAL_RBAC_V1=enforce/);
   assert.throws(() => assertRuntimeEnvironment({
     NODE_ENV: "development",
-    ARAIL_INTERNAL_RBAC_V1: "enforce",
+    ARAIL_INTERNAL_RBAC_V1: "invalid",
   }), RuntimeConfigurationError);
 });
 
@@ -331,13 +337,77 @@ test("[CONFIG][SHADOW] a merely present but malformed Firebase credential is rej
   assert.match(inspected.errors.join("\n"), /must be valid base64 service-account JSON/);
 });
 
-test("[CONFIG][PRODUCTION] a complete non-demo profile passes the PR-00 startup contract", () => {
-  const result = assertRuntimeEnvironment(LIVE_ENV);
-  assert.equal(result.operatingMode, "PRODUCTION");
-  assert.equal(result.demoEndpointsEnabled, false);
-  assert.equal(result.liveExternalActionsRequired, true);
-  assert.deepEqual(Object.values(result.adapters), ["live", "live", "live", "live", "live"]);
+test("[CONFIG][PR12][PRODUCTION] credentials and live adapters cannot replace a signed activation record", () => {
+  const inspected = inspectRuntimeEnvironment(LIVE_ENV);
+  const errors = inspected.errors.join("\n");
+  assert.match(errors, /ARAIL_ACTIVATION_MANIFEST_B64 is required/);
+  assert.match(errors, /requires ARAIL_INTERNAL_RBAC_V1=enforce/);
+  assert.equal(inspected.profile.liveExternalActionsRequired, true);
   assert.equal(shouldMountDemoEndpoints(LIVE_ENV), false);
+  assert.throws(() => assertRuntimeEnvironment(LIVE_ENV), RuntimeConfigurationError);
+});
+
+test("[CONFIG][PR12][PRODUCTION] a manifest cannot activate a capability absent from this build", async () => {
+  const { generateKeyPairSync, sign } = await import("node:crypto");
+  const { canonicalSerialize, sha256Digest } = await import("../contracts/v1");
+  const { ACTIVATION_APPROVAL_ROLES, CONTROLLED_LIVE_GATE_CODES, PRODUCTION_ONLY_GATE_CODES } = await import("./activation-manifest");
+  const now = new Date();
+  const acceptedAt = new Date(now.getTime() - 60_000).toISOString();
+  const expiresAt = new Date(now.getTime() + 60 * 60_000).toISOString();
+  const manifest = {
+    schemaVersion: "assurerail.activation.v1",
+    manifestId: "activation.runtime-test",
+    environment: "runtime-test",
+    operatingMode: "PRODUCTION",
+    buildCommit: "a".repeat(40),
+    issuedAt: now.toISOString(),
+    expiresAt,
+    capabilities: [{
+      id: "capability.not-implemented",
+      transactionRoute: "DA",
+      representation: "CONVENTIONAL",
+      lifecycleLeg: "INITIAL_TRANSFER_OR_ISSUE",
+      materialFunction: "TRANSFER_COMPLETION",
+      performer: "PARTICIPANT_OWNED",
+      cohortRef: "cohort.test",
+    }],
+    gates: [...CONTROLLED_LIVE_GATE_CODES, ...PRODUCTION_ONLY_GATE_CODES].map((code) => ({
+      code,
+      scopeKey: "scope.test",
+      evidenceClass: [
+        "INDEPENDENT_SECURITY_REVIEW",
+        "PARTICIPANT_EVIDENCE_EXPORT",
+        "ROUTE_LEGAL_PERMISSION",
+        "CONNECTOR_CERTIFICATION",
+        "OPERATING_ACCEPTANCE",
+        "CONTROLLED_PILOT_ACCEPTANCE",
+        "CUSTOMER_EXIT_REHEARSAL",
+      ].includes(code) ? "EXTERNAL" : "INTERNAL",
+      evidenceRef: `evidence.${code.toLowerCase()}`,
+      evidenceDigest: sha256Digest({ code }),
+      decisionRef: `decision.${code.toLowerCase()}`,
+      acceptedAt,
+      expiresAt,
+    })),
+    approvals: ACTIVATION_APPROVAL_ROLES.map((role, index) => ({
+      role,
+      actorRef: `actor.${index}`,
+      approvedAt: acceptedAt,
+      evidenceDigest: sha256Digest({ role }),
+    })),
+  } as const;
+  const keys = generateKeyPairSync("ed25519");
+  const signature = sign(null, Buffer.from(canonicalSerialize(manifest), "utf8"), keys.privateKey);
+  const inspected = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    ARAIL_INTERNAL_RBAC_V1: "enforce",
+    ASSURERAIL_ENVIRONMENT: manifest.environment,
+    ASSURERAIL_BUILD_COMMIT: manifest.buildCommit,
+    ARAIL_ACTIVATION_MANIFEST_B64: Buffer.from(JSON.stringify(manifest)).toString("base64"),
+    ARAIL_ACTIVATION_PUBLIC_KEY_B64: keys.publicKey.export({ format: "der", type: "spki" }).toString("base64"),
+    ARAIL_ACTIVATION_SIGNATURE_B64: signature.toString("base64"),
+  });
+  assert.match(inspected.errors.join("\n"), /has no implemented controlled-live command path in this build/);
 });
 
 test("[CONFIG] invalid modes, adapters and booleans are rejected", () => {
