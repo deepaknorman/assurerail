@@ -37,6 +37,9 @@ export class DvpService {
   async execute(noteId: string, input: DvpInput) {
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) {
+      throw new BadRequestException("governed token representation: direct legacy DvP is disabled; use the case-scoped token action workflow");
+    }
     if (note.state === "REDEEMED") throw new BadRequestException("note is redeemed — not tradeable");
 
     const sellerDid = input.sellerDid?.trim() || ISSUER_DID;
@@ -101,10 +104,12 @@ export class DvpService {
 
   async listDvp(noteId: string) {
     if (!(await this.repo.getNote(noteId))) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) throw new NotFoundException("note not found");
     return this.repo.listDvp(noteId);
   }
   async holdings(noteId: string) {
     if (!(await this.repo.getNote(noteId))) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) throw new NotFoundException("note not found");
     return this.repo.listHoldings(noteId);
   }
 }

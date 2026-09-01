@@ -45,7 +45,7 @@ const sellerHolding: HoldingRecord = {
 };
 
 function repoWith(methods: Record<string, unknown>): MintRepository {
-  return methods as unknown as MintRepository;
+  return { isGovernedTokenRepresentation: async () => false, ...methods } as unknown as MintRepository;
 }
 
 function eventBus(emit: (event: string, payload: Record<string, unknown>) => void = () => undefined): VenueEventBus {

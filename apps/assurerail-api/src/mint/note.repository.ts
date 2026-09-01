@@ -143,6 +143,10 @@ export abstract class MintRepository {
   /** A bounded page of notes (for the portfolio list view — never the whole table). */
   abstract listNotesPage(limit: number, offset: number): Promise<NoteRecord[]>;
   abstract getNote(id: string): Promise<NoteRecord | undefined>;
+  /** True only for a persistent legacy Note linked to a governed Rail token representation. */
+  async isGovernedTokenRepresentation(_noteId: string): Promise<boolean> {
+    return false;
+  }
   abstract updateNoteState(id: string, state: string): Promise<void>;
   abstract saveSurveillance(rec: Omit<SurveillanceRecord, "id" | "createdAt">): Promise<SurveillanceRecord>;
   abstract listSurveillance(noteId: string): Promise<SurveillanceRecord[]>;

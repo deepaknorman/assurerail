@@ -83,6 +83,21 @@ Run the disposable database evidence rehearsal (never a configured database):
 npm run db:rehearse:pr02 --workspace=@code/assurerail-api
 ```
 
+### Tokenised-DA representation adapter (PR-11)
+
+The case-scoped PR-11 adapter links an existing legacy Note to a neutral DA/TOKENISED transaction
+case and active authoritative-record declaration. The token is always a `MIRROR`; governed actions
+are durable `OBSERVE_ONLY` instructions with authenticated observations and exact reconciliation.
+It is off by default (`ARAIL_TOKENISED_DA_V1=off`), can be allow-listed only in `REPLAY`/`SHADOW`,
+and exposes no external dispatch. Linked Notes are removed from the global legacy read/mutation
+paths. See `docs/design/AssureRail_Tokenised_DA_Representation_PR11.md`.
+
+Run its disposable database evidence rehearsal:
+
+```bash
+npm run db:rehearse:pr11 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health

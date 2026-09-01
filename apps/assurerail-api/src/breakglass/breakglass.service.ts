@@ -21,6 +21,9 @@ export class BreakGlassService {
   async request(noteId: string, input: BreakGlassInput) {
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) {
+      throw new BadRequestException("governed token representation: direct legacy break-glass anchoring is disabled; use the case-scoped governed access workflow");
+    }
     if (!input.regulatorDid) throw new BadRequestException("regulatorDid required");
     if (!input.lawfulPurpose || input.lawfulPurpose.trim().length < 10) throw new BadRequestException("a lawful-purpose attestation (≥10 chars) is required");
 
@@ -36,6 +39,7 @@ export class BreakGlassService {
 
   async list(noteId: string) {
     if (!(await this.repo.getNote(noteId))) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) throw new NotFoundException("note not found");
     return this.repo.listBreakGlass(noteId);
   }
 }

@@ -124,13 +124,13 @@ export class PrismaMintRepository extends MintRepository {
   }
 
   async listNotes(): Promise<NoteRecord[]> {
-    const rows = await this.db.note.findMany({ orderBy: { createdAt: "asc" } });
+    const rows = await this.db.note.findMany({ where: { tokenRepresentation: { is: null } }, orderBy: { createdAt: "asc" } });
     return rows.map((r) => this.toNote(r));
   }
 
   // Index-only aggregate — reads the `state` column, never hydrates t1Aggregates. See the abstract doc.
   async countNotesByState(): Promise<Record<string, number>> {
-    const grouped = await this.db.note.groupBy({ by: ["state"], _count: { _all: true } });
+    const grouped = await this.db.note.groupBy({ by: ["state"], where: { tokenRepresentation: { is: null } }, _count: { _all: true } });
     const out: Record<string, number> = { ISSUED: 0, ACTIVE: 0, REDEEMED: 0, total: 0 };
     for (const g of grouped) {
       out[g.state] = g._count._all;
@@ -140,18 +140,22 @@ export class PrismaMintRepository extends MintRepository {
   }
 
   async sumMintableMinor(): Promise<string> {
-    const rows = await this.db.$queryRaw<{ sum: string | null }[]>`SELECT COALESCE(SUM((("t1Aggregates" ->> 'mintableMinor')::numeric)), 0)::text AS sum FROM "Note"`;
+    const rows = await this.db.$queryRaw<{ sum: string | null }[]>`SELECT COALESCE(SUM(((n."t1Aggregates" ->> 'mintableMinor')::numeric)), 0)::text AS sum FROM "Note" n WHERE NOT EXISTS (SELECT 1 FROM "TokenRepresentation" tr WHERE tr."noteId" = n."id")`;
     return rows[0]?.sum ?? "0";
   }
 
   async listNotesPage(limit: number, offset: number): Promise<NoteRecord[]> {
-    const rows = await this.db.note.findMany({ orderBy: { createdAt: "asc" }, take: Math.min(Math.max(limit, 1), 500), skip: Math.max(offset, 0) });
+    const rows = await this.db.note.findMany({ where: { tokenRepresentation: { is: null } }, orderBy: { createdAt: "asc" }, take: Math.min(Math.max(limit, 1), 500), skip: Math.max(offset, 0) });
     return rows.map((r) => this.toNote(r));
   }
 
   async getNote(id: string): Promise<NoteRecord | undefined> {
     const r = await this.db.note.findUnique({ where: { id } });
     return r ? this.toNote(r) : undefined;
+  }
+
+  async isGovernedTokenRepresentation(noteId: string): Promise<boolean> {
+    return (await this.db.tokenRepresentation.count({ where: { noteId } })) > 0;
   }
 
   /** No-op if the note doesn't exist (updateMany never throws on 0 rows) — matches the in-memory store. */

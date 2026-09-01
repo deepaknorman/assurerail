@@ -30,6 +30,9 @@ export class CloseService {
   async close(noteId: string, input: CloseInput) {
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) {
+      throw new BadRequestException("governed token representation: direct legacy closure is disabled; use the case-scoped token action workflow");
+    }
     if (note.state === "REDEEMED") throw new BadRequestException("note is already redeemed");
 
     const reason = (input.reason ?? "manual").toLowerCase();

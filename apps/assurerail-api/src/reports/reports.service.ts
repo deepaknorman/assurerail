@@ -9,6 +9,7 @@ export class ReportsService {
   async noteReport(noteId: string) {
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) throw new NotFoundException("note not found");
     const [holdings, surveillance, dvps] = await Promise.all([
       this.repo.listHoldings(noteId),
       this.repo.listSurveillance(noteId),

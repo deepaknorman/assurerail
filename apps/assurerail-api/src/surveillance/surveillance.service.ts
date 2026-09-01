@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { audit } from "../common/audit";
 import { MintRepository } from "../mint/note.repository";
 import { fetchSurveillance } from "./surveillance.client";
@@ -12,6 +12,9 @@ export class SurveillanceService {
   async sync(noteId: string) {
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) {
+      throw new BadRequestException("governed token representation: direct legacy surveillance anchoring is disabled; use case-scoped evidence and token actions");
+    }
 
     const surveillance = await fetchSurveillance(note.poolId);
     const hcs = selectHcsAdapter();
@@ -35,6 +38,7 @@ export class SurveillanceService {
 
   async list(noteId: string) {
     if (!(await this.repo.getNote(noteId))) throw new NotFoundException("note not found");
+    if (await this.repo.isGovernedTokenRepresentation(noteId)) throw new NotFoundException("note not found");
     return this.repo.listSurveillance(noteId);
   }
 }
