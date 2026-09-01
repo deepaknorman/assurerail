@@ -1317,6 +1317,21 @@ cash, depository/RTA/register and token representation. Add token issue/transfer
 instructions only through the saga and exact authority reconciliation. Conventional and tokenised
 PTC pricing/configuration remain separate commercial facts; fees never confer legal permission.
 
+**PR-16 implementation checkpoint (2 September 2026):** implemented for review under EX-27; not
+deployed. A separate domestic `PTC/TOKENISED` shadow route now records programme/trust, class/
+tranche, trustee, assurance provider, subscription/allotment, authoritative record declaration and
+mirror token identifiers. Fourteen provider/accountable-party evidence gates include the still-open
+real historic PTC replay, trustee control, trustee-versus-recordkeeper reconciliation, assurance,
+legal/finality and custody/operating acceptance. Missing evidence stays `OPEN`; synthetic/demo/
+fixture/example evidence is rejected. Five deterministic action plans remain `BLOCKED` until all
+external gates are verified and a different human approves shadow readiness; even then they create
+no external instruction. Candidate capability IDs remain outside the live registry.
+`ARAIL_TOKENISED_PTC_V1=shadow` is replay/shadow-only and depends on PR-10 plus the saga foundation.
+The API suite passed 264/264 with zero skipped; 23 migrations, restrictive history, parity and
+backup/restore passed. Design: `docs/design/AssureRail_Tokenised_PTC_Shadow_Route_PR16.md`; evidence:
+`docs/qa/AssureRail_PR16_Tokenised_PTC_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR16_Deployer_Handoff.md`.
+
 ### PR-17 — Venue conduct, surveillance, complaints and scale controls
 
 **Dependencies:** PR-13 and the routes exposed to commercial interaction

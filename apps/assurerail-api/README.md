@@ -201,6 +201,23 @@ See `docs/design/AssureRail_Tokenised_DA_Live_Connector_And_Custody_PR15.md` and
 npm run db:rehearse:pr15 --workspace=@code/assurerail-api
 ```
 
+### Separate tokenised PTC shadow route (PR-16)
+
+PR-16 adds a PTC/TOKENISED representation independently of the DA `Note`. It binds programme,
+trust, class/tranche, trustee, assurance provider, subscription/allotment evidence and the
+route-defined depository/RTA/register to a mirror-only token record. Fourteen external evidence
+gates remain explicit and open when unavailable. Five issue/transfer/distribution/lifecycle/burn
+plans are shadow records only; no external instruction or live capability is created.
+
+`ARAIL_TOKENISED_PTC_V1=shadow` is accepted only in `REPLAY`/`SHADOW` with PR-10 replay and the
+neutral saga foundation. It defaults `off`. See
+`docs/design/AssureRail_Tokenised_PTC_Shadow_Route_PR16.md` and
+`docs/runbooks/AssureRail_PR16_Deployer_Handoff.md`. Rehearse with:
+
+```bash
+npm run db:rehearse:pr16 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health
