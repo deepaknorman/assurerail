@@ -1155,6 +1155,19 @@ Flag: `ARAIL_LEGACY_NOTE_ADAPTER=on`, token adapter cohort flag added in PR desi
 Rollback: retain legacy projection/read; pause external actions, never reverse confirmed external
 state without approved correction process.
 
+**PR-11 implementation checkpoint (2 September 2026):** implemented for review on
+`codex/assurerail-pr01-neutral-taxonomy` under EX-26. The additive adapter links one legacy Note to
+one DA/TOKENISED `TransactionCase` and its active `AuthoritativeRecordDeclaration`; authority mode
+is fixed to `MIRROR`. Five case-scoped endpoints support linkage, read, observe-only action
+preparation, authenticated acknowledgement observation and exact reconciliation. There is no
+external dispatch endpoint and the module imports no HTS, HCS or payment adapter. Linked Notes fail
+closed on direct legacy DvP, amortisation, closure, surveillance/break-glass anchoring and global
+legacy reads. Supply, token positions, economic interests and the authoritative record must match;
+evidence digests bind the complete submitted snapshot and mismatches open critical breaks. The
+feature is off by default and rejected outside REPLAY/SHADOW. Full design and rejected shortcuts:
+`docs/design/AssureRail_Tokenised_DA_Representation_PR11.md`. Executed evidence:
+`docs/qa/AssureRail_PR11_Tokenised_DA_Evidence.md`. No deployment or live capability claim.
+
 ### PR-12 — Controlled pilot operating pack and production gate
 
 **Dependencies:** PR-03 through route adapter being piloted
