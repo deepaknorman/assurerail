@@ -15,7 +15,7 @@ route acceptance
 | `npm run build` | passed | Prisma client generation and TypeScript compilation against the additive schema |
 | `npx prisma validate --schema=prisma/schema.prisma` | passed | Prisma relationship and schema validity |
 | `bash -n scripts/assurerail-pr10-db-rehearsal.sh` | passed | Rehearsal script syntax |
-| `npm run db:rehearse:pr10` | passed | Disposable PostgreSQL fresh migration, synthetic PTC storage, restrictive evidence history, legacy DA upgrade/backfill, schema parity, dump/restore and migration-ledger parity |
+| `npm run db:rehearse:pr10` | passed | Disposable PostgreSQL fresh migration, actual planning-service transaction/idempotency, synthetic PTC storage, restrictive evidence history, legacy DA upgrade/backfill, schema parity, dump/restore and migration-ledger parity |
 
 ## Facts proved by the database rehearsal
 
@@ -27,8 +27,10 @@ route acceptance
 5. A pre-PR-10 DA saga is classified as `DA`; its route-evidence digest is deterministically
    backfilled from its retained plan digest; and all three prior DA evidence object IDs are unchanged.
 6. The fresh database matches the Prisma definitions for all PR-10 tables/fields.
-7. A custom-format backup restores with its evidence link intact and the migration ledger remains
-   current.
+7. The actual planning service writes one 11-leg/19-evidence-link saga atomically, replays an
+   identical command, rejects changed content under the same key and leaves one saga/audit record.
+8. A custom-format backup restores with all 20 service/fixture evidence links intact and the
+   migration ledger remains current.
 
 The rehearsal creates its own local temporary PostgreSQL cluster, never reads the configured
 `DATABASE_URL`, and removes the temporary data on exit.

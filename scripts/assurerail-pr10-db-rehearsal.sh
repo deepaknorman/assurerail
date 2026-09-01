@@ -18,7 +18,7 @@ UPGRADE_DB="assurerail_pr10_upgrade"
 RESTORE_DB="assurerail_pr10_restore"
 
 case "$TEST_ROOT" in */assurerail-pr10.*) ;; *) echo "refusing unsafe scratch path: $TEST_ROOT" >&2; exit 1 ;; esac
-for command_name in initdb pg_ctl createdb psql pg_dump pg_restore npx; do
+for command_name in initdb pg_ctl createdb psql pg_dump pg_restore node npm npx; do
   command -v "$command_name" >/dev/null || { echo "missing required command: $command_name" >&2; exit 1; }
 done
 cleanup() {
@@ -32,11 +32,17 @@ pg_ctl -D "$PG_DATA" -l "$PG_LOG" -o "-F -h 127.0.0.1 -p $PG_PORT -k $PG_SOCKET"
 db_url() { printf 'postgresql://%s@127.0.0.1:%s/%s' "$PG_USER" "$PG_PORT" "$1"; }
 psql_db() { local database="$1"; shift; psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$database" "$@"; }
 
+echo "[PR10-DB] compile service rehearsal"
+(cd "$RAIL_DIR"; npm run build >/dev/null)
+
 echo "[PR10-DB] fresh migration deploy"
 createdb -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" "$FRESH_DB"
 (cd "$RAIL_DIR"; DATABASE_URL="$(db_url "$FRESH_DB")" npx prisma migrate deploy --schema=prisma/schema.prisma)
 fresh_models="$(psql_db "$FRESH_DB" -Atc "SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename IN ('PtcReplayAuthorisation','SagaEvidenceLink');")"
 [[ "$fresh_models" == "2" ]] || { echo "expected 2 PR-10 models, found $fresh_models" >&2; exit 1; }
+
+echo "[PR10-DB] governed planning service transaction and idempotency"
+(cd "$RAIL_DIR"; DATABASE_URL="$(db_url "$FRESH_DB")" node dist/ptc-replay/ptc-replay-db-rehearsal.js)
 
 echo "[PR10-DB] PTC saga uses generic evidence without fabricated DA evidence"
 psql_db "$FRESH_DB" -c "
@@ -78,6 +84,6 @@ pg_dump -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$FRESH_DB" --format=custom 
 createdb -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" "$RESTORE_DB"
 pg_restore -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$RESTORE_DB" --exit-on-error "$TEST_ROOT/fresh.dump"
 restored="$(psql_db "$RESTORE_DB" -Atc 'SELECT count(*) FROM "SagaEvidenceLink";')"
-[[ "$restored" == "1" ]] || { echo "restore evidence-link count mismatch: $restored" >&2; exit 1; }
+[[ "$restored" == "20" ]] || { echo "restore evidence-link count mismatch: $restored" >&2; exit 1; }
 (cd "$RAIL_DIR"; DATABASE_URL="$(db_url "$RESTORE_DB")" npx prisma migrate status --schema=prisma/schema.prisma)
-echo "[PR10-DB] PASS models=2 ptc-evidence=generic da-upgrade=retained history=restrictive restore=1-link"
+echo "[PR10-DB] PASS models=2 service-saga=atomic/idempotent ptc-evidence=generic da-upgrade=retained history=restrictive restore=20-links"

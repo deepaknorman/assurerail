@@ -12,6 +12,7 @@ acceptance remain open
 | API build / Prisma generation / TypeScript compile | passed |
 | Focused feature-flag, runtime, endpoint, schema, route-pack and perimeter tests | 33 passed |
 | Full `apps/assurerail-api` suite | 212 passed, 0 failed, 0 skipped |
+| Enhanced disposable PostgreSQL PR-10 rehearsal | passed |
 | `git diff --check` for the phase files | passed |
 
 ## Boundaries proved
@@ -25,11 +26,13 @@ acceptance remain open
   optimistic version, function assignments and retained evidence versions/digests.
 - Trustee transaction control, issue/allotment observation and authoritative-record acknowledgement
   are separate ordered plan facts.
+- The actual planning service atomically persisted one synthetic saga with 11 legs, 19 evidence
+  links, null DA-only evidence references, one authoritative declaration and one governed audit.
+- Identical command replay returned the same saga; changed content under the same key was rejected;
+  only one saga remained; all 20 combined service/fixture evidence links survived dump/restore.
 
 ## Not established
 
-- No service-level PostgreSQL integration test has yet exercised a complete authorised saga command;
-  that test is required before observation/reconciliation work is accepted.
 - No observation, reconciliation, break-repair or comparison-export endpoint exists in this phase.
 - No participant-authorised historic PTC evidence pack has been replayed.
 - No external action, deployment, production readiness or regulatory permission is claimed.

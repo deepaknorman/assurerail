@@ -134,6 +134,17 @@ procedure is `docs/runbooks/AssureRail_PR10_Conventional_PTC_Replay.md`. The nex
 append-only observation/reconciliation service and evidence export, followed by the external
 historic replay gate.
 
+### 5.3 Service/database rehearsal checkpoint — 1 September 2026
+
+The governed planning command now has executable disposable-PostgreSQL evidence. The rehearsal
+builds the actual service, migrates a fresh database, seeds only synthetic admitted institutions,
+case parties, function assignments and verified evidence, then calls `PtcReplayService.createSaga`.
+It proves one atomic PTC saga, 11 ordered legs, 19 role-bound evidence links, null DA-only evidence
+fields, one authoritative declaration and one governed audit receipt. Repeating the identical
+command returns the same saga; changed content under the same idempotency key is rejected and does
+not create a second saga. The resulting history also survives dump/restore. This closes the planning
+service database-test gap, not the observation/reconciliation or real historic evidence gates.
+
 ## 6. External evidence gate
 
 The following cannot be supplied by code or guessed from a market convention: the named historic

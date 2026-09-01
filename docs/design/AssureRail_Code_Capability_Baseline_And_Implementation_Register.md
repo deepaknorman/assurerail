@@ -1092,6 +1092,14 @@ exposed. The full Rail suite passes 212 tests. Runbook:
 `docs/runbooks/AssureRail_PR10_Conventional_PTC_Replay.md`; evidence:
 `docs/qa/AssureRail_PR10_Governed_Planning_Evidence.md`.
 
+**PR-10 service/database checkpoint (1 September 2026):** the disposable database rehearsal now
+invokes the actual PTC planning service against a fully migrated synthetic database. It proves the
+atomic 11-leg/19-evidence-link saga write, null DA-only references, authoritative declaration,
+governed audit, identical-command replay, changed-command conflict, single-saga invariant and
+backup/restore retention. This closes the previously recorded planning-service database gap. It
+does not add observation/reconciliation endpoints or satisfy the external historic transaction
+gate.
+
 ### PR-11 — Tokenised-DA representation adapter refactor
 
 **Dependencies:** PR-06 and PR-09
