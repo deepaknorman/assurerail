@@ -149,6 +149,28 @@ See `docs/design/AssureRail_Permissioned_Primary_Commercial_Venue_PR13.md` and
 npm run db:rehearse:pr13 --workspace=@code/assurerail-api
 ```
 
+### Conventional secondary DA/PTC replay (PR-14)
+
+PR-14 adds separate domestic conventional DA and PTC secondary route packs. A case-owning seller
+can assemble an observation-only historic dossier covering the current holder, prior chain, seller
+authority, transfer restrictions, executed document, notices/consents, cash and authoritative
+record before/after evidence. PTC additionally requires trustee transaction-control evidence. Every
+item must be current, case-scoped, provider-attributed and `VERIFIED`; unavailable evidence remains
+an open gate.
+
+The module defaults off. `ARAIL_CONVENTIONAL_SECONDARY_V1=shadow` is accepted only with the neutral
+case and required saga foundation in a `REPLAY` or `SHADOW` runtime. It has no execute, settle,
+register-update, token or dispatch endpoint. For PTC, the trustee conclusion and recordkeeper result
+remain separate; disagreement creates a critical break. Rail never infers ownership from its own
+projection, and no PR-14 capability is registered as implemented-live.
+
+See `docs/design/AssureRail_Conventional_Secondary_DA_PTC_PR14.md` and
+`docs/runbooks/AssureRail_PR14_Deployer_Handoff.md`. Run its disposable database rehearsal with:
+
+```bash
+npm run db:rehearse:pr14 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health

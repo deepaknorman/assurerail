@@ -1257,6 +1257,25 @@ PTC the trustee transaction-control decision and route-defined depository/RTA/re
 both recorded; disagreement blocks completion. Initial implementation remains replay/shadow and
 cannot infer ownership from a Rail projection.
 
+**PR-14 implementation checkpoint (2 September 2026):** implemented for review on
+`codex/assurerail-pr01-neutral-taxonomy` under EX-27. Separate domestic conventional DA and PTC
+secondary replay route packs now govern an additive, observation-only dossier. It records exact
+quantity/consideration, active seller/buyer/recordkeeper parties (plus trustee for PTC), immutable
+provider-attributed evidence versions, two-person proposal/review, ordered observation legs and
+explicit critical breaks. Current-holder, prior-chain, seller-authority, restriction, executed
+document, notice/consent, cash and before/after authoritative-record evidence must all be current,
+case-scoped and `VERIFIED`; PTC additionally requires a separate trustee-control assertion. A
+trustee/recordkeeper disagreement creates `PTC_TRUSTEE_RECORDKEEPER_DISAGREEMENT` and blocks
+execution, cash and register-update functions. The five APIs cannot execute, settle, trade,
+dispatch, mint, burn or update a register. `ARAIL_CONVENTIONAL_SECONDARY_V1` defaults `off`, may be
+`shadow` only with the required neutral-case/saga foundation in `REPLAY`/`SHADOW`, and has no
+implemented-live capability ID. The API suite passed 253/253 with zero skipped; a disposable
+PostgreSQL rehearsal applied all 21 migrations and proved immutable versions, restrictive history,
+schema parity and backup/restore. Synthetic rehearsal rows are structural evidence only. Design:
+`docs/design/AssureRail_Conventional_Secondary_DA_PTC_PR14.md`; internal evidence:
+`docs/qa/AssureRail_PR14_Conventional_Secondary_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR14_Deployer_Handoff.md`.
+
 ### PR-15 — Tokenised DA live connector and custody boundary
 
 **Dependencies:** PR-11, PR-12 and conventional DA completion controls
