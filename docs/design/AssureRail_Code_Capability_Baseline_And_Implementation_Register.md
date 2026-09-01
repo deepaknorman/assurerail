@@ -1429,8 +1429,9 @@ agreed conventional/tokenised PTC examples are tested at 30/50 bps but remain co
 not global defaults. Currency and scale are explicit. Renewal and reinstatement require new
 customer acceptance; draft/rejected internal commercial records and stale evidence grants are
 excluded from customer views/exports. Commercial services invoke no transaction, settlement,
-token, authoritative-record, evidence-result or completion command. The API suite passed 290/290
-with zero skipped; the web build generated `/workspace/operations`; and 26 migrations plus
+token, authoritative-record, evidence-result or completion command. The API suite passed 292/292
+with zero skipped; the web build generated `/workspace/operations`; every governed API and client
+flag crosses the compose/Docker boundary with a fail-closed default; and 26 migrations plus
 uniqueness, restrictive history, schema parity and backup/restore passed. Real customer, finance,
 tax/GST, statement reconciliation, SLA/support, security and exit evidence remain open. The flag
 defaults off, is shadow-only and has no live capability ID. Design:

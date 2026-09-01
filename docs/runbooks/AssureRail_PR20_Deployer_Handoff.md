@@ -31,8 +31,10 @@ NEXT_PUBLIC_ASSURERAIL_CUSTOMER_OPERATIONS_V1=shadow
 ```
 
 The two `NEXT_PUBLIC_` values are build-time. Rebuild the web and API through the normal release
-pipeline. This profile enables shadow records only. It does not enable egress, live route actions,
-tax invoices, collections or production claims.
+pipeline. `docker-compose.assurerail.yml` passes both values as build arguments and defaults them to
+`off`; setting them only in a runtime container after the image is built has no effect. This profile
+enables shadow records only. It does not enable egress, live route actions, tax invoices,
+collections or production claims.
 
 After migration and before participant review, verify:
 

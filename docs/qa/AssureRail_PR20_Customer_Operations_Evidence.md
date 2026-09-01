@@ -8,12 +8,15 @@
 | Check | Result |
 |---|---|
 | API compile/typecheck | Passed |
-| Full AssureRail API suite | 290 passed, 0 failed, 0 skipped |
+| Full AssureRail API suite | 292 passed, 0 failed, 0 skipped |
 | Exact fee tests | Passed for 30/50 bps, agreed INR PTC examples, rounding, minima/maxima and malformed values |
 | Boundary tests | Passed for participant/internal separation, maker-checker, no transaction dispatch and active-grant exit filtering |
 | Runtime/flag tests | Passed: off by default, exact shadow dependencies and rejection in live modes |
+| Deployment configuration contract | Passed: every governed API flag is explicit in the example/compose stack with a fail-closed default; activation credentials have no compose fallback |
 | Internal RBAC tests | Passed: manager maker, risk/compliance reviewer and bounded support roles |
 | AssureRail web production build | Passed; `/workspace/operations` generated |
+| Web build-flag wiring | Passed: workspace and customer-operations flags are Docker build arguments and compose defaults both to `off` |
+| Compose validation | `docker compose -f docker-compose.assurerail.yml config --quiet` passed |
 | Shell syntax | Passed for `scripts/assurerail-pr20-db-rehearsal.sh` |
 | Disposable PostgreSQL rehearsal | 26 migrations applied; PR-20 schema parity passed; uniqueness/restrictive history exercised; backup/restore returned `1|2|1|1|1` |
 
