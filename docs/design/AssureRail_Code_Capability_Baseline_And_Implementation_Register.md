@@ -1287,6 +1287,26 @@ economics/register reconciliation and safe pause. Token authority defaults to mi
 enters the implemented-live registry without independent connector, custody, legal/finality and
 operating evidence.
 
+**PR-15 implementation checkpoint (2 September 2026):** implemented for review on
+`codex/assurerail-pr01-neutral-taxonomy` under EX-27; not deployed and not activated. The additive
+token connector boundary provides versioned two-person custody/connector bindings, only external
+signing-key references, exact per-action candidate capability IDs, a durable idempotent instruction
+worker, Vault-referenced HMAC authentication, SSRF-protected HTTPS egress, cryptographically bound
+final acknowledgements, ambiguous-success retry using the same idempotency key, safe pause and
+mandatory post-action token/economics/authoritative-record reconciliation. The existing token
+authority remains `MIRROR`; cash/payment remains outside the token connector and must use a
+separately governed settlement provider/saga. Runtime foundations now have explicit `on`/`enforce` modes for later
+controlled-live use, while replay features retain their non-live restrictions. The five candidate
+token action IDs remain deliberately absent from `IMPLEMENTED_LIVE_CAPABILITY_IDS`: independent
+connector conformance, key custody, route legal/finality, operating acceptance, security and pilot
+evidence are unavailable and remain open. Consequently the activation guard rejects every PR-15
+external action in this build even if an operator sets `ARAIL_TOKENISED_DA_V1=live`. Internal checks
+passed 259/259 with zero skipped; the disposable PostgreSQL rehearsal applied all 22 migrations and
+proved binding/action restrictions, schema parity and backup/restore. Design:
+`docs/design/AssureRail_Tokenised_DA_Live_Connector_And_Custody_PR15.md`; internal evidence:
+`docs/qa/AssureRail_PR15_Token_Connector_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR15_Deployer_Handoff.md`.
+
 ### PR-16 — Tokenised PTC route and representation
 
 **Dependencies:** PR-10, PR-12, PR-15 primitives and an approved PTC route design

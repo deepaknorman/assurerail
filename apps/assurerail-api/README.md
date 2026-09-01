@@ -171,6 +171,36 @@ See `docs/design/AssureRail_Conventional_Secondary_DA_PTC_PR14.md` and
 npm run db:rehearse:pr14 --workspace=@code/assurerail-api
 ```
 
+### Tokenised-DA connector and custody boundary (PR-15)
+
+PR-15 builds the provider-neutral controlled-live command path around the PR-11 token mirror. A
+two-person `TokenConnectorBinding` names the certified connector, custody institution/model,
+external signing-key reference, signing-policy digest, supported actions and three independently
+verified evidence objects: key custody, legal/finality analysis and operating acceptance. Private
+keys are never stored by Rail.
+
+Live commands remain case-, institution-, mandate-, entitlement-, function- and step-up-scoped.
+They create a durable idempotent external instruction before egress. A restart-safe worker uses a
+Vault-referenced HMAC credential and SSRF-protected HTTPS transport, accepts only a signed final
+acknowledgement bound to the exact instruction and expected result, and leaves the representation
+`BREAK_OPEN` until the existing supply/holdings/economics/authoritative-record reconciliation passes.
+Ambiguous outcomes retry the same idempotency key; safe pause cancels only instructions proven not
+to have been dispatched.
+
+Cash/payment is not routed through the custody/token connector; it requires its own settlement
+provider binding and saga. `ARAIL_TOKENISED_DA_V1=live` is syntactically available only with the fully enforced live
+foundation and PR-12 activation manifest. The five candidate action IDs deliberately remain absent
+from the implemented-live registry because independent external evidence is not yet available.
+Therefore this commit cannot activate mint, transfer, payment, anchor or burn in any environment.
+The deployment default remains `off`.
+
+See `docs/design/AssureRail_Tokenised_DA_Live_Connector_And_Custody_PR15.md` and
+`docs/runbooks/AssureRail_PR15_Deployer_Handoff.md`. Run the disposable structural rehearsal with:
+
+```bash
+npm run db:rehearse:pr15 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health
