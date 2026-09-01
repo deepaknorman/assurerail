@@ -2847,6 +2847,238 @@ model AuditLog {
   @@index([createdAt])
 }
 
+// ───────────────── venue conduct, complaints and scale controls (PR-17) ─────────────────
+// This is an internal evidence/control plane. A signal or alert is never an autonomous legal or
+// regulatory conclusion, and an approved control action does not create participant authority.
+model ConductPolicyRelease {
+  id                     String   @id
+  policyRef              String
+  version                Int
+  status                 String   @default("PROPOSED") // PROPOSED | APPROVED | REJECTED | SUPERSEDED
+  effectiveFrom          DateTime
+  expiresAt              DateTime
+  prohibitedActionRules  Json
+  fairAccessRules        Json
+  communicationsRules    Json
+  allocationRules        Json
+  slaRules               Json
+  policyDigest           String   @unique
+  proposedByUserId       String
+  proposalStepUpId       String
+  reviewedByUserId       String?
+  reviewStepUpId         String?
+  reviewReason           String?
+  reviewedAt             DateTime?
+  createdAt              DateTime @default(now())
+  signals                VenueConductSignal[]
+
+  @@unique([policyRef, version])
+  @@index([status, effectiveFrom, expiresAt])
+}
+
+model VenueConductSignal {
+  id                     String   @id
+  signalType             String // CONFLICT | RELATED_PARTY | FAIR_ACCESS | ALLOCATION | COMMUNICATION | PROHIBITED_ACTION
+  transactionCaseId      String?
+  commercialOpportunityId String?
+  institutionId          String?
+  route                  String?
+  cohortRef              String?
+  sourceEventRef         String
+  sourceOccurredAt       DateTime
+  sourceEvidenceRef      String
+  sourceEvidenceDigest   String
+  facts                  Json
+  factsDigest            String
+  policyReleaseId        String
+  policyRelease          ConductPolicyRelease @relation(fields: [policyReleaseId], references: [id], onDelete: Restrict)
+  evaluation             Json
+  evaluationDigest       String
+  result                 String   @default("REVIEW_REQUIRED") // REVIEW_REQUIRED | NO_ALERT
+  idempotencyKey         String
+  recordedByUserId       String
+  stepUpEvidenceId       String
+  createdAt              DateTime @default(now())
+  alert                  VenueConductAlert?
+
+  @@unique([sourceEventRef, idempotencyKey])
+  @@unique([sourceEventRef, sourceEvidenceDigest, policyReleaseId], map: "VenueConductSignal_event_digest_policy_key")
+  @@index([transactionCaseId, createdAt])
+  @@index([commercialOpportunityId, createdAt])
+  @@index([institutionId, createdAt])
+  @@index([result, createdAt])
+}
+
+model VenueConductAlert {
+  id                     String   @id
+  signalId               String   @unique
+  signal                 VenueConductSignal @relation(fields: [signalId], references: [id], onDelete: Restrict)
+  alertCode              String
+  severity               String
+  status                 String   @default("OPEN") // OPEN | TRIAGED | INVESTIGATING | CLOSED_NO_FINDING | REMEDIATED | ESCALATED
+  evidentialClassification String @default("REVIEW_REQUIRED")
+  ownerUserId            String
+  dueAt                  DateTime
+  resolution             String?
+  resolutionEvidenceRef  String?
+  resolutionEvidenceDigest String?
+  reviewedByUserId       String?
+  reviewStepUpId         String?
+  closedAt               DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now()) @updatedAt
+  investigations         VenueConductInvestigation[]
+
+  @@index([status, dueAt])
+  @@index([ownerUserId, status, dueAt])
+}
+
+model VenueConductInvestigation {
+  id                     String   @id
+  alertId                String
+  alert                  VenueConductAlert @relation(fields: [alertId], references: [id], onDelete: Restrict)
+  complaintId            String?
+  complaint              VenueComplaint? @relation(fields: [complaintId], references: [id], onDelete: Restrict)
+  status                 String   @default("OPEN") // OPEN | ON_HOLD | CONCLUDED | CANCELLED
+  legalHold              Boolean  @default(false)
+  scope                   Json
+  evidenceRefs            Json
+  assigneeUserId          String
+  dueAt                   DateTime
+  conclusion              String?
+  conclusionClass         String? // NO_FINDING | CONTROL_FAILURE | REFERRED; not a legal conclusion
+  proposedByUserId        String
+  lastChangedByUserId     String
+  stepUpEvidenceId        String
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @default(now()) @updatedAt
+
+  @@index([alertId, status])
+  @@index([complaintId, status])
+  @@index([assigneeUserId, status, dueAt])
+}
+
+model VenueComplaint {
+  id                     String   @id
+  complaintRef           String   @unique
+  complainantInstitutionId String?
+  transactionCaseId      String?
+  commercialOpportunityId String?
+  category               String
+  summary                String
+  evidenceRefs           Json
+  status                 String   @default("OPEN") // OPEN | ACKNOWLEDGED | INVESTIGATING | RESOLVED | REJECTED | WITHDRAWN
+  ownerUserId            String
+  dueAt                  DateTime
+  idempotencyKey         String   @unique
+  requestDigest          String   @unique
+  recordedByUserId       String
+  stepUpEvidenceId       String
+  resolution             String?
+  resolutionEvidenceRef  String?
+  resolutionEvidenceDigest String?
+  resolvedByUserId       String?
+  resolvedAt             DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now()) @updatedAt
+  investigations         VenueConductInvestigation[]
+  corrections            VenueCorrection[]
+
+  @@index([status, dueAt])
+  @@index([complainantInstitutionId, status, createdAt])
+}
+
+model VenueCorrection {
+  id                     String   @id
+  complaintId            String?
+  complaint              VenueComplaint? @relation(fields: [complaintId], references: [id], onDelete: Restrict)
+  targetType             String
+  targetRef              String
+  reason                 String
+  priorDigest            String
+  correctedDigest        String
+  correctionEvidenceRef  String
+  status                 String   @default("PROPOSED") // PROPOSED | APPROVED | REJECTED | APPLIED_EXTERNALLY
+  proposalDigest         String   @unique
+  proposedByUserId       String
+  proposalStepUpId       String
+  reviewedByUserId       String?
+  reviewStepUpId         String?
+  reviewReason           String?
+  reviewedAt             DateTime?
+  createdAt              DateTime @default(now())
+
+  @@index([targetType, targetRef, createdAt])
+  @@index([complaintId, status])
+}
+
+model VenueControlAction {
+  id                     String   @id
+  actionType             String // SAFE_PAUSE | PARTICIPANT_SANCTION
+  scopeType              String // GLOBAL | ENVIRONMENT | ROUTE | COHORT | INSTITUTION | CASE | OPPORTUNITY
+  scopeRef               String
+  severity               String
+  reason                 String
+  evidenceRefs           Json
+  effectiveFrom          DateTime
+  expiresAt              DateTime
+  status                 String   @default("PROPOSED") // PROPOSED | APPROVED | REJECTED | REVOKED | EXPIRED
+  proposalDigest         String   @unique
+  proposedByUserId       String
+  proposalStepUpId       String
+  reviewedByUserId       String?
+  reviewStepUpId         String?
+  reviewReason           String?
+  reviewedAt             DateTime?
+  revokedAt              DateTime?
+  createdAt              DateTime @default(now())
+
+  @@index([actionType, status, effectiveFrom, expiresAt], map: "VenueControlAction_type_status_window_idx")
+  @@index([scopeType, scopeRef, status])
+}
+
+model VenueCapacityBudget {
+  id                     String   @id
+  environment            String
+  route                  String
+  cohortRef              String
+  metric                 String
+  unit                   String
+  warningThreshold       String
+  hardThreshold          String
+  version                Int
+  status                 String   @default("ACTIVE") // ACTIVE | SUPERSEDED | RETIRED
+  budgetDigest           String   @unique
+  changedByUserId        String
+  stepUpEvidenceId       String
+  effectiveFrom          DateTime
+  expiresAt              DateTime
+  createdAt              DateTime @default(now())
+  observations           VenueCapacityObservation[]
+
+  @@unique([environment, route, cohortRef, metric, version], map: "VenueCapacityBudget_scope_metric_version_key")
+  @@index([environment, route, cohortRef, status])
+}
+
+model VenueCapacityObservation {
+  id                     String   @id
+  capacityBudgetId       String
+  capacityBudget         VenueCapacityBudget @relation(fields: [capacityBudgetId], references: [id], onDelete: Restrict)
+  observedValue          String
+  observedAt             DateTime
+  state                  String // WITHIN | WARNING | HARD_LIMIT
+  sourceEvidenceRef      String
+  sourceEvidenceDigest   String
+  observationDigest      String   @unique
+  recordedByUserId       String
+  stepUpEvidenceId       String
+  createdAt              DateTime @default(now())
+
+  @@unique([capacityBudgetId, observedAt])
+  @@index([capacityBudgetId, state, observedAt])
+  @@index([state, observedAt])
+}
+
 // ─────────────────────────────── account security (passkey + MFA) ───────────────────────────────
 /// WebAuthn passkey credential (venue-own; hardware-backed sign-in). Owner is the Firebase uid.
 model WebAuthnCredential {

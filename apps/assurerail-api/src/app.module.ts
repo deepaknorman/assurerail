@@ -102,6 +102,11 @@ const dbModules = process.env.DATABASE_URL ? [
   ...(inspectPersistenceFlags(process.env).internalRbac !== "off"
     ? [require("./operational-readiness/operational-readiness.module").OperationalReadinessModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).internalRbac !== "off"
+    && inspectPersistenceFlags(process.env).primaryCommercial === "shadow"
+    && inspectPersistenceFlags(process.env).venueConduct === "shadow"
+    ? [require("./venue-conduct/venue-conduct.module").VenueConductModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

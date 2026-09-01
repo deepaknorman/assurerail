@@ -17,6 +17,7 @@ import {
   type TransactionCaseMode,
   type TokenisedDaMode,
   type TokenisedPtcMode,
+  type VenueConductMode,
 } from "../persistence/feature-flags";
 import { inspectActivationManifest } from "./activation-manifest";
 import { isLiveCapabilityImplemented } from "./live-capability-registry";
@@ -68,6 +69,7 @@ export interface RuntimeEnvironmentProfile {
     tokenisedPtc: TokenisedPtcMode;
     primaryCommercial: PrimaryCommercialMode;
     conventionalSecondary: ConventionalSecondaryMode;
+    venueConduct: VenueConductMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -231,6 +233,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
     errors.push("ARAIL_CONVENTIONAL_SECONDARY_V1=shadow requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
   }
+  if (persistenceFlags.venueConduct !== "off"
+    && (persistenceFlags.primaryCommercial !== "shadow" || persistenceFlags.internalRbac === "off"
+      || persistenceFlags.transactionCase !== "shadow")) {
+    errors.push("ARAIL_VENUE_CONDUCT_V1=shadow requires primary commercial and transaction cases in shadow plus internal RBAC");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -267,6 +274,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.conventionalSecondary !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_CONVENTIONAL_SECONDARY_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.venueConduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_VENUE_CONDUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -423,6 +433,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         tokenisedPtc: persistenceFlags.tokenisedPtc,
         primaryCommercial: persistenceFlags.primaryCommercial,
         conventionalSecondary: persistenceFlags.conventionalSecondary,
+        venueConduct: persistenceFlags.venueConduct,
         internalRbac: persistenceFlags.internalRbac,
       },
     },
