@@ -1227,6 +1227,25 @@ completion is implied. Commercial records bind exact case/version, audience, val
 conflict disclosures and immutable communication history. Controlled-live capability IDs remain
 unregistered until exact legal/performer, conduct, participant and operating evidence closes.
 
+**PR-13 implementation checkpoint (2 September 2026):** implemented for review on
+`codex/assurerail-pr01-neutral-taxonomy` under EX-27. The additive, shadow-only API owns named
+primary opportunities, immutable exact-value term versions, institution invitation grants,
+interest indications, RFQs, private negotiation messages and two-person allocations. Access is
+derived from the active institution session, human mandate, case scope, named audience and current
+route/function entitlement. Publication/resumption rechecks current terms, active audience and
+`TERM_DISPLAY`/`SOLICITATION`/`QUOTE_INVITATION` assignments; allocations recheck current terms,
+audience and `ALLOCATION` authority before review and response. Sixteen endpoints expose records
+only. There is no anonymous discovery, order book, automatic matching, external solicitation,
+execution, settlement, issuance, token action or authoritative-record mutation. The
+`ARAIL_PRIMARY_COMMERCIAL_V1` flag defaults `off`, may be `shadow` only in `REPLAY`/`SHADOW`, and
+requires the neutral case foundation. No implemented-live capability ID was added and every legal,
+conduct, participant and operating gate remains open. The API suite passed 246/246 with zero
+skipped; a disposable PostgreSQL rehearsal applied all 20 migrations and proved named scope,
+immutable versions, idempotency, restrictive history and backup/restore. Design:
+`docs/design/AssureRail_Permissioned_Primary_Commercial_Venue_PR13.md`; internal evidence:
+`docs/qa/AssureRail_PR13_Primary_Commercial_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR13_Deployer_Handoff.md`.
+
 ### PR-14 — Conventional secondary DA and PTC workflows
 
 **Dependencies:** PR-13 plus PR-09/PR-10 route foundations

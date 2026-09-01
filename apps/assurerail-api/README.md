@@ -126,6 +126,29 @@ rehearsal with:
 npm run db:rehearse:pr12 --workspace=@code/assurerail-api
 ```
 
+### Permissioned primary commercial venue (PR-13)
+
+PR-13 adds a case- and institution-scoped record layer for named opportunities, immutable term
+versions, invitation grants, interest indications, RFQs, private negotiation messages and
+maker-checker allocations. It is not an order book or execution venue: there is no anonymous
+discovery, automatic matching, external solicitation, trade execution, settlement, issuance,
+ownership mutation or connector dispatch.
+
+The module defaults off. `ARAIL_PRIMARY_COMMERCIAL_V1=shadow` is accepted only in `REPLAY` or
+`SHADOW`, and only when participant admission, neutral ingress and transaction cases are also in
+shadow. Every action requires an active institution context, scoped human authority, applicable
+route/function entitlement and step-up evidence. Publication and allocation are two-person
+decisions. Exact amounts use canonical integer units; pricing values use canonical decimal strings.
+No PR-13 capability is registered as implemented-live, and all external activation gates remain
+open.
+
+See `docs/design/AssureRail_Permissioned_Primary_Commercial_Venue_PR13.md` and
+`docs/runbooks/AssureRail_PR13_Deployer_Handoff.md`. Run its disposable database rehearsal with:
+
+```bash
+npm run db:rehearse:pr13 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health
