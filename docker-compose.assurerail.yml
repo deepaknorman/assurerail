@@ -43,6 +43,30 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       ASSURERAIL_OPERATING_MODE: ${ASSURERAIL_OPERATING_MODE:-DEMO}
       ARAIL_DEMO_ENDPOINTS_ENABLED: ${ARAIL_DEMO_ENDPOINTS_ENABLED:-true}
+      # Product/runtime controls are always explicit in the effective container environment. Safe
+      # defaults preserve the current DEMO posture; changing a value does not bypass the dependency,
+      # operating-mode, activation-manifest or external-evidence checks in the API.
+      ARAIL_NEUTRAL_TAXONOMY_V1: ${ARAIL_NEUTRAL_TAXONOMY_V1:-off}
+      ARAIL_NEUTRAL_INGRESS_V1: ${ARAIL_NEUTRAL_INGRESS_V1:-off}
+      ARAIL_TRANSACTION_CASE_V1: ${ARAIL_TRANSACTION_CASE_V1:-off}
+      ARAIL_EXTERNAL_ACTION_SAGA_V1: ${ARAIL_EXTERNAL_ACTION_SAGA_V1:-off}
+      ARAIL_DA_REPLAY_V1: ${ARAIL_DA_REPLAY_V1:-off}
+      ARAIL_PTC_REPLAY_V1: ${ARAIL_PTC_REPLAY_V1:-off}
+      ARAIL_DURABLE_RELAY_MODE: ${ARAIL_DURABLE_RELAY_MODE:-legacy}
+      ARAIL_PARTICIPANT_ADMISSION_V1: ${ARAIL_PARTICIPANT_ADMISSION_V1:-off}
+      ARAIL_ROUTE_ENTITLEMENT_ENFORCE: ${ARAIL_ROUTE_ENTITLEMENT_ENFORCE:-off}
+      ARAIL_ROOM_READ_SOURCE: ${ARAIL_ROOM_READ_SOURCE:-legacy}
+      ARAIL_ROOM_WRITE_SOURCE: ${ARAIL_ROOM_WRITE_SOURCE:-legacy}
+      ARAIL_COMPLETION_ACK_V1: ${ARAIL_COMPLETION_ACK_V1:-off}
+      ARAIL_LEGACY_ROOM_PROXY_V1: ${ARAIL_LEGACY_ROOM_PROXY_V1:-off}
+      ARAIL_TOKENISED_DA_V1: ${ARAIL_TOKENISED_DA_V1:-off}
+      ARAIL_TOKENISED_PTC_V1: ${ARAIL_TOKENISED_PTC_V1:-off}
+      ARAIL_PRIMARY_COMMERCIAL_V1: ${ARAIL_PRIMARY_COMMERCIAL_V1:-off}
+      ARAIL_CONVENTIONAL_SECONDARY_V1: ${ARAIL_CONVENTIONAL_SECONDARY_V1:-off}
+      ARAIL_VENUE_CONDUCT_V1: ${ARAIL_VENUE_CONDUCT_V1:-off}
+      ARAIL_DEVELOPER_PORTAL_V1: ${ARAIL_DEVELOPER_PORTAL_V1:-off}
+      ARAIL_CUSTOMER_OPERATIONS_V1: ${ARAIL_CUSTOMER_OPERATIONS_V1:-off}
+      ARAIL_INTERNAL_RBAC_V1: ${ARAIL_INTERNAL_RBAC_V1:-off}
       PORT: "3006"
       DATABASE_URL: "postgresql://assurerail:${ASSURERAIL_DB_PASSWORD:-assurerail_dev}@assurerail-db:5432/assurerail_venue?connection_limit=10&pool_timeout=10"
       # Adapters — DEMO by default (deterministic, no external calls).
@@ -78,6 +102,8 @@ services:
         # the two high-entropy values (Firebase apiKey + reCAPTCHA site key) have no default — supply them
         # via root .env to enable auth/captcha. All are public-by-design but never hardcoded in a tracked file.
         NEXT_PUBLIC_ASSURERAIL_VENUE_URL: ${NEXT_PUBLIC_ASSURERAIL_VENUE_URL:-http://localhost:3006}
+        NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1: ${NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1:-off}
+        NEXT_PUBLIC_ASSURERAIL_CUSTOMER_OPERATIONS_V1: ${NEXT_PUBLIC_ASSURERAIL_CUSTOMER_OPERATIONS_V1:-off}
         NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
         NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}
     restart: unless-stopped
