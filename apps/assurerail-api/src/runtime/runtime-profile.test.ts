@@ -68,6 +68,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     conventionalSecondary: "off",
     venueConduct: "off",
     developerPortal: "off",
+    customerOperations: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -435,6 +436,22 @@ test("[CONFIG][PR19] developer portal requires shadow admission, ingress and rel
   assert.equal(accepted.profile.features.developerPortal, "shadow");
   const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_DEVELOPER_PORTAL_V1: "shadow" });
   assert.match(live.errors.join("\n"), /ARAIL_DEVELOPER_PORTAL_V1 is available only in REPLAY or SHADOW/);
+});
+
+test("[CONFIG][PR20] customer operations require the governed integration foundation and remain non-live", () => {
+  const missing = inspectRuntimeEnvironment({ ASSURERAIL_OPERATING_MODE: "SHADOW", ARAIL_CUSTOMER_OPERATIONS_V1: "shadow" });
+  assert.match(missing.errors.join("\n"), /requires participant admission and developer portal in shadow plus internal RBAC/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW", DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE, ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow", ARAIL_DURABLE_RELAY_MODE: "shadow",
+    ARAIL_DEVELOPER_PORTAL_V1: "shadow", ARAIL_INTERNAL_RBAC_V1: "shadow",
+    ARAIL_CUSTOMER_OPERATIONS_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.customerOperations, "shadow");
+  const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_CUSTOMER_OPERATIONS_V1: "shadow" });
+  assert.match(live.errors.join("\n"), /ARAIL_CUSTOMER_OPERATIONS_V1 is available only in REPLAY or SHADOW/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {

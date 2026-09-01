@@ -6,6 +6,7 @@ import {
   internalRoleCanSatisfyExternalAuthority,
   permissionsForInternalRole,
 } from "./internal-access-policy";
+import { resolveInternalWorkspaces } from "./internal-workspace-policy";
 
 const NOW = new Date("2026-09-01T12:00:00.000Z");
 
@@ -92,4 +93,17 @@ test("[PR17][RBAC] queue operation and independent conduct-policy review remain 
   assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("CONDUCT_POLICY_REVIEW"), true);
   assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("CONDUCT_CONTROL_REVIEW"), true);
   assert.equal(permissionsForInternalRole("SUPERADMIN").includes("CONDUCT_SIGNAL_RECORD"), false);
+});
+
+test("[PR20][RBAC] commercial makers, reviewers and support are separated", () => {
+  assert.equal(permissionsForInternalRole("MANAGER").includes("COMMERCIAL_CONTRACT_PROPOSE"), true);
+  assert.equal(permissionsForInternalRole("MANAGER").includes("COMMERCIAL_INVOICE_PREPARE"), true);
+  assert.equal(permissionsForInternalRole("MANAGER").includes("COMMERCIAL_INVOICE_REVIEW"), false);
+  assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("COMMERCIAL_INVOICE_REVIEW"), true);
+  assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("COMMERCIAL_INVOICE_PREPARE"), false);
+  assert.equal(permissionsForInternalRole("SUPPORT_ANALYST").includes("CUSTOMER_SERVICE_MANAGE"), true);
+  assert.equal(permissionsForInternalRole("SUPPORT_ANALYST").includes("COMMERCIAL_CREDIT_PROPOSE"), false);
+  assert.equal(permissionsForInternalRole("SUPERADMIN").includes("COMMERCIAL_CONTRACT_PROPOSE"), false);
+  const managerWorkspaces = resolveInternalWorkspaces({ assignments: [{ id: "assignment-manager", role: "MANAGER", status: "ACTIVE", scopeType: "GLOBAL", scopeRef: null, effectiveAt: new Date("2026-08-01T00:00:00.000Z"), expiresAt: new Date("2026-10-01T00:00:00.000Z") }], elevations: [], now: NOW });
+  assert.equal(managerWorkspaces.some((item) => item.id === "CUSTOMER_OPERATIONS" && item.permissions.includes("COMMERCIAL_INVOICE_PREPARE")), true);
 });
