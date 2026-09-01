@@ -1389,3 +1389,5 @@ that can safely support the subsequent transaction case.
 - The PR-00–PR-10 review boundary and remaining historic PTC evidence gate are recorded in
   `docs/qa/AssureRail_PR00_PR10_Review_Handoff.md`; the controlled external intake is defined in
   `docs/templates/AssureRail_Historic_PTC_Replay_Evidence_Intake_v1.md`.
+- The trustee/originator pilot execution plan, responsibilities, work packages, gates and acceptance
+  sequence are recorded in `docs/operations/AssureRail_Historic_PTC_Replay_Pilot_Plan.md`.
