@@ -63,6 +63,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     daReplay: "off",
     ptcReplay: "off",
     tokenisedDa: "off",
+    primaryCommercial: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -300,6 +301,38 @@ test("[CONFIG][PR11] tokenised DA requires the durable saga and remains non-live
     ARAIL_TOKENISED_DA_V1: "allow-list",
   });
   assert.match(live.errors.join("\n"), /ARAIL_TOKENISED_DA_V1 is available only/);
+});
+
+test("[CONFIG][PR13] primary commercial interaction requires the neutral case foundation and remains shadow-only", () => {
+  const missingCase = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_PRIMARY_COMMERCIAL_V1: "shadow",
+  });
+  assert.match(missingCase.errors.join("\n"), /ARAIL_PRIMARY_COMMERCIAL_V1=shadow requires ARAIL_TRANSACTION_CASE_V1=shadow/);
+
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_PRIMARY_COMMERCIAL_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.primaryCommercial, "shadow");
+
+  for (const operatingMode of ["SANDBOX", "CONTROLLED_LIVE", "PRODUCTION"]) {
+    const live = inspectRuntimeEnvironment({
+      ...LIVE_ENV,
+      ASSURERAIL_OPERATING_MODE: operatingMode,
+      ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+      ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+      ARAIL_TRANSACTION_CASE_V1: "shadow",
+      ARAIL_PRIMARY_COMMERCIAL_V1: "shadow",
+    });
+    assert.match(live.errors.join("\n"), /ARAIL_PRIMARY_COMMERCIAL_V1 is available only in REPLAY or SHADOW runtime/);
+  }
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {
