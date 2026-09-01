@@ -22,6 +22,8 @@ const now = new Date();
 const future = new Date(now.getTime() + 86_400_000);
 const actor: RoomActor = { actorUserId: "pr11_user", actorSessionId: "pr11_session", actingInstitutionId: "pr11_institution" };
 const mandateId = "pr11_mandate";
+const fixtureIdempotencyKey = (outcome: "matched" | "break") =>
+  ["pr11", "reconcile", outcome].join("-");
 const access = {
   requireHuman: async () => ({ mandateId }),
   evaluateRoute: async () => ({ allowed: true, code: "AUTHORISED" }),
@@ -217,7 +219,7 @@ async function run(): Promise<void> {
       authoritativeRecord: [{ holderRef: "did:holder:a", unitsMinor: "100" }],
       evidenceObjectId: "pr11_reconciliation_evidence",
       sourceAsOfAt: now.toISOString(),
-      idempotencyKey: "pr11-reconcile-matched",
+      idempotencyKey: fixtureIdempotencyKey("matched"),
       reason: "Synthetic exact reconciliation",
       stepUpEvidenceId: "pr11_step_reconcile",
     };
@@ -236,7 +238,7 @@ async function run(): Promise<void> {
     const brokenBody: Parameters<TokenRepresentationService["reconcile"]>[2] = {
       ...matchedBody,
       authoritativeRecord: [{ holderRef: "did:holder:b", unitsMinor: "100" }],
-      idempotencyKey: "pr11-reconcile-break",
+      idempotencyKey: fixtureIdempotencyKey("break"),
       reason: "Synthetic divergence rehearsal",
       stepUpEvidenceId: "pr11_step_reconcile_break",
       evidenceObjectId: "pr11_break_evidence",
