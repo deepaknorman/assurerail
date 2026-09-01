@@ -218,6 +218,24 @@ neutral saga foundation. It defaults `off`. See
 npm run db:rehearse:pr16 --workspace=@code/assurerail-api
 ```
 
+### Venue conduct, complaints and scale controls (PR-17)
+
+PR-17 adds a shadow-only internal control plane for versioned conduct policy, immutable conflict/
+related-party/fair-access/allocation/communications signals, review-required alerts,
+investigation/legal hold, complaints, append-only corrections, maker-checker safe pauses/sanctions
+and exact route/cohort capacity budgets. Outputs are evidence for human review, never autonomous
+legal conclusions.
+
+`ARAIL_VENUE_CONDUCT_V1=shadow` requires PR-13 commercial shadow, neutral transaction-case shadow
+and OP-01 internal RBAC, and is accepted only in `REPLAY`/`SHADOW`. It defaults `off`; there is no
+live value or live capability ID. See
+`docs/design/AssureRail_Venue_Conduct_Complaints_And_Scale_PR17.md` and
+`docs/runbooks/AssureRail_PR17_Deployer_Handoff.md`. Rehearse with:
+
+```bash
+npm run db:rehearse:pr17 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health

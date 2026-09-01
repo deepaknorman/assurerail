@@ -1342,6 +1342,21 @@ kill/safe-pause controls, participant sanctions, SLA/queue ownership, capacity b
 cohort operational dashboards. Policies are versioned and outputs are evidence, not autonomous
 legal conclusions. This stage supplies internal tooling required before any broad customer cohort.
 
+**PR-17 implementation checkpoint (2 September 2026):** implemented for review under EX-27; not
+deployed. The new internal, shadow-only control plane records versioned conduct policies, immutable
+source/evaluation signals, review-required alerts, investigations/legal holds, complaints,
+append-only corrections, maker-checker safe-pause/sanction proposals and exact route/cohort capacity
+budgets/observations. Missing or ambiguous conflict, related-party, fair-access, allocation,
+communications or prohibited-action facts fail closed to human review; no evaluator can emit an
+autonomous legal conclusion. `ARAIL_VENUE_CONDUCT_V1=shadow` requires PR-13 commercial shadow,
+transaction-case shadow and OP-01 internal RBAC and is permitted only in replay/shadow. There is no
+live value, live capability ID or external-action path. The API suite passed 274/274 with zero
+skipped; 24 migrations, PR-17 schema parity and backup/restore passed. Real policy approval,
+authorised-channel connectors, pilot capacity/SLA evidence and route enforcement remain open
+activation gates. Design: `docs/design/AssureRail_Venue_Conduct_Complaints_And_Scale_PR17.md`;
+evidence: `docs/qa/AssureRail_PR17_Venue_Conduct_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR17_Deployer_Handoff.md`.
+
 ### PR-18 — End-to-end customer workspaces
 
 **Dependencies:** PR-03–PR-17 APIs relevant to the route
