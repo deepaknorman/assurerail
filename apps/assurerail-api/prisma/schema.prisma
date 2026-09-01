@@ -206,6 +206,14 @@ model Institution {
   authoritativeRecords    AuthoritativeRecordDeclaration[] @relation("AuthoritativeRecordkeeperInstitution")
   reconciliationBreaks    ReconciliationBreak[]         @relation("ReconciliationBreakOwnerInstitution")
   tokenReconciliationBreaks TokenReconciliationBreak[]
+  ownedCommercialOpportunities CommercialOpportunity[] @relation("CommercialOpportunityOwnerInstitution")
+  commercialAudienceGrants    CommercialAudienceGrant[]
+  commercialInterests         CommercialInterestIndication[]
+  commercialRfqs              CommercialRfq[]           @relation("CommercialRfqRequesterInstitution")
+  ownedNegotiationThreads     CommercialNegotiationThread[] @relation("CommercialThreadOwnerInstitution")
+  counterpartyThreads         CommercialNegotiationThread[] @relation("CommercialThreadCounterpartyInstitution")
+  commercialMessages          CommercialNegotiationMessage[]
+  commercialAllocations       CommercialAllocation[]
 
   @@index([status])
   @@index([applicantUserId])
@@ -1099,6 +1107,7 @@ model TransactionCase {
   authoritativeRecords   AuthoritativeRecordDeclaration[]
   reconciliationBreaks   ReconciliationBreak[]
   tokenRepresentations   TokenRepresentation[]
+  commercialOpportunities CommercialOpportunity[]
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
@@ -2254,6 +2263,269 @@ model DeploymentActivationGate {
   @@unique([deploymentActivationId, gateCode], map: "DeploymentActivationGate_activation_code_key")
   @@index([readinessGateId, boundAt], map: "DeploymentActivationGate_gate_bound_idx")
   @@index([readinessDecisionId], map: "DeploymentActivationGate_decision_idx")
+}
+
+// ───────────────── permissioned primary commercial venue (PR-13) ─────────────────
+// Commercial interaction is case-, institution- and function-scoped. These records do not execute,
+// settle, issue, transfer ownership or become an order book merely because they exist.
+model CommercialOpportunity {
+  id                     String          @id
+  transactionCaseId      String
+  transactionCase        TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  ownerInstitutionId     String
+  ownerInstitution       Institution     @relation("CommercialOpportunityOwnerInstitution", fields: [ownerInstitutionId], references: [id], onDelete: Restrict)
+  opportunityReference   String
+  status                 String          @default("DRAFT") // DRAFT | PUBLISHED | PAUSED | WITHDRAWN | CLOSED
+  audienceMode           String          @default("NAMED_INSTITUTIONS")
+  currentTermVersion     Int?
+  aggregateVersion       Int             @default(1)
+  opensAt                DateTime?
+  closesAt               DateTime?
+  creationIdempotencyKey String
+  creationRequestDigest  String
+  createdByUserId        String
+  createdByMandateId     String
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @default(now()) @updatedAt
+  terms                  CommercialTermVersion[]
+  audienceGrants         CommercialAudienceGrant[]
+  changes                CommercialOpportunityChange[]
+  interests              CommercialInterestIndication[]
+  rfqs                   CommercialRfq[]
+  threads                CommercialNegotiationThread[]
+  allocations            CommercialAllocation[]
+
+  @@unique([transactionCaseId, opportunityReference])
+  @@unique([ownerInstitutionId, creationIdempotencyKey])
+  @@index([ownerInstitutionId, status, createdAt])
+  @@index([transactionCaseId, status])
+}
+
+model CommercialTermVersion {
+  id                       String                @id
+  commercialOpportunityId  String
+  commercialOpportunity    CommercialOpportunity @relation(fields: [commercialOpportunityId], references: [id], onDelete: Restrict)
+  version                  Int
+  currency                 String
+  amountUnits              String
+  amountScale              Int
+  minimumParticipationUnits String
+  maximumParticipationUnits String?
+  pricingType              String
+  pricingValue             String
+  commercialTerms          Json
+  termSheetEvidenceObjectId String?
+  validFrom                DateTime
+  expiresAt                DateTime
+  termDigest               String
+  reason                   String
+  createdByUserId          String
+  createdByMandateId       String
+  stepUpEvidenceId         String
+  createdAt                DateTime              @default(now())
+  interests                CommercialInterestIndication[]
+  rfqs                     CommercialRfq[]
+  allocations              CommercialAllocation[]
+
+  @@unique([commercialOpportunityId, version])
+  @@unique([commercialOpportunityId, termDigest])
+  @@index([commercialOpportunityId, expiresAt])
+}
+
+model CommercialAudienceGrant {
+  id                      String                @id
+  commercialOpportunityId String
+  commercialOpportunity   CommercialOpportunity @relation(fields: [commercialOpportunityId], references: [id], onDelete: Restrict)
+  institutionId           String
+  institution             Institution           @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  status                  String                @default("ACTIVE") // ACTIVE | REVOKED | EXPIRED
+  purpose                 String
+  conflictDisclosure      Json
+  effectiveAt             DateTime
+  expiresAt               DateTime
+  invitationDigest        String                @unique
+  invitedByUserId         String
+  invitedByMandateId      String
+  stepUpEvidenceId        String
+  revokedByUserId         String?
+  revocationReason        String?
+  revokedAt               DateTime?
+  createdAt               DateTime              @default(now())
+
+  @@unique([commercialOpportunityId, institutionId])
+  @@index([institutionId, status, expiresAt])
+}
+
+model CommercialOpportunityChange {
+  id                      String                @id
+  commercialOpportunityId String
+  commercialOpportunity   CommercialOpportunity @relation(fields: [commercialOpportunityId], references: [id], onDelete: Restrict)
+  action                  String // PUBLISH | PAUSE | RESUME | WITHDRAW | CLOSE
+  expectedVersion         Int
+  fromStatus              String
+  toStatus                String
+  reason                  String
+  proposalDigest          String
+  status                  String                @default("PENDING") // PENDING | APPROVED | REJECTED | SUPERSEDED
+  proposedByUserId        String
+  proposedByMandateId     String
+  proposalStepUpId        String
+  reviewedByUserId        String?
+  reviewedByMandateId     String?
+  reviewStepUpId          String?
+  reviewReason            String?
+  proposedAt              DateTime              @default(now())
+  reviewedAt              DateTime?
+  appliedAt               DateTime?
+
+  @@unique([commercialOpportunityId, proposalDigest])
+  @@index([commercialOpportunityId, status, proposedAt])
+}
+
+model CommercialInterestIndication {
+  id                      String                @id
+  commercialOpportunityId String
+  commercialOpportunity   CommercialOpportunity @relation(fields: [commercialOpportunityId], references: [id], onDelete: Restrict)
+  institutionId           String
+  institution             Institution           @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  termVersionId           String
+  termVersion             CommercialTermVersion @relation(fields: [termVersionId], references: [id], onDelete: Restrict)
+  currency                String
+  amountUnits             String
+  amountScale             Int
+  status                  String                @default("SUBMITTED") // SUBMITTED | WITHDRAWN | CONVERTED | EXPIRED
+  qualifications          Json
+  idempotencyKey          String
+  requestDigest           String
+  submittedByUserId       String
+  submittedByMandateId    String
+  submissionStepUpId      String
+  withdrawnByUserId       String?
+  withdrawalStepUpId      String?
+  withdrawalReason        String?
+  withdrawnAt             DateTime?
+  expiresAt               DateTime
+  createdAt               DateTime              @default(now())
+
+  @@unique([commercialOpportunityId, institutionId, idempotencyKey])
+  @@index([commercialOpportunityId, status, createdAt])
+  @@index([institutionId, status, createdAt])
+}
+
+model CommercialRfq {
+  id                       String                @id
+  commercialOpportunityId  String
+  commercialOpportunity    CommercialOpportunity @relation(fields: [commercialOpportunityId], references: [id], onDelete: Restrict)
+  requesterInstitutionId   String
+  requesterInstitution     Institution           @relation("CommercialRfqRequesterInstitution", fields: [requesterInstitutionId], references: [id], onDelete: Restrict)
+  termVersionId            String
+  termVersion              CommercialTermVersion @relation(fields: [termVersionId], references: [id], onDelete: Restrict)
+  currency                 String
+  amountUnits              String
+  amountScale              Int
+  requestedTerms           Json
+  requestedTermsDigest     String
+  status                   String                @default("OPEN") // OPEN | RESPONDED | DECLINED | WITHDRAWN | CLOSED | EXPIRED
+  responseTerms            Json?
+  responseTermsDigest      String?
+  responseReason           String?
+  idempotencyKey           String
+  requestDigest            String
+  requestedByUserId        String
+  requestedByMandateId     String
+  requestStepUpId          String
+  respondedByUserId        String?
+  respondedByMandateId     String?
+  responseStepUpId         String?
+  respondedAt              DateTime?
+  expiresAt                DateTime
+  createdAt                DateTime              @default(now())
+  threads                  CommercialNegotiationThread[]
+
+  @@unique([commercialOpportunityId, requesterInstitutionId, idempotencyKey])
+  @@index([commercialOpportunityId, status, createdAt])
+  @@index([requesterInstitutionId, status, createdAt])
+}
+
+model CommercialNegotiationThread {
+  id                       String                @id
+  commercialOpportunityId  String
+  commercialOpportunity    CommercialOpportunity @relation(fields: [commercialOpportunityId], references: [id], onDelete: Restrict)
+  commercialRfqId          String?
+  commercialRfq            CommercialRfq?        @relation(fields: [commercialRfqId], references: [id], onDelete: Restrict)
+  ownerInstitutionId       String
+  ownerInstitution         Institution           @relation("CommercialThreadOwnerInstitution", fields: [ownerInstitutionId], references: [id], onDelete: Restrict)
+  counterpartyInstitutionId String
+  counterpartyInstitution  Institution           @relation("CommercialThreadCounterpartyInstitution", fields: [counterpartyInstitutionId], references: [id], onDelete: Restrict)
+  status                   String                @default("OPEN") // OPEN | ACCEPTED | REJECTED | WITHDRAWN | CLOSED
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @default(now()) @updatedAt
+  messages                 CommercialNegotiationMessage[]
+
+  @@unique([commercialOpportunityId, counterpartyInstitutionId, commercialRfqId])
+  @@index([ownerInstitutionId, status])
+  @@index([counterpartyInstitutionId, status])
+}
+
+model CommercialNegotiationMessage {
+  id                    String                      @id
+  negotiationThreadId   String
+  negotiationThread     CommercialNegotiationThread @relation(fields: [negotiationThreadId], references: [id], onDelete: Restrict)
+  senderInstitutionId   String
+  senderInstitution     Institution                 @relation(fields: [senderInstitutionId], references: [id], onDelete: Restrict)
+  messageKind           String // PROPOSAL | COUNTER | COMMENT | WITHDRAWAL
+  body                  String
+  termSnapshot          Json?
+  termSnapshotDigest    String?
+  previousMessageId     String?
+  idempotencyKey        String
+  requestDigest         String
+  sentByUserId          String
+  sentByMandateId       String
+  stepUpEvidenceId      String
+  occurredAt            DateTime                    @default(now())
+
+  @@unique([negotiationThreadId, idempotencyKey])
+  @@index([negotiationThreadId, occurredAt])
+}
+
+model CommercialAllocation {
+  id                      String                @id
+  commercialOpportunityId String
+  commercialOpportunity   CommercialOpportunity @relation(fields: [commercialOpportunityId], references: [id], onDelete: Restrict)
+  allocationReference     String
+  offereeInstitutionId    String
+  offereeInstitution      Institution           @relation(fields: [offereeInstitutionId], references: [id], onDelete: Restrict)
+  termVersionId           String
+  termVersion             CommercialTermVersion @relation(fields: [termVersionId], references: [id], onDelete: Restrict)
+  basisType               String // INTEREST | RFQ | NEGOTIATION
+  basisId                 String
+  currency                String
+  amountUnits             String
+  amountScale             Int
+  status                  String                @default("PROPOSED") // PROPOSED | OFFERED | REJECTED_INTERNAL | ACCEPTED | DECLINED | WITHDRAWN | EXPIRED
+  idempotencyKey          String
+  proposalDigest          String
+  proposedByUserId        String
+  proposedByMandateId     String
+  proposalStepUpId        String
+  reviewedByUserId        String?
+  reviewedByMandateId     String?
+  reviewStepUpId          String?
+  reviewReason            String?
+  reviewedAt              DateTime?
+  respondedByUserId       String?
+  respondedByMandateId    String?
+  responseStepUpId        String?
+  responseReason          String?
+  respondedAt             DateTime?
+  expiresAt               DateTime
+  createdAt               DateTime              @default(now())
+
+  @@unique([commercialOpportunityId, allocationReference])
+  @@unique([commercialOpportunityId, idempotencyKey])
+  @@index([commercialOpportunityId, status, createdAt])
+  @@index([offereeInstitutionId, status, createdAt])
 }
 
 /// Append-only, hash-chained audit trail. Written via a single-writer/advisory-locked append so
