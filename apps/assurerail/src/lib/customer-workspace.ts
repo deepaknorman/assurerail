@@ -1,0 +1,50 @@
+export const CUSTOMER_WORKSPACE_FLAG = "NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1";
+
+export function customerWorkspaceEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1): boolean {
+  return value?.trim().toLowerCase() === "shadow";
+}
+
+export type Availability<T> =
+  | { status: "AVAILABLE"; data: T }
+  | { status: "UNAVAILABLE"; reason: string };
+
+export function availability<T>(result: PromiseSettledResult<T>): Availability<T> {
+  return result.status === "fulfilled"
+    ? { status: "AVAILABLE", data: result.value }
+    : { status: "UNAVAILABLE", reason: result.reason instanceof Error ? result.reason.message : "Capability unavailable" };
+}
+
+export type EvidenceDisplayState = "EXPECTED" | "RECEIVED" | "VERIFIED" | "RECONCILED" | "LEGALLY_EFFECTIVE";
+
+export function evidenceDisplayState(input: {
+  legallyEffective?: boolean;
+  reconciled?: boolean;
+  result?: string | null;
+  received?: boolean;
+}): EvidenceDisplayState {
+  if (input.legallyEffective) return "LEGALLY_EFFECTIVE";
+  if (input.reconciled) return "RECONCILED";
+  if (input.result === "VERIFIED") return "VERIFIED";
+  if (input.received || input.result) return "RECEIVED";
+  return "EXPECTED";
+}
+
+export function stateTone(state: EvidenceDisplayState): string {
+  if (state === "LEGALLY_EFFECTIVE" || state === "RECONCILED") return "pill-ok";
+  if (state === "EXPECTED" || state === "RECEIVED") return "pill-warn";
+  return "";
+}
+
+export function activeMandateActions(mandates: Array<{ action: string; status?: string; effectiveAt?: string | null; expiresAt?: string | null }>, at = new Date()): Set<string> {
+  return new Set(mandates.filter((item) => item.status === undefined || item.status === "ACTIVE")
+    .filter((item) => !item.effectiveAt || new Date(item.effectiveAt) <= at)
+    .filter((item) => !item.expiresAt || new Date(item.expiresAt) > at)
+    .map((item) => item.action));
+}
+
+export function qualificationText(value: unknown): string {
+  if (value === null || value === undefined) return "No qualification supplied";
+  if (typeof value === "string") return value || "No qualification supplied";
+  if (Array.isArray(value)) return value.length ? value.map(String).join("; ") : "No qualification supplied";
+  return JSON.stringify(value);
+}

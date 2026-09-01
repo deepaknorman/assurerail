@@ -314,3 +314,53 @@ textarea.field { min-height: 72px; resize: vertical; }
   .institution-admin-layout, .form-grid, .review-row { grid-template-columns: 1fr; }
   .institution-title-row { flex-direction: column; }
 }
+
+/* PR-18 institution-facing workspace. Authority remains server-side. */
+.customer-workspace .eyebrow { margin: 0 0 6px; color: var(--arail-accent-text); font-family: var(--arail-font-mono); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.workspace-hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 18px 0; overflow: hidden; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-md); background: var(--arail-border-subtle); }
+.workspace-hero > div { display: flex; min-height: 86px; flex-direction: column; justify-content: center; padding: 15px 18px; background: var(--arail-bg-surface); }
+.workspace-hero strong { margin: 4px 0; color: var(--arail-text-primary); font-size: 20px; }
+.workspace-hero small, .workspace-label { color: var(--arail-text-muted); font-size: 10px; }
+.workspace-label { font-family: var(--arail-font-mono); letter-spacing: .07em; text-transform: uppercase; }
+.workspace-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+.workspace-module { margin: 0; }
+.workspace-module.workspace-wide { grid-column: 1 / -1; }
+.workspace-module h2 { margin: 0 0 8px; font-size: 16px; }
+.workspace-module > p { color: var(--arail-text-secondary); font-size: 12px; line-height: 1.55; }
+.workspace-module-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.workspace-module-head > div { display: flex; align-items: center; gap: 8px; }
+.workspace-step { display: inline-grid; width: 24px; height: 24px; place-items: center; border-radius: 999px; background: var(--arail-bg-raised); color: var(--arail-accent-text); font-family: var(--arail-font-mono); font-size: 9px; }
+.workspace-list { display: flex; flex-direction: column; margin-top: 10px; }
+.workspace-list > li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--arail-border-subtle); color: var(--arail-text-secondary); font-size: 12px; }
+.workspace-list > li strong { color: var(--arail-text-primary); }
+.workspace-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--arail-border-subtle); color: var(--arail-text-primary); }
+a.workspace-row:hover strong { color: var(--arail-accent-text); }
+.workspace-row > span:first-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.workspace-row small { color: var(--arail-text-muted); font-size: 10px; overflow-wrap: anywhere; }
+.workspace-case-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 12px; }
+.workspace-case { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 14px; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm); background: var(--arail-bg-raised); color: var(--arail-text-primary); }
+.workspace-case > div { display: flex; flex-direction: column; gap: 5px; }
+.workspace-case > div:last-child { align-items: flex-end; text-align: right; }
+.workspace-case small { color: var(--arail-text-muted); font-size: 10px; }
+.capability-unavailable { display: flex; flex-direction: column; gap: 3px; margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--arail-warning-border); border-radius: var(--arail-radius-sm); color: var(--arail-warning-text); font-size: 11px; }
+.evidence-ladder { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 16px 0; }
+.evidence-ladder > div { display: flex; min-height: 54px; flex-direction: column; gap: 5px; padding: 10px; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm); color: var(--arail-text-muted); }
+.evidence-ladder > div.current { border-color: var(--arail-accent-text); background: color-mix(in srgb, var(--arail-accent-text) 8%, var(--arail-bg-surface)); color: var(--arail-text-primary); }
+.evidence-ladder span { font-family: var(--arail-font-mono); font-size: 9px; font-weight: 700; letter-spacing: .05em; }
+.evidence-ladder small { font-size: 9px; }
+.evidence-table { display: flex; flex-direction: column; }
+.evidence-row { display: grid; grid-template-columns: 1.2fr .8fr .9fr .9fr 1.2fr; gap: 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--arail-border-subtle); }
+.evidence-row > div { display: flex; min-width: 0; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.evidence-row small { color: var(--arail-text-muted); font-size: 9px; }
+.evidence-row strong { color: var(--arail-text-primary); font-size: 11px; }
+.case-timeline { display: flex; flex-direction: column; }
+.case-timeline > div { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--arail-border-subtle); }
+.case-timeline > div > span { color: var(--arail-accent-text); font-family: var(--arail-font-mono); font-size: 10px; }
+.case-timeline > div > div { display: flex; flex-direction: column; gap: 3px; }
+.case-timeline small { color: var(--arail-text-muted); font-size: 10px; }
+.negotiation-thread { margin-top: 10px; padding: 12px; border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-sm); }
+.negotiation-thread > div { margin-top: 10px; padding-left: 12px; border-left: 2px solid var(--arail-border-strong); }
+.negotiation-thread span, .negotiation-thread small { color: var(--arail-text-muted); font-family: var(--arail-font-mono); font-size: 9px; }
+.negotiation-thread p { margin: 3px 0; color: var(--arail-text-secondary); font-size: 12px; }
+@media (max-width: 820px) { .workspace-hero { grid-template-columns: repeat(2, minmax(0, 1fr)); } .evidence-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .workspace-grid, .evidence-ladder { grid-template-columns: 1fr; } .workspace-module.workspace-wide { grid-column: auto; } .workspace-hero { grid-template-columns: 1fr; } }

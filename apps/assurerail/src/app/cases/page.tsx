@@ -34,7 +34,7 @@ export default function CasesPage() {
     {error && <div className="msg err" role="alert">{error}</div>}
     {!activeInstitutionId && <div className="msg err">Select an admitted institution before viewing its cases.</div>}
     <section className="panel"><h2 className="section-title">Case register</h2><div className="record-list">
-      {rows.map((item) => <article className="record-card" key={item.id}><div className="record-head"><div><strong>{item.caseReference}</strong><p className="meta">{item.transactionRoute} · {item.representation} · {item.assetClass}</p></div><span className="pill">{item.status}</span></div><p className="meta">{item.operatingMode} evidence · aggregate v{item.aggregateVersion} · {new Date(item.createdAt).toLocaleString("en-IN")}</p><Link className="btn" href={`/cases/${encodeURIComponent(item.id)}/rooms`}>Open room migration workspace</Link></article>)}
+      {rows.map((item) => <article className="record-card" key={item.id}><div className="record-head"><div><strong>{item.caseReference}</strong><p className="meta">{item.transactionRoute} · {item.representation} · {item.assetClass}</p></div><span className="pill">{item.status}</span></div><p className="meta">{item.operatingMode} evidence · aggregate v{item.aggregateVersion} · {new Date(item.createdAt).toLocaleString("en-IN")}</p><div className="button-row"><Link className="btn btn-primary" href={`/workspace/cases/${encodeURIComponent(item.id)}`}>Open customer case</Link><Link className="btn" href={`/cases/${encodeURIComponent(item.id)}/rooms`}>Room migration</Link></div></article>)}
       {!rows.length && <p className="meta">No case is visible in this institution context.</p>}
     </div></section>
   </main></>;

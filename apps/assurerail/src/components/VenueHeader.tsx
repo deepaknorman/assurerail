@@ -57,9 +57,10 @@ export function VenueHeader() {
   const initial = (email[0] ?? "?").toUpperCase();
   const isAdmin = !!venueUser?.isAdmin;
   const nav = [
-    { href: "/console", label: "Console" },
+    ...(activeInstitutionId && process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1 === "shadow" ? [{ href: "/workspace", label: "Workspace" }] : []),
     { href: "/institutions", label: "Institutions" },
     { href: "/cases", label: "Cases" },
+    { href: "/console", label: "Legacy console" },
     { href: "/activity", label: "Activity" },
     ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
     ...(isAdmin ? [{ href: "/admin/institutions", label: "Approvals" }] : []),
@@ -75,7 +76,7 @@ export function VenueHeader() {
         <Link href="/console" className="appbar-brand" onClick={closeAll} aria-label="AssureRail home"><Logo /></Link>
         <nav className={`appbar-nav ${navOpen ? "mobile-open" : ""}`}>
           {nav.map((n) => (
-            <Link key={n.href} href={n.href} className={pathname === n.href ? "active" : ""} onClick={closeAll}>{n.label}</Link>
+            <Link key={n.href} href={n.href} className={pathname === n.href || pathname.startsWith(`${n.href}/`) ? "active" : ""} onClick={closeAll}>{n.label}</Link>
           ))}
         </nav>
         <div className="appbar-spacer" />
