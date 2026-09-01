@@ -63,6 +63,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     daReplay: "off",
     ptcReplay: "off",
     tokenisedDa: "off",
+    tokenisedPtc: "off",
     primaryCommercial: "off",
     conventionalSecondary: "off",
     internalRbac: "off",
@@ -325,6 +326,20 @@ test("[CONFIG][PR15] live tokenised DA requires the fully enforced foundation an
   const errors = foundation.errors.join("\n");
   assert.doesNotMatch(errors, /requires transaction cases on|available only in REPLAY or SHADOW/);
   assert.match(errors, /ARAIL_ACTIVATION_MANIFEST_B64 is required/);
+});
+
+test("[CONFIG][PR16] tokenised PTC requires its separate PTC replay/saga foundation and remains shadow-only", () => {
+  const missing = inspectRuntimeEnvironment({ ASSURERAIL_OPERATING_MODE: "SHADOW", ARAIL_TOKENISED_PTC_V1: "shadow" });
+  assert.match(missing.errors.join("\n"), /requires transaction cases in shadow, required saga and PTC replay allow-list/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "REPLAY", DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE, ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow", ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required", ARAIL_PTC_REPLAY_V1: "allow-list", ARAIL_TOKENISED_PTC_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_TOKENISED_PTC_V1: "shadow" });
+  assert.match(live.errors.join("\n"), /available only in REPLAY or SHADOW/);
 });
 
 test("[CONFIG][PR13] primary commercial interaction requires the neutral case foundation and remains shadow-only", () => {
