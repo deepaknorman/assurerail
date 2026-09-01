@@ -70,6 +70,10 @@ export const DEVELOPER_PORTAL_FLAG = "ARAIL_DEVELOPER_PORTAL_V1" as const;
 export const DEVELOPER_PORTAL_VALUES = ["off", "shadow"] as const;
 export type DeveloperPortalMode = (typeof DEVELOPER_PORTAL_VALUES)[number];
 
+export const CUSTOMER_OPERATIONS_FLAG = "ARAIL_CUSTOMER_OPERATIONS_V1" as const;
+export const CUSTOMER_OPERATIONS_VALUES = ["off", "shadow"] as const;
+export type CustomerOperationsMode = (typeof CUSTOMER_OPERATIONS_VALUES)[number];
+
 // OP-01 internal-control-plane rollout. Shadow evaluates and records the new policy without
 // replacing the legacy bootstrap role gate; enforcement is a separately approved cutover.
 export const INTERNAL_RBAC_FLAG = "ARAIL_INTERNAL_RBAC_V1" as const;
@@ -113,6 +117,7 @@ export function inspectPersistenceFlags(env: Environment): {
   conventionalSecondary: ConventionalSecondaryMode;
   venueConduct: VenueConductMode;
   developerPortal: DeveloperPortalMode;
+  customerOperations: CustomerOperationsMode;
   internalRbac: InternalRbacMode;
   errors: readonly string[];
 } {
@@ -134,6 +139,7 @@ export function inspectPersistenceFlags(env: Environment): {
   const conventionalSecondary = readFlag(env, CONVENTIONAL_SECONDARY_FLAG, CONVENTIONAL_SECONDARY_VALUES, "off");
   const venueConduct = readFlag(env, VENUE_CONDUCT_FLAG, VENUE_CONDUCT_VALUES, "off");
   const developerPortal = readFlag(env, DEVELOPER_PORTAL_FLAG, DEVELOPER_PORTAL_VALUES, "off");
+  const customerOperations = readFlag(env, CUSTOMER_OPERATIONS_FLAG, CUSTOMER_OPERATIONS_VALUES, "off");
   const internalRbac = readFlag(env, INTERNAL_RBAC_FLAG, INTERNAL_RBAC_VALUES, "off");
   return {
     neutralIngress: ingress.value,
@@ -154,11 +160,12 @@ export function inspectPersistenceFlags(env: Environment): {
     conventionalSecondary: conventionalSecondary.value,
     venueConduct: venueConduct.value,
     developerPortal: developerPortal.value,
+    customerOperations: customerOperations.value,
     internalRbac: internalRbac.value,
     errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error,
       roomReadSource.error, roomWriteSource.error, completionAcknowledgement.error, legacyRoomProxy.error,
       externalActionSaga.error, daReplay.error, ptcReplay.error, tokenisedDa.error, tokenisedPtc.error, primaryCommercial.error,
-      conventionalSecondary.error, venueConduct.error, developerPortal.error,
+      conventionalSecondary.error, venueConduct.error, developerPortal.error, customerOperations.error,
       internalRbac.error]
       .filter((error): error is string => Boolean(error)),
   };

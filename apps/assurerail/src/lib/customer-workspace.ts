@@ -1,6 +1,11 @@
 export const CUSTOMER_WORKSPACE_FLAG = "NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1";
+export const CUSTOMER_OPERATIONS_FLAG = "NEXT_PUBLIC_ASSURERAIL_CUSTOMER_OPERATIONS_V1";
 
 export function customerWorkspaceEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1): boolean {
+  return value?.trim().toLowerCase() === "shadow";
+}
+
+export function customerOperationsEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_OPERATIONS_V1): boolean {
   return value?.trim().toLowerCase() === "shadow";
 }
 

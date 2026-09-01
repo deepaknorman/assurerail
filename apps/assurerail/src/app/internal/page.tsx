@@ -75,7 +75,7 @@ export default function InternalWorkspacePage() {
         <section className="panel">
           <div className="record-head"><h2 className="section-title">Authority boundary</h2><span className="pill pill-ok">CUSTOMER AUTHORITY: NONE</span></div>
           <p className="tier-note">These assignments cannot satisfy a participant mandate, trustee appointment, case function, settlement authority or authoritative-record decision.</p>
-          <p className="tier-note">This checkpoint exposes authority and escalation metadata. Domain commands remain unavailable until their exact server-side enforcement and operating controls are implemented.</p>
+          <p className="tier-note">This view exposes only the workspaces supported by current assignments. Each domain command remains separately server-authorised; a visible workspace never grants customer authority or bypasses maker-checker.</p>
         </section>
         <div className="record-list">
           {model.workspaces.map((workspace) => <section className="record-card" id={workspace.id.toLowerCase()} key={workspace.id}>

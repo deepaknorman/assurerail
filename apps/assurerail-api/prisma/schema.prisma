@@ -221,6 +221,12 @@ model Institution {
   developerClients         DeveloperClientRegistration[]
   developerConformanceRuns DeveloperConformanceRun[]
   integrationExitExports   IntegrationExitExport[]
+  customerContracts        CustomerContract[]
+  customerUsageEvents      CustomerUsageEvent[]
+  implementationCohorts    CustomerImplementationCohort[]
+  customerServiceRequests  CustomerServiceRequest[]
+  customerOperationalReviews CustomerOperationalReview[]
+  customerDataExitExports  CustomerDataExitExport[]
   secondaryTransferEvidence   SecondaryTransferEvidence[]
   secondaryTransferBreaks     SecondaryTransferBreak[] @relation("SecondaryTransferBreakOwnerInstitution")
   tokenCustodyAssignments     TokenConnectorBinding[] @relation("TokenCustodyInstitution")
@@ -912,6 +918,302 @@ model IntegrationExitExport {
   scope              Json
   recordCounts       Json
   manifestDigest     String
+  requestedByUserId  String
+  requestedByMandateId String
+  stepUpEvidenceId   String
+  createdAt          DateTime    @default(now())
+
+  @@index([institutionId, createdAt])
+}
+
+// ───────────────── customer operations and commercial administration (PR-20, shadow) ──────────
+
+model CustomerContract {
+  id                         String      @id
+  institutionId              String
+  institution                Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  contractRef                String
+  version                    Int         @default(1)
+  status                     String      @default("PROPOSED") // PROPOSED | APPROVED_PENDING_CUSTOMER | ACTIVE_SHADOW | SUSPENDED | TERMINATED | EXPIRED | REJECTED
+  currency                   String
+  currencyScale              Int
+  termsDigest                String
+  termsEvidenceRef           String
+  proposedByUserId           String
+  proposalStepUpId           String
+  reviewedByUserId           String?
+  reviewStepUpId             String?
+  reviewReason               String?
+  reviewedAt                 DateTime?
+  participantAcceptedByUserId String?
+  participantMandateId       String?
+  participantStepUpId        String?
+  participantAcceptedAt      DateTime?
+  effectiveAt                DateTime
+  expiresAt                  DateTime
+  renewalReviewAt            DateTime
+  createdAt                  DateTime    @default(now())
+  updatedAt                  DateTime    @default(now()) @updatedAt
+  changes                    CustomerContractChange[]
+  rateCards                  CustomerRateCard[]
+  usageEvents                CustomerUsageEvent[]
+  invoiceStatements          CustomerInvoiceStatement[]
+  creditCorrections          CustomerCreditCorrection[]
+  cohorts                    CustomerImplementationCohort[]
+
+  @@unique([institutionId, contractRef, version], map: "CustomerContract_institution_ref_version")
+  @@index([institutionId, status, effectiveAt, expiresAt], map: "CustomerContract_scope_status_term")
+}
+
+model CustomerContractChange {
+  id                 String           @id
+  customerContractId String
+  customerContract   CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
+  changeType         String // RENEW | SUSPEND | TERMINATE | REINSTATE
+  fromStatus         String
+  proposedValues     Json
+  reason             String
+  evidenceRef        String
+  proposalDigest     String
+  status             String           @default("PROPOSED")
+  proposedByUserId   String
+  proposalStepUpId   String
+  reviewedByUserId   String?
+  reviewStepUpId     String?
+  reviewReason       String?
+  proposedAt         DateTime         @default(now())
+  reviewedAt         DateTime?
+  appliedAt          DateTime?
+
+  @@index([customerContractId, status])
+}
+
+model CustomerRateCard {
+  id                 String           @id
+  customerContractId String
+  customerContract   CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
+  version            Int
+  status             String           @default("PROPOSED") // PROPOSED | APPROVED_SHADOW | REJECTED | SUPERSEDED | EXPIRED
+  effectiveAt        DateTime
+  expiresAt          DateTime
+  rateCardDigest     String
+  proposedByUserId   String
+  proposalStepUpId   String
+  reviewedByUserId   String?
+  reviewStepUpId     String?
+  reviewReason       String?
+  reviewedAt         DateTime?
+  createdAt          DateTime         @default(now())
+  feeRules           CustomerFeeRule[]
+  invoiceStatements  CustomerInvoiceStatement[]
+
+  @@unique([customerContractId, version], map: "CustomerRateCard_contract_version")
+  @@index([customerContractId, status, effectiveAt, expiresAt], map: "CustomerRateCard_scope_status_term")
+}
+
+model CustomerFeeRule {
+  id               String           @id
+  customerRateCardId String
+  customerRateCard CustomerRateCard @relation(fields: [customerRateCardId], references: [id], onDelete: Restrict)
+  transactionRoute String
+  representation   String
+  lifecycleLeg     String
+  metric           String
+  feeBasis         String // FIXED_MINOR | NOTIONAL_BASIS_POINTS | PER_UNIT_MINOR
+  rateValue        String // canonical non-negative integer text; basis points when feeBasis is NOTIONAL_BASIS_POINTS
+  minimumFeeMinor  String?
+  maximumFeeMinor  String?
+  roundingMode     String // DOWN | HALF_UP
+  createdAt        DateTime @default(now())
+  invoiceLines     CustomerInvoiceLine[]
+
+  @@unique([customerRateCardId, transactionRoute, representation, lifecycleLeg, metric], map: "CustomerFeeRule_card_route_metric")
+}
+
+model CustomerUsageEvent {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  customerContractId String
+  customerContract   CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
+  transactionCaseId  String?
+  sourceEventRef     String
+  sourceEventDigest  String
+  transactionRoute   String
+  representation     String
+  lifecycleLeg       String
+  metric             String
+  quantityMinor      String
+  notionalMinor      String
+  currency           String
+  occurredAt         DateTime
+  status             String      @default("UNBILLED") // UNBILLED | BILLED | REVERSED
+  recordedByUserId   String
+  recordedAt         DateTime    @default(now())
+  invoiceLine        CustomerInvoiceLine?
+
+  @@unique([institutionId, sourceEventRef], map: "CustomerUsageEvent_institution_source")
+  @@index([customerContractId, status, occurredAt], map: "CustomerUsageEvent_contract_status_time")
+}
+
+model CustomerInvoiceStatement {
+  id                 String           @id
+  customerContractId String
+  customerContract   CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
+  customerRateCardId String
+  customerRateCard   CustomerRateCard @relation(fields: [customerRateCardId], references: [id], onDelete: Restrict)
+  statementRef       String
+  periodStart        DateTime
+  periodEnd          DateTime
+  currency           String
+  currencyScale      Int
+  grossFeeMinor      String
+  creditMinor        String
+  netFeeMinor        String
+  status             String           @default("DRAFT") // DRAFT | ISSUED_SHADOW | CORRECTED | VOID
+  statementDigest    String
+  preparedByUserId   String
+  preparationStepUpId String
+  issuedByUserId     String?
+  issueStepUpId      String?
+  issueReason        String?
+  issuedAt           DateTime?
+  createdAt          DateTime         @default(now())
+  lines              CustomerInvoiceLine[]
+  creditCorrections  CustomerCreditCorrection[]
+
+  @@unique([customerContractId, statementRef], map: "CustomerInvoiceStatement_contract_ref")
+  @@index([customerContractId, periodStart, periodEnd], map: "CustomerInvoiceStatement_contract_period_idx")
+}
+
+model CustomerInvoiceLine {
+  id                 String                   @id
+  invoiceStatementId String
+  invoiceStatement   CustomerInvoiceStatement @relation(fields: [invoiceStatementId], references: [id], onDelete: Restrict)
+  usageEventId       String                   @unique
+  usageEvent         CustomerUsageEvent       @relation(fields: [usageEventId], references: [id], onDelete: Restrict)
+  feeRuleId          String
+  feeRule            CustomerFeeRule          @relation(fields: [feeRuleId], references: [id], onDelete: Restrict)
+  basisMinor         String
+  rateValue          String
+  calculatedFeeMinor String
+  calculationDigest String
+  createdAt          DateTime                 @default(now())
+
+  @@index([invoiceStatementId])
+}
+
+model CustomerCreditCorrection {
+  id                 String                   @id
+  customerContractId String
+  customerContract   CustomerContract         @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
+  invoiceStatementId String
+  invoiceStatement   CustomerInvoiceStatement @relation(fields: [invoiceStatementId], references: [id], onDelete: Restrict)
+  amountMinor        String
+  reason             String
+  evidenceRef        String
+  proposalDigest     String
+  status             String                   @default("PROPOSED") // PROPOSED | APPROVED | REJECTED
+  proposedByUserId   String
+  proposalStepUpId   String
+  reviewedByUserId   String?
+  reviewStepUpId     String?
+  reviewReason       String?
+  reviewedAt         DateTime?
+  createdAt          DateTime                 @default(now())
+
+  @@index([invoiceStatementId, status])
+}
+
+model CustomerImplementationCohort {
+  id                 String           @id
+  institutionId      String
+  institution        Institution      @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  customerContractId String
+  customerContract   CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
+  cohortRef          String
+  operatingMode      String
+  routes             Json
+  gateRefs           Json
+  status             String           @default("PLANNED") // PLANNED | ACTIVE_SHADOW | PAUSED | COMPLETED | CANCELLED
+  startsAt           DateTime
+  endsAt             DateTime
+  ownerUserId        String
+  changeReason       String
+  changedByUserId    String
+  changeStepUpId     String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @default(now()) @updatedAt
+
+  @@unique([institutionId, cohortRef])
+  @@index([institutionId, status, startsAt, endsAt], map: "CustomerImplementationCohort_scope_status_term")
+}
+
+model CustomerServiceRequest {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  transactionCaseId  String?
+  requestRef         String
+  requestType        String
+  priority           String
+  subject            String
+  description        String
+  evidenceRefs       Json
+  status             String      @default("OPEN") // OPEN | ACKNOWLEDGED | IN_PROGRESS | WAITING_CUSTOMER | RESOLVED | CLOSED
+  slaDueAt           DateTime
+  escalationLevel    Int         @default(0)
+  escalationPath     Json
+  assignedToUserId   String?
+  createdByUserId    String
+  createdByMandateId String
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @default(now()) @updatedAt
+  messages           CustomerServiceMessage[]
+
+  @@unique([institutionId, requestRef])
+  @@index([institutionId, status, slaDueAt])
+}
+
+model CustomerServiceMessage {
+  id                     String                 @id
+  customerServiceRequestId String
+  customerServiceRequest CustomerServiceRequest @relation(fields: [customerServiceRequestId], references: [id], onDelete: Restrict)
+  authorType             String // CUSTOMER | INTERNAL
+  authorUserId           String
+  body                   String
+  evidenceRefs           Json
+  createdAt              DateTime               @default(now())
+
+  @@index([customerServiceRequestId, createdAt])
+}
+
+model CustomerOperationalReview {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  periodStart        DateTime
+  periodEnd          DateTime
+  serviceMetrics     Json
+  openItems          Json
+  evidenceRefs       Json
+  status             String      @default("RECORDED")
+  recordedByUserId   String
+  stepUpEvidenceId   String
+  createdAt          DateTime    @default(now())
+
+  @@index([institutionId, periodEnd])
+}
+
+model CustomerDataExitExport {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  exportVersion      String
+  highWaterAt        DateTime
+  recordCounts       Json
+  manifestDigest     String
+  scope              Json
   requestedByUserId  String
   requestedByMandateId String
   stepUpEvidenceId   String

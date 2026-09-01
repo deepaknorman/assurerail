@@ -1,0 +1,36 @@
+import { Body, Controller, ForbiddenException, Get, Param, Post, Req, UnauthorizedException } from "@nestjs/common";
+import type { Request } from "express";
+import { CustomerOperationsService } from "./customer-operations.service";
+
+type RailRequest = Request & { user?: { id?: string; session?: { id?: string; activeInstitutionId?: string | null } | null; activeInstitution?: { institutionId?: string } | null } };
+function participant(req: RailRequest, institutionId: string) { if (!req.user?.id || !req.user.session?.id) throw new UnauthorizedException("authenticated Rail session required"); if (req.user.activeInstitution?.institutionId !== institutionId) throw new ForbiddenException("path institution must match active session context"); return { actorUserId: req.user.id, actorSessionId: req.user.session.id, actingInstitutionId: institutionId }; }
+function internal(req: RailRequest) { if (!req.user?.id || !req.user.session?.id) throw new UnauthorizedException("authenticated Rail session required"); if (req.user.session.activeInstitutionId) throw new ForbiddenException("internal customer operations require no participant institution context"); return { actorUserId: req.user.id, actorSessionId: req.user.session.id }; }
+
+@Controller("v1/rail/institutions/:institutionId/customer-operations")
+export class CustomerOperationsParticipantController {
+  constructor(private readonly service: CustomerOperationsService) {}
+  @Get("overview") overview(@Req() req: RailRequest, @Param("institutionId") institutionId: string) { return this.service.participantOverview(participant(req, institutionId)); }
+  @Post("contracts/:contractId/acknowledge") acknowledge(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("contractId") contractId: string, @Body() body: Parameters<CustomerOperationsService["acknowledgeContract"]>[2]) { return this.service.acknowledgeContract(participant(req, institutionId), contractId, body); }
+  @Post("service-requests") request(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Body() body: Parameters<CustomerOperationsService["createServiceRequest"]>[1]) { return this.service.createServiceRequest(participant(req, institutionId), body); }
+  @Post("service-requests/:requestId/messages") message(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("requestId") requestId: string, @Body() body: Parameters<CustomerOperationsService["addCustomerMessage"]>[2]) { return this.service.addCustomerMessage(participant(req, institutionId), requestId, body); }
+  @Post("exit-exports") exit(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Body() body: Parameters<CustomerOperationsService["exportCustomerData"]>[1]) { return this.service.exportCustomerData(participant(req, institutionId), body); }
+}
+
+@Controller("v1/rail/internal/customer-operations/institutions/:institutionId")
+export class CustomerOperationsInternalController {
+  constructor(private readonly service: CustomerOperationsService) {}
+  @Post("contracts") proposeContract(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Body() body: Parameters<CustomerOperationsService["proposeContract"]>[2]) { return this.service.proposeContract(internal(req), institutionId, body); }
+  @Post("contracts/:contractId/review") reviewContract(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("contractId") contractId: string, @Body() body: Parameters<CustomerOperationsService["reviewContract"]>[3]) { return this.service.reviewContract(internal(req), institutionId, contractId, body); }
+  @Post("contracts/:contractId/changes") proposeChange(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("contractId") contractId: string, @Body() body: Parameters<CustomerOperationsService["proposeContractChange"]>[3]) { return this.service.proposeContractChange(internal(req), institutionId, contractId, body); }
+  @Post("contract-changes/:changeId/review") reviewChange(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("changeId") changeId: string, @Body() body: Parameters<CustomerOperationsService["reviewContractChange"]>[3]) { return this.service.reviewContractChange(internal(req), institutionId, changeId, body); }
+  @Post("contracts/:contractId/rate-cards") rateCard(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("contractId") contractId: string, @Body() body: Parameters<CustomerOperationsService["proposeRateCard"]>[3]) { return this.service.proposeRateCard(internal(req), institutionId, contractId, body); }
+  @Post("rate-cards/:rateCardId/review") reviewRateCard(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("rateCardId") rateCardId: string, @Body() body: Parameters<CustomerOperationsService["reviewRateCard"]>[3]) { return this.service.reviewRateCard(internal(req), institutionId, rateCardId, body); }
+  @Post("usage-events") usage(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Body() body: Parameters<CustomerOperationsService["recordUsage"]>[2]) { return this.service.recordUsage(internal(req), institutionId, body); }
+  @Post("invoice-statements") invoice(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Body() body: Parameters<CustomerOperationsService["prepareInvoice"]>[2]) { return this.service.prepareInvoice(internal(req), institutionId, body); }
+  @Post("invoice-statements/:invoiceId/issue") issueInvoice(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("invoiceId") invoiceId: string, @Body() body: Parameters<CustomerOperationsService["issueInvoice"]>[3]) { return this.service.issueInvoice(internal(req), institutionId, invoiceId, body); }
+  @Post("invoice-statements/:invoiceId/credits") credit(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("invoiceId") invoiceId: string, @Body() body: Parameters<CustomerOperationsService["proposeCredit"]>[3]) { return this.service.proposeCredit(internal(req), institutionId, invoiceId, body); }
+  @Post("credits/:creditId/review") reviewCredit(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("creditId") creditId: string, @Body() body: Parameters<CustomerOperationsService["reviewCredit"]>[3]) { return this.service.reviewCredit(internal(req), institutionId, creditId, body); }
+  @Post("cohorts") cohort(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Body() body: Parameters<CustomerOperationsService["createCohort"]>[2]) { return this.service.createCohort(internal(req), institutionId, body); }
+  @Post("service-requests/:requestId/manage") manage(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Param("requestId") requestId: string, @Body() body: Parameters<CustomerOperationsService["manageService"]>[3]) { return this.service.manageService(internal(req), institutionId, requestId, body); }
+  @Post("operational-reviews") review(@Req() req: RailRequest, @Param("institutionId") institutionId: string, @Body() body: Parameters<CustomerOperationsService["recordOperationalReview"]>[2]) { return this.service.recordOperationalReview(internal(req), institutionId, body); }
+}

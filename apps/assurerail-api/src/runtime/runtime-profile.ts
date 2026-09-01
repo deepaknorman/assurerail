@@ -2,6 +2,7 @@ import {
   inspectPersistenceFlags,
   type CompletionAcknowledgementMode,
   type ConventionalSecondaryMode,
+  type CustomerOperationsMode,
   type DurableRelayMode,
   type DaReplayMode,
   type DeveloperPortalMode,
@@ -72,6 +73,7 @@ export interface RuntimeEnvironmentProfile {
     conventionalSecondary: ConventionalSecondaryMode;
     venueConduct: VenueConductMode;
     developerPortal: DeveloperPortalMode;
+    customerOperations: CustomerOperationsMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -245,6 +247,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || persistenceFlags.durableRelay !== "shadow")) {
     errors.push("ARAIL_DEVELOPER_PORTAL_V1=shadow requires participant admission, neutral ingress and durable relay in shadow");
   }
+  if (persistenceFlags.customerOperations !== "off"
+    && (persistenceFlags.participantAdmission !== "shadow" || persistenceFlags.internalRbac === "off"
+      || persistenceFlags.developerPortal !== "shadow")) {
+    errors.push("ARAIL_CUSTOMER_OPERATIONS_V1=shadow requires participant admission and developer portal in shadow plus internal RBAC");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -287,6 +294,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.developerPortal !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_DEVELOPER_PORTAL_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.customerOperations !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_CUSTOMER_OPERATIONS_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -445,6 +455,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         conventionalSecondary: persistenceFlags.conventionalSecondary,
         venueConduct: persistenceFlags.venueConduct,
         developerPortal: persistenceFlags.developerPortal,
+        customerOperations: persistenceFlags.customerOperations,
         internalRbac: persistenceFlags.internalRbac,
       },
     },
