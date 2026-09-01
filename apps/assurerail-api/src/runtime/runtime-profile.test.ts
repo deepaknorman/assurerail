@@ -66,6 +66,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     tokenisedPtc: "off",
     primaryCommercial: "off",
     conventionalSecondary: "off",
+    venueConduct: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -404,6 +405,21 @@ test("[CONFIG][PR14] conventional secondary replay requires the durable case/sag
     ARAIL_CONVENTIONAL_SECONDARY_V1: "shadow",
   });
   assert.match(live.errors.join("\n"), /ARAIL_CONVENTIONAL_SECONDARY_V1 is available only in REPLAY or SHADOW runtime/);
+});
+
+test("[CONFIG][PR17] venue conduct requires the commercial/internal shadow foundation and remains non-live", () => {
+  const missing = inspectRuntimeEnvironment({ ASSURERAIL_OPERATING_MODE: "SHADOW", ARAIL_VENUE_CONDUCT_V1: "shadow" });
+  assert.match(missing.errors.join("\n"), /requires primary commercial and transaction cases in shadow plus internal RBAC/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW", DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE, ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow", ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_PRIMARY_COMMERCIAL_V1: "shadow", ARAIL_INTERNAL_RBAC_V1: "enforce", ARAIL_VENUE_CONDUCT_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.venueConduct, "shadow");
+  const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_VENUE_CONDUCT_V1: "shadow" });
+  assert.match(live.errors.join("\n"), /ARAIL_VENUE_CONDUCT_V1 is available only in REPLAY or SHADOW/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {

@@ -85,3 +85,11 @@ test("[OP01][RBAC] maker-checker prevents self approval and self reconciliation 
 test("[OP01][RBAC] staff access can never become external transaction authority", () => {
   assert.equal(internalRoleCanSatisfyExternalAuthority(), false);
 });
+
+test("[PR17][RBAC] queue operation and independent conduct-policy review remain separate", () => {
+  assert.equal(permissionsForInternalRole("MANAGER").includes("CONDUCT_SIGNAL_RECORD"), true);
+  assert.equal(permissionsForInternalRole("MANAGER").includes("CONDUCT_POLICY_REVIEW"), false);
+  assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("CONDUCT_POLICY_REVIEW"), true);
+  assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("CONDUCT_CONTROL_REVIEW"), true);
+  assert.equal(permissionsForInternalRole("SUPERADMIN").includes("CONDUCT_SIGNAL_RECORD"), false);
+});
