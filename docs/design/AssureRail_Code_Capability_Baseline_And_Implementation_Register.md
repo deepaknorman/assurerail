@@ -1386,3 +1386,6 @@ that can safely support the subsequent transaction case.
   code presence or future scope.
 - The eventual three-year resource/cost plan uses these PR/SOP work packages, transaction/evidence
   volume assumptions, service hours and external-provider obligations as bottom-up drivers.
+- The PR-00–PR-10 review boundary and remaining historic PTC evidence gate are recorded in
+  `docs/qa/AssureRail_PR00_PR10_Review_Handoff.md`; the controlled external intake is defined in
+  `docs/templates/AssureRail_Historic_PTC_Replay_Evidence_Intake_v1.md`.
