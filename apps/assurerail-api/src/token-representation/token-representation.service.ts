@@ -17,8 +17,8 @@ import type { RoomActor } from "../rooms/room-authority.service";
 import { PrismaService } from "../store/prisma.service";
 import { compareTokenRepresentation, exactNonNegativeInteger } from "./token-reconciliation";
 
-const ACTION_TYPES = ["MINT", "TRANSFER", "PAYMENT", "ANCHOR", "AMORTISE_BURN", "CLOSE_BURN"] as const;
-type TokenActionType = (typeof ACTION_TYPES)[number];
+export const TOKEN_ACTION_TYPES = ["MINT", "TRANSFER", "PAYMENT", "ANCHOR", "AMORTISE_BURN", "CLOSE_BURN"] as const;
+export type TokenActionType = (typeof TOKEN_ACTION_TYPES)[number];
 
 type LinkBody = {
   noteId?: string;
@@ -65,7 +65,9 @@ type ReconcileBody = {
 
 function enabled(): void {
   const flags = inspectPersistenceFlags(process.env);
-  if (flags.transactionCase !== "shadow" || flags.externalActionSaga !== "required" || flags.tokenisedDa !== "allow_list") {
+  const replay = flags.transactionCase === "shadow" && flags.tokenisedDa === "allow_list";
+  const live = flags.transactionCase === "on" && flags.tokenisedDa === "live";
+  if ((!replay && !live) || flags.externalActionSaga !== "required") {
     throw new ForbiddenException("tokenised-DA representation adapter is disabled");
   }
 }
@@ -86,7 +88,7 @@ function json(value: unknown, name: string): Prisma.InputJsonValue {
   }
 }
 
-function actionExpected(actionType: TokenActionType, value: unknown): Prisma.InputJsonValue {
+export function tokenActionExpected(actionType: TokenActionType, value: unknown): Prisma.InputJsonValue {
   const expected = json(value, "expected") as unknown as Record<string, unknown>;
   const positiveUnits = (field: string) => {
     let amount: string;
@@ -231,10 +233,13 @@ export class TokenRepresentationService {
     const representation = await this.requireRepresentation(caseId);
     const providerReferenceId = required(body.providerReferenceId, "providerReferenceId");
     const actionType = required(body.actionType, "actionType", 40) as TokenActionType;
-    if (!(ACTION_TYPES as readonly string[]).includes(actionType)) {
-      throw new BadRequestException(`actionType must be one of: ${ACTION_TYPES.join(", ")}`);
+    if (!(TOKEN_ACTION_TYPES as readonly string[]).includes(actionType)) {
+      throw new BadRequestException(`actionType must be one of: ${TOKEN_ACTION_TYPES.join(", ")}`);
     }
-    const expected = actionExpected(actionType, body.expected);
+    if (inspectPersistenceFlags(process.env).tokenisedDa === "live") {
+      throw new ForbiddenException("live token actions must use the certified connector command endpoint");
+    }
+    const expected = tokenActionExpected(actionType, body.expected);
     const expectedDigest = sha256Digest(expected);
     const idempotencyKey = required(body.idempotencyKey, "idempotencyKey", 200);
     const reason = required(body.reason, "reason", 1000);
@@ -550,8 +555,12 @@ export class TokenRepresentationService {
     if (transactionCase.transactionRoute !== "DA" || transactionCase.representation !== "TOKENISED") {
       throw new BadRequestException("token representation adapter requires a DA/TOKENISED transaction case");
     }
-    if (!["REPLAY", "SHADOW"].includes(transactionCase.operatingMode)) {
-      throw new BadRequestException("token representation adapter is available only in REPLAY or SHADOW case mode");
+    const flags = inspectPersistenceFlags(process.env);
+    const validMode = flags.tokenisedDa === "allow_list"
+      ? ["REPLAY", "SHADOW"].includes(transactionCase.operatingMode)
+      : flags.tokenisedDa === "live" && ["CONTROLLED_LIVE", "PRODUCTION"].includes(transactionCase.operatingMode);
+    if (!validMode) {
+      throw new BadRequestException("token representation case mode does not match its replay/live feature mode");
     }
     if (transactionCase.lifecycleLeg !== "INITIAL_TRANSFER_OR_ISSUE") {
       throw new BadRequestException("PR-11 supports initial tokenised DA only; secondary activity remains unavailable");

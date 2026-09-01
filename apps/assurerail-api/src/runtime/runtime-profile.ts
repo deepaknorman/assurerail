@@ -162,18 +162,26 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   const errors: string[] = [];
   const persistenceFlags = inspectPersistenceFlags(env);
   errors.push(...persistenceFlags.errors);
-  if (persistenceFlags.neutralIngress === "shadow" && persistenceFlags.participantAdmission !== "shadow") {
-    errors.push("ARAIL_NEUTRAL_INGRESS_V1=shadow requires ARAIL_PARTICIPANT_ADMISSION_V1=shadow");
+  if (persistenceFlags.neutralIngress !== "off" && persistenceFlags.participantAdmission === "off") {
+    errors.push("ARAIL_NEUTRAL_INGRESS_V1=shadow|on requires participant admission");
   }
-  if (persistenceFlags.transactionCase === "shadow"
-    && (persistenceFlags.participantAdmission !== "shadow" || persistenceFlags.neutralIngress !== "shadow")) {
-    errors.push("ARAIL_TRANSACTION_CASE_V1=shadow requires participant admission and neutral ingress in shadow mode");
+  if (persistenceFlags.neutralIngress === "on" && persistenceFlags.participantAdmission !== "enforce") {
+    errors.push("ARAIL_NEUTRAL_INGRESS_V1=on requires ARAIL_PARTICIPANT_ADMISSION_V1=enforce");
   }
-  if (persistenceFlags.roomReadSource !== "legacy" && persistenceFlags.transactionCase !== "shadow") {
-    errors.push("ARAIL_ROOM_READ_SOURCE=compare|rail requires ARAIL_TRANSACTION_CASE_V1=shadow");
+  if (persistenceFlags.transactionCase !== "off"
+    && (persistenceFlags.participantAdmission === "off" || persistenceFlags.neutralIngress === "off")) {
+    errors.push("ARAIL_TRANSACTION_CASE_V1=shadow|on requires participant admission and neutral ingress");
   }
-  if (persistenceFlags.roomWriteSource === "rail" && persistenceFlags.transactionCase !== "shadow") {
-    errors.push("ARAIL_ROOM_WRITE_SOURCE=rail requires ARAIL_TRANSACTION_CASE_V1=shadow");
+  if (persistenceFlags.transactionCase === "on"
+    && (persistenceFlags.participantAdmission !== "enforce" || persistenceFlags.neutralIngress !== "on"
+      || persistenceFlags.routeEntitlement !== "enforce" || persistenceFlags.internalRbac !== "enforce")) {
+    errors.push("ARAIL_TRANSACTION_CASE_V1=on requires enforced participant admission, neutral ingress, route entitlement and internal RBAC");
+  }
+  if (persistenceFlags.roomReadSource !== "legacy" && persistenceFlags.transactionCase === "off") {
+    errors.push("ARAIL_ROOM_READ_SOURCE=compare|rail requires transaction cases");
+  }
+  if (persistenceFlags.roomWriteSource === "rail" && persistenceFlags.transactionCase === "off") {
+    errors.push("ARAIL_ROOM_WRITE_SOURCE=rail requires transaction cases");
   }
   if (persistenceFlags.roomReadSource === "rail" && persistenceFlags.roomWriteSource !== "rail") {
     errors.push("ARAIL_ROOM_READ_SOURCE=rail requires the PR-08 case allocation gate and ARAIL_ROOM_WRITE_SOURCE=rail");
@@ -182,12 +190,16 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     && (persistenceFlags.roomReadSource !== "rail" || persistenceFlags.roomWriteSource !== "rail")) {
     errors.push("ARAIL_LEGACY_ROOM_PROXY_V1=shadow requires Rail room read/write capability; each case still needs an approved allocation");
   }
-  if (persistenceFlags.completionAcknowledgement !== "off"
+  if (persistenceFlags.completionAcknowledgement === "shadow"
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.neutralIngress !== "shadow")) {
-    errors.push("ARAIL_COMPLETION_ACK_V1=shadow|on requires transaction cases and neutral ingress in shadow mode");
+    errors.push("ARAIL_COMPLETION_ACK_V1=shadow requires transaction cases and neutral ingress in shadow mode");
   }
-  if (persistenceFlags.externalActionSaga !== "off" && persistenceFlags.transactionCase !== "shadow") {
-    errors.push("ARAIL_EXTERNAL_ACTION_SAGA_V1=shadow|required requires ARAIL_TRANSACTION_CASE_V1=shadow");
+  if (persistenceFlags.completionAcknowledgement === "on"
+    && (persistenceFlags.transactionCase !== "on" || persistenceFlags.neutralIngress !== "on")) {
+    errors.push("ARAIL_COMPLETION_ACK_V1=on requires transaction cases and neutral ingress on");
+  }
+  if (persistenceFlags.externalActionSaga !== "off" && persistenceFlags.transactionCase === "off") {
+    errors.push("ARAIL_EXTERNAL_ACTION_SAGA_V1=shadow|required requires transaction cases");
   }
   if (persistenceFlags.daReplay !== "off"
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
@@ -197,9 +209,13 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
     errors.push("ARAIL_PTC_REPLAY_V1=allow_list requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
   }
-  if (persistenceFlags.tokenisedDa !== "off"
+  if (persistenceFlags.tokenisedDa === "allow_list"
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
     errors.push("ARAIL_TOKENISED_DA_V1=allow_list requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
+  }
+  if (persistenceFlags.tokenisedDa === "live"
+    && (persistenceFlags.transactionCase !== "on" || persistenceFlags.externalActionSaga !== "required")) {
+    errors.push("ARAIL_TOKENISED_DA_V1=live requires transaction cases on and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
   }
   if (persistenceFlags.primaryCommercial !== "off" && persistenceFlags.transactionCase !== "shadow") {
     errors.push("ARAIL_PRIMARY_COMMERCIAL_V1=shadow requires ARAIL_TRANSACTION_CASE_V1=shadow");
@@ -214,10 +230,14 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   if (persistenceFlags.transactionCase === "shadow" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_TRANSACTION_CASE_V1=shadow is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
+  if (persistenceFlags.transactionCase === "on" && !["CONTROLLED_LIVE", "PRODUCTION"].includes(operatingMode)) {
+    errors.push(`ARAIL_TRANSACTION_CASE_V1=on is available only in CONTROLLED_LIVE or PRODUCTION runtime, not ${operatingMode}`);
+  }
   if (persistenceFlags.completionAcknowledgement === "on" && !["CONTROLLED_LIVE", "PRODUCTION"].includes(operatingMode)) {
     errors.push(`ARAIL_COMPLETION_ACK_V1=on is forbidden in ${operatingMode}; use shadow until a controlled-live case foundation is approved`);
   }
-  if (persistenceFlags.externalActionSaga !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+  if (persistenceFlags.externalActionSaga !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)
+    && !(persistenceFlags.tokenisedDa === "live" && ["CONTROLLED_LIVE", "PRODUCTION"].includes(operatingMode))) {
     errors.push(`PR-09 external-action sagas are observe-only and available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
   if (persistenceFlags.daReplay !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
@@ -226,8 +246,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   if (persistenceFlags.ptcReplay !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_PTC_REPLAY_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
-  if (persistenceFlags.tokenisedDa !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+  if (persistenceFlags.tokenisedDa === "allow_list" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_TOKENISED_DA_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.tokenisedDa === "live" && !["CONTROLLED_LIVE", "PRODUCTION"].includes(operatingMode)) {
+    errors.push(`ARAIL_TOKENISED_DA_V1=live is available only in CONTROLLED_LIVE or PRODUCTION runtime, not ${operatingMode}`);
   }
   if (persistenceFlags.primaryCommercial !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_PRIMARY_COMMERCIAL_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);

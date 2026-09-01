@@ -1,5 +1,5 @@
 export const NEUTRAL_INGRESS_FLAG = "ARAIL_NEUTRAL_INGRESS_V1" as const;
-export const NEUTRAL_INGRESS_VALUES = ["off", "shadow"] as const;
+export const NEUTRAL_INGRESS_VALUES = ["off", "shadow", "on"] as const;
 export type NeutralIngressMode = (typeof NEUTRAL_INGRESS_VALUES)[number];
 
 export const DURABLE_RELAY_FLAG = "ARAIL_DURABLE_RELAY_MODE" as const;
@@ -7,15 +7,15 @@ export const DURABLE_RELAY_VALUES = ["legacy", "shadow", "durable"] as const;
 export type DurableRelayMode = (typeof DURABLE_RELAY_VALUES)[number];
 
 export const PARTICIPANT_ADMISSION_FLAG = "ARAIL_PARTICIPANT_ADMISSION_V1" as const;
-export const PARTICIPANT_ADMISSION_VALUES = ["off", "shadow"] as const;
+export const PARTICIPANT_ADMISSION_VALUES = ["off", "shadow", "enforce"] as const;
 export type ParticipantAdmissionMode = (typeof PARTICIPANT_ADMISSION_VALUES)[number];
 
 export const ROUTE_ENTITLEMENT_FLAG = "ARAIL_ROUTE_ENTITLEMENT_ENFORCE" as const;
-export const ROUTE_ENTITLEMENT_VALUES = ["off", "compare"] as const;
+export const ROUTE_ENTITLEMENT_VALUES = ["off", "compare", "enforce"] as const;
 export type RouteEntitlementMode = (typeof ROUTE_ENTITLEMENT_VALUES)[number];
 
 export const TRANSACTION_CASE_FLAG = "ARAIL_TRANSACTION_CASE_V1" as const;
-export const TRANSACTION_CASE_VALUES = ["off", "shadow"] as const;
+export const TRANSACTION_CASE_VALUES = ["off", "shadow", "on"] as const;
 export type TransactionCaseMode = (typeof TRANSACTION_CASE_VALUES)[number];
 
 export const ROOM_READ_SOURCE_FLAG = "ARAIL_ROOM_READ_SOURCE" as const;
@@ -47,7 +47,7 @@ export const PTC_REPLAY_VALUES = ["off", "allow_list"] as const;
 export type PtcReplayMode = (typeof PTC_REPLAY_VALUES)[number];
 
 export const TOKENISED_DA_FLAG = "ARAIL_TOKENISED_DA_V1" as const;
-export const TOKENISED_DA_VALUES = ["off", "allow_list"] as const;
+export const TOKENISED_DA_VALUES = ["off", "allow_list", "live"] as const;
 export type TokenisedDaMode = (typeof TOKENISED_DA_VALUES)[number];
 
 export const PRIMARY_COMMERCIAL_FLAG = "ARAIL_PRIMARY_COMMERCIAL_V1" as const;

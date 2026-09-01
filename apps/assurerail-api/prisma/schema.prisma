@@ -220,6 +220,7 @@ model Institution {
   secondaryTransfersAsRecordkeeper SecondaryTransfer[] @relation("SecondaryTransferRecordkeeperInstitution")
   secondaryTransferEvidence   SecondaryTransferEvidence[]
   secondaryTransferBreaks     SecondaryTransferBreak[] @relation("SecondaryTransferBreakOwnerInstitution")
+  tokenCustodyAssignments     TokenConnectorBinding[] @relation("TokenCustodyInstitution")
 
   @@index([status])
   @@index([applicantUserId])
@@ -823,6 +824,7 @@ model ConnectorRegistration {
   certifications      ConnectorCertification[]
   subjectMappings     ConnectorSubjectMapping[]
   sourceCompletions   SourceCompletion[]
+  tokenConnectorBindings TokenConnectorBinding[]
 
   @@unique([institutionId, connectorKey])
   @@index([institutionId, status])
@@ -869,7 +871,7 @@ model ConnectorCertification {
   profileRef                String
   schemaId                  String
   schemaVersion             String
-  operatingMode             String // REPLAY | SHADOW in PR-05
+  operatingMode             String // REPLAY | SHADOW | CONTROLLED_LIVE | PRODUCTION (live modes require later activation gates)
   status                    String                @default("PROPOSED") // PROPOSED | APPROVED | REJECTED | SUPERSEDED | EXPIRED
   conformanceEvidenceDigest String
   conformanceResult         Json
@@ -884,6 +886,7 @@ model ConnectorCertification {
   expiresAt                 DateTime?
   createdAt                 DateTime              @default(now())
   updatedAt                 DateTime              @default(now()) @updatedAt
+  tokenConnectorBindings    TokenConnectorBinding[]
 
   @@unique([connectorRegistrationId, profileRef, schemaVersion, operatingMode, conformanceEvidenceDigest], map: "ConnectorCertification_evidence_key")
   @@index([connectorRegistrationId, status])
@@ -919,6 +922,9 @@ model EvidenceObject {
   authoritativeRecordDeclarations AuthoritativeRecordDeclaration[] @relation("DaRecordDeclarationEvidence")
   tokenReconciliationSnapshots TokenReconciliationSnapshot[]
   secondaryTransferEvidence SecondaryTransferEvidence[]
+  tokenCustodyEvidence TokenConnectorBinding[] @relation("TokenCustodyEvidence")
+  tokenLegalFinalityEvidence TokenConnectorBinding[] @relation("TokenLegalFinalityEvidence")
+  tokenOperatingAcceptanceEvidence TokenConnectorBinding[] @relation("TokenOperatingAcceptanceEvidence")
 
   @@index([institutionId, transactionCaseId])
   @@index([institutionId, status])
@@ -1948,7 +1954,7 @@ model TokenRepresentation {
   network                          String
   tokenId                          String
   unitsScale                       Int                            @default(0)
-  status                           String                         @default("LINKED") // LINKED | RECONCILED | BREAK_OPEN | SUSPENDED
+  status                           String                         @default("LINKED") // LINKED | RECONCILED | ACTION_PENDING | BREAK_OPEN | SUSPENDED
   linkageIdempotencyKey            String
   linkageRequestDigest             String
   linkedByUserId                   String
@@ -1959,10 +1965,66 @@ model TokenRepresentation {
   actions                          TokenAction[]
   reconciliationSnapshots          TokenReconciliationSnapshot[]
   breaks                           TokenReconciliationBreak[]
+  connectorBindings                TokenConnectorBinding[]
 
   @@unique([transactionCaseId, linkageIdempotencyKey], map: "TokenRepresentation_case_linkage_key")
   @@index([authoritativeRecordDeclarationId, status], map: "TokenRepresentation_authority_status_idx")
   @@index([tokenId])
+}
+
+// PR-15 connector and custody assignment. A binding names who controls signing and which certified
+// connector performs the external action; it never stores a private key or makes the token legal title.
+model TokenConnectorBinding {
+  id                                  String                 @id
+  tokenRepresentationId               String
+  tokenRepresentation                 TokenRepresentation    @relation(fields: [tokenRepresentationId], references: [id], onDelete: Restrict)
+  version                             Int
+  connectorRegistrationId             String
+  connectorRegistration               ConnectorRegistration  @relation(fields: [connectorRegistrationId], references: [id], onDelete: Restrict)
+  connectorCertificationId            String
+  connectorCertification              ConnectorCertification @relation(fields: [connectorCertificationId], references: [id], onDelete: Restrict)
+  connectorProfileRef                 String
+  custodyInstitutionId                String
+  custodyInstitution                  Institution            @relation("TokenCustodyInstitution", fields: [custodyInstitutionId], references: [id], onDelete: Restrict)
+  custodyModel                        String // EXTERNAL_CUSTODIAN | INSTITUTION_CONTROLLED | MPC_PROVIDER
+  signingKeyReference                 String
+  signingPolicyDigest                 String
+  supportedActionTypes                Json // MINT | TRANSFER | ANCHOR | AMORTISE_BURN | CLOSE_BURN; payment uses a separate connector
+  custodyEvidenceObjectId             String
+  custodyEvidenceObject               EvidenceObject         @relation("TokenCustodyEvidence", fields: [custodyEvidenceObjectId], references: [id], onDelete: Restrict)
+  custodyEvidenceDigest               String
+  legalFinalityEvidenceObjectId        String
+  legalFinalityEvidenceObject          EvidenceObject         @relation("TokenLegalFinalityEvidence", fields: [legalFinalityEvidenceObjectId], references: [id], onDelete: Restrict)
+  legalFinalityEvidenceDigest          String
+  operatingAcceptanceEvidenceObjectId  String
+  operatingAcceptanceEvidenceObject    EvidenceObject         @relation("TokenOperatingAcceptanceEvidence", fields: [operatingAcceptanceEvidenceObjectId], references: [id], onDelete: Restrict)
+  operatingAcceptanceEvidenceDigest    String
+  status                              String                 @default("PROPOSED") // PROPOSED | ACTIVE | REJECTED | SUSPENDED | REVOKED | EXPIRED
+  proposalDigest                      String
+  proposedByUserId                    String
+  proposedByMandateId                 String
+  proposalStepUpId                    String
+  proposedAt                          DateTime               @default(now())
+  reviewedByUserId                    String?
+  reviewedByMandateId                 String?
+  reviewStepUpId                      String?
+  reviewReason                        String?
+  reviewedAt                          DateTime?
+  effectiveAt                         DateTime?
+  expiresAt                           DateTime?
+  suspendedByUserId                   String?
+  suspensionReason                    String?
+  suspendedAt                         DateTime?
+  createdAt                           DateTime               @default(now())
+  updatedAt                           DateTime               @default(now()) @updatedAt
+  actions                             TokenAction[]
+
+  @@unique([tokenRepresentationId, version], map: "TokenConnectorBinding_representation_version_key")
+  @@unique([tokenRepresentationId, proposalDigest], map: "TokenConnectorBinding_representation_proposal_key")
+  @@index([tokenRepresentationId, status, effectiveAt], map: "TokenConnectorBinding_representation_status_idx")
+  @@index([connectorRegistrationId, status], map: "TokenConnectorBinding_connector_status_idx")
+  @@index([connectorCertificationId])
+  @@index([custodyInstitutionId, status])
 }
 
 model TokenAction {
@@ -1984,10 +2046,13 @@ model TokenAction {
   stepUpEvidenceId      String
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @default(now()) @updatedAt
+  connectorBindingId    String?
+  connectorBinding      TokenConnectorBinding? @relation(fields: [connectorBindingId], references: [id], onDelete: Restrict)
 
   @@unique([tokenRepresentationId, idempotencyKey], map: "TokenAction_representation_idempotency_key")
   @@unique([tokenRepresentationId, sequence], map: "TokenAction_representation_sequence_key")
   @@index([tokenRepresentationId, state, sequence], map: "TokenAction_representation_state_sequence_idx")
+  @@index([connectorBindingId, state], map: "TokenAction_connector_state_idx")
 }
 
 model TokenReconciliationSnapshot {

@@ -4,7 +4,9 @@
  * A signed activation manifest can narrow this set, but cannot make an unimplemented
  * capability executable. PR-12 deliberately starts with an empty registry. Later PRs
  * may add an ID only when the corresponding command calls OperationalActivationGuard
- * and its external-action path is durable, idempotent and reconciled.
+ * and its external-action path is durable, idempotent and reconciled. PR-15 builds the tokenised-DA
+ * connector path but deliberately leaves its candidate IDs out of this registry until independent
+ * connector, custody, legal/finality and operating-acceptance evidence has been reviewed.
  */
 export const IMPLEMENTED_LIVE_CAPABILITY_IDS = [] as const;
 

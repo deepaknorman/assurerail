@@ -30,54 +30,54 @@ const dbModules = process.env.DATABASE_URL ? [
   require("./platform/platform.module").PlatformModule,
   require("./security/security.module").SecurityModule,
   require("./ops/ops.module").OpsModule,
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
     ? [require("./institutions/institutions.module").InstitutionsModule]
     : []),
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
-    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).neutralIngress !== "off"
     ? [require("./evidence/evidence.module").EvidenceModule]
     : []),
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
-    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
-    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).neutralIngress !== "off"
+    && inspectPersistenceFlags(process.env).transactionCase !== "off"
     ? [require("./cases/cases.module").CasesModule]
     : []),
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
-    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
-    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).neutralIngress !== "off"
+    && inspectPersistenceFlags(process.env).transactionCase !== "off"
     && inspectPersistenceFlags(process.env).roomReadSource !== "legacy"
     ? [require("./rooms/rooms.module").RoomsModule]
     : []),
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
-    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
-    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).neutralIngress !== "off"
+    && inspectPersistenceFlags(process.env).transactionCase !== "off"
     && inspectPersistenceFlags(process.env).completionAcknowledgement !== "off"
     ? [require("./completion/source-completion.module").SourceCompletionModule]
     : []),
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
-    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
-    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).neutralIngress !== "off"
+    && inspectPersistenceFlags(process.env).transactionCase !== "off"
     && inspectPersistenceFlags(process.env).externalActionSaga === "required"
     && inspectPersistenceFlags(process.env).daReplay === "allow_list"
     ? [require("./da-replay/da-replay.module").DaReplayModule]
     : []),
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
-    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
-    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).neutralIngress !== "off"
+    && inspectPersistenceFlags(process.env).transactionCase !== "off"
     && inspectPersistenceFlags(process.env).externalActionSaga === "required"
     && inspectPersistenceFlags(process.env).ptcReplay === "allow_list"
     ? [require("./ptc-replay/ptc-replay.module").PtcReplayModule]
     : []),
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
-    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
-    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).neutralIngress !== "off"
+    && inspectPersistenceFlags(process.env).transactionCase !== "off"
     && inspectPersistenceFlags(process.env).externalActionSaga === "required"
-    && inspectPersistenceFlags(process.env).tokenisedDa === "allow_list"
+    && inspectPersistenceFlags(process.env).tokenisedDa !== "off"
     ? [require("./token-representation/token-representation.module").TokenRepresentationModule]
     : []),
-  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
-    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
-    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+  ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).neutralIngress !== "off"
+    && inspectPersistenceFlags(process.env).transactionCase !== "off"
     && inspectPersistenceFlags(process.env).primaryCommercial === "shadow"
     ? [require("./commercial/commercial.module").CommercialModule]
     : []),

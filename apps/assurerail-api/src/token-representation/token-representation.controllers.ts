@@ -1,6 +1,7 @@
 import { Body, Controller, ForbiddenException, Get, Param, Post, Req, UnauthorizedException } from "@nestjs/common";
 import type { Request } from "express";
 import type { RoomActor } from "../rooms/room-authority.service";
+import { TokenConnectorService } from "./token-connector.service";
 import { TokenRepresentationService } from "./token-representation.service";
 
 type RailRequest = Request & { user?: { id?: string; session?: { id?: string } | null; activeInstitution?: { institutionId?: string } | null } };
@@ -39,5 +40,35 @@ export class TokenRepresentationController {
   @Post("reconciliations")
   reconcile(@Req() req: RailRequest, @Param("caseId") caseId: string, @Body() body: Parameters<TokenRepresentationService["reconcile"]>[2]) {
     return this.representations.reconcile(context(req), caseId, body);
+  }
+}
+
+@Controller("v1/rail/cases/:caseId/token-representation/connector")
+export class TokenConnectorController {
+  constructor(private readonly connectors: TokenConnectorService) {}
+
+  @Get("bindings")
+  bindings(@Req() req: RailRequest, @Param("caseId") caseId: string) {
+    return this.connectors.listBindings(context(req), caseId);
+  }
+
+  @Post("bindings")
+  proposeBinding(@Req() req: RailRequest, @Param("caseId") caseId: string, @Body() body: Parameters<TokenConnectorService["proposeBinding"]>[2]) {
+    return this.connectors.proposeBinding(context(req), caseId, body);
+  }
+
+  @Post("bindings/:bindingId/review")
+  reviewBinding(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("bindingId") bindingId: string, @Body() body: Parameters<TokenConnectorService["reviewBinding"]>[3]) {
+    return this.connectors.reviewBinding(context(req), caseId, bindingId, body);
+  }
+
+  @Post("bindings/:bindingId/safe-pause")
+  safePause(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("bindingId") bindingId: string, @Body() body: Parameters<TokenConnectorService["pauseBinding"]>[3]) {
+    return this.connectors.pauseBinding(context(req), caseId, bindingId, body);
+  }
+
+  @Post("actions")
+  prepareLiveAction(@Req() req: RailRequest, @Param("caseId") caseId: string, @Body() body: Parameters<TokenConnectorService["prepareLiveAction"]>[2]) {
+    return this.connectors.prepareLiveAction(context(req), caseId, body);
   }
 }
