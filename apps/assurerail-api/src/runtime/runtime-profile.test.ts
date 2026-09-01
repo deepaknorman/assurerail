@@ -60,6 +60,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     legacyRoomProxy: "off",
     externalActionSaga: "off",
     daReplay: "off",
+    ptcReplay: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -235,6 +236,37 @@ test("[CONFIG][PR09] DA replay requires the durable saga and remains non-live", 
   });
   assert.match(live.errors.join("\n"), /observe-only and available only in REPLAY or SHADOW/);
   assert.match(live.errors.join("\n"), /ARAIL_DA_REPLAY_V1 is available only/);
+});
+
+test("[CONFIG][PR10] PTC replay requires the durable saga and remains non-live", () => {
+  const missingSaga = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_PTC_REPLAY_V1: "allow-list",
+  });
+  assert.match(missingSaga.errors.join("\n"), /ARAIL_PTC_REPLAY_V1=allow_list requires/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "REPLAY",
+    DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required",
+    ARAIL_PTC_REPLAY_V1: "allow-list",
+  });
+  assert.equal(accepted.errors.length, 0);
+  const live = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required",
+    ARAIL_PTC_REPLAY_V1: "allow-list",
+  });
+  assert.match(live.errors.join("\n"), /ARAIL_PTC_REPLAY_V1 is available only/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement cannot be enabled before cutover evidence exists", () => {

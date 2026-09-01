@@ -113,6 +113,27 @@ fabricating DA credit-decision or transfer-document references. The next phase i
 case-scoped replay service and operating runbook. The real historic evidence gate in section 6
 remains open.
 
+### 5.2 Governed planning-service checkpoint — 1 September 2026
+
+The second phase adds a disabled-by-default, case-scoped planning surface behind
+`ARAIL_PTC_REPLAY_V1=allow_list`. It mounts only when participant admission, neutral intake,
+transaction cases and the observe-only saga foundation are also enabled in a `REPLAY` or `SHADOW`
+runtime. The five endpoints cover only authorisation read/propose/review and saga list/create.
+
+Planning requires the exact domestic conventional PTC route, active originator/trustee/recordkeeper
+case parties, independently approved case state, case-owner maker/checker replay authorisation,
+current route-function assignments, optimistic case version, and signed/current/verified evidence
+objects for every declared evidence role. The service validates each supplied digest against the
+latest retained evidence version, stores an ordered evidence-link bundle, preserves trustee control
+and authoritative-record acknowledgement as separate plan legs, and writes the saga, legs,
+before-snapshot, case version and governed audit atomically.
+
+This phase still exposes no observation, reconciliation, break repair, comparison export, issue,
+allotment, cash, notice, RTA/depository/register or external-dispatch command. Its operating
+procedure is `docs/runbooks/AssureRail_PR10_Conventional_PTC_Replay.md`. The next phase is the
+append-only observation/reconciliation service and evidence export, followed by the external
+historic replay gate.
+
 ## 6. External evidence gate
 
 The following cannot be supplied by code or guessed from a market convention: the named historic

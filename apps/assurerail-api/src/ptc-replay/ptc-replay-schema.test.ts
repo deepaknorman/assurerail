@@ -9,6 +9,7 @@ const migration = readFileSync(resolve(
   "prisma/migrations/20260901150000_assurerail_pr10_ptc_replay_foundation/migration.sql",
 ), "utf8");
 const routePack = readFileSync(resolve(process.cwd(), "src/ptc-replay/ptc-route-pack.ts"), "utf8");
+const planningService = readFileSync(resolve(process.cwd(), "src/ptc-replay/ptc-replay.service.ts"), "utf8");
 
 test("[PR10][SCHEMA] PTC authorisation and generic immutable saga evidence remain explicit", () => {
   assert.match(schema, /model PtcReplayAuthorisation \{/);
@@ -33,4 +34,8 @@ test("[PR10][PERIMETER] the PTC foundation remains observe-only and imports no t
   assert.match(routePack, /executionMode: "OBSERVE_ONLY"/);
   assert.doesNotMatch(routePack, /settlement\.adapter|hcs\.adapter|hts\.adapter|WebhookEgress|\.dispatch\(/);
   assert.doesNotMatch(routePack, /\bNote\b|mint|burn/i);
+  assert.doesNotMatch(planningService, /settlement\.adapter|hcs\.adapter|hts\.adapter|WebhookEgress|\.dispatch\(/);
+  assert.doesNotMatch(planningService, /\bNote\b|mint|burn/i);
+  assert.match(planningService, /transactionRoute: "PTC"/);
+  assert.match(planningService, /executionMode: "OBSERVE_ONLY"/);
 });

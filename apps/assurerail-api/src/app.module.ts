@@ -61,6 +61,13 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).daReplay === "allow_list"
     ? [require("./da-replay/da-replay.module").DaReplayModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
+    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+    && inspectPersistenceFlags(process.env).externalActionSaga === "required"
+    && inspectPersistenceFlags(process.env).ptcReplay === "allow_list"
+    ? [require("./ptc-replay/ptc-replay.module").PtcReplayModule]
+    : []),
   ...(inspectPersistenceFlags(process.env).internalRbac !== "off"
     ? [require("./internal-access/internal-access.module").InternalAccessModule]
     : []),

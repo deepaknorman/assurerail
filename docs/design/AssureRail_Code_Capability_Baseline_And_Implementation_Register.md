@@ -1081,6 +1081,17 @@ backup-restore rehearsal passed. Executed evidence:
 `docs/qa/AssureRail_PR10_Persistence_Foundation_Evidence.md`. A governed PTC replay service,
 operating runbook and participant-authorised historic PTC replay remain open.
 
+**PR-10 governed-planning checkpoint (1 September 2026):** a disabled-by-default
+`ARAIL_PTC_REPLAY_V1=allow_list` gate now mounts five case-scoped governance/planning endpoints only
+in `REPLAY/SHADOW` with the prerequisite neutral-case and observe-only saga flags. Saga creation
+fails closed unless route, case parties, maker/checker authorisation, case version, performer
+assignments and every signed/current/verified evidence binding agree. It atomically retains the
+PTC saga, ordered legs, provider-neutral evidence links, authoritative-record declaration and before
+snapshot. No observation, reconciliation, repair, comparison, external action or live adapter is
+exposed. The full Rail suite passes 212 tests. Runbook:
+`docs/runbooks/AssureRail_PR10_Conventional_PTC_Replay.md`; evidence:
+`docs/qa/AssureRail_PR10_Governed_Planning_Evidence.md`.
+
 ### PR-11 — Tokenised-DA representation adapter refactor
 
 **Dependencies:** PR-06 and PR-09
