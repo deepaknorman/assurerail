@@ -64,6 +64,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     ptcReplay: "off",
     tokenisedDa: "off",
     primaryCommercial: "off",
+    conventionalSecondary: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -333,6 +334,38 @@ test("[CONFIG][PR13] primary commercial interaction requires the neutral case fo
     });
     assert.match(live.errors.join("\n"), /ARAIL_PRIMARY_COMMERCIAL_V1 is available only in REPLAY or SHADOW runtime/);
   }
+});
+
+test("[CONFIG][PR14] conventional secondary replay requires the durable case/saga foundation and remains non-live", () => {
+  const missingSaga = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_CONVENTIONAL_SECONDARY_V1: "shadow",
+  });
+  assert.match(missingSaga.errors.join("\n"), /ARAIL_CONVENTIONAL_SECONDARY_V1=shadow requires/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "REPLAY",
+    DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required",
+    ARAIL_CONVENTIONAL_SECONDARY_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.conventionalSecondary, "shadow");
+  const live = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required",
+    ARAIL_CONVENTIONAL_SECONDARY_V1: "shadow",
+  });
+  assert.match(live.errors.join("\n"), /ARAIL_CONVENTIONAL_SECONDARY_V1 is available only in REPLAY or SHADOW runtime/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {
