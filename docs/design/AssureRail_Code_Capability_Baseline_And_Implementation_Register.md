@@ -1197,22 +1197,113 @@ Acceptance evidence:
 Rollback: pilot stops new cases/actions; existing cases follow route-specific safe pause/repair/exit,
 not a database rollback.
 
-### PR-13 onward — full-stack commercial and secondary functions
+**PR-12 implementation checkpoint (2 September 2026):** implemented for review on
+`codex/assurerail-pr01-neutral-taxonomy` under EX-27. Controlled-live and production now require an
+Ed25519-signed, expiring activation manifest bound to the exact environment, operating mode, Git
+build, route/function/performer/cohort allow-list, current durable gate decisions and five distinct
+release approvers. External legal, security, connector, participant/trustee and operating evidence
+cannot be replaced with internal or synthetic evidence. Additive persistence retains versioned
+readiness gates, immutable decisions, activation proposals/approval/revocation and exact gate
+bindings. Internal RBAC enforcement retires legacy platform-admin bypasses and checks separated,
+time-bounded staff coverage. The implemented-live capability registry starts empty, while all six
+legacy direct external-effect families reject controlled-live/production; therefore PR-12 enables
+no transaction function by itself. The deployer handoff keeps the current box in `DEMO` and makes
+deployment distinct from activation. The API suite passed 238/238 with zero skipped; a disposable
+PostgreSQL rehearsal applied all 19 migrations and proved immutable/restrictive history plus
+backup/restore. All real external acceptance gates remain open. Design:
+`docs/design/AssureRail_Controlled_Pilot_And_Production_Gate_PR12.md`; executed internal evidence:
+`docs/qa/AssureRail_PR12_Internal_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR12_Activation_And_Deployer_Handoff.md`.
 
-These are committed long-term scope, but deliberately follow replay and controlled completion:
+### PR-13 — Permissioned primary commercial venue
 
-1. permissioned term display and counterparty discovery;
-2. RFQ/negotiation and controlled document/communication records;
-3. matching/allocation with conduct, fairness, conflict, surveillance and licensed-performer gates;
-4. secondary conventional DA transfer with prior-chain/current-holder and notice/register controls;
-5. primary and secondary conventional PTC placement/trading through the authorised performer and
-   authoritative depository/RTA/register;
-6. tokenised secondary DA only after token/legal-record reconciliation is approved; and
-7. tokenised PTC as its own route/representation workstream, not a reuse claim from tokenised DA.
+**Dependencies:** PR-06, PR-07, PR-12 and applicable DA/PTC route packs
 
-Each function needs a separate PR series because permission, market conduct, conflicts, complaints,
-surveillance, records and operational staffing differ. The kernel should make them possible without
-pretending they are already licensed or built.
+Build institution-scoped opportunity/term display, invitations, interest indications, RFQs,
+negotiation messages, controlled term revisions, allocation proposals and accept/reject decisions.
+Discovery, negotiation, matching and allocation remain separate material functions with explicit
+performer assignments. No order book, anonymous public discovery, automatic match or transaction
+completion is implied. Commercial records bind exact case/version, audience, validity, authority,
+conflict disclosures and immutable communication history. Controlled-live capability IDs remain
+unregistered until exact legal/performer, conduct, participant and operating evidence closes.
+
+### PR-14 — Conventional secondary DA and PTC workflows
+
+**Dependencies:** PR-13 plus PR-09/PR-10 route foundations
+
+Add secondary-interest intake, current-holder/prior-chain verification, seller authority, transfer
+restrictions, notices/consents, document execution, cash/register legs and authoritative-record
+reconciliation for conventional DA and conventional PTC. DA and PTC keep separate route rules. For
+PTC the trustee transaction-control decision and route-defined depository/RTA/register evidence are
+both recorded; disagreement blocks completion. Initial implementation remains replay/shadow and
+cannot infer ownership from a Rail projection.
+
+### PR-15 — Tokenised DA live connector and custody boundary
+
+**Dependencies:** PR-11, PR-12 and conventional DA completion controls
+
+Convert the observe-only tokenised-DA adapter into a connector-neutral external-instruction path
+behind the durable saga. Add connector certification profiles, signing/key-custody assignments,
+idempotent mint/transfer/burn/anchor acknowledgement, ambiguous-success recovery, holdings/supply/
+economics/register reconciliation and safe pause. Token authority defaults to mirror. No capability
+enters the implemented-live registry without independent connector, custody, legal/finality and
+operating evidence.
+
+### PR-16 — Tokenised PTC route and representation
+
+**Dependencies:** PR-10, PR-12, PR-15 primitives and an approved PTC route design
+
+Implement tokenised PTC as its own PTC/TOKENISED route—not a relabelled Note or tokenised DA flow.
+Bind programme/trust, class/tranche, subscription/allotment, trustee control, assurance appointment,
+cash, depository/RTA/register and token representation. Add token issue/transfer/lifecycle/burn
+instructions only through the saga and exact authority reconciliation. Conventional and tokenised
+PTC pricing/configuration remain separate commercial facts; fees never confer legal permission.
+
+### PR-17 — Venue conduct, surveillance, complaints and scale controls
+
+**Dependencies:** PR-13 and the routes exposed to commercial interaction
+
+Add conflicts/related-party disclosures, fair-access and allocation evidence, communications and
+conduct surveillance, prohibited-action rules, complaints/corrections, investigation/legal hold,
+kill/safe-pause controls, participant sanctions, SLA/queue ownership, capacity budgets and route/
+cohort operational dashboards. Policies are versioned and outputs are evidence, not autonomous
+legal conclusions. This stage supplies internal tooling required before any broad customer cohort.
+
+### PR-18 — End-to-end customer workspaces
+
+**Dependencies:** PR-03–PR-17 APIs relevant to the route
+
+Build role-specific institution onboarding, opportunity, RFQ/negotiation, diligence room, case,
+condition/approval, completion, lifecycle, evidence export, break and support workspaces. Customer
+authority derives from membership, mandate, appointment and case role—not UI visibility. Each view
+shows source/as-of/expiry/qualification and separates expected, received, verified, reconciled and
+legally effective states. Legacy Note screens remain compatibility surfaces until retired by
+measured use.
+
+### PR-19 — Integration and developer experience
+
+**Dependencies:** stable PR-13–PR-18 contracts
+
+Provide institution-owned connector/client registration, versioned API/event documentation,
+sandbox fixtures clearly labelled non-evidence, webhook challenge/replay, conformance packs,
+idempotency examples, delivery health, credential rotation and migration/exit tooling. Sandboxes can
+prove software conformance only; real connector certification and authoritative external evidence
+remain independent activation gates.
+
+### PR-20 — Customer operations and commercial administration
+
+**Dependencies:** PR-12 and metered capabilities from PR-13–PR-19
+
+Add contracts/rate cards, conventional and tokenised route fee rules, metering, invoice statement,
+credits/corrections, implementation cohorts, service requests, operational reviews, renewals,
+suspension/termination and full customer evidence/data exit. Commercial calculation is tenant- and
+contract-scoped with exact money, effective dating and maker-checker. Pricing never changes route
+authority, legal record, evidence result or completion state.
+
+PR-13–PR-20 are product build stages, not blanket launch approvals. Each separately defines flags,
+implemented capability IDs, rollback/safe-pause, internal evidence and open external gates. Public
+web copy, SEO, articles and inbound campaigns follow the accepted capability registry and are not
+made truthful merely by completing these code stages.
 
 ---
 

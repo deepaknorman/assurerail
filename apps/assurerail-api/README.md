@@ -98,6 +98,34 @@ Run its disposable database evidence rehearsal:
 npm run db:rehearse:pr11 --workspace=@code/assurerail-api
 ```
 
+### Controlled-pilot and production gate (PR-12)
+
+`CONTROLLED_LIVE` and `PRODUCTION` no longer become valid merely because credentials and live
+adapter names are present. They require an Ed25519-signed, expiring activation manifest bound to
+the exact environment and Git build, a non-empty route/function/cohort allow-list, five distinct
+approvers and the complete mode-specific readiness evidence set. External gates—including legal
+permission, independent security review, connector certification, participant export and operating
+acceptance—must reference independently reviewed external evidence; synthetic/demo/fixture records
+cannot close them.
+
+The database retains versioned readiness requirements, immutable independent decisions, the signed
+activation proposal, a separate release approval and exact gate-decision bindings. Live startup
+also requires `ARAIL_INTERNAL_RBAC_V1=enforce`; that mode disables legacy platform-admin bypasses
+and verifies real, separated staff coverage. Every future mutating live command must call the
+operational activation guard for its exact manifest capability ID. The implemented-live capability
+registry is deliberately empty in PR-12, so even a correctly signed manifest cannot activate a
+function absent from the build. Legacy mint, DvP, amortisation, closure, surveillance anchoring and
+break-glass anchoring also reject `CONTROLLED_LIVE` and `PRODUCTION` directly. No live route is
+enabled by PR-12 itself.
+
+See `docs/design/AssureRail_Controlled_Pilot_And_Production_Gate_PR12.md` and
+`docs/runbooks/AssureRail_PR12_Activation_And_Deployer_Handoff.md`. Run the disposable database
+rehearsal with:
+
+```bash
+npm run db:rehearse:pr12 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health
