@@ -50,6 +50,10 @@ export const TOKENISED_DA_FLAG = "ARAIL_TOKENISED_DA_V1" as const;
 export const TOKENISED_DA_VALUES = ["off", "allow_list", "live"] as const;
 export type TokenisedDaMode = (typeof TOKENISED_DA_VALUES)[number];
 
+export const TOKENISED_PTC_FLAG = "ARAIL_TOKENISED_PTC_V1" as const;
+export const TOKENISED_PTC_VALUES = ["off", "shadow"] as const;
+export type TokenisedPtcMode = (typeof TOKENISED_PTC_VALUES)[number];
+
 export const PRIMARY_COMMERCIAL_FLAG = "ARAIL_PRIMARY_COMMERCIAL_V1" as const;
 export const PRIMARY_COMMERCIAL_VALUES = ["off", "shadow"] as const;
 export type PrimaryCommercialMode = (typeof PRIMARY_COMMERCIAL_VALUES)[number];
@@ -96,6 +100,7 @@ export function inspectPersistenceFlags(env: Environment): {
   daReplay: DaReplayMode;
   ptcReplay: PtcReplayMode;
   tokenisedDa: TokenisedDaMode;
+  tokenisedPtc: TokenisedPtcMode;
   primaryCommercial: PrimaryCommercialMode;
   conventionalSecondary: ConventionalSecondaryMode;
   internalRbac: InternalRbacMode;
@@ -114,6 +119,7 @@ export function inspectPersistenceFlags(env: Environment): {
   const daReplay = readFlag(env, DA_REPLAY_FLAG, DA_REPLAY_VALUES, "off");
   const ptcReplay = readFlag(env, PTC_REPLAY_FLAG, PTC_REPLAY_VALUES, "off");
   const tokenisedDa = readFlag(env, TOKENISED_DA_FLAG, TOKENISED_DA_VALUES, "off");
+  const tokenisedPtc = readFlag(env, TOKENISED_PTC_FLAG, TOKENISED_PTC_VALUES, "off");
   const primaryCommercial = readFlag(env, PRIMARY_COMMERCIAL_FLAG, PRIMARY_COMMERCIAL_VALUES, "off");
   const conventionalSecondary = readFlag(env, CONVENTIONAL_SECONDARY_FLAG, CONVENTIONAL_SECONDARY_VALUES, "off");
   const internalRbac = readFlag(env, INTERNAL_RBAC_FLAG, INTERNAL_RBAC_VALUES, "off");
@@ -131,12 +137,13 @@ export function inspectPersistenceFlags(env: Environment): {
     daReplay: daReplay.value,
     ptcReplay: ptcReplay.value,
     tokenisedDa: tokenisedDa.value,
+    tokenisedPtc: tokenisedPtc.value,
     primaryCommercial: primaryCommercial.value,
     conventionalSecondary: conventionalSecondary.value,
     internalRbac: internalRbac.value,
     errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error,
       roomReadSource.error, roomWriteSource.error, completionAcknowledgement.error, legacyRoomProxy.error,
-      externalActionSaga.error, daReplay.error, ptcReplay.error, tokenisedDa.error, primaryCommercial.error,
+      externalActionSaga.error, daReplay.error, ptcReplay.error, tokenisedDa.error, tokenisedPtc.error, primaryCommercial.error,
       conventionalSecondary.error,
       internalRbac.error]
       .filter((error): error is string => Boolean(error)),

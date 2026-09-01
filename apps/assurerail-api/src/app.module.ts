@@ -75,6 +75,14 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).tokenisedDa !== "off"
     ? [require("./token-representation/token-representation.module").TokenRepresentationModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
+    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+    && inspectPersistenceFlags(process.env).externalActionSaga === "required"
+    && inspectPersistenceFlags(process.env).ptcReplay === "allow_list"
+    && inspectPersistenceFlags(process.env).tokenisedPtc === "shadow"
+    ? [require("./ptc-token/ptc-token.module").PtcTokenModule]
+    : []),
   ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
     && inspectPersistenceFlags(process.env).neutralIngress !== "off"
     && inspectPersistenceFlags(process.env).transactionCase !== "off"

@@ -221,6 +221,10 @@ model Institution {
   secondaryTransferEvidence   SecondaryTransferEvidence[]
   secondaryTransferBreaks     SecondaryTransferBreak[] @relation("SecondaryTransferBreakOwnerInstitution")
   tokenCustodyAssignments     TokenConnectorBinding[] @relation("TokenCustodyInstitution")
+  ptcTokenTrusteeRepresentations PtcTokenRepresentation[] @relation("PtcTokenTrusteeInstitution")
+  ptcTokenRecordkeeperRepresentations PtcTokenRepresentation[] @relation("PtcTokenRecordkeeperInstitution")
+  ptcTokenAssuranceRepresentations PtcTokenRepresentation[] @relation("PtcTokenAssuranceInstitution")
+  ptcTokenEvidenceResponsibilities PtcTokenEvidenceGate[] @relation("PtcTokenGateAccountableInstitution")
 
   @@index([status])
   @@index([applicantUserId])
@@ -925,6 +929,7 @@ model EvidenceObject {
   tokenCustodyEvidence TokenConnectorBinding[] @relation("TokenCustodyEvidence")
   tokenLegalFinalityEvidence TokenConnectorBinding[] @relation("TokenLegalFinalityEvidence")
   tokenOperatingAcceptanceEvidence TokenConnectorBinding[] @relation("TokenOperatingAcceptanceEvidence")
+  ptcTokenEvidenceGates PtcTokenEvidenceGate[]
 
   @@index([institutionId, transactionCaseId])
   @@index([institutionId, status])
@@ -1122,6 +1127,7 @@ model TransactionCase {
   tokenRepresentations   TokenRepresentation[]
   commercialOpportunities CommercialOpportunity[]
   secondaryTransfer       SecondaryTransfer?
+  ptcTokenRepresentation  PtcTokenRepresentation?
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
@@ -1932,10 +1938,98 @@ model AuthoritativeRecordDeclaration {
   updatedAt                 DateTime         @default(now()) @updatedAt
   snapshots                 AuthoritativeRecordSnapshot[]
   tokenRepresentations      TokenRepresentation[]
+  ptcTokenRepresentations   PtcTokenRepresentation[]
 
   @@index([recordkeeperInstitutionId, status])
   @@index([sourceReferenceId])
   @@index([declarationEvidenceObjectId])
+}
+
+// ───────────────── tokenised PTC shadow route (PR-16) ─────────────────
+// This is separate from the DA Note/token projection. It records a PTC class/tranche mirror and
+// explicit external evidence gates; it has no live instruction or dispatch path in PR-16.
+model PtcTokenRepresentation {
+  id                               String                         @id
+  transactionCaseId                String                         @unique
+  transactionCase                  TransactionCase                @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  programmeReference               String
+  trustReference                   String
+  classReference                   String
+  trancheDefinitionDigest          String
+  trusteeInstitutionId             String
+  trusteeInstitution               Institution                    @relation("PtcTokenTrusteeInstitution", fields: [trusteeInstitutionId], references: [id], onDelete: Restrict)
+  recordkeeperInstitutionId        String
+  recordkeeperInstitution          Institution                    @relation("PtcTokenRecordkeeperInstitution", fields: [recordkeeperInstitutionId], references: [id], onDelete: Restrict)
+  assuranceProviderInstitutionId   String?
+  assuranceProviderInstitution     Institution?                   @relation("PtcTokenAssuranceInstitution", fields: [assuranceProviderInstitutionId], references: [id], onDelete: Restrict)
+  authoritativeRecordDeclarationId String
+  authoritativeRecordDeclaration   AuthoritativeRecordDeclaration @relation(fields: [authoritativeRecordDeclarationId], references: [id], onDelete: Restrict)
+  network                          String
+  tokenId                          String
+  authorityMode                    String                         @default("MIRROR")
+  status                           String                         @default("EVIDENCE_OPEN") // EVIDENCE_OPEN | PROPOSED | SHADOW_READY | REJECTED | SUSPENDED
+  routePackRef                     String
+  routePackVersion                 String
+  idempotencyKey                   String
+  requestDigest                    String
+  proposedByUserId                 String
+  proposedByMandateId              String
+  proposalStepUpId                 String
+  proposedAt                       DateTime                       @default(now())
+  reviewedByUserId                 String?
+  reviewedByMandateId              String?
+  reviewStepUpId                   String?
+  reviewReason                     String?
+  reviewedAt                       DateTime?
+  createdAt                        DateTime                       @default(now())
+  updatedAt                        DateTime                       @default(now()) @updatedAt
+  evidenceGates                    PtcTokenEvidenceGate[]
+  actionPlans                      PtcTokenActionPlan[]
+
+  @@unique([transactionCaseId, idempotencyKey])
+  @@unique([network, tokenId])
+  @@index([trusteeInstitutionId, status])
+  @@index([recordkeeperInstitutionId, status])
+}
+
+model PtcTokenEvidenceGate {
+  id                       String                 @id
+  ptcTokenRepresentationId String
+  ptcTokenRepresentation   PtcTokenRepresentation @relation(fields: [ptcTokenRepresentationId], references: [id], onDelete: Restrict)
+  gateCode                 String
+  expectedEvidenceType     String
+  accountableInstitutionId String
+  accountableInstitution   Institution             @relation("PtcTokenGateAccountableInstitution", fields: [accountableInstitutionId], references: [id], onDelete: Restrict)
+  evidenceObjectId         String?
+  evidenceObject           EvidenceObject?        @relation(fields: [evidenceObjectId], references: [id], onDelete: Restrict)
+  evidenceDigest           String?
+  status                   String                 @default("OPEN") // OPEN | VERIFIED | FAILED | EXPIRED
+  qualification            String?
+  sourceAsOfAt             DateTime?
+  expiresAt                DateTime?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @default(now()) @updatedAt
+
+  @@unique([ptcTokenRepresentationId, gateCode])
+  @@index([status, expiresAt])
+  @@index([evidenceObjectId])
+}
+
+model PtcTokenActionPlan {
+  id                       String                 @id
+  ptcTokenRepresentationId String
+  ptcTokenRepresentation   PtcTokenRepresentation @relation(fields: [ptcTokenRepresentationId], references: [id], onDelete: Restrict)
+  actionType               String // ISSUE | TRANSFER | DISTRIBUTION | LIFECYCLE_ANCHOR | BURN
+  sequence                 Int
+  candidateCapabilityId    String
+  state                    String                 @default("BLOCKED") // BLOCKED | SHADOW_READY
+  blockingGateCodes        Json
+  planDigest               String
+  createdAt                DateTime               @default(now())
+
+  @@unique([ptcTokenRepresentationId, actionType])
+  @@unique([ptcTokenRepresentationId, sequence])
+  @@index([ptcTokenRepresentationId, state])
 }
 
 // ───────────────── tokenised-DA representation adapter (PR-11) ───────────────

@@ -16,6 +16,7 @@ import {
   type RoomWriteSource,
   type TransactionCaseMode,
   type TokenisedDaMode,
+  type TokenisedPtcMode,
 } from "../persistence/feature-flags";
 import { inspectActivationManifest } from "./activation-manifest";
 import { isLiveCapabilityImplemented } from "./live-capability-registry";
@@ -64,6 +65,7 @@ export interface RuntimeEnvironmentProfile {
     daReplay: DaReplayMode;
     ptcReplay: PtcReplayMode;
     tokenisedDa: TokenisedDaMode;
+    tokenisedPtc: TokenisedPtcMode;
     primaryCommercial: PrimaryCommercialMode;
     conventionalSecondary: ConventionalSecondaryMode;
     internalRbac: InternalRbacMode;
@@ -217,6 +219,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     && (persistenceFlags.transactionCase !== "on" || persistenceFlags.externalActionSaga !== "required")) {
     errors.push("ARAIL_TOKENISED_DA_V1=live requires transaction cases on and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
   }
+  if (persistenceFlags.tokenisedPtc !== "off"
+    && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required"
+      || persistenceFlags.ptcReplay !== "allow_list")) {
+    errors.push("ARAIL_TOKENISED_PTC_V1=shadow requires transaction cases in shadow, required saga and PTC replay allow-list");
+  }
   if (persistenceFlags.primaryCommercial !== "off" && persistenceFlags.transactionCase !== "shadow") {
     errors.push("ARAIL_PRIMARY_COMMERCIAL_V1=shadow requires ARAIL_TRANSACTION_CASE_V1=shadow");
   }
@@ -251,6 +258,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.tokenisedDa === "live" && !["CONTROLLED_LIVE", "PRODUCTION"].includes(operatingMode)) {
     errors.push(`ARAIL_TOKENISED_DA_V1=live is available only in CONTROLLED_LIVE or PRODUCTION runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.tokenisedPtc !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_TOKENISED_PTC_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
   if (persistenceFlags.primaryCommercial !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_PRIMARY_COMMERCIAL_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
@@ -410,6 +420,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         daReplay: persistenceFlags.daReplay,
         ptcReplay: persistenceFlags.ptcReplay,
         tokenisedDa: persistenceFlags.tokenisedDa,
+        tokenisedPtc: persistenceFlags.tokenisedPtc,
         primaryCommercial: persistenceFlags.primaryCommercial,
         conventionalSecondary: persistenceFlags.conventionalSecondary,
         internalRbac: persistenceFlags.internalRbac,
