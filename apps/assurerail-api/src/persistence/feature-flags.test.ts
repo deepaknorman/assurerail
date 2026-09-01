@@ -21,6 +21,7 @@ test("[PR02][FLAGS] persistence paths default to inert/legacy-compatible values"
     primaryCommercial: "off",
     conventionalSecondary: "off",
     venueConduct: "off",
+    developerPortal: "off",
     internalRbac: "off",
     errors: [],
   });
@@ -45,6 +46,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_PRIMARY_COMMERCIAL_V1: "SHADOW",
     ARAIL_CONVENTIONAL_SECONDARY_V1: "SHADOW",
     ARAIL_VENUE_CONDUCT_V1: "SHADOW",
+    ARAIL_DEVELOPER_PORTAL_V1: "SHADOW",
     ARAIL_INTERNAL_RBAC_V1: "SHADOW",
   }), {
     neutralIngress: "shadow",
@@ -64,6 +66,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     primaryCommercial: "shadow",
     conventionalSecondary: "shadow",
     venueConduct: "shadow",
+    developerPortal: "shadow",
     internalRbac: "shadow",
     errors: [],
   });
@@ -85,6 +88,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_PRIMARY_COMMERCIAL_V1: "enabled",
     ARAIL_CONVENTIONAL_SECONDARY_V1: "enabled",
     ARAIL_VENUE_CONDUCT_V1: "enabled",
+    ARAIL_DEVELOPER_PORTAL_V1: "enabled",
     ARAIL_INTERNAL_RBAC_V1: "enabled",
   });
   assert.equal(rejected.neutralIngress, "off");
@@ -104,6 +108,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
   assert.equal(rejected.primaryCommercial, "off");
   assert.equal(rejected.conventionalSecondary, "off");
   assert.equal(rejected.venueConduct, "off");
+  assert.equal(rejected.developerPortal, "off");
   assert.equal(rejected.internalRbac, "off");
-  assert.equal(rejected.errors.length, 17);
+  assert.equal(rejected.errors.length, 18);
 });
