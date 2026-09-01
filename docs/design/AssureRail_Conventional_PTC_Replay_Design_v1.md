@@ -93,6 +93,26 @@ required predecessors. Every mismatch creates `ReconciliationBreak` with blocked
    trustee-authoritative comparison and an RTA/depository/register comparison as separate artefacts.
 6. Add the `ARAIL_PTC_REPLAY_V1=allow_list` gate only after those tests and operating runbook exist.
 
+### 5.1 Persistence-foundation checkpoint — 1 September 2026
+
+The first persistence phase is implemented additively and remains runtime-inert:
+
+- `SettlementSaga` now carries an explicit `transactionRoute` and a route-evidence bundle digest;
+- the three DA-specific evidence relationships remain available for existing and new DA replays but
+  are no longer falsely mandatory for a PTC saga;
+- `SagaEvidenceLink` provides immutable, ordered, role-specific evidence references without adding
+  PTC facts to an opaque JSON field;
+- `PtcReplayAuthorisation` is separate from DA authorisation and retains maker/checker, step-up,
+  digest, effective-time and revocation facts; and
+- the migration defaults and backfills every existing saga as `DA`, retains all three existing DA
+  evidence references, and does not delete or rewrite historic data.
+
+This checkpoint adds no PTC controller, UI, live adapter, feature enablement or external action. A
+synthetic database rehearsal proves that a PTC saga can retain trustee-control evidence without
+fabricating DA credit-decision or transfer-document references. The next phase is the governed,
+case-scoped replay service and operating runbook. The real historic evidence gate in section 6
+remains open.
+
 ## 6. External evidence gate
 
 The following cannot be supplied by code or guessed from a market convention: the named historic

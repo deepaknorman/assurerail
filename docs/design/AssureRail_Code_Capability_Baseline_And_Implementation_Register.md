@@ -1038,8 +1038,8 @@ DA replay remains open, as does the verified-evidence promotion/provider workflo
 `VERIFIED` evidence without manual database intervention. Design/decision detail:
 `docs/design/AssureRail_Conventional_DA_Replay_And_External_Action_Saga_v1.md`; operating procedure:
 `docs/runbooks/AssureRail_PR09_Conventional_DA_Replay.md`; executed evidence:
-`docs/qa/AssureRail_PR09_Conventional_DA_Replay_Evidence.md`. Not deployed and not pushed at this
-checkpoint. PR-10 remains untouched pending founder review.
+`docs/qa/AssureRail_PR09_Conventional_DA_Replay_Evidence.md`. It was subsequently committed and
+pushed under the founder-approved EX-24; it was not deployed.
 
 ### PR-10 — Conventional PTC replay adapter
 
@@ -1067,6 +1067,19 @@ Acceptance evidence:
 
 Flag: `ARAIL_PTC_REPLAY_V1=allow-list`.
 Rollback: replay/shadow only; disable cohort, retain exportable case.
+
+**PR-10 persistence-foundation checkpoint (1 September 2026):** the independent domestic,
+conventional PTC route-pack/fixture tests are now joined by additive persistence. The common saga
+records route and route-evidence digest explicitly; immutable `SagaEvidenceLink` records provide
+ordered provider-neutral evidence roles; and `PtcReplayAuthorisation` keeps PTC replay approval
+separate from DA approval. The migration classifies/backfills existing saga rows as DA, retains all
+legacy DA evidence references and relaxes only the three DA-specific requirements so a PTC replay
+does not fabricate a transferee credit decision or DA transfer document. No PTC API, UI, feature
+enablement, external dispatch or public capability claim exists at this checkpoint. All 210 Rail
+tests, build/schema validation, and the disposable fresh/upgrade/constraint/schema-parity/
+backup-restore rehearsal passed. Executed evidence:
+`docs/qa/AssureRail_PR10_Persistence_Foundation_Evidence.md`. A governed PTC replay service,
+operating runbook and participant-authorised historic PTC replay remain open.
 
 ### PR-11 — Tokenised-DA representation adapter refactor
 

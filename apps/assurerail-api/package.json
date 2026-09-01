@@ -18,6 +18,7 @@
     "db:rehearse:pr07": "bash ../../scripts/assurerail-pr07-db-rehearsal.sh",
     "db:rehearse:pr08": "bash ../../scripts/assurerail-pr08-db-rehearsal.sh",
     "db:rehearse:pr09": "bash ../../scripts/assurerail-pr09-db-rehearsal.sh",
+    "db:rehearse:pr10": "bash ../../scripts/assurerail-pr10-db-rehearsal.sh",
     "db:rehearse:op01": "bash ../../scripts/assurerail-op01-db-rehearsal.sh",
     "seed:admin": "node dist/seed-admin.js",
     "test": "prisma generate && tsc && node --test \"dist/**/*.test.js\""

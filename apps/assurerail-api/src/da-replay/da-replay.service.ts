@@ -737,11 +737,13 @@ export class DaReplayService {
             transactionCaseId: caseId,
             routePackRef: CONVENTIONAL_DA_ROUTE_PACK.ref,
             routePackVersion: CONVENTIONAL_DA_ROUTE_PACK.version,
+            transactionRoute: "DA",
             executionMode: "OBSERVE_ONLY",
             state: "READY",
             idempotencyKey,
             requestDigest,
             planDigest,
+            routeEvidenceBundleDigest: planDigest,
             legalMechanism: required(
               body.legalMechanism,
               "legalMechanism",
