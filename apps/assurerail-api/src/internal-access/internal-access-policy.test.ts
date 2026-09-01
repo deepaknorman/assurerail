@@ -43,6 +43,8 @@ test("[OP01][RBAC] inactive, expired and wrong-scope assignments fail closed", (
     requestedScopeRef: "prod-in",
   };
   assert.equal(evaluateInternalAssignment({ ...request, status: "SUSPENDED" }).code, "INTERNAL_ASSIGNMENT_NOT_ACTIVE");
+  assert.equal(evaluateInternalAssignment({ ...request, effectiveAt: null }).code, "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED");
+  assert.equal(evaluateInternalAssignment({ ...request, expiresAt: null }).code, "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED");
   assert.equal(evaluateInternalAssignment({ ...request, expiresAt: NOW }).code, "INTERNAL_ASSIGNMENT_OUTSIDE_EFFECTIVE_PERIOD");
   assert.equal(evaluateInternalAssignment({ ...request, requestedScopeRef: "staging-in" }).code, "INTERNAL_SCOPE_MISMATCH");
 });
@@ -53,7 +55,7 @@ test("[OP01][RBAC] global reporting does not make a viewer a customer-data or op
     status: "ACTIVE",
     scopeType: "GLOBAL",
     scopeRef: null,
-    effectiveAt: null,
+    effectiveAt: new Date("2026-08-01T00:00:00.000Z"),
     expiresAt: new Date("2026-10-01T00:00:00.000Z"),
     now: NOW,
   };

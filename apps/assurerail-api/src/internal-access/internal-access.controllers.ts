@@ -1,16 +1,19 @@
-import { Body, Controller, Get, Param, Post, Req, UnauthorizedException } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Param, Post, Req, UnauthorizedException } from "@nestjs/common";
 import type { Request } from "express";
 import { SuperAdminOnly } from "../auth/roles.decorator";
 import { inspectPersistenceFlags } from "../persistence/feature-flags";
 import { InternalAccessService } from "./internal-access.service";
 import { INTERNAL_PERMISSIONS, INTERNAL_ROLES, INTERNAL_SCOPE_TYPES } from "./internal-access-policy";
 
-type RailRequest = Request & { user?: { id?: string; session?: { id?: string } | null } };
+type RailRequest = Request & { user?: { id?: string; session?: { id?: string; activeInstitutionId?: string | null } | null } };
 
 function actor(req: RailRequest): { userId: string; sessionId: string } {
   const userId = req.user?.id;
   const sessionId = req.user?.session?.id;
   if (!userId || !sessionId) throw new UnauthorizedException("an authenticated Rail user with an active session is required");
+  if (req.user?.session?.activeInstitutionId) {
+    throw new ForbiddenException("internal staff workspace requires a session with no active participant institution");
+  }
   return { userId, sessionId };
 }
 
@@ -28,6 +31,12 @@ export class InternalAccessSelfController {
   mine(@Req() req: RailRequest) {
     requireEnabled();
     return this.access.listForUser(actor(req).userId);
+  }
+
+  @Get("workspaces")
+  workspaces(@Req() req: RailRequest) {
+    requireEnabled();
+    return this.access.workspaceForUser(actor(req).userId);
   }
 
   @Get("vocabulary")
@@ -52,8 +61,9 @@ export class InternalAccessAdminController {
   constructor(private readonly access: InternalAccessService) {}
 
   @Get("assignments")
-  assignments() {
+  assignments(@Req() req: RailRequest) {
     requireEnabled();
+    actor(req);
     return this.access.listAssignments();
   }
 

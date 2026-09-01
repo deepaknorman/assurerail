@@ -15,6 +15,7 @@ import {
   type InternalRole,
   type InternalScopeType,
 } from "./internal-access-policy";
+import { resolveInternalWorkspaces } from "./internal-workspace-policy";
 
 const ASSIGNMENT_ROLES_REQUIRING_SHORT_TERM = new Set<InternalRole>(["SUPERADMIN", "SYSADMIN", "SECURITY_ADMIN"]);
 const ELEVATION_RISK_CLASSES = new Set(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
@@ -138,6 +139,22 @@ export class InternalAccessService {
       this.db.privilegedAccessRequest.findMany({ where: { userId }, orderBy: { requestedAt: "desc" } }),
     ]);
     return { assignments, elevations };
+  }
+
+  async workspaceForUser(userId: string) {
+    const user = await this.db.venueUser.findUnique({
+      where: { id: userId },
+      select: { id: true, status: true, identityVerifiedAt: true },
+    });
+    if (!user || user.status !== "ACTIVE" || !user.identityVerifiedAt) {
+      throw new ForbiddenException("an active identity-bound staff account is required");
+    }
+    const { assignments, elevations } = await this.listForUser(userId);
+    return {
+      userId,
+      customerAuthorityGranted: false as const,
+      workspaces: resolveInternalWorkspaces({ assignments, elevations }),
+    };
   }
 
   async listAssignments() {

@@ -22,6 +22,7 @@ export function VenueHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [notifs, setNotifs] = useState<ActivityRow[]>([]);
+  const [hasStaffWorkspace, setHasStaffWorkspace] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,6 +30,16 @@ export function VenueHeader() {
       vget<{ rows: ActivityRow[] }>("/venue/activity?limit=6").then((r) => setNotifs(r.rows)).catch(() => {});
     }
   }, [notifOpen, notifs.length]);
+
+  useEffect(() => {
+    if (!venueUser || activeInstitutionId) {
+      setHasStaffWorkspace(false);
+      return;
+    }
+    vget<{ workspaces: unknown[] }>("/v1/rail/internal-access/workspaces", { institutionId: null })
+      .then((result) => setHasStaffWorkspace(result.workspaces.length > 0))
+      .catch(() => setHasStaffWorkspace(false));
+  }, [venueUser, activeInstitutionId]);
 
   useEffect(() => {
     if (!notifOpen && !menuOpen) return;
@@ -53,6 +64,7 @@ export function VenueHeader() {
     ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
     ...(isAdmin ? [{ href: "/admin/institutions", label: "Approvals" }] : []),
     ...(venueUser?.platformRole === "SUPERADMIN" ? [{ href: "/admin/access", label: "Access" }] : []),
+    ...(hasStaffWorkspace ? [{ href: "/internal", label: "Staff" }] : []),
   ];
   const closeAll = () => { setNotifOpen(false); setMenuOpen(false); setNavOpen(false); };
 

@@ -181,6 +181,9 @@ function scopeMatches(input: InternalAssignmentPolicyInput): boolean {
 export function evaluateInternalAssignment(input: InternalAssignmentPolicyInput): InternalPolicyDecision {
   if (!isInternalRole(input.role)) return { allowed: false, code: "INTERNAL_ROLE_UNRECOGNISED" };
   if (input.status !== "ACTIVE") return { allowed: false, code: "INTERNAL_ASSIGNMENT_NOT_ACTIVE" };
+  if (!input.effectiveAt || !input.expiresAt) {
+    return { allowed: false, code: "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED" };
+  }
   if (!activeDuring(input.now, input.effectiveAt, input.expiresAt)) {
     return { allowed: false, code: "INTERNAL_ASSIGNMENT_OUTSIDE_EFFECTIVE_PERIOD" };
   }

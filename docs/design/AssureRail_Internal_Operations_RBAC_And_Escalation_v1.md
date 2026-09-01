@@ -254,6 +254,17 @@ to that legacy superadmin and is not an assertion that the new roles are enforce
 staff workspaces; OP-01c replaces the bootstrap guard only after actual assignment coverage, session
 revocation and emergency rehearsal evidence exist.
 
+**OP-01b workspace checkpoint (1 September 2026):** a server-derived internal workspace registry
+now maps only active, effective assignments and exact temporary elevations into Governance, System,
+Security, Operations, Reconciliation, Integrations, Support, Risk, and Audit/Reporting views. The
+staff landing page shows the holder's exact assigned permissions, scope, expiry, boundary and escalation path; it
+contains no customer case content. Both API and UI require the user to leave any active participant
+institution context, and the response explicitly records that no customer authority is granted.
+Assignments without an explicit effective time and expiry, malformed scopes, expired assignments,
+inactive assignments and unrecognised roles fail closed. This is navigation and authority visibility,
+not OP-01c enforcement: every future workspace command/object read must still invoke the exact
+server-side permission and resource policy before its domain page is enabled.
+
 ---
 
 ## 9. Deliberately rejected shortcuts
