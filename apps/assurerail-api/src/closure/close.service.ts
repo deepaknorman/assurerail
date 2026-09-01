@@ -5,6 +5,7 @@ import { selectHtsAdapter } from "../hts/hts.adapter";
 import { selectHcsAdapter } from "../surveillance/hcs.adapter";
 import { VenueEventBus } from "../events/venue-events";
 import { AuditService } from "../store/audit.service";
+import { assertLegacyExternalEffectPathAllowed } from "../runtime/legacy-external-effect.guard";
 
 export interface CloseInput {
   reason?: string; // maturity | clean_up_call | call | amortised | manual
@@ -28,6 +29,7 @@ export class CloseService {
    * Note cannot be closed again.
    */
   async close(noteId: string, input: CloseInput) {
+    assertLegacyExternalEffectPathAllowed("legacy.note.close");
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
     if (await this.repo.isGovernedTokenRepresentation(noteId)) {

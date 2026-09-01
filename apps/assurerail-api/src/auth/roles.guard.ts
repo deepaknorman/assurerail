@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ROLES_KEY, ADMIN_KEY, SUPERADMIN_KEY, ENTITY_ROLES_KEY } from "./roles.decorator";
+import { inspectPersistenceFlags } from "../persistence/feature-flags";
 
 // Global authorization guard. Tiers (a platform SUPERADMIN bypasses every check):
 //   @SuperAdminOnly  → platformRole === "SUPERADMIN"
@@ -17,22 +18,25 @@ export class RolesGuard implements CanActivate {
     const user = req.user as
       | { role?: string; isAdmin?: boolean; platformRole?: string | null; entityRole?: string | null; status?: string; allowlisted?: boolean }
       | undefined;
+    const internalEnforced = inspectPersistenceFlags(process.env).internalRbac === "enforce";
 
     const superAdminOnly = this.reflector.getAllAndOverride<boolean>(SUPERADMIN_KEY, [ctx.getHandler(), ctx.getClass()]);
     if (superAdminOnly) {
+      if (internalEnforced) throw new ForbiddenException("legacy SUPERADMIN route is disabled while internal RBAC enforcement is active");
       if (user?.platformRole !== "SUPERADMIN") throw new ForbiddenException("superadmin only");
       return true;
     }
 
     const adminOnly = this.reflector.getAllAndOverride<boolean>(ADMIN_KEY, [ctx.getHandler(), ctx.getClass()]);
     if (adminOnly) {
+      if (internalEnforced) throw new ForbiddenException("legacy platform-admin route is disabled while internal RBAC enforcement is active");
       if (!user?.isAdmin) throw new ForbiddenException("admin only");
       return true;
     }
 
     const entityRoles = this.reflector.getAllAndOverride<string[]>(ENTITY_ROLES_KEY, [ctx.getHandler(), ctx.getClass()]);
     if (entityRoles && entityRoles.length > 0) {
-      if (user?.isAdmin) return true; // platform admin bypasses
+      if (user?.isAdmin && !internalEnforced) return true; // legacy-only bypass
       if (user?.status !== "ACTIVE" || !user.allowlisted) {
         throw new ForbiddenException("legacy entity-role access requires an active allow-listed account");
       }
@@ -46,7 +50,7 @@ export class RolesGuard implements CanActivate {
     if (!roles || roles.length === 0) return true;
 
     if (!user) throw new ForbiddenException("authentication required");
-    if (user.isAdmin) return true; // platform admin bypasses role + onboarding checks
+    if (user.isAdmin && !internalEnforced) return true; // legacy-only bypass
 
     if (user.status !== "ACTIVE" || !user.allowlisted) {
       throw new ForbiddenException("account not onboarded — complete DigiKYC onboarding first");

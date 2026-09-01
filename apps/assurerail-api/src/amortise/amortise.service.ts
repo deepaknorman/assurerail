@@ -5,6 +5,7 @@ import { selectHtsAdapter } from "../hts/hts.adapter";
 import { selectHcsAdapter } from "../surveillance/hcs.adapter";
 import { VenueEventBus } from "../events/venue-events";
 import { AuditService } from "../store/audit.service";
+import { assertLegacyExternalEffectPathAllowed } from "../runtime/legacy-external-effect.guard";
 
 export interface AmortiseInput {
   principalMinor: string; // principal repaid this cycle
@@ -26,6 +27,7 @@ export class AmortiseService {
    * This is the correct model for a SINGLE-CLASS Note; sequential/waterfall apply only once tranched.
    */
   async amortise(noteId: string, input: AmortiseInput) {
+    assertLegacyExternalEffectPathAllowed("legacy.note.amortise");
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
     if (await this.repo.isGovernedTokenRepresentation(noteId)) {

@@ -9,6 +9,7 @@ import { verifyTrusteeAuthorisation, type TrusteeAuthorisation } from "../truste
 import { MintRepository } from "./note.repository";
 import { VenueEventBus } from "../events/venue-events";
 import { AuditService } from "../store/audit.service";
+import { assertLegacyExternalEffectPathAllowed } from "../runtime/legacy-external-effect.guard";
 
 @Injectable()
 export class MintService {
@@ -32,6 +33,7 @@ export class MintService {
    * the code or calls this endpoint directly, and is the opposite of what the demo is meant to prove.
    */
   async mint(poolId: string, authorisation?: TrusteeAuthorisation) {
+    assertLegacyExternalEffectPathAllowed("legacy.note.mint");
     const { tape, verification } = await this.tape.load(poolId);
     if (!verification.ok) throw new BadRequestException(`tape failed verification: ${verification.reasons.join("; ")}`);
     if (!verification.mintReady) throw new BadRequestException(`not mint-ready: ${verification.reasons.join("; ")}`);

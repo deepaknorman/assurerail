@@ -15,6 +15,8 @@ import {
   type TransactionCaseMode,
   type TokenisedDaMode,
 } from "../persistence/feature-flags";
+import { inspectActivationManifest } from "./activation-manifest";
+import { isLiveCapabilityImplemented } from "./live-capability-registry";
 
 export const ASSURERAIL_OPERATING_MODES = [
   "DEMO",
@@ -34,6 +36,11 @@ export interface RuntimeEnvironmentProfile {
   persistentStoreRequired: boolean;
   authenticatedRuntimeRequired: boolean;
   liveExternalActionsRequired: boolean;
+  activation: {
+    manifestId: string | null;
+    manifestDigest: string | null;
+    capabilityIds: string[];
+  };
   adapters: {
     tape: AdapterMode;
     hts: AdapterMode;
@@ -190,9 +197,6 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
     errors.push("ARAIL_TOKENISED_DA_V1=allow_list requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
   }
-  if (persistenceFlags.internalRbac === "enforce") {
-    errors.push("ARAIL_INTERNAL_RBAC_V1=enforce is reserved but unavailable until OP-01c assignment coverage, session revocation and emergency rehearsal gates are implemented and accepted; use shadow");
-  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -237,6 +241,17 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   const persistentStoreRequired = operatingMode !== "DEMO";
   const authenticatedRuntimeRequired = operatingMode !== "DEMO";
   const liveExternalActionsRequired = operatingMode === "CONTROLLED_LIVE" || operatingMode === "PRODUCTION";
+  const activation = liveExternalActionsRequired
+    ? inspectActivationManifest(env)
+    : { manifest: null, manifestDigest: null, errors: [] as string[] };
+  errors.push(...activation.errors);
+  for (const capability of activation.manifest?.capabilities ?? []) {
+    if (!isLiveCapabilityImplemented(capability.id)) {
+      errors.push(
+        `activation capability ${capability.id} has no implemented controlled-live command path in this build`,
+      );
+    }
+  }
 
   if (operatingMode === "DEMO") {
     const liveAdapters = Object.entries(adapters)
@@ -275,6 +290,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
 
   if (liveExternalActionsRequired) {
+    if (persistenceFlags.internalRbac !== "enforce") {
+      errors.push(`${operatingMode} mode requires ARAIL_INTERNAL_RBAC_V1=enforce`);
+    }
     if (persistenceFlags.durableRelay !== "durable") {
       errors.push(`${operatingMode} mode requires ARAIL_DURABLE_RELAY_MODE=durable`);
     }
@@ -332,6 +350,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       persistentStoreRequired,
       authenticatedRuntimeRequired,
       liveExternalActionsRequired,
+      activation: {
+        manifestId: activation.manifest?.manifestId ?? null,
+        manifestDigest: activation.manifestDigest ?? null,
+        capabilityIds: activation.manifest?.capabilities.map((capability) => capability.id) ?? [],
+      },
       adapters,
       features: {
         neutralIngress: persistenceFlags.neutralIngress,

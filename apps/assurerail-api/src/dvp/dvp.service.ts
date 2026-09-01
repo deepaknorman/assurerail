@@ -7,6 +7,7 @@ import { selectHcsAdapter } from "../surveillance/hcs.adapter";
 import { selectSettlementAdapter } from "../settlement/settlement.adapter";
 import { VenueEventBus } from "../events/venue-events";
 import { AuditService } from "../store/audit.service";
+import { assertLegacyExternalEffectPathAllowed } from "../runtime/legacy-external-effect.guard";
 
 export interface DvpInput {
   buyerDid: string;
@@ -35,6 +36,7 @@ export class DvpService {
    * The settlement leg runs first; only if it succeeds does the asset leg move → no settlement risk.
    */
   async execute(noteId: string, input: DvpInput) {
+    assertLegacyExternalEffectPathAllowed("legacy.note.dvp");
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
     if (await this.repo.isGovernedTokenRepresentation(noteId)) {

@@ -78,6 +78,9 @@ const dbModules = process.env.DATABASE_URL ? [
   ...(inspectPersistenceFlags(process.env).internalRbac !== "off"
     ? [require("./internal-access/internal-access.module").InternalAccessModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).internalRbac !== "off"
+    ? [require("./operational-readiness/operational-readiness.module").OperationalReadinessModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

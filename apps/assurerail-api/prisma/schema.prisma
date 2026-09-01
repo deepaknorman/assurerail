@@ -2144,6 +2144,118 @@ model MigrationReceipt {
   @@index([transactionCaseId])
 }
 
+// ───────────────── controlled-pilot and production readiness (PR-12) ─────────────────
+// Readiness decisions are durable and independently reviewable. External evidence requirements
+// cannot be closed by a synthetic fixture; the accepted decision is snapshotted into a signed,
+// expiring deployment activation record before a controlled-live/production process may boot.
+model OperationalReadinessGate {
+  id                       String                       @id
+  environment              String
+  scopeType                String                       // GLOBAL | ROUTE_FUNCTION | CONNECTOR | CUSTOMER_COHORT
+  scopeRef                 String?
+  scopeKey                 String
+  gateCode                 String
+  requirementVersion       Int                          @default(1)
+  title                    String
+  requirement              String
+  evidenceClassRequired    String                       // INTERNAL | EXTERNAL
+  status                   String                       @default("OPEN") // OPEN | SUBMITTED | ACCEPTED | REJECTED | EXPIRED | REVOKED
+  ownerUserId              String
+  proposedByUserId         String
+  proposalStepUpId         String
+  proposalDigest           String                       @unique
+  currentEvidenceRef       String?
+  currentEvidenceDigest    String?
+  currentDecisionId        String?                      @unique
+  currentDecision          OperationalReadinessDecision? @relation("CurrentReadinessDecision", fields: [currentDecisionId], references: [id], onDelete: Restrict)
+  acceptedAt               DateTime?
+  expiresAt                DateTime?
+  revokedAt                DateTime?
+  supersedesId             String?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @default(now()) @updatedAt
+  decisions                OperationalReadinessDecision[] @relation("ReadinessGateDecisions")
+  activationBindings       DeploymentActivationGate[]
+
+  @@unique([environment, scopeKey, gateCode, requirementVersion], map: "OperationalReadinessGate_scope_code_version_key")
+  @@index([environment, status, expiresAt], map: "OperationalReadinessGate_environment_status_expiry_idx")
+  @@index([scopeType, scopeRef, gateCode], map: "OperationalReadinessGate_scope_code_idx")
+  @@index([ownerUserId, status], map: "OperationalReadinessGate_owner_status_idx")
+}
+
+model OperationalReadinessDecision {
+  id                    String                   @id
+  readinessGateId       String
+  readinessGate         OperationalReadinessGate @relation("ReadinessGateDecisions", fields: [readinessGateId], references: [id], onDelete: Restrict)
+  currentForGate        OperationalReadinessGate? @relation("CurrentReadinessDecision")
+  version               Int
+  decision              String                   // ACCEPT | REJECT | REVOKE
+  evidenceClass         String                   // INTERNAL | EXTERNAL
+  evidenceRef           String
+  evidenceDigest        String
+  reason                String
+  decidedByUserId       String
+  decisionStepUpId      String
+  decisionDigest        String                   @unique
+  validFrom              DateTime
+  expiresAt             DateTime
+  createdAt             DateTime                 @default(now())
+  activationBindings    DeploymentActivationGate[]
+
+  @@unique([readinessGateId, version], map: "OperationalReadinessDecision_gate_version_key")
+  @@index([readinessGateId, decision, expiresAt], map: "OperationalReadinessDecision_gate_decision_expiry_idx")
+  @@index([decidedByUserId, createdAt], map: "OperationalReadinessDecision_actor_created_idx")
+}
+
+model DeploymentActivation {
+  id                  String                     @id
+  manifestId          String                     @unique
+  environment         String
+  operatingMode       String                     // CONTROLLED_LIVE | PRODUCTION
+  buildCommit         String
+  status              String                     @default("DRAFT") // DRAFT | APPROVED | REVOKED | EXPIRED
+  manifest            Json
+  manifestDigest      String                     @unique
+  signatureAlgorithm  String                     @default("ED25519")
+  signingKeyId        String
+  signature           String
+  proposedByUserId    String
+  proposalStepUpId    String
+  approvedByUserId    String?
+  approvalStepUpId    String?
+  approvalReason      String?
+  approvalDigest      String?                    @unique
+  approvedAt          DateTime?
+  expiresAt           DateTime
+  revokedByUserId     String?
+  revocationStepUpId  String?
+  revocationReason    String?
+  revokedAt           DateTime?
+  createdAt           DateTime                   @default(now())
+  gateBindings        DeploymentActivationGate[]
+
+  @@index([environment, operatingMode, status, expiresAt], map: "DeploymentActivation_environment_mode_status_idx")
+  @@index([buildCommit, status], map: "DeploymentActivation_build_status_idx")
+}
+
+model DeploymentActivationGate {
+  deploymentActivationId String
+  deploymentActivation   DeploymentActivation         @relation(fields: [deploymentActivationId], references: [id], onDelete: Restrict)
+  readinessGateId        String
+  readinessGate          OperationalReadinessGate      @relation(fields: [readinessGateId], references: [id], onDelete: Restrict)
+  readinessDecisionId    String
+  readinessDecision      OperationalReadinessDecision  @relation(fields: [readinessDecisionId], references: [id], onDelete: Restrict)
+  gateCode               String
+  scopeKey               String
+  evidenceDigest         String
+  boundAt                DateTime                      @default(now())
+
+  @@id([deploymentActivationId, readinessGateId])
+  @@unique([deploymentActivationId, gateCode], map: "DeploymentActivationGate_activation_code_key")
+  @@index([readinessGateId, boundAt], map: "DeploymentActivationGate_gate_bound_idx")
+  @@index([readinessDecisionId], map: "DeploymentActivationGate_decision_idx")
+}
+
 /// Append-only, hash-chained audit trail. Written via a single-writer/advisory-locked append so
 /// concurrent writes can't fork the chain: hash = sha256(prevHash + canonical(record)). Distinct
 /// actor namespaces (system:tokenco lifecycle vs system:tokenco-ops remediation). `detail` is redacted

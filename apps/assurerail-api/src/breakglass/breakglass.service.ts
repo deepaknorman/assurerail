@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { audit } from "../common/audit";
 import { MintRepository } from "../mint/note.repository";
 import { selectHcsAdapter } from "../surveillance/hcs.adapter";
+import { assertLegacyExternalEffectPathAllowed } from "../runtime/legacy-external-effect.guard";
 
 export interface BreakGlassInput {
   regulatorDid: string;
@@ -19,6 +20,7 @@ export class BreakGlassService {
    * market participant, on lawful terms, with an audit trail no one can alter (§8.2).
    */
   async request(noteId: string, input: BreakGlassInput) {
+    assertLegacyExternalEffectPathAllowed("legacy.note.break-glass");
     const note = await this.repo.getNote(noteId);
     if (!note) throw new NotFoundException("note not found");
     if (await this.repo.isGovernedTokenRepresentation(noteId)) {
