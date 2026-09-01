@@ -174,7 +174,7 @@ test("[CONFIG][PR07] room compare reads require the complete shadow foundation",
     ASSURERAIL_OPERATING_MODE: "SHADOW",
     ARAIL_ROOM_READ_SOURCE: "compare",
   });
-  assert.match(missingCase.errors.join("\n"), /requires ARAIL_TRANSACTION_CASE_V1=shadow/);
+  assert.match(missingCase.errors.join("\n"), /requires transaction cases/);
 });
 
 test("[CONFIG][PR08] Rail room cutover requires write capability, case allocation remains a database gate", () => {
@@ -302,6 +302,29 @@ test("[CONFIG][PR11] tokenised DA requires the durable saga and remains non-live
     ARAIL_TOKENISED_DA_V1: "allow-list",
   });
   assert.match(live.errors.join("\n"), /ARAIL_TOKENISED_DA_V1 is available only/);
+});
+
+test("[CONFIG][PR15] live tokenised DA requires the fully enforced foundation and remains manifest-gated", () => {
+  const missingFoundation = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    ARAIL_TOKENISED_DA_V1: "live",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required",
+  });
+  assert.match(missingFoundation.errors.join("\n"), /requires transaction cases on/);
+
+  const foundation = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "enforce",
+    ARAIL_NEUTRAL_INGRESS_V1: "on",
+    ARAIL_ROUTE_ENTITLEMENT_ENFORCE: "enforce",
+    ARAIL_TRANSACTION_CASE_V1: "on",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required",
+    ARAIL_TOKENISED_DA_V1: "live",
+    ARAIL_INTERNAL_RBAC_V1: "enforce",
+  });
+  const errors = foundation.errors.join("\n");
+  assert.doesNotMatch(errors, /requires transaction cases on|available only in REPLAY or SHADOW/);
+  assert.match(errors, /ARAIL_ACTIVATION_MANIFEST_B64 is required/);
 });
 
 test("[CONFIG][PR13] primary commercial interaction requires the neutral case foundation and remains shadow-only", () => {
