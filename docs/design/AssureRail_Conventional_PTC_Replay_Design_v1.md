@@ -168,6 +168,29 @@ checkpoint adds no break-repair command, external issue/allotment/cash/notice/re
 adapter or UI. A participant-authorised historic PTC replay and governed repair workflow remain
 open.
 
+### 5.5 Governed break-repair checkpoint — 1 September 2026
+
+The fourth phase reuses the generic `ReconciliationBreak`, `SagaRepairAction` and immutable
+`SagaLegObservation` records introduced by the DA saga foundation. The accountable leg-owner
+institution may propose an `APPEND_CORRECTED_OBSERVATION` action with retained authority evidence,
+reason, idempotency and proposal step-up. A different authorised human at that institution must
+approve or reject it with an independent review step-up.
+
+Approval revalidates the corrected observation against the current signed evidence version and the
+retained expected digest. A still-mismatched correction cannot be approved. An approved correction
+is appended at the next observation version; the original mismatch is never edited or hidden. The
+repair action, corrected observation, resolved break, leg/saga/case state and governed audit commit
+atomically. Rejection reopens the break without discarding the rejected proposal. If the corrected
+leg is the authoritative-record acknowledgement, an `AFTER` snapshot is created only from the exact
+recordkeeper-owned replacement evidence.
+
+Repair approval leaves the leg `OBSERVED`, not reconciled. A third authorised human must perform the
+ordinary independent reconciliation; neither the original observation recorder nor the repair
+checker may do so. The disposable database rehearsal proves maker/checker enforcement, immutable
+two-version history, exact-only repair, break resolution, three-person separation and subsequent
+reconciliation. This remains historic `OBSERVE_ONLY` processing with no external mutation. The
+participant-authorised all-leg historic replay remains the final PR-10 evidence gate.
+
 ## 6. External evidence gate
 
 The following cannot be supplied by code or guessed from a market convention: the named historic

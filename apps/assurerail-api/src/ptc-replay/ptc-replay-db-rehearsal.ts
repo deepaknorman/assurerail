@@ -327,9 +327,104 @@ async function run(): Promise<void> {
     assert.equal(report.matched, 1);
     assert.equal(report.breaks, 1);
     assert.equal(report.notObserved, created.legs.length - 2);
-    const pack = await service.evidencePack(mismatchActor, caseId, created.id);
+    const [openBreak] = await service.listBreaks(mismatchActor, caseId);
+    const correctedEvidenceId = "evidence_ptc_corrected_observation";
+    await db.evidenceObject.create({ data: {
+      id: correctedEvidenceId,
+      institutionId: secondLeg.participantOwnerInstitutionId,
+      transactionCaseId: caseId,
+      evidenceType: "PTC_REPLAY_OBSERVATION",
+      classification: "CASE_CONFIDENTIAL",
+      purpose: "Synthetic corrected observation",
+      status: "AVAILABLE",
+      currentVersion: 1,
+      retentionUntilAt: future,
+      createdByUserId: userId,
+      versions: { create: {
+        id: "evidence_version_ptc_corrected_observation",
+        version: 1,
+        schemaId: "synthetic.ptc-observation",
+        schemaVersion: "1.0.0",
+        payloadDigest: secondLeg.expectedDigest,
+        signatureStatus: "VERIFIED",
+        result: "VERIFIED",
+        sourceAsOfAt: now,
+        expiresAt: future,
+        qualifications: [],
+        validationStatus: "VALID",
+        validationDetail: {},
+        createdByUserId: userId,
+      } },
+    } });
+    const replacementObservation: Parameters<PtcReplayService["proposeRepair"]>[3]["replacementObservation"] = {
+      idempotencyKey: "corrected-observation",
+      observed: secondLeg.expected,
+      externalReference: "synthetic://corrected-observation",
+      finalityClass: "FINAL",
+      signatureStatus: "VERIFIED",
+      evidenceObjectId: correctedEvidenceId,
+      observedAt: now.toISOString(),
+      reason: "Synthetic corrected observation",
+    };
+    const repairChecker: RoomActor = { ...mismatchActor, actorUserId: "ptc_repair_checker_10" };
+    const rejectedRepair = await service.proposeRepair(mismatchActor, caseId, openBreak!.id, {
+      idempotencyKey: "rejected-proposal",
+      replacementObservation,
+      reason: "Synthetic rejection rehearsal",
+      authorityEvidenceRef: "synthetic://repair-authority",
+      stepUpEvidenceId: "step-rejected-proposal",
+    });
+    const rejectedReview = await service.reviewRepair(repairChecker, caseId, openBreak!.id, rejectedRepair.id, {
+      idempotencyKey: "rejected-review",
+      approve: false,
+      reason: "Exercise rejection and break reopening",
+      stepUpEvidenceId: "step-rejected-review",
+    });
+    assert.equal("status" in rejectedReview ? rejectedReview.status : undefined, "REJECTED");
+    assert.equal((await service.listBreaks(mismatchActor, caseId))[0]!.status, "OPEN");
+    const repair = await service.proposeRepair(mismatchActor, caseId, openBreak!.id, {
+      idempotencyKey: "repair-proposal",
+      replacementObservation,
+      reason: "Replace the mismatched synthetic observation without rewriting it",
+      authorityEvidenceRef: "synthetic://repair-authority",
+      stepUpEvidenceId: "step-repair-proposal",
+    });
+    assert.equal(repair.status, "PROPOSED");
+    await assert.rejects(service.reviewRepair(mismatchActor, caseId, openBreak!.id, repair.id, {
+      idempotencyKey: "self-review",
+      approve: true,
+      reason: "Must fail",
+      stepUpEvidenceId: "step-self-review",
+    }), /maker cannot review/);
+    await service.reviewRepair(repairChecker, caseId, openBreak!.id, repair.id, {
+      idempotencyKey: "repair-review",
+      approve: true,
+      reason: "Independent synthetic repair review",
+      stepUpEvidenceId: "step-repair-review",
+    });
+    const [repairedSaga] = await service.listSagas(repairChecker, caseId);
+    assert.equal(repairedSaga!.legs[1]!.state, "OBSERVED");
+    assert.equal(repairedSaga!.legs[1]!.observations.length, 2);
+    assert.equal(repairedSaga!.breaks[0]!.status, "RESOLVED");
+    await assert.rejects(service.reconcileLeg(repairChecker, caseId, created.id, secondLeg.id, {
+      idempotencyKey: "checker-reconcile",
+      reason: "Must fail",
+      stepUpEvidenceId: "step-checker-reconcile",
+    }), /repair checker cannot also reconcile/);
+    const repairReconciler: RoomActor = { ...mismatchActor, actorUserId: "ptc_repair_reconciler_10" };
+    const repairedAndReconciled = await service.reconcileLeg(repairReconciler, caseId, created.id, secondLeg.id, {
+      idempotencyKey: "repair-reconcile",
+      reason: "Independent post-repair reconciliation",
+      stepUpEvidenceId: "step-repair-reconcile",
+    });
+    assert.equal(repairedAndReconciled.legs[1]!.state, "RECONCILED");
+    const repairedReport = await service.comparison(repairReconciler, caseId, created.id);
+    assert.equal(repairedReport.matched, 2);
+    assert.equal(repairedReport.breaks, 0);
+    assert.equal(repairedReport.notObserved, created.legs.length - 2);
+    const pack = await service.evidencePack(repairReconciler, caseId, created.id);
     assert.match(pack.evidencePackDigest, /^sha256:[0-9a-f]{64}$/);
-    process.stdout.write(`[PR10-SERVICE-DB] PASS saga=${created.id} legs=${created.legs.length} evidence=${created.evidenceLinks.length} plan-idempotent=true observation-idempotent=true reconciled=1 breaks=1\n`);
+    process.stdout.write(`[PR10-SERVICE-DB] PASS saga=${created.id} legs=${created.legs.length} evidence=${created.evidenceLinks.length} plan-idempotent=true observation-idempotent=true rejected=1 repaired=1 reconciled=2 open-breaks=0\n`);
   } finally {
     await db.$disconnect();
   }

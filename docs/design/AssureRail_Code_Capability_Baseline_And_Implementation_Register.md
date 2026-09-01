@@ -1115,6 +1115,19 @@ external issue/allotment/cash/notice/register action, live adapter, UI or partic
 historic PTC replay. Executed evidence:
 `docs/qa/AssureRail_PR10_Observation_Reconciliation_Evidence.md`.
 
+**PR-10 governed-repair checkpoint (1 September 2026):** two additional case-scoped routes now
+permit the accountable leg-owner institution to propose an append-only corrected observation and a
+different authorised human to approve or reject it. Approval revalidates the current signed
+evidence digest and retained expectation, appends observation version 2 without rewriting version
+1, atomically resolves the break and records the complete repair trail in the evidence pack.
+Rejection reopens the break. The repair checker cannot also reconcile the corrected leg, so a third
+authorised human is required. The disposable service/database rehearsal proves self-review denial,
+exact-only application, immutable mismatch retention, break resolution, post-repair reconciliation,
+zero open breaks and dump/restore survival. The module now has twelve routes but remains off by
+default, `REPLAY/SHADOW`, `OBSERVE_ONLY` and free of external transaction adapters. A real
+participant-authorised historic PTC replay across all required legs remains open. Executed evidence:
+`docs/qa/AssureRail_PR10_Governed_Repair_Evidence.md`.
+
 ### PR-11 — Tokenised-DA representation adapter refactor
 
 **Dependencies:** PR-06 and PR-09

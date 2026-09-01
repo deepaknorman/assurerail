@@ -56,6 +56,16 @@ export class PtcReplayController {
     return this.replay.listBreaks(context(req), caseId);
   }
 
+  @Post("breaks/:breakId/repairs")
+  proposeRepair(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("breakId") breakId: string, @Body() body: Parameters<PtcReplayService["proposeRepair"]>[3]) {
+    return this.replay.proposeRepair(context(req), caseId, breakId, body);
+  }
+
+  @Post("breaks/:breakId/repairs/:repairId/review")
+  reviewRepair(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("breakId") breakId: string, @Param("repairId") repairId: string, @Body() body: Parameters<PtcReplayService["reviewRepair"]>[4]) {
+    return this.replay.reviewRepair(context(req), caseId, breakId, repairId, body);
+  }
+
   @Get("sagas/:sagaId/comparison")
   comparison(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("sagaId") sagaId: string) {
     return this.replay.comparison(context(req), caseId, sagaId);

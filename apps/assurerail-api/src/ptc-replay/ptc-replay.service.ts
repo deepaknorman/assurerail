@@ -80,7 +80,7 @@ type ObservationBody = {
 type LoadedLeg = Prisma.SettlementLegGetPayload<{
   include: {
     settlementSaga: { include: { legs: true } };
-    observations: true;
+    observations: { include: { appliedRepairs: true } };
   };
 }>;
 
@@ -617,6 +617,9 @@ export class PtcReplayService {
       throw new ConflictException("only an exact observed leg can be reconciled");
     if (observation.recordedByUserId === actor.actorUserId)
       throw new ForbiddenException("observation recorder cannot independently reconcile the same leg");
+    const appliedRepair = observation.appliedRepairs[0];
+    if (appliedRepair?.reviewedByUserId === actor.actorUserId)
+      throw new ForbiddenException("repair checker cannot also reconcile the repaired leg");
     await this.requireEvidence(observation.evidenceObjectId, caseId, actor.actingInstitutionId, null);
     const authority = await this.access.requireHuman({ userId: actor.actorUserId, institutionId: actor.actingInstitutionId, action: "OPERATE_ROUTE", scopeType: "TRANSACTION_CASE", scopeRef: caseId });
     const reason = required(body.reason, "reason", 1_000);
@@ -653,9 +656,183 @@ export class PtcReplayService {
   async listBreaks(actor: RoomActor, caseId: string) {
     await this.requireCase(actor, caseId, "VIEW_CASE");
     return this.db.reconciliationBreak.findMany({
-      where: { transactionCaseId: caseId, settlementSaga: { transactionRoute: "PTC" } },
+      where: { transactionCaseId: caseId, settlementSaga: { transactionRoute: "PTC", executionMode: "OBSERVE_ONLY" } },
       orderBy: [{ status: "asc" }, { severity: "asc" }, { createdAt: "asc" }],
+      include: { repairActions: { orderBy: { proposedAt: "asc" } } },
     });
+  }
+
+  async proposeRepair(
+    actor: RoomActor,
+    caseId: string,
+    breakId: string,
+    body: {
+      idempotencyKey?: string;
+      replacementObservation?: ObservationBody;
+      reason?: string;
+      authorityEvidenceRef?: string;
+      stepUpEvidenceId?: string;
+    },
+  ) {
+    const { transactionCase } = await this.requireCase(actor, caseId, "OPERATE_CASE");
+    const item = await this.db.reconciliationBreak.findUnique({ where: { id: breakId }, include: { settlementLeg: { include: { settlementSaga: true } } } });
+    if (!item || item.transactionCaseId !== caseId || !item.settlementLeg ||
+      item.settlementLeg.settlementSaga.transactionRoute !== "PTC" || item.settlementLeg.settlementSaga.executionMode !== "OBSERVE_ONLY")
+      throw new NotFoundException("PTC reconciliation break not found");
+    if (item.ownerInstitutionId !== actor.actingInstitutionId)
+      throw new ForbiddenException("only the accountable break owner may propose repair");
+    const replacementObservation = this.canonicalObservationBody(body.replacementObservation);
+    const idempotencyKey = required(body.idempotencyKey, "idempotencyKey", 200);
+    const reason = required(body.reason, "reason", 1_000);
+    const authorityEvidenceRef = required(body.authorityEvidenceRef, "authorityEvidenceRef", 500);
+    const requestDigest = commandDigest("PTC_REPLAY_REPAIR_PROPOSE", { caseId, breakId, idempotencyKey, replacementObservation, reason, authorityEvidenceRef });
+    const existing = await this.db.sagaRepairAction.findUnique({
+      where: { reconciliationBreakId_idempotencyKey: { reconciliationBreakId: breakId, idempotencyKey } },
+    });
+    if (existing) {
+      if (existing.requestDigest !== requestDigest)
+        throw new ConflictException("repair idempotency key was reused with different content");
+      return existing;
+    }
+    if (!["EXECUTION_PENDING", "COMPLETION_PENDING", "BLOCKED"].includes(transactionCase.status))
+      throw new ConflictException("repairs may be proposed only for an active or blocked PTC replay case");
+    if (item.status !== "OPEN") throw new ConflictException("break is not open for a repair proposal");
+    const authority = await this.access.requireHuman({ userId: actor.actorUserId, institutionId: actor.actingInstitutionId, action: "OPERATE_ROUTE", scopeType: "TRANSACTION_CASE", scopeRef: caseId });
+    const stepUpEvidenceId = required(body.stepUpEvidenceId, "stepUpEvidenceId", 160);
+    try {
+      return await this.db.$transaction(async (tx) => {
+        await this.stepUp.consume({ evidenceId: stepUpEvidenceId, userId: actor.actorUserId, sessionId: actor.actorSessionId, purpose: "PTC_REPLAY_REPAIR_PROPOSE", institutionId: actor.actingInstitutionId }, tx);
+        const claimed = await tx.reconciliationBreak.updateMany({ where: { id: breakId, status: "OPEN" }, data: { status: "REPAIR_PROPOSED" } });
+        if (claimed.count !== 1) throw new ConflictException("break changed while repair was being proposed");
+        const repair = await tx.sagaRepairAction.create({ data: {
+          id: `srepair_${randomUUID()}`,
+          reconciliationBreakId: breakId,
+          idempotencyKey,
+          requestDigest,
+          actionType: "APPEND_CORRECTED_OBSERVATION",
+          replacementObservation,
+          reason,
+          authorityEvidenceRef,
+          proposedByUserId: actor.actorUserId,
+          proposedByMandateId: authority.mandateId!,
+          proposalStepUpId: stepUpEvidenceId,
+        } });
+        await appendGovernedAudit(tx, { actor: this.actorRef(actor), event: "rail.ptc_replay.repair_proposed", detail: { caseId, breakId, repairId: repair.id, requestDigest, authorityMandateId: authority.mandateId } });
+        return repair;
+      });
+    } catch (error) {
+      const replay = await this.db.sagaRepairAction.findUnique({ where: { reconciliationBreakId_idempotencyKey: { reconciliationBreakId: breakId, idempotencyKey } } });
+      if (replay?.requestDigest === requestDigest) return replay;
+      throw error;
+    }
+  }
+
+  async reviewRepair(
+    actor: RoomActor,
+    caseId: string,
+    breakId: string,
+    repairId: string,
+    body: { idempotencyKey?: string; approve?: boolean; reason?: string; stepUpEvidenceId?: string },
+  ) {
+    const { transactionCase } = await this.requireCase(actor, caseId, "OPERATE_CASE");
+    const repair = await this.db.sagaRepairAction.findUnique({
+      where: { id: repairId },
+      include: { reconciliationBreak: { include: { settlementLeg: { include: { settlementSaga: true, observations: { include: { appliedRepairs: true }, orderBy: { version: "asc" } } } } } } },
+    });
+    if (!repair || repair.reconciliationBreakId !== breakId || repair.reconciliationBreak.transactionCaseId !== caseId ||
+      !repair.reconciliationBreak.settlementLeg || repair.reconciliationBreak.settlementLeg.settlementSaga.transactionRoute !== "PTC" ||
+      repair.reconciliationBreak.settlementLeg.settlementSaga.executionMode !== "OBSERVE_ONLY")
+      throw new NotFoundException("PTC repair proposal not found");
+    if (repair.reconciliationBreak.ownerInstitutionId !== actor.actingInstitutionId)
+      throw new ForbiddenException("only the accountable break owner may review repair");
+    const idempotencyKey = required(body.idempotencyKey, "idempotencyKey", 200);
+    const requestDigest = commandDigest("PTC_REPLAY_REPAIR_REVIEW", { caseId, breakId, repairId, ...body });
+    if (repair.reviewIdempotencyKey) {
+      if (repair.reviewIdempotencyKey !== idempotencyKey || repair.reviewRequestDigest !== requestDigest)
+        throw new ConflictException("repair review command conflicts with the retained result");
+      return repair.status === "APPLIED" ? this.loadSaga(repair.reconciliationBreak.settlementSagaId) : repair;
+    }
+    if (!["EXECUTION_PENDING", "COMPLETION_PENDING", "BLOCKED"].includes(transactionCase.status))
+      throw new ConflictException("repairs may be reviewed only for an active or blocked PTC replay case");
+    if (repair.status !== "PROPOSED" || repair.reconciliationBreak.status !== "REPAIR_PROPOSED")
+      throw new ConflictException("repair proposal is not reviewable");
+    if (repair.proposedByUserId === actor.actorUserId)
+      throw new ForbiddenException("repair maker cannot review their own proposal");
+    const authority = await this.access.requireHuman({ userId: actor.actorUserId, institutionId: actor.actingInstitutionId, action: "OPERATE_ROUTE", scopeType: "TRANSACTION_CASE", scopeRef: caseId });
+    const reviewReason = required(body.reason, "reason", 1_000);
+    const stepUpEvidenceId = required(body.stepUpEvidenceId, "stepUpEvidenceId", 160);
+    if (body.approve !== true) {
+      try {
+        return await this.db.$transaction(async (tx) => {
+          await this.stepUp.consume({ evidenceId: stepUpEvidenceId, userId: actor.actorUserId, sessionId: actor.actorSessionId, purpose: "PTC_REPLAY_REPAIR_REVIEW", institutionId: actor.actingInstitutionId }, tx);
+          const changed = await tx.sagaRepairAction.updateMany({ where: { id: repair.id, status: "PROPOSED", reviewIdempotencyKey: null }, data: {
+            status: "REJECTED", reviewedByUserId: actor.actorUserId, reviewedByMandateId: authority.mandateId!, reviewStepUpId: stepUpEvidenceId,
+            reviewReason, reviewIdempotencyKey: idempotencyKey, reviewRequestDigest: requestDigest, reviewedAt: new Date(),
+          } });
+          if (changed.count !== 1) throw new ConflictException("repair proposal changed concurrently");
+          const reopened = await tx.reconciliationBreak.updateMany({ where: { id: breakId, status: "REPAIR_PROPOSED" }, data: { status: "OPEN" } });
+          if (reopened.count !== 1) throw new ConflictException("reconciliation break changed concurrently");
+          await appendGovernedAudit(tx, { actor: this.actorRef(actor), event: "rail.ptc_replay.repair_rejected", detail: { caseId, breakId, repairId, reviewReason } });
+          return tx.sagaRepairAction.findUniqueOrThrow({ where: { id: repair.id } });
+        });
+      } catch (error) {
+        const replay = await this.db.sagaRepairAction.findUnique({ where: { id: repairId } });
+        if (replay?.reviewIdempotencyKey === idempotencyKey && replay.reviewRequestDigest === requestDigest) return replay;
+        throw error;
+      }
+    }
+    const leg = repair.reconciliationBreak.settlementLeg;
+    const replacement = repair.replacementObservation as unknown as ObservationBody;
+    const validated = await this.validateObservation(caseId, leg, replacement, actor.actingInstitutionId);
+    if (validated.comparison.result !== "MATCHED")
+      throw new ConflictException("repair replacement evidence still differs from the retained expectation");
+    const observationIdempotencyKey = required(replacement.idempotencyKey, "replacementObservation.idempotencyKey", 200);
+    const observationRequestDigest = commandDigest("PTC_REPLAY_REPAIR_OBSERVATION", { caseId, breakId, repairId, ...replacement });
+    try {
+      return await this.db.$transaction(async (tx) => {
+        await this.stepUp.consume({ evidenceId: stepUpEvidenceId, userId: actor.actorUserId, sessionId: actor.actorSessionId, purpose: "PTC_REPLAY_REPAIR_REVIEW", institutionId: actor.actingInstitutionId }, tx);
+        const claimed = await tx.sagaRepairAction.updateMany({ where: { id: repair.id, status: "PROPOSED", reviewIdempotencyKey: null }, data: {
+          status: "APPROVED", reviewedByUserId: actor.actorUserId, reviewedByMandateId: authority.mandateId!, reviewStepUpId: stepUpEvidenceId,
+          reviewReason, reviewIdempotencyKey: idempotencyKey, reviewRequestDigest: requestDigest, reviewedAt: new Date(),
+        } });
+        if (claimed.count !== 1) throw new ConflictException("repair proposal changed concurrently");
+        const nextVersion = leg.currentObservationVersion + 1;
+        const observation = await tx.sagaLegObservation.create({ data: {
+          id: `sobs_${randomUUID()}`, settlementLegId: leg.id, version: nextVersion, idempotencyKey: observationIdempotencyKey,
+          requestDigest: observationRequestDigest, observation: validated.observed as unknown as Prisma.InputJsonValue,
+          observationDigest: validated.comparison.observedDigest, externalReference: validated.externalReference,
+          finalityClass: "FINAL", signatureStatus: "VERIFIED", evidenceObjectId: validated.evidence.id, observedAt: validated.observedAt,
+          recordedByUserId: repair.proposedByUserId, recordedByMandateId: repair.proposedByMandateId,
+          comparisonResult: "MATCHED", comparison: toCanonicalValue({ differences: [] }) as unknown as Prisma.InputJsonValue,
+        } });
+        if (leg.legType === "AUTHORITATIVE_RECORD_ACKNOWLEDGEMENT") {
+          const declaration = await tx.authoritativeRecordDeclaration.findUniqueOrThrow({ where: { transactionCaseId: caseId } });
+          const afterDigest = (validated.observed as Readonly<Record<string, unknown>>).afterDigest;
+          await tx.authoritativeRecordSnapshot.create({ data: {
+            id: `ars_${randomUUID()}`, authoritativeRecordDeclarationId: declaration.id, settlementSagaId: repair.reconciliationBreak.settlementSagaId,
+            snapshotKind: "AFTER", recordReference: validated.externalReference, payloadDigest: digest(afterDigest, "replacementObservation.observed.afterDigest"),
+            evidenceObjectId: validated.evidence.id, sourceAsOfAt: validated.observedAt, recordedByUserId: repair.proposedByUserId,
+          } });
+        }
+        await tx.sagaRepairAction.update({ where: { id: repair.id }, data: { status: "APPLIED", appliedAt: new Date(), appliedObservationId: observation.id } });
+        const resolved = await tx.reconciliationBreak.updateMany({ where: { id: breakId, status: "REPAIR_PROPOSED" }, data: {
+          status: "RESOLVED", resolutionEvidenceRef: validated.externalReference, resolutionEvidenceDigest: validated.comparison.observedDigest,
+          resolutionReason: repair.reason, resolvedByUserId: repair.proposedByUserId, independentlyClosedByUserId: actor.actorUserId, resolvedAt: new Date(),
+        } });
+        if (resolved.count !== 1) throw new ConflictException("reconciliation break changed concurrently");
+        const changedLeg = await tx.settlementLeg.updateMany({ where: { id: leg.id, state: "BREAK_OPEN", currentObservationVersion: leg.currentObservationVersion }, data: { state: "OBSERVED", currentObservationVersion: nextVersion } });
+        if (changedLeg.count !== 1) throw new ConflictException("saga leg changed concurrently");
+        const state = await this.refreshSagaState(tx, repair.reconciliationBreak.settlementSagaId);
+        await tx.transactionCase.update({ where: { id: caseId }, data: { aggregateVersion: { increment: 1 }, routeState: `PTC_REPLAY_SAGA_${state}` } });
+        await appendGovernedAudit(tx, { actor: this.actorRef(actor), event: "rail.ptc_replay.repair_applied", detail: { caseId, breakId, repairId, observationId: observation.id, reviewReason, authorityMandateId: authority.mandateId } });
+        return tx.settlementSaga.findUniqueOrThrow({ where: { id: repair.reconciliationBreak.settlementSagaId }, include: this.sagaInclude() });
+      });
+    } catch (error) {
+      const replay = await this.db.sagaRepairAction.findUnique({ where: { id: repairId } });
+      if (replay?.reviewIdempotencyKey === idempotencyKey && replay.reviewRequestDigest === requestDigest && replay.status === "APPLIED")
+        return this.loadSaga(repair.reconciliationBreak.settlementSagaId);
+      throw error;
+    }
   }
 
   async comparison(actor: RoomActor, caseId: string, sagaId: string) {
@@ -700,7 +877,11 @@ export class PtcReplayService {
       this.loadSaga(sagaId),
       this.db.transactionCase.findUnique({ where: { id: caseId }, include: { parties: true, functionAssignments: true, decisions: { include: { approvals: true } }, transitions: true } }),
       this.db.authoritativeRecordDeclaration.findUnique({ where: { transactionCaseId: caseId }, include: { snapshots: { orderBy: { sourceAsOfAt: "asc" } } } }),
-      this.db.reconciliationBreak.findMany({ where: { transactionCaseId: caseId }, orderBy: { createdAt: "asc" } }),
+      this.db.reconciliationBreak.findMany({
+        where: { transactionCaseId: caseId, settlementSaga: { transactionRoute: "PTC", executionMode: "OBSERVE_ONLY" } },
+        orderBy: { createdAt: "asc" },
+        include: { repairActions: { orderBy: { proposedAt: "asc" } } },
+      }),
       this.comparison(actor, caseId, sagaId),
     ]);
     if (!transactionCase || saga.transactionCaseId !== caseId || saga.transactionRoute !== "PTC")
@@ -717,6 +898,42 @@ export class PtcReplayService {
       comparison,
     })));
     return { generatedAt: new Date().toISOString(), evidencePack: pack, evidencePackDigest: sha256Digest(pack) };
+  }
+
+  private canonicalObservationBody(value: unknown): Prisma.InputJsonValue {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      throw new BadRequestException("replacementObservation must be an object");
+    if ("stepUpEvidenceId" in value)
+      throw new BadRequestException("replacementObservation must not carry step-up evidence; the repair proposal has its own ceremony");
+    try {
+      return toCanonicalValue(value) as unknown as Prisma.InputJsonValue;
+    } catch (error) {
+      throw new BadRequestException(`replacementObservation is not canonical JSON: ${(error as Error).message}`);
+    }
+  }
+
+  private async validateObservation(caseId: string, leg: Pick<LoadedLeg, "expected">, body: ObservationBody, institutionId: string) {
+    const evidenceObjectId = required(body.evidenceObjectId, "replacementObservation.evidenceObjectId", 160);
+    const evidence = await this.requireEvidence(evidenceObjectId, caseId, institutionId, null);
+    const observedAt = date(body.observedAt, "replacementObservation.observedAt");
+    if (observedAt.getTime() > Date.now() + 300_000)
+      throw new BadRequestException("replacement observation cannot be materially in the future");
+    const externalReference = required(body.externalReference, "replacementObservation.externalReference", 500);
+    if (required(body.finalityClass, "replacementObservation.finalityClass", 40) !== "FINAL")
+      throw new BadRequestException("replacementObservation.finalityClass must be FINAL");
+    if (required(body.signatureStatus, "replacementObservation.signatureStatus", 40) !== "VERIFIED")
+      throw new BadRequestException("replacementObservation.signatureStatus must be VERIFIED");
+    required(body.reason, "replacementObservation.reason", 1_000);
+    let observed;
+    try {
+      observed = toCanonicalValue(body.observed ?? {});
+    } catch (error) {
+      throw new BadRequestException(`replacementObservation.observed is not canonical JSON: ${(error as Error).message}`);
+    }
+    const comparison = comparePtcReplayObservation(leg.expected, observed);
+    if (comparison.observedDigest !== evidence.payloadDigest)
+      throw new ConflictException("replacement observation digest does not match its retained evidence version");
+    return { evidence, observedAt, externalReference, observed, comparison };
   }
 
   private evidenceRequirements(input: ConventionalPtcReplayInput, body: SagaCreateBody): EvidenceRequirement[] {
@@ -861,7 +1078,7 @@ export class PtcReplayService {
       where: { id: legId },
       include: {
         settlementSaga: { include: { legs: true } },
-        observations: { orderBy: { version: "asc" } },
+        observations: { include: { appliedRepairs: true }, orderBy: { version: "asc" } },
       },
     });
     if (!leg || leg.settlementSagaId !== sagaId || leg.settlementSaga.transactionCaseId !== caseId || leg.settlementSaga.transactionRoute !== "PTC")
@@ -888,7 +1105,7 @@ export class PtcReplayService {
       evidenceLinks: { orderBy: { sequence: "asc" as const } },
       legs: {
         orderBy: { sequence: "asc" as const },
-        include: { observations: { orderBy: { version: "asc" as const } } },
+        include: { observations: { include: { appliedRepairs: true }, orderBy: { version: "asc" as const } } },
       },
       recordSnapshots: { orderBy: { sourceAsOfAt: "asc" as const } },
       breaks: { orderBy: { createdAt: "asc" as const } },

@@ -46,3 +46,6 @@ and a participant-authorised historic PTC replay remain open
 - No issue, allotment, cash, notice, RTA/depository/register, token, settlement, external-dispatch or
   webhook-egress adapter is imported or called.
 - No UI, deployment, production readiness, regulatory permission or public capability is claimed.
+
+The previously open repair capability was implemented only in the separately tested follow-on
+checkpoint: `docs/qa/AssureRail_PR10_Governed_Repair_Evidence.md`.
