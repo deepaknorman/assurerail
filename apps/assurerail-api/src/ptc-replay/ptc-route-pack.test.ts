@@ -5,6 +5,7 @@ import {
   buildConventionalPtcReplayPlan,
   comparePtcReplayObservation,
   CONVENTIONAL_PTC_REPLAY_ROUTE_PACK,
+  derivePtcSagaState,
 } from "./ptc-route-pack";
 import { SYNTHETIC_CONVENTIONAL_PTC_REPLAY_V1 } from "./fixtures/synthetic-conventional-ptc-replay-v1";
 
@@ -52,6 +53,23 @@ test("[PR10][PTC] observations are immutable comparisons and a difference remain
   const record = plan.find((leg) => leg.legType === "AUTHORITATIVE_RECORD_ACKNOWLEDGEMENT")!;
   assert.equal(comparePtcReplayObservation(record.expected, record.expected).result, "MATCHED");
   assert.equal(comparePtcReplayObservation(record.expected, { recordReference: "incorrect" }).result, "BREAK_OPEN");
+});
+
+test("[PR10][PTC] saga state fails closed on breaks and completes only after every required reconciliation", () => {
+  assert.equal(derivePtcSagaState([{ required: true, state: "PLANNED" }], 0), "READY");
+  assert.equal(derivePtcSagaState([
+    { required: true, state: "RECONCILED" },
+    { required: true, state: "PLANNED" },
+  ], 0), "EXECUTING");
+  assert.equal(derivePtcSagaState([
+    { required: true, state: "RECONCILED" },
+    { required: true, state: "OBSERVED" },
+  ], 0), "OBSERVED");
+  assert.equal(derivePtcSagaState([
+    { required: true, state: "RECONCILED" },
+    { required: true, state: "RECONCILED" },
+  ], 0), "RECONCILED");
+  assert.equal(derivePtcSagaState([{ required: true, state: "RECONCILED" }], 1), "BREAK_OPEN");
 });
 
 test("[PR10][PTC] unsafe partial lifecycle ownership and invalid exact values fail closed", () => {

@@ -40,4 +40,29 @@ export class PtcReplayController {
   createSaga(@Req() req: RailRequest, @Param("caseId") caseId: string, @Body() body: Parameters<PtcReplayService["createSaga"]>[2]) {
     return this.replay.createSaga(context(req), caseId, body);
   }
+
+  @Post("sagas/:sagaId/legs/:legId/observations")
+  observe(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("sagaId") sagaId: string, @Param("legId") legId: string, @Body() body: Parameters<PtcReplayService["recordObservation"]>[4]) {
+    return this.replay.recordObservation(context(req), caseId, sagaId, legId, body);
+  }
+
+  @Post("sagas/:sagaId/legs/:legId/reconcile")
+  reconcile(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("sagaId") sagaId: string, @Param("legId") legId: string, @Body() body: Parameters<PtcReplayService["reconcileLeg"]>[4]) {
+    return this.replay.reconcileLeg(context(req), caseId, sagaId, legId, body);
+  }
+
+  @Get("breaks")
+  breaks(@Req() req: RailRequest, @Param("caseId") caseId: string) {
+    return this.replay.listBreaks(context(req), caseId);
+  }
+
+  @Get("sagas/:sagaId/comparison")
+  comparison(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("sagaId") sagaId: string) {
+    return this.replay.comparison(context(req), caseId, sagaId);
+  }
+
+  @Get("sagas/:sagaId/evidence-pack")
+  evidencePack(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("sagaId") sagaId: string) {
+    return this.replay.evidencePack(context(req), caseId, sagaId);
+  }
 }

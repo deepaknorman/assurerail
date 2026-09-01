@@ -18,7 +18,9 @@ import { PrismaService } from "../store/prisma.service";
 import {
   buildConventionalPtcFunctionAssignments,
   buildConventionalPtcReplayPlan,
+  comparePtcReplayObservation,
   CONVENTIONAL_PTC_REPLAY_ROUTE_PACK,
+  derivePtcSagaState,
   type ConventionalPtcReplayInput,
 } from "./ptc-route-pack";
 
@@ -62,6 +64,25 @@ type SagaCreateBody = {
   reason?: string;
   stepUpEvidenceId?: string;
 };
+
+type ObservationBody = {
+  idempotencyKey?: string;
+  observed?: unknown;
+  externalReference?: string;
+  finalityClass?: string;
+  signatureStatus?: string;
+  evidenceObjectId?: string;
+  observedAt?: string;
+  reason?: string;
+  stepUpEvidenceId?: string;
+};
+
+type LoadedLeg = Prisma.SettlementLegGetPayload<{
+  include: {
+    settlementSaga: { include: { legs: true } };
+    observations: true;
+  };
+}>;
 
 type EvidenceRequirement = {
   role: keyof EvidenceBindings;
@@ -109,6 +130,12 @@ function commandDigest(scope: string, body: Readonly<Record<string, unknown>>): 
 
 function unique(error: unknown): boolean {
   return (error as { code?: string } | null)?.code === "P2002";
+}
+
+function date(value: unknown, name: string): Date {
+  const parsed = new Date(required(value, name, 80));
+  if (!Number.isFinite(parsed.getTime())) throw new BadRequestException(`${name} must be an ISO-8601 timestamp`);
+  return parsed;
 }
 
 @Injectable()
@@ -248,11 +275,6 @@ export class PtcReplayService {
   async createSaga(actor: RoomActor, caseId: string, body: SagaCreateBody) {
     const { transactionCase, authority } = await this.requireOwner(actor, caseId);
     this.assertPtcRoute(transactionCase);
-    if (transactionCase.status !== "APPROVED_FOR_EXECUTION")
-      throw new ConflictException("PTC replay saga may be planned only after independent case approval");
-    const authorisation = await this.db.ptcReplayAuthorisation.findUnique({ where: { transactionCaseId: caseId } });
-    if (!authorisation || authorisation.status !== "APPROVED" || !authorisation.effectiveAt)
-      throw new ForbiddenException("case is not allow-listed by an approved PTC replay authorisation");
     const idempotencyKey = required(body.idempotencyKey, "idempotencyKey", 200);
     const requestDigest = commandDigest("PTC_REPLAY_SAGA_CREATE", { caseId, ...body });
     const existing = await this.db.settlementSaga.findUnique({
@@ -263,6 +285,11 @@ export class PtcReplayService {
         throw new ConflictException("saga idempotency key conflicts with a retained saga");
       return this.loadSaga(existing.id);
     }
+    if (transactionCase.status !== "APPROVED_FOR_EXECUTION")
+      throw new ConflictException("PTC replay saga may be planned only after independent case approval");
+    const authorisation = await this.db.ptcReplayAuthorisation.findUnique({ where: { transactionCaseId: caseId } });
+    if (!authorisation || authorisation.status !== "APPROVED" || !authorisation.effectiveAt)
+      throw new ForbiddenException("case is not allow-listed by an approved PTC replay authorisation");
     const expectedCaseAggregateVersion = positiveInteger(body.expectedCaseAggregateVersion, "expectedCaseAggregateVersion");
     if (transactionCase.aggregateVersion !== expectedCaseAggregateVersion)
       throw new ConflictException("stale case aggregate version");
@@ -430,6 +457,268 @@ export class PtcReplayService {
     return this.loadSaga(sagaId);
   }
 
+  async recordObservation(
+    actor: RoomActor,
+    caseId: string,
+    sagaId: string,
+    legId: string,
+    body: ObservationBody,
+  ) {
+    const { transactionCase } = await this.requireCase(actor, caseId, "OPERATE_CASE");
+    const leg = await this.requireLeg(caseId, sagaId, legId);
+    if (leg.settlementSaga.transactionRoute !== "PTC" || leg.settlementSaga.executionMode !== "OBSERVE_ONLY")
+      throw new ForbiddenException("PTC replay observations cannot dispatch live actions");
+    if (leg.participantOwnerInstitutionId !== actor.actingInstitutionId)
+      throw new ForbiddenException("only the declared participant owner may record this leg");
+    const idempotencyKey = required(body.idempotencyKey, "idempotencyKey", 200);
+    const requestDigest = commandDigest("PTC_REPLAY_OBSERVATION_RECORD", { caseId, sagaId, legId, ...body });
+    const replay = await this.db.sagaLegObservation.findUnique({
+      where: { settlementLegId_idempotencyKey: { settlementLegId: legId, idempotencyKey } },
+    });
+    if (replay) {
+      if (replay.requestDigest !== requestDigest)
+        throw new ConflictException("observation idempotency key was reused with different content");
+      return this.loadSaga(sagaId);
+    }
+    if (transactionCase.status !== "EXECUTION_PENDING")
+      throw new ConflictException("observations may be recorded only while case execution is pending");
+    if (leg.currentObservationVersion !== 0 || leg.observations.length !== 0)
+      throw new ConflictException("an initial observation already exists; correction requires governed repair");
+    await this.assertPriorLegsObserved(sagaId, leg.sequence);
+    const authority = await this.access.requireHuman({
+      userId: actor.actorUserId,
+      institutionId: actor.actingInstitutionId,
+      action: "OPERATE_ROUTE",
+      scopeType: "TRANSACTION_CASE",
+      scopeRef: caseId,
+    });
+    const evidenceObjectId = required(body.evidenceObjectId, "evidenceObjectId", 160);
+    const evidence = await this.requireEvidence(evidenceObjectId, caseId, actor.actingInstitutionId, null);
+    const observedAt = date(body.observedAt, "observedAt");
+    if (observedAt.getTime() > Date.now() + 300_000)
+      throw new BadRequestException("observedAt cannot be materially in the future");
+    const externalReference = required(body.externalReference, "externalReference", 500);
+    if (required(body.finalityClass, "finalityClass", 40) !== "FINAL")
+      throw new BadRequestException("finalityClass must be FINAL for replay evidence");
+    if (required(body.signatureStatus, "signatureStatus", 40) !== "VERIFIED")
+      throw new BadRequestException("signatureStatus must be VERIFIED for replay evidence");
+    const observed = toCanonicalValue(body.observed ?? {});
+    const comparison = comparePtcReplayObservation(leg.expected, observed);
+    if (comparison.observedDigest !== evidence.payloadDigest)
+      throw new ConflictException("observation digest does not match its retained evidence version");
+    const reason = required(body.reason, "reason", 1_000);
+    const stepUpEvidenceId = required(body.stepUpEvidenceId, "stepUpEvidenceId", 160);
+    try {
+      await this.db.$transaction(async (tx) => {
+        await this.stepUp.consume({
+          evidenceId: stepUpEvidenceId,
+          userId: actor.actorUserId,
+          sessionId: actor.actorSessionId,
+          purpose: "PTC_REPLAY_OBSERVATION_RECORD",
+          institutionId: actor.actingInstitutionId,
+        }, tx);
+        const changed = await tx.settlementLeg.updateMany({
+          where: { id: leg.id, currentObservationVersion: 0, state: "PLANNED" },
+          data: { state: comparison.result === "MATCHED" ? "OBSERVED" : "BREAK_OPEN", currentObservationVersion: 1 },
+        });
+        if (changed.count !== 1) throw new ConflictException("saga leg changed concurrently");
+        const observation = await tx.sagaLegObservation.create({ data: {
+          id: `sobs_${randomUUID()}`,
+          settlementLegId: leg.id,
+          version: 1,
+          idempotencyKey,
+          requestDigest,
+          observation: observed as unknown as Prisma.InputJsonValue,
+          observationDigest: comparison.observedDigest,
+          externalReference,
+          finalityClass: "FINAL",
+          signatureStatus: "VERIFIED",
+          evidenceObjectId: evidence.id,
+          observedAt,
+          recordedByUserId: actor.actorUserId,
+          recordedByMandateId: authority.mandateId!,
+          comparisonResult: comparison.result,
+          comparison: toCanonicalValue({ differences: comparison.differences }) as unknown as Prisma.InputJsonValue,
+        } });
+        if (comparison.result === "BREAK_OPEN") {
+          await tx.reconciliationBreak.create({ data: {
+            id: `rbreak_${randomUUID()}`,
+            transactionCaseId: caseId,
+            settlementSagaId: sagaId,
+            settlementLegId: leg.id,
+            breakCode: "PTC_LEG_OBSERVATION_MISMATCH",
+            severity: "CRITICAL",
+            expected: comparison.expected as unknown as Prisma.InputJsonValue,
+            observed: comparison.observed as unknown as Prisma.InputJsonValue,
+            expectedDigest: comparison.expectedDigest,
+            observedDigest: comparison.observedDigest,
+            blockedCapabilities: ["CASE_COMPLETION"],
+            ownerInstitutionId: actor.actingInstitutionId,
+            dueAt: new Date(Date.now() + 4 * 60 * 60 * 1_000),
+            openedByUserId: actor.actorUserId,
+          } });
+        }
+        if (leg.legType === "AUTHORITATIVE_RECORD_ACKNOWLEDGEMENT" && comparison.result === "MATCHED") {
+          const declaration = await tx.authoritativeRecordDeclaration.findUniqueOrThrow({ where: { transactionCaseId: caseId } });
+          const afterDigest = (observed as Readonly<Record<string, unknown>>).afterDigest;
+          await tx.authoritativeRecordSnapshot.create({ data: {
+            id: `ars_${randomUUID()}`,
+            authoritativeRecordDeclarationId: declaration.id,
+            settlementSagaId: sagaId,
+            snapshotKind: "AFTER",
+            recordReference: externalReference,
+            payloadDigest: digest(afterDigest, "observed.afterDigest"),
+            evidenceObjectId: evidence.id,
+            sourceAsOfAt: observedAt,
+            recordedByUserId: actor.actorUserId,
+          } });
+        }
+        const state = await this.refreshSagaState(tx, sagaId);
+        await tx.transactionCase.update({
+          where: { id: caseId },
+          data: { aggregateVersion: { increment: 1 }, routeState: `PTC_REPLAY_SAGA_${state}` },
+        });
+        await appendGovernedAudit(tx, {
+          actor: this.actorRef(actor),
+          event: "rail.ptc_replay.observation_recorded",
+          detail: { caseId, sagaId, legId, observationId: observation.id, comparisonResult: comparison.result, reason, authorityMandateId: authority.mandateId },
+        });
+      });
+    } catch (error) {
+      const retained = await this.db.sagaLegObservation.findUnique({ where: { settlementLegId_idempotencyKey: { settlementLegId: legId, idempotencyKey } } });
+      if (retained?.requestDigest === requestDigest) return this.loadSaga(sagaId);
+      throw error;
+    }
+    return this.loadSaga(sagaId);
+  }
+
+  async reconcileLeg(
+    actor: RoomActor,
+    caseId: string,
+    sagaId: string,
+    legId: string,
+    body: { idempotencyKey?: string; reason?: string; stepUpEvidenceId?: string },
+  ) {
+    const { transactionCase } = await this.requireCase(actor, caseId, "OPERATE_CASE");
+    const leg = await this.requireLeg(caseId, sagaId, legId);
+    if (leg.participantOwnerInstitutionId !== actor.actingInstitutionId)
+      throw new ForbiddenException("only the declared participant owner may reconcile this leg");
+    const idempotencyKey = required(body.idempotencyKey, "idempotencyKey", 200);
+    const requestDigest = commandDigest("PTC_REPLAY_LEG_RECONCILE", { caseId, sagaId, legId, ...body });
+    if (leg.reconciliationIdempotencyKey) {
+      if (leg.reconciliationIdempotencyKey !== idempotencyKey || leg.reconciliationRequestDigest !== requestDigest)
+        throw new ConflictException("leg reconciliation command conflicts with the retained result");
+      return this.loadSaga(sagaId);
+    }
+    if (!["EXECUTION_PENDING", "COMPLETION_PENDING"].includes(transactionCase.status))
+      throw new ConflictException("leg reconciliation requires an active PTC replay case");
+    const observation = leg.observations.at(-1);
+    if (leg.state !== "OBSERVED" || !observation || observation.comparisonResult !== "MATCHED")
+      throw new ConflictException("only an exact observed leg can be reconciled");
+    if (observation.recordedByUserId === actor.actorUserId)
+      throw new ForbiddenException("observation recorder cannot independently reconcile the same leg");
+    await this.requireEvidence(observation.evidenceObjectId, caseId, actor.actingInstitutionId, null);
+    const authority = await this.access.requireHuman({ userId: actor.actorUserId, institutionId: actor.actingInstitutionId, action: "OPERATE_ROUTE", scopeType: "TRANSACTION_CASE", scopeRef: caseId });
+    const reason = required(body.reason, "reason", 1_000);
+    const stepUpEvidenceId = required(body.stepUpEvidenceId, "stepUpEvidenceId", 160);
+    try {
+      await this.db.$transaction(async (tx) => {
+        await this.stepUp.consume({ evidenceId: stepUpEvidenceId, userId: actor.actorUserId, sessionId: actor.actorSessionId, purpose: "PTC_REPLAY_LEG_RECONCILE", institutionId: actor.actingInstitutionId }, tx);
+        const changed = await tx.settlementLeg.updateMany({
+          where: { id: leg.id, state: "OBSERVED", currentObservationVersion: observation.version },
+          data: {
+            state: "RECONCILED",
+            reconciledByUserId: actor.actorUserId,
+            reconciliationStepUpId: stepUpEvidenceId,
+            reconciliationReason: reason,
+            reconciliationIdempotencyKey: idempotencyKey,
+            reconciliationRequestDigest: requestDigest,
+            reconciledAt: new Date(),
+          },
+        });
+        if (changed.count !== 1) throw new ConflictException("saga leg changed concurrently");
+        const state = await this.refreshSagaState(tx, sagaId);
+        await tx.transactionCase.update({ where: { id: caseId }, data: { aggregateVersion: { increment: 1 }, routeState: `PTC_REPLAY_SAGA_${state}` } });
+        await appendGovernedAudit(tx, { actor: this.actorRef(actor), event: "rail.ptc_replay.leg_reconciled", detail: { caseId, sagaId, legId, observationId: observation.id, reason, authorityMandateId: authority.mandateId } });
+      });
+    } catch (error) {
+      const replay = await this.db.settlementLeg.findUnique({ where: { id: legId } });
+      if (replay?.reconciliationIdempotencyKey === idempotencyKey && replay.reconciliationRequestDigest === requestDigest)
+        return this.loadSaga(sagaId);
+      throw error;
+    }
+    return this.loadSaga(sagaId);
+  }
+
+  async listBreaks(actor: RoomActor, caseId: string) {
+    await this.requireCase(actor, caseId, "VIEW_CASE");
+    return this.db.reconciliationBreak.findMany({
+      where: { transactionCaseId: caseId, settlementSaga: { transactionRoute: "PTC" } },
+      orderBy: [{ status: "asc" }, { severity: "asc" }, { createdAt: "asc" }],
+    });
+  }
+
+  async comparison(actor: RoomActor, caseId: string, sagaId: string) {
+    await this.requireCase(actor, caseId, "VIEW_CASE");
+    const saga = await this.loadSaga(sagaId);
+    if (saga.transactionCaseId !== caseId || saga.transactionRoute !== "PTC")
+      throw new NotFoundException("PTC replay saga not found");
+    const rows = saga.legs.map((leg) => {
+      const current = leg.observations.at(-1);
+      return {
+        sequence: leg.sequence,
+        legKey: leg.legKey,
+        legType: leg.legType,
+        ownerInstitutionId: leg.participantOwnerInstitutionId,
+        state: leg.state,
+        expectedDigest: leg.expectedDigest,
+        observedDigest: current?.observationDigest ?? null,
+        comparisonResult: current?.comparisonResult ?? "NOT_OBSERVED",
+        externalReference: current?.externalReference ?? null,
+        differences: current ? (current.comparison as Record<string, unknown>).differences ?? [] : [],
+      };
+    });
+    const report = {
+      sagaId,
+      caseId,
+      executionMode: saga.executionMode,
+      sagaState: saga.state,
+      routePackRef: saga.routePackRef,
+      routePackVersion: saga.routePackVersion,
+      historicOutcomeRef: saga.historicOutcomeRef,
+      matched: rows.filter((row) => row.comparisonResult === "MATCHED").length,
+      breaks: rows.filter((row) => row.comparisonResult === "BREAK_OPEN").length,
+      notObserved: rows.filter((row) => row.comparisonResult === "NOT_OBSERVED").length,
+      rows,
+    };
+    return { ...report, reportDigest: sha256Digest(report) };
+  }
+
+  async evidencePack(actor: RoomActor, caseId: string, sagaId: string) {
+    await this.requireCase(actor, caseId, "VIEW_CASE");
+    const [saga, transactionCase, declaration, breaks, comparison] = await Promise.all([
+      this.loadSaga(sagaId),
+      this.db.transactionCase.findUnique({ where: { id: caseId }, include: { parties: true, functionAssignments: true, decisions: { include: { approvals: true } }, transitions: true } }),
+      this.db.authoritativeRecordDeclaration.findUnique({ where: { transactionCaseId: caseId }, include: { snapshots: { orderBy: { sourceAsOfAt: "asc" } } } }),
+      this.db.reconciliationBreak.findMany({ where: { transactionCaseId: caseId }, orderBy: { createdAt: "asc" } }),
+      this.comparison(actor, caseId, sagaId),
+    ]);
+    if (!transactionCase || saga.transactionCaseId !== caseId || saga.transactionRoute !== "PTC")
+      throw new NotFoundException("PTC replay saga not found");
+    const pack = toCanonicalValue(JSON.parse(JSON.stringify({
+      schemaId: "assurerail.conventional-ptc-replay-evidence-pack",
+      schemaVersion: "1.0.0",
+      executionMode: "OBSERVE_ONLY",
+      mutationStatement: "NO_MONEY_ISSUE_ALLOTMENT_REGISTER_OR_NOTICE_ACTION_DISPATCHED",
+      transactionCase,
+      saga,
+      authoritativeRecord: declaration,
+      reconciliationBreaks: breaks,
+      comparison,
+    })));
+    return { generatedAt: new Date().toISOString(), evidencePack: pack, evidencePackDigest: sha256Digest(pack) };
+  }
+
   private evidenceRequirements(input: ConventionalPtcReplayInput, body: SagaCreateBody): EvidenceRequirement[] {
     const requirements: EvidenceRequirement[] = [
       { role: "PROGRAMME_OR_TRUST", institutionId: input.trusteeInstitutionId, evidenceType: "PROGRAMME_OR_TRUST", digest: input.programmeTrust.programmeOrTrustEvidenceDigest },
@@ -459,7 +748,7 @@ export class PtcReplayService {
     return requirements;
   }
 
-  private async requireEvidence(evidenceObjectId: string, caseId: string, institutionId: string, evidenceType: string) {
+  private async requireEvidence(evidenceObjectId: string, caseId: string, institutionId: string, evidenceType: string | null) {
     const item = await this.db.evidenceObject.findUnique({
       where: { id: evidenceObjectId },
       include: {
@@ -470,10 +759,11 @@ export class PtcReplayService {
     const latest = item?.versions[0];
     if (!item || item.transactionCaseId !== caseId || item.institutionId !== institutionId ||
       item.institution.status !== "ACTIVE" || item.institution.admission?.status !== "ADMITTED" ||
-      item.evidenceType !== evidenceType || item.status !== "AVAILABLE" || !latest ||
+      (evidenceType && item.evidenceType !== evidenceType) || item.status !== "AVAILABLE" || !latest ||
       latest.validationStatus !== "VALID" || latest.signatureStatus !== "VERIFIED" ||
       latest.result !== "VERIFIED" || (latest.expiresAt && latest.expiresAt <= new Date())) {
-      throw new BadRequestException(`${evidenceType} evidence must be current, signed, valid, verified, available and case-scoped to ${institutionId}`);
+      const label = evidenceType ?? "observation";
+      throw new BadRequestException(`${label} evidence must be current, signed, valid, verified, available and case-scoped to ${institutionId}`);
     }
     return { id: item.id, payloadDigest: latest.payloadDigest };
   }
@@ -558,6 +848,37 @@ export class PtcReplayService {
     }
   }
 
+  private async assertPriorLegsObserved(sagaId: string, sequence: number): Promise<void> {
+    const pending = await this.db.settlementLeg.findFirst({
+      where: { settlementSagaId: sagaId, required: true, sequence: { lt: sequence }, state: { notIn: ["OBSERVED", "RECONCILED"] } },
+      orderBy: { sequence: "asc" },
+    });
+    if (pending) throw new ConflictException(`prior required leg is not observed: ${pending.legKey}`);
+  }
+
+  private async requireLeg(caseId: string, sagaId: string, legId: string): Promise<LoadedLeg> {
+    const leg = await this.db.settlementLeg.findUnique({
+      where: { id: legId },
+      include: {
+        settlementSaga: { include: { legs: true } },
+        observations: { orderBy: { version: "asc" } },
+      },
+    });
+    if (!leg || leg.settlementSagaId !== sagaId || leg.settlementSaga.transactionCaseId !== caseId || leg.settlementSaga.transactionRoute !== "PTC")
+      throw new NotFoundException("PTC replay saga leg not found");
+    return leg;
+  }
+
+  private async refreshSagaState(tx: Prisma.TransactionClient, sagaId: string) {
+    const [legs, openBreaks] = await Promise.all([
+      tx.settlementLeg.findMany({ where: { settlementSagaId: sagaId }, select: { required: true, state: true } }),
+      tx.reconciliationBreak.count({ where: { settlementSagaId: sagaId, status: { not: "RESOLVED" } } }),
+    ]);
+    const state = derivePtcSagaState(legs, openBreaks);
+    await tx.settlementSaga.update({ where: { id: sagaId }, data: { state, reconciledAt: state === "RECONCILED" ? new Date() : null } });
+    return state;
+  }
+
   private loadSaga(sagaId: string) {
     return this.db.settlementSaga.findUniqueOrThrow({ where: { id: sagaId }, include: this.sagaInclude() });
   }
@@ -565,7 +886,10 @@ export class PtcReplayService {
   private sagaInclude() {
     return {
       evidenceLinks: { orderBy: { sequence: "asc" as const } },
-      legs: { orderBy: { sequence: "asc" as const } },
+      legs: {
+        orderBy: { sequence: "asc" as const },
+        include: { observations: { orderBy: { version: "asc" as const } } },
+      },
       recordSnapshots: { orderBy: { sourceAsOfAt: "asc" as const } },
       breaks: { orderBy: { createdAt: "asc" as const } },
     };

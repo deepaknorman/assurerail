@@ -2,8 +2,8 @@
 
 **Executed:** 1 September 2026
 
-**Result:** planning checkpoint passed; historic replay, observation/reconciliation and live route
-acceptance remain open
+**Result:** planning checkpoint passed. Observation/reconciliation was subsequently implemented and
+is evidenced separately; historic replay and live-route acceptance remain open
 
 ## Checks
 
@@ -19,7 +19,8 @@ acceptance remain open
 
 - The PTC module defaults off and is accepted only with the neutral case and required observe-only
   saga foundation in `REPLAY/SHADOW`.
-- Its five routes are case-scoped and limited to authorisation and saga planning.
+- At this checkpoint, its five routes were case-scoped and limited to authorisation and saga
+  planning.
 - The service imports no settlement, token, anchor, webhook-egress or external-dispatch adapter.
 - Saga writes explicitly set `transactionRoute=PTC` and `executionMode=OBSERVE_ONLY`.
 - Planning validates exact route dimensions, active case parties, maker/checker allow-listing,
@@ -33,6 +34,9 @@ acceptance remain open
 
 ## Not established
 
-- No observation, reconciliation, break-repair or comparison-export endpoint exists in this phase.
+- Observation/reconciliation was deliberately absent from this checkpoint and was added only in the
+  separately tested follow-on phase; break repair remains absent.
 - No participant-authorised historic PTC evidence pack has been replayed.
 - No external action, deployment, production readiness or regulatory permission is claimed.
+
+Follow-on evidence: `docs/qa/AssureRail_PR10_Observation_Reconciliation_Evidence.md`.

@@ -287,8 +287,55 @@ export function buildConventionalPtcFunctionAssignments(
 export function comparePtcReplayObservation(
   expectedInput: unknown,
   observedInput: unknown,
-): { readonly result: "MATCHED" | "BREAK_OPEN"; readonly expectedDigest: string; readonly observedDigest: string } {
-  const expectedDigest = sha256Digest(toCanonicalValue(expectedInput));
-  const observedDigest = sha256Digest(toCanonicalValue(observedInput));
-  return Object.freeze({ result: expectedDigest === observedDigest ? "MATCHED" : "BREAK_OPEN", expectedDigest, observedDigest });
+): {
+  readonly result: "MATCHED" | "BREAK_OPEN";
+  readonly expected: CanonicalValue;
+  readonly observed: CanonicalValue;
+  readonly expectedDigest: string;
+  readonly observedDigest: string;
+  readonly differences: readonly { readonly path: string; readonly expected: CanonicalValue | undefined; readonly observed: CanonicalValue | undefined }[];
+} {
+  const expected = toCanonicalValue(expectedInput);
+  const observed = toCanonicalValue(observedInput);
+  const differences: Array<{ path: string; expected: CanonicalValue | undefined; observed: CanonicalValue | undefined }> = [];
+  const walk = (left: CanonicalValue | undefined, right: CanonicalValue | undefined, path: string): void => {
+    if (left === undefined || right === undefined) {
+      differences.push({ path, expected: left, observed: right });
+      return;
+    }
+    if (Array.isArray(left) || Array.isArray(right)) {
+      if (!Array.isArray(left) || !Array.isArray(right) || sha256Digest(left) !== sha256Digest(right))
+        differences.push({ path, expected: left, observed: right });
+      return;
+    }
+    if (left !== null && right !== null && typeof left === "object" && typeof right === "object") {
+      const leftRecord = left as Readonly<Record<string, CanonicalValue>>;
+      const rightRecord = right as Readonly<Record<string, CanonicalValue>>;
+      for (const key of [...new Set([...Object.keys(leftRecord), ...Object.keys(rightRecord)])].sort())
+        walk(leftRecord[key], rightRecord[key], `${path}.${key}`);
+      return;
+    }
+    if (left !== right) differences.push({ path, expected: left, observed: right });
+  };
+  walk(expected, observed, "$");
+  return Object.freeze({
+    result: differences.length === 0 ? "MATCHED" : "BREAK_OPEN",
+    expected,
+    observed,
+    expectedDigest: sha256Digest(expected),
+    observedDigest: sha256Digest(observed),
+    differences: Object.freeze(differences),
+  });
+}
+
+export function derivePtcSagaState(
+  legs: readonly { required: boolean; state: string }[],
+  openBreakCount: number,
+): "READY" | "EXECUTING" | "OBSERVED" | "RECONCILED" | "BREAK_OPEN" {
+  if (openBreakCount > 0 || legs.some((leg) => leg.state === "BREAK_OPEN")) return "BREAK_OPEN";
+  const required = legs.filter((leg) => leg.required);
+  if (required.length === 0 || required.every((leg) => leg.state === "PLANNED")) return "READY";
+  if (required.every((leg) => leg.state === "RECONCILED")) return "RECONCILED";
+  if (required.every((leg) => ["OBSERVED", "RECONCILED"].includes(leg.state))) return "OBSERVED";
+  return "EXECUTING";
 }

@@ -74,22 +74,42 @@ Confirm after creation:
 - no DA-specific credit-decision or transfer-document field was fabricated; and
 - no external instruction, outbox delivery or provider action was created.
 
-## 6. Current stop boundary
+## 6. Observation and independent reconciliation
 
-This checkpoint does not expose commands to record observations, reconcile legs, repair breaks,
-export a comparison, issue/allot a PTC, move cash, deliver notices or update an RTA/depository/
-register. Stop after plan verification. Do not manipulate database rows to simulate the next phase.
+Process required legs in sequence. The declared owner institution records the canonical historic
+facts with a unique idempotency key, final external reference, `FINAL` finality, `VERIFIED`
+signature status, observation time, reason, case-scoped step-up and a retained evidence object whose
+latest payload digest equals the observation digest. The service rejects an observation if an
+earlier required leg is unobserved or broken.
 
-## 7. Disable and retain
+- An exact comparison moves the leg to `OBSERVED` and retains both digests and the empty difference
+  set.
+- A mismatch moves the leg to `BREAK_OPEN` and creates a critical reconciliation break that blocks
+  case completion. Stop the sequence; do not rewrite either the expected or observed facts.
+- A different authorised human at the same declared owner institution must independently reconcile
+  an exact observation. The recorder cannot approve their own observation.
+- Use the comparison and evidence-pack reads to review every leg, external reference, difference,
+  open break and retained digest.
+- Only an exact, recordkeeper-owned authoritative-record acknowledgement creates the `AFTER`
+  snapshot. Trustee transaction control remains separate and cannot mask a register discrepancy.
 
-Set `ARAIL_PTC_REPLAY_V1=off` and restart the non-live environment to remove the planning routes.
+## 7. Current stop boundary
+
+This checkpoint does not expose break repair or commands to issue/allot a PTC, move cash, deliver
+notices or update an RTA/depository/register. Observations are historic evidence only. Stop at any
+break and do not manipulate database rows to simulate repair or completion.
+
+## 8. Disable and retain
+
+Set `ARAIL_PTC_REPLAY_V1=off` and restart the non-live environment to remove the replay routes.
 Do not delete saga, evidence, authorisation or audit history. Export the case/evidence references and
 record the reason for suspension. Since this stage dispatches no external action, rollback requires
 no money/title compensation.
 
-## 8. Gate before completed replay acceptance
+## 9. Gate before completed replay acceptance
 
 Obtain the named historic transaction data owner, permission to use the evidence, actual trustee
 control decision, route-defined RTA/depository/register before/after acknowledgements, and required
-counsel/rating/assurance evidence. The append-only observation/reconciliation/export phase and its
-tests must be implemented before that evidence can be replayed and accepted.
+counsel/rating/assurance evidence. The governed break-repair phase and its tests must be implemented,
+and every required leg must be replayed and independently reconciled without an unresolved critical
+break, before the historic transaction can be accepted as a completed replay.

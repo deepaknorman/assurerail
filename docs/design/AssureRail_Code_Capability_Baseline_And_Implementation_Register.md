@@ -1100,6 +1100,21 @@ backup/restore retention. This closes the previously recorded planning-service d
 does not add observation/reconciliation endpoints or satisfy the external historic transaction
 gate.
 
+**PR-10 observation/reconciliation checkpoint (1 September 2026):** the same off-by-default,
+case-scoped module now exposes ten endpoints: the five governance/planning routes plus append-only
+initial observation, exact-result reconciliation, break listing, comparison and evidence-pack
+reads. The declared leg-owner institution must supply canonical observed facts backed by a current,
+signed, verified evidence version with the same digest, a final external reference, idempotency key
+and case-scoped step-up. Exact and mismatched results, field-level differences, leg/saga/case state,
+critical completion-blocking breaks and governed audit are committed atomically. The observation
+recorder cannot reconcile the same leg; an authoritative after-snapshot is created only from an
+exact recordkeeper-owned acknowledgement. The enhanced disposable database rehearsal proves
+observation replay, independent reconciliation, mismatch-to-break, comparison and evidence-pack
+behaviour, while the full Rail suite passes 213/213. There is still no break-repair endpoint,
+external issue/allotment/cash/notice/register action, live adapter, UI or participant-authorised
+historic PTC replay. Executed evidence:
+`docs/qa/AssureRail_PR10_Observation_Reconciliation_Evidence.md`.
+
 ### PR-11 — Tokenised-DA representation adapter refactor
 
 **Dependencies:** PR-06 and PR-09

@@ -224,7 +224,112 @@ async function run(): Promise<void> {
     assert.equal(await db.settlementSaga.count({ where: { transactionCaseId: caseId } }), 1);
     assert.equal(await db.authoritativeRecordDeclaration.count({ where: { transactionCaseId: caseId } }), 1);
     assert.equal(await db.auditLog.count({ where: { event: "rail.ptc_replay.saga_planned" } }), 1);
-    process.stdout.write(`[PR10-SERVICE-DB] PASS saga=${created.id} legs=${created.legs.length} evidence=${created.evidenceLinks.length} idempotent=true\n`);
+    await db.transactionCase.update({ where: { id: caseId }, data: { status: "EXECUTION_PENDING" } });
+    const firstLeg = created.legs[0]!;
+    const observationEvidenceId = "evidence_ptc_exact_observation";
+    await db.evidenceObject.create({ data: {
+      id: observationEvidenceId,
+      institutionId: firstLeg.participantOwnerInstitutionId,
+      transactionCaseId: caseId,
+      evidenceType: "PTC_REPLAY_OBSERVATION",
+      classification: "CASE_CONFIDENTIAL",
+      purpose: "Synthetic exact observation",
+      status: "AVAILABLE",
+      currentVersion: 1,
+      retentionUntilAt: future,
+      createdByUserId: userId,
+      versions: { create: {
+        id: "evidence_version_ptc_exact_observation",
+        version: 1,
+        schemaId: "synthetic.ptc-observation",
+        schemaVersion: "1.0.0",
+        payloadDigest: firstLeg.expectedDigest,
+        signatureStatus: "VERIFIED",
+        result: "VERIFIED",
+        sourceAsOfAt: now,
+        expiresAt: future,
+        qualifications: [],
+        validationStatus: "VALID",
+        validationDetail: {},
+        createdByUserId: userId,
+      } },
+    } });
+    const observer: RoomActor = { ...actor, actorUserId: "ptc_observer_10", actingInstitutionId: firstLeg.participantOwnerInstitutionId };
+    const observationBody: Parameters<PtcReplayService["recordObservation"]>[4] = {
+      idempotencyKey: "ptc-observation-exact-10",
+      observed: firstLeg.expected,
+      externalReference: "synthetic://exact-observation",
+      finalityClass: "FINAL",
+      signatureStatus: "VERIFIED",
+      evidenceObjectId: observationEvidenceId,
+      observedAt: now.toISOString(),
+      reason: "Synthetic exact observation",
+      stepUpEvidenceId: "step-observation",
+    };
+    const observedSaga = await service.recordObservation(observer, caseId, created.id, firstLeg.id, observationBody);
+    assert.equal(observedSaga.legs[0]!.state, "OBSERVED");
+    assert.equal(observedSaga.legs[0]!.observations.length, 1);
+    const observationReplay = await service.recordObservation(observer, caseId, created.id, firstLeg.id, observationBody);
+    assert.equal(observationReplay.legs[0]!.observations.length, 1);
+    const checker: RoomActor = { ...observer, actorUserId: "ptc_checker_10" };
+    const reconciledSaga = await service.reconcileLeg(checker, caseId, created.id, firstLeg.id, {
+      idempotencyKey: "ptc-reconcile-exact-10",
+      reason: "Independent synthetic reconciliation",
+      stepUpEvidenceId: "step-reconcile",
+    });
+    assert.equal(reconciledSaga.legs[0]!.state, "RECONCILED");
+
+    const secondLeg = reconciledSaga.legs[1]!;
+    const mismatchObserved = { mismatch: "synthetic" };
+    const mismatchEvidenceId = "evidence_ptc_mismatch_observation";
+    await db.evidenceObject.create({ data: {
+      id: mismatchEvidenceId,
+      institutionId: secondLeg.participantOwnerInstitutionId,
+      transactionCaseId: caseId,
+      evidenceType: "PTC_REPLAY_OBSERVATION",
+      classification: "CASE_CONFIDENTIAL",
+      purpose: "Synthetic mismatch observation",
+      status: "AVAILABLE",
+      currentVersion: 1,
+      retentionUntilAt: future,
+      createdByUserId: userId,
+      versions: { create: {
+        id: "evidence_version_ptc_mismatch_observation",
+        version: 1,
+        schemaId: "synthetic.ptc-observation",
+        schemaVersion: "1.0.0",
+        payloadDigest: sha256Digest(mismatchObserved),
+        signatureStatus: "VERIFIED",
+        result: "VERIFIED",
+        sourceAsOfAt: now,
+        expiresAt: future,
+        qualifications: [],
+        validationStatus: "VALID",
+        validationDetail: {},
+        createdByUserId: userId,
+      } },
+    } });
+    const mismatchActor: RoomActor = { ...actor, actorUserId: "ptc_mismatch_observer_10", actingInstitutionId: secondLeg.participantOwnerInstitutionId };
+    const brokenSaga = await service.recordObservation(mismatchActor, caseId, created.id, secondLeg.id, {
+      idempotencyKey: "mismatch-replay",
+      observed: mismatchObserved,
+      externalReference: "synthetic://mismatch-observation",
+      finalityClass: "FINAL",
+      signatureStatus: "VERIFIED",
+      evidenceObjectId: mismatchEvidenceId,
+      observedAt: now.toISOString(),
+      reason: "Synthetic mismatch observation",
+      stepUpEvidenceId: "step-mismatch-observation",
+    });
+    assert.equal(brokenSaga.state, "BREAK_OPEN");
+    assert.equal((await service.listBreaks(mismatchActor, caseId)).length, 1);
+    const report = await service.comparison(mismatchActor, caseId, created.id);
+    assert.equal(report.matched, 1);
+    assert.equal(report.breaks, 1);
+    assert.equal(report.notObserved, created.legs.length - 2);
+    const pack = await service.evidencePack(mismatchActor, caseId, created.id);
+    assert.match(pack.evidencePackDigest, /^sha256:[0-9a-f]{64}$/);
+    process.stdout.write(`[PR10-SERVICE-DB] PASS saga=${created.id} legs=${created.legs.length} evidence=${created.evidenceLinks.length} plan-idempotent=true observation-idempotent=true reconciled=1 breaks=1\n`);
   } finally {
     await db.$disconnect();
   }

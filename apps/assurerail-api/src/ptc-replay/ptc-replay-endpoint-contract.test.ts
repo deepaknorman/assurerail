@@ -5,7 +5,7 @@ import { RequestMethod } from "@nestjs/common";
 import { METHOD_METADATA, PATH_METADATA } from "@nestjs/common/constants";
 import { PtcReplayController } from "./ptc-replay.controllers";
 
-test("[PR10b][ENDPOINTS] PTC planning exposes only case-scoped governance and saga planning", () => {
+test("[PR10c][ENDPOINTS] PTC replay exposes case-scoped planning, observation, reconciliation and evidence reads", () => {
   const base = Reflect.getMetadata(PATH_METADATA, PtcReplayController) as string;
   const found = Object.getOwnPropertyNames(PtcReplayController.prototype).flatMap((name) => {
     if (name === "constructor") return [];
@@ -16,9 +16,13 @@ test("[PR10b][ENDPOINTS] PTC planning exposes only case-scoped governance and sa
     const child = Reflect.getMetadata(PATH_METADATA, handler) as string;
     return [{ method: RequestMethod[method], path: `/${[base, child].filter(Boolean).join("/")}`.replace(/\/+/g, "/") }];
   });
-  assert.equal(found.length, 5);
+  assert.equal(found.length, 10);
   assert.ok(found.every((entry) => entry.path.startsWith("/v1/rail/cases/:caseId/ptc-replay")));
   assert.ok(found.some((entry) => entry.method === "POST" && entry.path.endsWith("/authorisation/:authorisationId/review")));
   assert.ok(found.some((entry) => entry.method === "POST" && entry.path.endsWith("/sagas")));
-  assert.ok(found.every((entry) => !/observation|reconcile|repair|dispatch|settle|allot/.test(entry.path)));
+  assert.ok(found.some((entry) => entry.method === "POST" && entry.path.endsWith("/legs/:legId/observations")));
+  assert.ok(found.some((entry) => entry.method === "POST" && entry.path.endsWith("/legs/:legId/reconcile")));
+  assert.ok(found.some((entry) => entry.method === "GET" && entry.path.endsWith("/comparison")));
+  assert.ok(found.some((entry) => entry.method === "GET" && entry.path.endsWith("/evidence-pack")));
+  assert.ok(found.every((entry) => !/repair|dispatch|settle|allot/.test(entry.path)));
 });

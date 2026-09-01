@@ -145,6 +145,29 @@ command returns the same saga; changed content under the same idempotency key is
 not create a second saga. The resulting history also survives dump/restore. This closes the planning
 service database-test gap, not the observation/reconciliation or real historic evidence gates.
 
+### 5.4 Observation and independent-reconciliation checkpoint — 1 September 2026
+
+The third phase adds append-only historic observations to the same case-scoped, disabled-by-default
+surface. The declared participant owner records the initial observation with an idempotency key,
+external reference, finality, verified signature status, observation time, reason, step-up evidence
+and a current retained evidence object whose payload digest exactly matches the canonical observed
+facts. No observation can dispatch an external action, and a later leg cannot be observed while an
+earlier required leg remains unobserved or broken.
+
+The service compares canonical expected and observed facts and retains both digests and field-level
+differences. An exact result moves the leg to `OBSERVED`; a mismatch moves it to `BREAK_OPEN` and
+atomically creates a critical `ReconciliationBreak` that blocks `CASE_COMPLETION`. Only a different
+authorised human at the same declared owner institution can reconcile an exact observation. An
+exact authoritative-record acknowledgement also creates the distinct `AFTER` snapshot; a trustee
+decision never substitutes for that recordkeeper evidence.
+
+Read-only break, comparison and evidence-pack endpoints expose the retained result and a stable
+digest. The disposable service/database rehearsal proves identical-observation replay, independent
+reconciliation, mismatch-to-break behaviour, comparison counts and evidence-pack generation. This
+checkpoint adds no break-repair command, external issue/allotment/cash/notice/register action, live
+adapter or UI. A participant-authorised historic PTC replay and governed repair workflow remain
+open.
+
 ## 6. External evidence gate
 
 The following cannot be supplied by code or guessed from a market convention: the named historic
