@@ -1,6 +1,6 @@
 # AssureRail PR-19 integration evidence
 
-**Date:** 2 September 2026  
+**Date:** 2 September 2026
 **Scope:** internal software/structural evidence only
 
 ## Executed evidence

@@ -48,4 +48,3 @@ export function evaluateSoftwareConformance(observations: unknown): {
   const canonicalInput = toCanonicalValue({ fixtureSetVersion: SANDBOX_FIXTURE_SET_V1.fixtureSetVersion, observations: rows });
   return { result, assertions, inputDigest: sha256Digest(canonicalInput), resultDigest: sha256Digest({ result, assertions }) };
 }
-

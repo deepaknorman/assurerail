@@ -1,6 +1,6 @@
 # AssureRail PR-18 customer-workspace evidence
 
-**Date:** 2 September 2026  
+**Date:** 2 September 2026
 **Scope:** internal software evidence only; no customer, trustee or production acceptance
 
 ## Executed checks
@@ -26,4 +26,3 @@ work around that environmental restriction.
 - external legal or regulatory approval of any venue function.
 
 All remain open and do not become passed because the views compile.
-

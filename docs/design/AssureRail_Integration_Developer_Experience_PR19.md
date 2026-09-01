@@ -1,6 +1,6 @@
 # AssureRail integration and developer experience — PR-19
 
-**Status:** implemented under EX-27 for review; not deployed or activated  
+**Status:** implemented under EX-27 for review; not deployed or activated
 **Boundary:** institution-scoped replay/shadow integration tooling
 
 ## Outcome
@@ -68,4 +68,3 @@ their existing case/evidence processes; PR-19 does not silently combine them.
 - replaying a non-terminal delivery;
 - permitting a client registration to authenticate live traffic; or
 - enabling this module in controlled-live/production.
-

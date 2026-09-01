@@ -34,4 +34,3 @@ secrets nor `credentialVaultRef`.
 Set `ARAIL_DEVELOPER_PORTAL_V1=off`, rebuild and restart the API normally. Hide the developer centre
 by setting the customer workspace build flag off if required. Preserve all client credential
 versions, conformance runs, webhook delivery history and exit manifests; do not drop the migration.
-

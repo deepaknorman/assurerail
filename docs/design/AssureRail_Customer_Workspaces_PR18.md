@@ -1,6 +1,6 @@
 # AssureRail customer workspaces — PR-18
 
-**Status:** implemented under EX-27 for review; not deployed or activated  
+**Status:** implemented under EX-27 for review; not deployed or activated
 **Operating boundary:** replay/shadow presentation over existing institution-scoped APIs
 
 ## Outcome
@@ -56,4 +56,3 @@ institution workspace and remains a compatibility surface pending measured retir
 Build the web app with `NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1=off` or unset. The navigation
 entry disappears and no API or persisted domain data is changed. Existing institution, case, room
 and legacy console routes remain intact.
-
