@@ -1368,6 +1368,21 @@ shows source/as-of/expiry/qualification and separates expected, received, verifi
 legally effective states. Legacy Note screens remain compatibility surfaces until retired by
 measured use.
 
+**PR-18 implementation checkpoint (2 September 2026):** implemented for review under EX-27; not
+deployed or activated. A build-time-gated institution home now joins onboarding/readiness, named
+opportunities, transaction cases and evidence entry points. Case cockpits show parties, function
+assignments, rooms, conditions/decisions, case-scoped evidence, completion, route sagas, breaks and
+lifecycle transitions; opportunity views show the server-filtered term, RFQ, negotiation and
+allocation record. The UI explicitly separates expected, received, verified, reconciled and legally
+effective states, and displays unavailable services as unavailable rather than empty or passed.
+Every backing API retains membership/mandate/appointment/case/audience enforcement; the client flag
+is presentation-only. The Note console remains labelled as a legacy compatibility surface. The
+workspace check and production Next.js build passed. Real participant access-matrix, accessibility,
+customer/trustee usability and controlled-live acceptance remain open. Design:
+`docs/design/AssureRail_Customer_Workspaces_PR18.md`; evidence:
+`docs/qa/AssureRail_PR18_Customer_Workspace_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR18_Deployer_Handoff.md`.
+
 ### PR-19 — Integration and developer experience
 
 **Dependencies:** stable PR-13–PR-18 contracts
