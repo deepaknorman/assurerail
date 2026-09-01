@@ -245,7 +245,9 @@ audit/elevation event integrity.
 **OP-01a implementation checkpoint (1 September 2026):** the versioned role/permission vocabulary,
 scope/effective-date evaluator, additive persistence migration, step-up ceremony boundary, bootstrap
 assignment/elevation APIs and migration rehearsal are implemented. The module mounts only when
-`ARAIL_INTERNAL_RBAC_V1` is explicitly `shadow` or `enforce`; its default is `off`. While in `shadow`,
+`ARAIL_INTERNAL_RBAC_V1` is explicitly `shadow`; its default is `off`. The value `enforce` is
+reserved in the vocabulary but runtime startup rejects it until OP-01c cutover evidence is accepted.
+While in `shadow`,
 the assignment-management APIs remain behind the legacy superadmin bootstrap guard so that the first
 independent control-plane assignments can be created. No legacy role is migrated or granted, no
 customer object is exposed by these APIs, and no role-specific operational UI or enforcement/cutover

@@ -60,6 +60,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     legacyRoomProxy: "off",
     externalActionSaga: "off",
     daReplay: "off",
+    internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
 });
@@ -234,6 +235,26 @@ test("[CONFIG][PR09] DA replay requires the durable saga and remains non-live", 
   });
   assert.match(live.errors.join("\n"), /observe-only and available only in REPLAY or SHADOW/);
   assert.match(live.errors.join("\n"), /ARAIL_DA_REPLAY_V1 is available only/);
+});
+
+test("[CONFIG][OP01c] internal RBAC enforcement cannot be enabled before cutover evidence exists", () => {
+  const shadow = inspectRuntimeEnvironment({
+    NODE_ENV: "development",
+    ARAIL_INTERNAL_RBAC_V1: "shadow",
+  });
+  assert.equal(shadow.profile.features.internalRbac, "shadow");
+  assert.doesNotMatch(shadow.errors.join("\n"), /OP-01c assignment coverage/);
+
+  const enforce = inspectRuntimeEnvironment({
+    NODE_ENV: "development",
+    ARAIL_INTERNAL_RBAC_V1: "enforce",
+  });
+  assert.equal(enforce.profile.features.internalRbac, "enforce");
+  assert.match(enforce.errors.join("\n"), /reserved but unavailable until OP-01c assignment coverage/);
+  assert.throws(() => assertRuntimeEnvironment({
+    NODE_ENV: "development",
+    ARAIL_INTERNAL_RBAC_V1: "enforce",
+  }), RuntimeConfigurationError);
 });
 
 test("[CONFIG][SHADOW] a merely present but malformed Firebase credential is rejected", () => {

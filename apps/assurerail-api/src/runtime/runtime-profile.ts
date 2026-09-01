@@ -4,6 +4,7 @@ import {
   type DurableRelayMode,
   type DaReplayMode,
   type ExternalActionSagaMode,
+  type InternalRbacMode,
   type LegacyRoomProxyMode,
   type NeutralIngressMode,
   type ParticipantAdmissionMode,
@@ -50,6 +51,7 @@ export interface RuntimeEnvironmentProfile {
     legacyRoomProxy: LegacyRoomProxyMode;
     externalActionSaga: ExternalActionSagaMode;
     daReplay: DaReplayMode;
+    internalRbac: InternalRbacMode;
   };
 }
 
@@ -175,6 +177,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   if (persistenceFlags.daReplay !== "off"
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
     errors.push("ARAIL_DA_REPLAY_V1=allow_list requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
+  }
+  if (persistenceFlags.internalRbac === "enforce") {
+    errors.push("ARAIL_INTERNAL_RBAC_V1=enforce is reserved but unavailable until OP-01c assignment coverage, session revocation and emergency rehearsal gates are implemented and accepted; use shadow");
   }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
@@ -322,6 +327,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         legacyRoomProxy: persistenceFlags.legacyRoomProxy,
         externalActionSaga: persistenceFlags.externalActionSaga,
         daReplay: persistenceFlags.daReplay,
+        internalRbac: persistenceFlags.internalRbac,
       },
     },
     errors,
