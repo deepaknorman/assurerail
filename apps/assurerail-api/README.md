@@ -236,6 +236,22 @@ live value or live capability ID. See
 npm run db:rehearse:pr17 --workspace=@code/assurerail-api
 ```
 
+### Institution integration and developer centre (PR-19)
+
+PR-19 adds shadow-only, institution-scoped contract documentation, synthetic conformance fixtures,
+API-client credential-version metadata, connector conformance records, webhook challenge/replay and
+delivery health, plus digest-bound integration exit export. Raw credentials and Vault references
+are excluded from list and exit responses. `PASSED_SOFTWARE` never means certified or live.
+
+`ARAIL_DEVELOPER_PORTAL_V1=shadow` requires participant admission, neutral ingress and durable
+relay all in shadow, and is valid only in `REPLAY`/`SHADOW`. It defaults off and has no live
+capability ID. See `docs/design/AssureRail_Integration_Developer_Experience_PR19.md` and rehearse
+with:
+
+```bash
+npm run db:rehearse:pr19 --workspace=@code/assurerail-api
+```
+
 ### Endpoints
 ```
 GET  /health

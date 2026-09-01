@@ -1393,6 +1393,22 @@ idempotency examples, delivery health, credential rotation and migration/exit to
 prove software conformance only; real connector certification and authoritative external evidence
 remain independent activation gates.
 
+**PR-19 implementation checkpoint (2 September 2026):** implemented for review under EX-27; not
+deployed or activated. The new institution-scoped developer boundary publishes versioned intake,
+acknowledgement and event contracts; exact idempotency guidance; synthetic non-evidence fixtures;
+shadow client registrations; append-only opaque credential versions; connector software-
+conformance runs; webhook challenge/replay and delivery health; a developer-centre UI; and a
+digest-bound integration exit package. Participant routes require exact active-institution context,
+action mandate and purpose-specific step-up for changes. Client and exit responses exclude raw
+secrets and Vault references. `PASSED_SOFTWARE` is structurally prevented from becoming connector
+certification or external evidence. `ARAIL_DEVELOPER_PORTAL_V1` defaults off, is shadow-only and has
+no live capability ID. The API suite passed 281/281 with zero skipped; the web production build
+passed; 25 migrations, schema parity, restrictive history and backup/restore passed. Real client,
+webhook, connector, counterparty, load/security and customer-exit acceptance remain open. Design:
+`docs/design/AssureRail_Integration_Developer_Experience_PR19.md`; evidence:
+`docs/qa/AssureRail_PR19_Integration_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_PR19_Deployer_Handoff.md`.
+
 ### PR-20 — Customer operations and commercial administration
 
 **Dependencies:** PR-12 and metered capabilities from PR-13–PR-19
