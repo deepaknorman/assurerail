@@ -214,6 +214,12 @@ model Institution {
   counterpartyThreads         CommercialNegotiationThread[] @relation("CommercialThreadCounterpartyInstitution")
   commercialMessages          CommercialNegotiationMessage[]
   commercialAllocations       CommercialAllocation[]
+  secondaryTransfersAsSeller  SecondaryTransfer[] @relation("SecondaryTransferSellerInstitution")
+  secondaryTransfersAsBuyer   SecondaryTransfer[] @relation("SecondaryTransferBuyerInstitution")
+  secondaryTransfersAsTrustee SecondaryTransfer[] @relation("SecondaryTransferTrusteeInstitution")
+  secondaryTransfersAsRecordkeeper SecondaryTransfer[] @relation("SecondaryTransferRecordkeeperInstitution")
+  secondaryTransferEvidence   SecondaryTransferEvidence[]
+  secondaryTransferBreaks     SecondaryTransferBreak[] @relation("SecondaryTransferBreakOwnerInstitution")
 
   @@index([status])
   @@index([applicantUserId])
@@ -912,6 +918,7 @@ model EvidenceObject {
   sagaEvidenceLinks SagaEvidenceLink[]
   authoritativeRecordDeclarations AuthoritativeRecordDeclaration[] @relation("DaRecordDeclarationEvidence")
   tokenReconciliationSnapshots TokenReconciliationSnapshot[]
+  secondaryTransferEvidence SecondaryTransferEvidence[]
 
   @@index([institutionId, transactionCaseId])
   @@index([institutionId, status])
@@ -1108,6 +1115,7 @@ model TransactionCase {
   reconciliationBreaks   ReconciliationBreak[]
   tokenRepresentations   TokenRepresentation[]
   commercialOpportunities CommercialOpportunity[]
+  secondaryTransfer       SecondaryTransfer?
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
@@ -2526,6 +2534,135 @@ model CommercialAllocation {
   @@unique([commercialOpportunityId, idempotencyKey])
   @@index([commercialOpportunityId, status, createdAt])
   @@index([offereeInstitutionId, status, createdAt])
+}
+
+// ───────────────── conventional secondary DA/PTC replay (PR-14) ─────────────────
+// Retained observation-only dossiers. These records cannot dispatch cash, transfer title, update a
+// register or infer ownership from a Rail projection.
+model SecondaryTransfer {
+  id                        String          @id
+  transactionCaseId         String          @unique
+  transactionCase           TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  transactionRoute          String          // DA | PTC
+  routePackRef              String
+  routePackVersion          String
+  executionMode             String          @default("OBSERVE_ONLY")
+  transferReference         String
+  instrumentReference       String
+  instrumentDigest          String
+  sellerInstitutionId       String
+  sellerInstitution         Institution     @relation("SecondaryTransferSellerInstitution", fields: [sellerInstitutionId], references: [id], onDelete: Restrict)
+  buyerInstitutionId        String
+  buyerInstitution          Institution     @relation("SecondaryTransferBuyerInstitution", fields: [buyerInstitutionId], references: [id], onDelete: Restrict)
+  trusteeInstitutionId      String?
+  trusteeInstitution        Institution?    @relation("SecondaryTransferTrusteeInstitution", fields: [trusteeInstitutionId], references: [id], onDelete: Restrict)
+  recordkeeperInstitutionId String
+  recordkeeperInstitution   Institution     @relation("SecondaryTransferRecordkeeperInstitution", fields: [recordkeeperInstitutionId], references: [id], onDelete: Restrict)
+  quantityUnits             String
+  quantityScale             Int
+  considerationCurrency     String
+  considerationMinorUnits   String
+  considerationScale        Int
+  status                    String          @default("COLLECTING") // COLLECTING | PROPOSED | REJECTED | RECONCILED | BREAK_OPEN
+  aggregateVersion          Int             @default(1)
+  creationIdempotencyKey    String
+  creationRequestDigest     String
+  proposedByUserId          String?
+  proposedByMandateId       String?
+  proposalStepUpId          String?
+  proposalDigest            String?
+  proposedAt                DateTime?
+  reviewedByUserId          String?
+  reviewedByMandateId       String?
+  reviewStepUpId            String?
+  reviewReason              String?
+  reviewedAt                DateTime?
+  reconciledAt              DateTime?
+  createdByUserId           String
+  createdByMandateId        String
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @default(now()) @updatedAt
+  evidence                  SecondaryTransferEvidence[]
+  legs                      SecondaryTransferLeg[]
+  breaks                    SecondaryTransferBreak[]
+
+  @@unique([sellerInstitutionId, creationIdempotencyKey], map: "SecondaryTransfer_seller_creation_idem_key")
+  @@unique([transactionCaseId, transferReference])
+  @@index([sellerInstitutionId, status, createdAt])
+  @@index([buyerInstitutionId, status, createdAt])
+  @@index([transactionRoute, status, updatedAt])
+}
+
+model SecondaryTransferEvidence {
+  id                    String            @id
+  secondaryTransferId   String
+  secondaryTransfer     SecondaryTransfer @relation(fields: [secondaryTransferId], references: [id], onDelete: Restrict)
+  evidenceType          String
+  version               Int
+  providerInstitutionId String
+  providerInstitution   Institution       @relation(fields: [providerInstitutionId], references: [id], onDelete: Restrict)
+  evidenceObjectId      String
+  evidenceObject        EvidenceObject    @relation(fields: [evidenceObjectId], references: [id], onDelete: Restrict)
+  evidenceResult        String
+  assertionDigest       String
+  sourceAsOfAt          DateTime
+  idempotencyKey        String
+  requestDigest         String
+  recordedByUserId      String
+  recordedByMandateId   String
+  stepUpEvidenceId      String
+  createdAt             DateTime          @default(now())
+
+  @@unique([secondaryTransferId, evidenceType, version], map: "SecondaryTransferEvidence_transfer_type_version_key")
+  @@unique([secondaryTransferId, evidenceType, assertionDigest], map: "SecondaryTransferEvidence_transfer_type_assertion_key")
+  @@unique([secondaryTransferId, idempotencyKey], map: "SecondaryTransferEvidence_transfer_idem_key")
+  @@index([secondaryTransferId, evidenceType, createdAt], map: "SecondaryTransferEvidence_transfer_type_created_idx")
+  @@index([evidenceObjectId])
+}
+
+model SecondaryTransferLeg {
+  id                      String            @id
+  secondaryTransferId     String
+  secondaryTransfer       SecondaryTransfer @relation(fields: [secondaryTransferId], references: [id], onDelete: Restrict)
+  legKey                  String
+  legType                 String
+  sequence                Int
+  performerInstitutionId  String
+  performerClass          String
+  expectedEvidenceType    String
+  expectedAssertionDigest String
+  evidenceRecordId        String
+  state                   String            @default("PLANNED") // PLANNED | MATCHED | BREAK_OPEN
+  comparisonDigest        String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @default(now()) @updatedAt
+
+  @@unique([secondaryTransferId, legKey])
+  @@unique([secondaryTransferId, sequence])
+  @@unique([secondaryTransferId, evidenceRecordId], map: "SecondaryTransferLeg_transfer_evidence_key")
+  @@index([secondaryTransferId, state, sequence], map: "SecondaryTransferLeg_transfer_state_sequence_idx")
+}
+
+model SecondaryTransferBreak {
+  id                    String            @id
+  secondaryTransferId   String
+  secondaryTransfer     SecondaryTransfer @relation(fields: [secondaryTransferId], references: [id], onDelete: Restrict)
+  breakCode             String
+  severity              String
+  expectedDigest        String
+  observedDigest        String
+  blockedCapabilities   Json
+  ownerInstitutionId    String
+  ownerInstitution      Institution       @relation("SecondaryTransferBreakOwnerInstitution", fields: [ownerInstitutionId], references: [id], onDelete: Restrict)
+  status                String            @default("OPEN") // OPEN | RESOLVED
+  detail                Json
+  openedByUserId        String
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now()) @updatedAt
+
+  @@unique([secondaryTransferId, breakCode], map: "SecondaryTransferBreak_transfer_code_key")
+  @@index([secondaryTransferId, status, severity], map: "SecondaryTransferBreak_transfer_status_severity_idx")
+  @@index([ownerInstitutionId, status, createdAt])
 }
 
 /// Append-only, hash-chained audit trail. Written via a single-writer/advisory-locked append so

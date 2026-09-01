@@ -1,6 +1,7 @@
 import {
   inspectPersistenceFlags,
   type CompletionAcknowledgementMode,
+  type ConventionalSecondaryMode,
   type DurableRelayMode,
   type DaReplayMode,
   type ExternalActionSagaMode,
@@ -64,6 +65,7 @@ export interface RuntimeEnvironmentProfile {
     ptcReplay: PtcReplayMode;
     tokenisedDa: TokenisedDaMode;
     primaryCommercial: PrimaryCommercialMode;
+    conventionalSecondary: ConventionalSecondaryMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -202,6 +204,10 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   if (persistenceFlags.primaryCommercial !== "off" && persistenceFlags.transactionCase !== "shadow") {
     errors.push("ARAIL_PRIMARY_COMMERCIAL_V1=shadow requires ARAIL_TRANSACTION_CASE_V1=shadow");
   }
+  if (persistenceFlags.conventionalSecondary !== "off"
+    && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
+    errors.push("ARAIL_CONVENTIONAL_SECONDARY_V1=shadow requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -225,6 +231,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.primaryCommercial !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_PRIMARY_COMMERCIAL_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.conventionalSecondary !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_CONVENTIONAL_SECONDARY_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -379,6 +388,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         ptcReplay: persistenceFlags.ptcReplay,
         tokenisedDa: persistenceFlags.tokenisedDa,
         primaryCommercial: persistenceFlags.primaryCommercial,
+        conventionalSecondary: persistenceFlags.conventionalSecondary,
         internalRbac: persistenceFlags.internalRbac,
       },
     },
