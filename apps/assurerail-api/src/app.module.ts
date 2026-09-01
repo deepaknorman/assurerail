@@ -107,6 +107,12 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).venueConduct === "shadow"
     ? [require("./venue-conduct/venue-conduct.module").VenueConductModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
+    && inspectPersistenceFlags(process.env).durableRelay === "shadow"
+    && inspectPersistenceFlags(process.env).developerPortal === "shadow"
+    ? [require("./developer-portal/developer-portal.module").DeveloperPortalModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

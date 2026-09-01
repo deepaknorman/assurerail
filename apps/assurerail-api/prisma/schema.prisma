@@ -218,6 +218,9 @@ model Institution {
   secondaryTransfersAsBuyer   SecondaryTransfer[] @relation("SecondaryTransferBuyerInstitution")
   secondaryTransfersAsTrustee SecondaryTransfer[] @relation("SecondaryTransferTrusteeInstitution")
   secondaryTransfersAsRecordkeeper SecondaryTransfer[] @relation("SecondaryTransferRecordkeeperInstitution")
+  developerClients         DeveloperClientRegistration[]
+  developerConformanceRuns DeveloperConformanceRun[]
+  integrationExitExports   IntegrationExitExport[]
   secondaryTransferEvidence   SecondaryTransferEvidence[]
   secondaryTransferBreaks     SecondaryTransferBreak[] @relation("SecondaryTransferBreakOwnerInstitution")
   tokenCustodyAssignments     TokenConnectorBinding[] @relation("TokenCustodyInstitution")
@@ -829,10 +832,92 @@ model ConnectorRegistration {
   subjectMappings     ConnectorSubjectMapping[]
   sourceCompletions   SourceCompletion[]
   tokenConnectorBindings TokenConnectorBinding[]
+  developerConformanceRuns DeveloperConformanceRun[]
 
   @@unique([institutionId, connectorKey])
   @@index([institutionId, status])
   @@index([providerReferenceId])
+}
+
+// ───────────────── institution integration/developer workspace (PR-19, shadow only) ────────────
+
+model DeveloperClientRegistration {
+  id                       String      @id
+  institutionId            String
+  institution              Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  clientKey                String
+  displayName              String
+  allowedActions           Json
+  status                   String      @default("SHADOW_ONLY") // SHADOW_ONLY | SUSPENDED | REVOKED
+  currentCredentialVersion Int         @default(0)
+  createdByUserId          String
+  createdByMandateId       String
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @default(now()) @updatedAt
+  credentials              DeveloperCredentialVersion[]
+
+  @@unique([institutionId, clientKey], map: "DeveloperClientRegistration_institution_key")
+  @@index([institutionId, status])
+}
+
+model DeveloperCredentialVersion {
+  id                    String                      @id
+  developerClientId     String
+  developerClient       DeveloperClientRegistration @relation(fields: [developerClientId], references: [id], onDelete: Restrict)
+  version               Int
+  credentialVaultRef    String
+  credentialFingerprint String
+  status                String                      @default("ACTIVE_SHADOW") // ACTIVE_SHADOW | SUPERSEDED | REVOKED | EXPIRED
+  reason                String
+  createdByUserId       String
+  createdByMandateId    String
+  stepUpEvidenceId      String
+  effectiveAt           DateTime
+  expiresAt             DateTime
+  supersededAt          DateTime?
+  revokedAt             DateTime?
+  createdAt             DateTime                    @default(now())
+
+  @@unique([developerClientId, version], map: "DeveloperCredentialVersion_client_version")
+  @@unique([developerClientId, credentialFingerprint], map: "DeveloperCredentialVersion_client_fingerprint")
+  @@index([status, expiresAt])
+}
+
+model DeveloperConformanceRun {
+  id                      String                @id
+  institutionId           String
+  institution             Institution           @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  connectorRegistrationId String
+  connectorRegistration   ConnectorRegistration @relation(fields: [connectorRegistrationId], references: [id], onDelete: Restrict)
+  fixtureSetVersion       String
+  schemaProfileRef        String
+  result                  String // PASSED_SOFTWARE | FAILED_SOFTWARE | REVIEW_REQUIRED
+  assertions              Json
+  inputDigest             String
+  resultDigest            String
+  sandboxNonEvidence      Boolean               @default(true)
+  createdByUserId         String
+  createdByMandateId      String
+  stepUpEvidenceId        String
+  createdAt               DateTime              @default(now())
+
+  @@index([institutionId, connectorRegistrationId, createdAt], map: "DeveloperConformanceRun_scope_time")
+}
+
+model IntegrationExitExport {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  exportVersion      String
+  scope              Json
+  recordCounts       Json
+  manifestDigest     String
+  requestedByUserId  String
+  requestedByMandateId String
+  stepUpEvidenceId   String
+  createdAt          DateTime    @default(now())
+
+  @@index([institutionId, createdAt])
 }
 
 model ConnectorSubjectMapping {

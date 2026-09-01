@@ -4,6 +4,7 @@ import {
   type ConventionalSecondaryMode,
   type DurableRelayMode,
   type DaReplayMode,
+  type DeveloperPortalMode,
   type ExternalActionSagaMode,
   type InternalRbacMode,
   type LegacyRoomProxyMode,
@@ -70,6 +71,7 @@ export interface RuntimeEnvironmentProfile {
     primaryCommercial: PrimaryCommercialMode;
     conventionalSecondary: ConventionalSecondaryMode;
     venueConduct: VenueConductMode;
+    developerPortal: DeveloperPortalMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -238,6 +240,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || persistenceFlags.transactionCase !== "shadow")) {
     errors.push("ARAIL_VENUE_CONDUCT_V1=shadow requires primary commercial and transaction cases in shadow plus internal RBAC");
   }
+  if (persistenceFlags.developerPortal !== "off"
+    && (persistenceFlags.participantAdmission !== "shadow" || persistenceFlags.neutralIngress !== "shadow"
+      || persistenceFlags.durableRelay !== "shadow")) {
+    errors.push("ARAIL_DEVELOPER_PORTAL_V1=shadow requires participant admission, neutral ingress and durable relay in shadow");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -277,6 +284,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.venueConduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_VENUE_CONDUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.developerPortal !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_DEVELOPER_PORTAL_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -434,6 +444,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         primaryCommercial: persistenceFlags.primaryCommercial,
         conventionalSecondary: persistenceFlags.conventionalSecondary,
         venueConduct: persistenceFlags.venueConduct,
+        developerPortal: persistenceFlags.developerPortal,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

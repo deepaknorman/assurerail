@@ -66,6 +66,33 @@ export class WebhooksService {
     });
   }
 
+  listForInstitution(institutionId: string) {
+    return this.db.webhookSubscription.findMany({
+      where: { institutionId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, institutionId: true, url: true, events: true, active: true,
+        endpointStatus: true, verifiedAt: true, disabledReason: true, revokedAt: true,
+        createdAt: true, updatedAt: true,
+      },
+    });
+  }
+
+  async deliveriesForInstitution(institutionId: string, limit = 50) {
+    const subscriptions = await this.db.webhookSubscription.findMany({ where: { institutionId }, select: { id: true } });
+    return this.db.webhookDelivery.findMany({
+      where: { subscriptionId: { in: subscriptions.map((item) => item.id) } },
+      orderBy: { createdAt: "desc" },
+      take: Math.min(Math.max(limit, 1), 200),
+      select: {
+        id: true, subscriptionId: true, outboxMessageId: true, event: true, payloadDigest: true,
+        state: true, attempt: true, statusCode: true, ok: true, nextAttemptAt: true,
+        errorCode: true, responseDigest: true, deliveredAt: true, terminalAt: true,
+        createdAt: true, updatedAt: true,
+      },
+    });
+  }
+
   async subscribe(url: string, events: string[], institutionId?: string) {
     await this.egress.validateEndpoint(url);
     const normalizedEvents = [...new Set(events.map((event) => event.trim()).filter(Boolean))];
@@ -253,6 +280,19 @@ export class WebhooksService {
     });
     if (updated.count !== 1) throw new ConflictException("only terminal durable delivery jobs can be replayed");
     return { ok: true, id };
+  }
+
+  async requireInstitutionSubscription(id: string, institutionId: string) {
+    const subscription = await this.db.webhookSubscription.findFirst({ where: { id, institutionId } });
+    if (!subscription) throw new NotFoundException("webhook subscription not found");
+    return subscription;
+  }
+
+  async requireInstitutionDelivery(id: string, institutionId: string) {
+    const delivery = await this.db.webhookDelivery.findUnique({ where: { id } });
+    if (!delivery) throw new NotFoundException("webhook delivery not found");
+    await this.requireInstitutionSubscription(delivery.subscriptionId, institutionId);
+    return delivery;
   }
 
   /** Transitional legacy relay. Durable mode never calls this in-process path. */
