@@ -46,6 +46,10 @@ export const PTC_REPLAY_FLAG = "ARAIL_PTC_REPLAY_V1" as const;
 export const PTC_REPLAY_VALUES = ["off", "allow_list"] as const;
 export type PtcReplayMode = (typeof PTC_REPLAY_VALUES)[number];
 
+export const TOKENISED_DA_FLAG = "ARAIL_TOKENISED_DA_V1" as const;
+export const TOKENISED_DA_VALUES = ["off", "allow_list"] as const;
+export type TokenisedDaMode = (typeof TOKENISED_DA_VALUES)[number];
+
 // OP-01 internal-control-plane rollout. Shadow evaluates and records the new policy without
 // replacing the legacy bootstrap role gate; enforcement is a separately approved cutover.
 export const INTERNAL_RBAC_FLAG = "ARAIL_INTERNAL_RBAC_V1" as const;
@@ -83,6 +87,7 @@ export function inspectPersistenceFlags(env: Environment): {
   externalActionSaga: ExternalActionSagaMode;
   daReplay: DaReplayMode;
   ptcReplay: PtcReplayMode;
+  tokenisedDa: TokenisedDaMode;
   internalRbac: InternalRbacMode;
   errors: readonly string[];
 } {
@@ -98,6 +103,7 @@ export function inspectPersistenceFlags(env: Environment): {
   const externalActionSaga = readFlag(env, EXTERNAL_ACTION_SAGA_FLAG, EXTERNAL_ACTION_SAGA_VALUES, "off");
   const daReplay = readFlag(env, DA_REPLAY_FLAG, DA_REPLAY_VALUES, "off");
   const ptcReplay = readFlag(env, PTC_REPLAY_FLAG, PTC_REPLAY_VALUES, "off");
+  const tokenisedDa = readFlag(env, TOKENISED_DA_FLAG, TOKENISED_DA_VALUES, "off");
   const internalRbac = readFlag(env, INTERNAL_RBAC_FLAG, INTERNAL_RBAC_VALUES, "off");
   return {
     neutralIngress: ingress.value,
@@ -112,10 +118,11 @@ export function inspectPersistenceFlags(env: Environment): {
     externalActionSaga: externalActionSaga.value,
     daReplay: daReplay.value,
     ptcReplay: ptcReplay.value,
+    tokenisedDa: tokenisedDa.value,
     internalRbac: internalRbac.value,
     errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error,
       roomReadSource.error, roomWriteSource.error, completionAcknowledgement.error, legacyRoomProxy.error,
-      externalActionSaga.error, daReplay.error, ptcReplay.error, internalRbac.error]
+      externalActionSaga.error, daReplay.error, ptcReplay.error, tokenisedDa.error, internalRbac.error]
       .filter((error): error is string => Boolean(error)),
   };
 }

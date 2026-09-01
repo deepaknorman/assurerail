@@ -13,6 +13,7 @@ import {
   type RoomReadSource,
   type RoomWriteSource,
   type TransactionCaseMode,
+  type TokenisedDaMode,
 } from "../persistence/feature-flags";
 
 export const ASSURERAIL_OPERATING_MODES = [
@@ -53,6 +54,7 @@ export interface RuntimeEnvironmentProfile {
     externalActionSaga: ExternalActionSagaMode;
     daReplay: DaReplayMode;
     ptcReplay: PtcReplayMode;
+    tokenisedDa: TokenisedDaMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -184,6 +186,10 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
     errors.push("ARAIL_PTC_REPLAY_V1=allow_list requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
   }
+  if (persistenceFlags.tokenisedDa !== "off"
+    && (persistenceFlags.transactionCase !== "shadow" || persistenceFlags.externalActionSaga !== "required")) {
+    errors.push("ARAIL_TOKENISED_DA_V1=allow_list requires transaction cases in shadow mode and ARAIL_EXTERNAL_ACTION_SAGA_V1=required");
+  }
   if (persistenceFlags.internalRbac === "enforce") {
     errors.push("ARAIL_INTERNAL_RBAC_V1=enforce is reserved but unavailable until OP-01c assignment coverage, session revocation and emergency rehearsal gates are implemented and accepted; use shadow");
   }
@@ -204,6 +210,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.ptcReplay !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_PTC_REPLAY_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.tokenisedDa !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_TOKENISED_DA_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -337,6 +346,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         externalActionSaga: persistenceFlags.externalActionSaga,
         daReplay: persistenceFlags.daReplay,
         ptcReplay: persistenceFlags.ptcReplay,
+        tokenisedDa: persistenceFlags.tokenisedDa,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

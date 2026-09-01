@@ -16,6 +16,7 @@ test("[PR02][FLAGS] persistence paths default to inert/legacy-compatible values"
     externalActionSaga: "off",
     daReplay: "off",
     ptcReplay: "off",
+    tokenisedDa: "off",
     internalRbac: "off",
     errors: [],
   });
@@ -35,6 +36,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_EXTERNAL_ACTION_SAGA_V1: "REQUIRED",
     ARAIL_DA_REPLAY_V1: "ALLOW-LIST",
     ARAIL_PTC_REPLAY_V1: "ALLOW-LIST",
+    ARAIL_TOKENISED_DA_V1: "ALLOW-LIST",
     ARAIL_INTERNAL_RBAC_V1: "SHADOW",
   }), {
     neutralIngress: "shadow",
@@ -49,6 +51,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     externalActionSaga: "required",
     daReplay: "allow_list",
     ptcReplay: "allow_list",
+    tokenisedDa: "allow_list",
     internalRbac: "shadow",
     errors: [],
   });
@@ -65,6 +68,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_EXTERNAL_ACTION_SAGA_V1: "enabled",
     ARAIL_DA_REPLAY_V1: "enabled",
     ARAIL_PTC_REPLAY_V1: "enabled",
+    ARAIL_TOKENISED_DA_V1: "enabled",
     ARAIL_INTERNAL_RBAC_V1: "enabled",
   });
   assert.equal(rejected.neutralIngress, "off");
@@ -79,6 +83,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
   assert.equal(rejected.externalActionSaga, "off");
   assert.equal(rejected.daReplay, "off");
   assert.equal(rejected.ptcReplay, "off");
+  assert.equal(rejected.tokenisedDa, "off");
   assert.equal(rejected.internalRbac, "off");
-  assert.equal(rejected.errors.length, 12);
+  assert.equal(rejected.errors.length, 13);
 });

@@ -205,6 +205,7 @@ model Institution {
   connectorSubjectMaps    ConnectorSubjectMapping[]     @relation("ConnectorSubjectInstitution")
   authoritativeRecords    AuthoritativeRecordDeclaration[] @relation("AuthoritativeRecordkeeperInstitution")
   reconciliationBreaks    ReconciliationBreak[]         @relation("ReconciliationBreakOwnerInstitution")
+  tokenReconciliationBreaks TokenReconciliationBreak[]
 
   @@index([status])
   @@index([applicantUserId])
@@ -507,6 +508,7 @@ model Note {
   closeAnchorRef String? // HCS anchor of the closure event
   closeReason    String? // maturity | clean_up_call | call | amortised | manual
   redeemedAt     DateTime?
+  tokenRepresentation TokenRepresentation?
 
   @@index([poolId])
 }
@@ -901,6 +903,7 @@ model EvidenceObject {
   daExecutedDocumentSagas SettlementSaga[] @relation("DaExecutedDocumentEvidence")
   sagaEvidenceLinks SagaEvidenceLink[]
   authoritativeRecordDeclarations AuthoritativeRecordDeclaration[] @relation("DaRecordDeclarationEvidence")
+  tokenReconciliationSnapshots TokenReconciliationSnapshot[]
 
   @@index([institutionId, transactionCaseId])
   @@index([institutionId, status])
@@ -1095,6 +1098,7 @@ model TransactionCase {
   settlementSagas        SettlementSaga[]
   authoritativeRecords   AuthoritativeRecordDeclaration[]
   reconciliationBreaks   ReconciliationBreak[]
+  tokenRepresentations   TokenRepresentation[]
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
@@ -1606,7 +1610,7 @@ model ExternalInstruction {
   requestDigest       String
   request             Json?
   storageRef          String?
-  state               String                    @default("PENDING") // PENDING | SENT | ACKNOWLEDGED | AMBIGUOUS | FAILED | CANCELLED
+  state               String                    @default("PENDING") // PENDING | SHADOW_RECORDED | SENT | ACKNOWLEDGED | AMBIGUOUS | FAILED | CANCELLED
   attemptCount        Int                       @default(0)
   nextAttemptAt       DateTime                  @default(now())
   lockedAt            DateTime?
@@ -1620,6 +1624,7 @@ model ExternalInstruction {
   updatedAt           DateTime                  @default(now()) @updatedAt
   acknowledgements    ExternalAcknowledgement[]
   sourceCompletion    SourceCompletion?
+  tokenAction         TokenAction?
 
   @@unique([providerReferenceId, idempotencyKey])
   @@index([state, nextAttemptAt])
@@ -1903,10 +1908,127 @@ model AuthoritativeRecordDeclaration {
   createdAt                 DateTime         @default(now())
   updatedAt                 DateTime         @default(now()) @updatedAt
   snapshots                 AuthoritativeRecordSnapshot[]
+  tokenRepresentations      TokenRepresentation[]
 
   @@index([recordkeeperInstitutionId, status])
   @@index([sourceReferenceId])
   @@index([declarationEvidenceObjectId])
+}
+
+// ───────────────── tokenised-DA representation adapter (PR-11) ───────────────
+// The token is a route projection. `authorityMode` is deliberately fixed to MIRROR by the PR-11
+// service; neither this record nor the legacy Note ledger becomes the legally operative register.
+model TokenRepresentation {
+  id                               String                         @id
+  transactionCaseId                String                         @unique
+  transactionCase                  TransactionCase                @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  noteId                           String                         @unique
+  note                             Note                           @relation(fields: [noteId], references: [id], onDelete: Restrict)
+  authoritativeRecordDeclarationId String
+  authoritativeRecordDeclaration   AuthoritativeRecordDeclaration @relation(fields: [authoritativeRecordDeclarationId], references: [id], onDelete: Restrict)
+  representationType               String                         @default("TOKENISED")
+  authorityMode                    String                         @default("MIRROR")
+  network                          String
+  tokenId                          String
+  unitsScale                       Int                            @default(0)
+  status                           String                         @default("LINKED") // LINKED | RECONCILED | BREAK_OPEN | SUSPENDED
+  linkageIdempotencyKey            String
+  linkageRequestDigest             String
+  linkedByUserId                   String
+  linkedByMandateId                String
+  linkageStepUpId                  String
+  linkedAt                         DateTime                       @default(now())
+  updatedAt                        DateTime                       @default(now()) @updatedAt
+  actions                          TokenAction[]
+  reconciliationSnapshots          TokenReconciliationSnapshot[]
+  breaks                           TokenReconciliationBreak[]
+
+  @@unique([transactionCaseId, linkageIdempotencyKey], map: "TokenRepresentation_case_linkage_key")
+  @@index([authoritativeRecordDeclarationId, status], map: "TokenRepresentation_authority_status_idx")
+  @@index([tokenId])
+}
+
+model TokenAction {
+  id                    String              @id
+  tokenRepresentationId String
+  tokenRepresentation   TokenRepresentation @relation(fields: [tokenRepresentationId], references: [id], onDelete: Restrict)
+  externalInstructionId String              @unique
+  externalInstruction   ExternalInstruction @relation(fields: [externalInstructionId], references: [id], onDelete: Restrict)
+  actionType            String // MINT | TRANSFER | PAYMENT | ANCHOR | AMORTISE_BURN | CLOSE_BURN
+  sequence              Int
+  executionMode         String              @default("OBSERVE_ONLY")
+  state                 String              @default("PREPARED") // PREPARED | OBSERVED | RECONCILED | BREAK_OPEN | CANCELLED
+  expected              Json
+  expectedDigest        String
+  idempotencyKey        String
+  requestDigest         String
+  createdByUserId       String
+  createdByMandateId    String
+  stepUpEvidenceId      String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @default(now()) @updatedAt
+
+  @@unique([tokenRepresentationId, idempotencyKey], map: "TokenAction_representation_idempotency_key")
+  @@unique([tokenRepresentationId, sequence], map: "TokenAction_representation_sequence_key")
+  @@index([tokenRepresentationId, state, sequence], map: "TokenAction_representation_state_sequence_idx")
+}
+
+model TokenReconciliationSnapshot {
+  id                        String                     @id
+  tokenRepresentationId     String
+  tokenRepresentation       TokenRepresentation        @relation(fields: [tokenRepresentationId], references: [id], onDelete: Restrict)
+  version                   Int
+  idempotencyKey            String
+  requestDigest             String
+  tokenSupplyMinor          String
+  tokenHoldings             Json
+  tokenHoldingsDigest       String
+  economicInterests         Json
+  economicInterestDigest    String
+  authoritativeRecord       Json
+  authoritativeRecordDigest String
+  evidenceObjectId          String
+  evidenceObject            EvidenceObject             @relation(fields: [evidenceObjectId], references: [id], onDelete: Restrict)
+  sourceAsOfAt              DateTime
+  comparison                Json
+  comparisonDigest          String
+  reconciliationState       String // MATCHED | BREAK_OPEN
+  recordedByUserId          String
+  recordedByMandateId       String
+  stepUpEvidenceId          String
+  createdAt                 DateTime                   @default(now())
+  breaks                    TokenReconciliationBreak[]
+
+  @@unique([tokenRepresentationId, version], map: "TokenReconciliationSnapshot_representation_version_key")
+  @@unique([tokenRepresentationId, idempotencyKey], map: "TokenReconciliationSnapshot_representation_idempotency_key")
+  @@index([tokenRepresentationId, reconciliationState, createdAt], map: "TokenReconciliationSnapshot_state_created_idx")
+  @@index([evidenceObjectId])
+}
+
+model TokenReconciliationBreak {
+  id                       String                      @id
+  tokenRepresentationId    String
+  tokenRepresentation      TokenRepresentation         @relation(fields: [tokenRepresentationId], references: [id], onDelete: Restrict)
+  reconciliationSnapshotId String
+  reconciliationSnapshot   TokenReconciliationSnapshot @relation(fields: [reconciliationSnapshotId], references: [id], onDelete: Restrict)
+  breakCode                String
+  severity                 String
+  expected                 Json
+  observed                 Json
+  expectedDigest           String
+  observedDigest           String
+  blockedCapabilities      Json
+  status                   String                      @default("OPEN") // OPEN | RESOLVED
+  ownerInstitutionId       String
+  ownerInstitution         Institution                 @relation(fields: [ownerInstitutionId], references: [id], onDelete: Restrict)
+  dueAt                    DateTime
+  openedByUserId           String
+  createdAt                DateTime                    @default(now())
+  updatedAt                DateTime                    @default(now()) @updatedAt
+
+  @@unique([reconciliationSnapshotId, breakCode], map: "TokenReconciliationBreak_snapshot_code_key")
+  @@index([tokenRepresentationId, status, severity], map: "TokenReconciliationBreak_representation_status_idx")
+  @@index([ownerInstitutionId, status, dueAt], map: "TokenReconciliationBreak_owner_status_due_idx")
 }
 
 model AuthoritativeRecordSnapshot {
