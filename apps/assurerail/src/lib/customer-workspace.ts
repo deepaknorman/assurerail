@@ -1,5 +1,6 @@
 export const CUSTOMER_WORKSPACE_FLAG = "NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1";
 export const CUSTOMER_OPERATIONS_FLAG = "NEXT_PUBLIC_ASSURERAIL_CUSTOMER_OPERATIONS_V1";
+export const HOSTED_ALPHA_FLAG = "NEXT_PUBLIC_ASSURERAIL_HOSTED_ALPHA_V1";
 
 export function customerWorkspaceEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1): boolean {
   return value?.trim().toLowerCase() === "shadow";
@@ -7,6 +8,54 @@ export function customerWorkspaceEnabled(value = process.env.NEXT_PUBLIC_ASSURER
 
 export function customerOperationsEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_OPERATIONS_V1): boolean {
   return value?.trim().toLowerCase() === "shadow";
+}
+
+export function hostedAlphaEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_HOSTED_ALPHA_V1): boolean {
+  return value?.trim().toLowerCase() === "shadow";
+}
+
+export type HostedAlphaTaskCategory = "GOVERNANCE" | "CASE" | "EVIDENCE" | "RECONCILIATION" | "COMMERCIAL" | "SERVICE";
+export type HostedAlphaTaskPriority = "CRITICAL" | "HIGH" | "NORMAL" | "LOW";
+export type HostedAlphaDueState = "OVERDUE" | "DUE_SOON" | "OPEN" | "WATCH";
+
+export interface HostedAlphaTask {
+  id: string;
+  category: HostedAlphaTaskCategory;
+  priority: HostedAlphaTaskPriority;
+  dueState: HostedAlphaDueState;
+  title: string;
+  summary: string;
+  href: string;
+  sourceType: string;
+  sourceId: string;
+  transactionCaseId: string | null;
+  requiredAction: string;
+  dueAt: string | null;
+  operatingBoundary: "SHADOW";
+}
+
+export interface HostedAlphaTaskResponse {
+  generatedAt: string;
+  institutionId: string;
+  actorUserId: string;
+  operatingBoundary: "SHADOW";
+  authorityNotice: string;
+  counts: {
+    total: number;
+    actionRequired: number;
+    watch: number;
+    critical: number;
+    overdue: number;
+    dueSoon: number;
+    byCategory: Record<HostedAlphaTaskCategory, number>;
+  };
+  tasks: HostedAlphaTask[];
+}
+
+export function hostedAlphaTaskTone(task: Pick<HostedAlphaTask, "priority" | "dueState">): string {
+  if (task.priority === "CRITICAL" || task.dueState === "OVERDUE") return "task-critical";
+  if (task.priority === "HIGH" || task.dueState === "DUE_SOON") return "task-attention";
+  return "";
 }
 
 export type Availability<T> =

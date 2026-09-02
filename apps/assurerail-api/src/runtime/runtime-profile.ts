@@ -7,6 +7,7 @@ import {
   type DaReplayMode,
   type DeveloperPortalMode,
   type ExternalActionSagaMode,
+  type HostedAlphaMode,
   type InternalRbacMode,
   type LegacyRoomProxyMode,
   type NeutralIngressMode,
@@ -74,6 +75,7 @@ export interface RuntimeEnvironmentProfile {
     venueConduct: VenueConductMode;
     developerPortal: DeveloperPortalMode;
     customerOperations: CustomerOperationsMode;
+    hostedAlpha: HostedAlphaMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -252,6 +254,10 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || persistenceFlags.developerPortal !== "shadow")) {
     errors.push("ARAIL_CUSTOMER_OPERATIONS_V1=shadow requires participant admission and developer portal in shadow plus internal RBAC");
   }
+  if (persistenceFlags.hostedAlpha !== "off"
+    && (persistenceFlags.participantAdmission === "off" || persistenceFlags.transactionCase === "off")) {
+    errors.push("ARAIL_HOSTED_ALPHA_V1=shadow requires participant admission and transaction cases");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -297,6 +303,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.customerOperations !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_CUSTOMER_OPERATIONS_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.hostedAlpha !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_HOSTED_ALPHA_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -456,6 +465,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         venueConduct: persistenceFlags.venueConduct,
         developerPortal: persistenceFlags.developerPortal,
         customerOperations: persistenceFlags.customerOperations,
+        hostedAlpha: persistenceFlags.hostedAlpha,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

@@ -119,6 +119,11 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).customerOperations === "shadow"
     ? [require("./customer-operations/customer-operations.module").CustomerOperationsModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).hostedAlpha === "shadow"
+    && inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).transactionCase !== "off"
+    ? [require("./hosted-alpha/hosted-alpha.module").HostedAlphaModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

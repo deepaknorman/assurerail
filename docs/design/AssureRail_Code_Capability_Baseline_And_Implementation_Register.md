@@ -1444,6 +1444,32 @@ implemented capability IDs, rollback/safe-pause, internal evidence and open exte
 web copy, SEO, articles and inbound campaigns follow the accepted capability registry and are not
 made truthful merely by completing these code stages.
 
+### AR-21 — Hosted alpha and institution action centre
+
+**Dependencies:** PR-03, PR-06 and the deployed PR-18–PR-20 customer foundations
+
+Consolidate governed records into a coherent institution-scoped home, action queue and navigation
+layer. A task is a read projection of work the current member may see; it is never a command,
+authority grant or gate result.
+
+**AR-21 implementation checkpoint (2 September 2026):** implemented for review under EX-28; not
+deployed or activated. A new `/v1/rail/institutions/:institutionId/hosted-alpha/tasks` API derives
+deterministically ordered governance, case, evidence, reconciliation, commercial and service tasks
+from the active institution's visible records. It requires an authenticated active-institution
+session, `VIEW_INSTITUTION`, and each task family's separately evaluated action. Task payloads expose
+only concise source metadata, due state, required action and destination. The customer workspace
+shows a bounded action summary and `/workspace/tasks` provides a responsive category-filtered
+queue. Participant header notifications now use this scoped source and never the legacy
+platform-wide activity feed; only a platform administrator with no acting institution retains that
+separate feed. `ARAIL_HOSTED_ALPHA_V1` and its web build flag default off, are limited to
+`REPLAY/SHADOW`, and require participant-admission and transaction-case foundations. The API suite
+passed 299/299 with zero skipped; AR-21/PR-18 web boundary checks and the production web build
+passed. Customer/trustee workflow acceptance, multi-institution DB isolation, accessibility, VAPT,
+notification delivery and all external activation evidence remain open. Programme:
+`docs/design/AssureRail_Productisation_AR21_AR30.md`; evidence:
+`docs/qa/AssureRail_AR21_Hosted_Alpha_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR21_Deployer_Handoff.md`.
+
 ---
 
 ## 9. Test and evidence baseline

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { hostedAlphaEnabled, type HostedAlphaTask, type HostedAlphaTaskResponse } from "@/lib/customer-workspace";
 import { vget, shortDid } from "@/lib/venue";
 import { Logo } from "./Logo";
 
@@ -22,14 +23,30 @@ export function VenueHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [notifs, setNotifs] = useState<ActivityRow[]>([]);
+  const [tasks, setTasks] = useState<HostedAlphaTask[]>([]);
+  const [notificationMode, setNotificationMode] = useState<"TASKS" | "ACTIVITY" | "NONE">("NONE");
   const [hasStaffWorkspace, setHasStaffWorkspace] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const isAdmin = !!venueUser?.isAdmin;
 
   useEffect(() => {
-    if (notifOpen && notifs.length === 0) {
+    if (!notifOpen) return;
+    if (activeInstitutionId && hostedAlphaEnabled()) {
+      setNotificationMode("TASKS");
+      setNotifs([]);
+      vget<HostedAlphaTaskResponse>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}/hosted-alpha/tasks`)
+        .then((result) => setTasks(result.tasks.filter((task) => task.dueState !== "WATCH").slice(0, 6)))
+        .catch(() => setTasks([]));
+    } else if (isAdmin && !activeInstitutionId) {
+      setNotificationMode("ACTIVITY");
+      setTasks([]);
       vget<{ rows: ActivityRow[] }>("/venue/activity?limit=6").then((r) => setNotifs(r.rows)).catch(() => {});
+    } else {
+      setNotificationMode("NONE");
+      setTasks([]);
+      setNotifs([]);
     }
-  }, [notifOpen, notifs.length]);
+  }, [notifOpen, activeInstitutionId, isAdmin]);
 
   useEffect(() => {
     if (!venueUser || activeInstitutionId) {
@@ -55,9 +72,9 @@ export function VenueHeader() {
 
   const email = venueUser?.email ?? firebaseUser?.email ?? "";
   const initial = (email[0] ?? "?").toUpperCase();
-  const isAdmin = !!venueUser?.isAdmin;
   const nav = [
     ...(activeInstitutionId && process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1 === "shadow" ? [{ href: "/workspace", label: "Workspace" }] : []),
+    ...(activeInstitutionId && hostedAlphaEnabled() ? [{ href: "/workspace/tasks", label: "Actions" }] : []),
     { href: "/institutions", label: "Institutions" },
     { href: "/cases", label: "Cases" },
     { href: "/console", label: "Legacy console" },
@@ -83,22 +100,26 @@ export function VenueHeader() {
         <div className="appbar-actions" ref={actionsRef}>
           <button className="icon-btn" aria-label="Notifications" onClick={() => { setNotifOpen(!notifOpen); setMenuOpen(false); }}>
             <Bell />
-            {notifs.length > 0 && <span className="badge-dot" />}
+            {(tasks.length > 0 || notifs.length > 0) && <span className="badge-dot" />}
           </button>
           {notifOpen && (
             <div className="notif">
-              <h4>Recent activity</h4>
-              {notifs.length === 0 ? (
-                <div className="n-empty">No recent activity</div>
-              ) : (
-                notifs.map((n) => (
+              <h4>{notificationMode === "TASKS" ? "Action centre" : notificationMode === "ACTIVITY" ? "Recent platform activity" : "Notifications"}</h4>
+              {notificationMode === "TASKS" && tasks.map((task) => (
+                <Link className="n-item notification-task" href={task.href} key={task.id} onClick={closeAll}>
+                  <div className="n-ev">{task.title}</div>
+                  <div className="n-t">{task.priority} · {task.dueState} · {task.category}</div>
+                </Link>
+              ))}
+              {notificationMode === "ACTIVITY" && notifs.map((n) => (
                   <div className="n-item" key={n.id}>
                     <div className="n-ev">{n.event}</div>
                     <div className="n-t">{new Date(n.createdAt).toLocaleString("en-IN")}</div>
                   </div>
-                ))
-              )}
-              <Link href="/activity" className="menu-item" style={{ borderTop: "1px solid var(--arail-border-subtle)", justifyContent: "center", color: "var(--arail-accent-text)" }} onClick={closeAll}>View all activity →</Link>
+                ))}
+              {((notificationMode === "TASKS" && tasks.length === 0) || (notificationMode === "ACTIVITY" && notifs.length === 0) || notificationMode === "NONE") && <div className="n-empty">{notificationMode === "NONE" ? "Select an institution to see scoped actions." : "Nothing requires attention in this view."}</div>}
+              {notificationMode === "TASKS" && <Link href="/workspace/tasks" className="menu-item" style={{ borderTop: "1px solid var(--arail-border-subtle)", justifyContent: "center", color: "var(--arail-accent-text)" }} onClick={closeAll}>View all actions →</Link>}
+              {notificationMode === "ACTIVITY" && <Link href="/activity" className="menu-item" style={{ borderTop: "1px solid var(--arail-border-subtle)", justifyContent: "center", color: "var(--arail-accent-text)" }} onClick={closeAll}>View all activity →</Link>}
             </div>
           )}
           <button className="profile-btn" aria-label="Profile" onClick={() => { setMenuOpen(!menuOpen); setNotifOpen(false); }}>

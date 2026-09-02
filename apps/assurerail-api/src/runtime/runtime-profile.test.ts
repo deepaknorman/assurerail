@@ -69,6 +69,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     venueConduct: "off",
     developerPortal: "off",
     customerOperations: "off",
+    hostedAlpha: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -452,6 +453,21 @@ test("[CONFIG][PR20] customer operations require the governed integration founda
   assert.equal(accepted.profile.features.customerOperations, "shadow");
   const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_CUSTOMER_OPERATIONS_V1: "shadow" });
   assert.match(live.errors.join("\n"), /ARAIL_CUSTOMER_OPERATIONS_V1 is available only in REPLAY or SHADOW/);
+});
+
+test("[CONFIG][AR21] hosted alpha requires admission and case foundations and remains non-live", () => {
+  const missing = inspectRuntimeEnvironment({ ASSURERAIL_OPERATING_MODE: "SHADOW", ARAIL_HOSTED_ALPHA_V1: "shadow" });
+  assert.match(missing.errors.join("\n"), /requires participant admission and transaction cases/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW", DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE, ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow", ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_HOSTED_ALPHA_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.hostedAlpha, "shadow");
+  const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_HOSTED_ALPHA_V1: "shadow" });
+  assert.match(live.errors.join("\n"), /ARAIL_HOSTED_ALPHA_V1 is available only in REPLAY or SHADOW/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {
