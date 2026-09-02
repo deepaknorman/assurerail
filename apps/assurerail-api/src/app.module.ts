@@ -140,6 +140,9 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).externalActionSaga === "required"
     ? [require("./lifecycle/lifecycle.module").LifecycleModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).enterpriseIntegration === "shadow"
+    ? [require("./enterprise-integration/enterprise-integration.module").EnterpriseIntegrationModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

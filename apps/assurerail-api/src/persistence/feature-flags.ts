@@ -106,6 +106,10 @@ export const TOKENISED_PRODUCT_FLAG = "ARAIL_TOKENISED_PRODUCT_V1" as const;
 export const TOKENISED_PRODUCT_VALUES = ["off", "shadow"] as const;
 export type TokenisedProductMode = (typeof TOKENISED_PRODUCT_VALUES)[number];
 
+export const ENTERPRISE_INTEGRATION_FLAG = "ARAIL_ENTERPRISE_INTEGRATION_V1" as const;
+export const ENTERPRISE_INTEGRATION_VALUES = ["off", "shadow"] as const;
+export type EnterpriseIntegrationMode = (typeof ENTERPRISE_INTEGRATION_VALUES)[number];
+
 // OP-01 internal-control-plane rollout. Shadow evaluates and records the new policy without
 // replacing the legacy bootstrap role gate; enforcement is a separately approved cutover.
 export const INTERNAL_RBAC_FLAG = "ARAIL_INTERNAL_RBAC_V1" as const;
@@ -158,6 +162,7 @@ export function inspectPersistenceFlags(env: Environment): {
   primaryVenueProduct: PrimaryVenueProductMode;
   secondaryProduct: SecondaryProductMode;
   tokenisedProduct: TokenisedProductMode;
+  enterpriseIntegration: EnterpriseIntegrationMode;
   internalRbac: InternalRbacMode;
   errors: readonly string[];
 } {
@@ -188,6 +193,7 @@ export function inspectPersistenceFlags(env: Environment): {
   const primaryVenueProduct = readFlag(env, PRIMARY_VENUE_PRODUCT_FLAG, PRIMARY_VENUE_PRODUCT_VALUES, "off");
   const secondaryProduct = readFlag(env, SECONDARY_PRODUCT_FLAG, SECONDARY_PRODUCT_VALUES, "off");
   const tokenisedProduct = readFlag(env, TOKENISED_PRODUCT_FLAG, TOKENISED_PRODUCT_VALUES, "off");
+  const enterpriseIntegration = readFlag(env, ENTERPRISE_INTEGRATION_FLAG, ENTERPRISE_INTEGRATION_VALUES, "off");
   const internalRbac = readFlag(env, INTERNAL_RBAC_FLAG, INTERNAL_RBAC_VALUES, "off");
   return {
     neutralIngress: ingress.value,
@@ -217,12 +223,13 @@ export function inspectPersistenceFlags(env: Environment): {
     primaryVenueProduct: primaryVenueProduct.value,
     secondaryProduct: secondaryProduct.value,
     tokenisedProduct: tokenisedProduct.value,
+    enterpriseIntegration: enterpriseIntegration.value,
     internalRbac: internalRbac.value,
     errors: [ingress.error, relay.error, admission.error, entitlement.error, transactionCase.error,
       roomReadSource.error, roomWriteSource.error, completionAcknowledgement.error, legacyRoomProxy.error,
       externalActionSaga.error, daReplay.error, ptcReplay.error, tokenisedDa.error, tokenisedPtc.error, primaryCommercial.error,
       conventionalSecondary.error, venueConduct.error, developerPortal.error, customerOperations.error, hostedAlpha.error, institutionalProduct.error, daProduct.error, ptcProduct.error, lifecycleProduct.error, primaryVenueProduct.error, secondaryProduct.error, tokenisedProduct.error,
-      internalRbac.error]
+      enterpriseIntegration.error, internalRbac.error]
       .filter((error): error is string => Boolean(error)),
   };
 }

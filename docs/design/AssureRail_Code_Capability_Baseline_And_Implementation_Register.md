@@ -1675,8 +1675,35 @@ rehearsed against a disposable PostgreSQL database after applying all 30 migrati
 linkage/observation/reconciliation, mirror/open-gate state, parity and restore all passed. These are
 software and synthetic database checks only, not external acceptance.
 
-AR-29–AR-30 remain unimplemented product stages. This checkpoint does not approve controlled-live
-or production operation.
+### AR-29 — Enterprise integration governance
+
+**Dependencies:** AR-22–AR-28 and PR-19/20
+
+**AR-29 implementation checkpoint (3 September 2026):** implemented for review under EX-28; not
+deployed or activated. The product adds 11 versioned connector classes spanning lender registry,
+trustee, RTA/depository/register, payment, signing/stamping, rating/servicer, finance/tax, CRM and
+notification boundaries. Software conformance, accountable-party evidence and case authority are
+separate records and approvals. Profiles require current signed gate-scoped evidence, current
+provider admission, an independently reviewed proposal and a healthy observation no more than 24
+hours old. Case bindings also require the exact active material-function assignment and performer.
+
+Evidence quarantine, provider/admission suspension, expiry or stale/degraded health reopens the
+derived gate and returns retained bindings as `SAFE_PAUSED`; history is not rewritten. Profiles,
+health observations and bindings are idempotent; proposals and reviews use separate humans and
+purpose-bound step-up. The integration/evidence pack excludes secrets. The API/web flags default
+off and are replay/shadow-only. No live capability or external instruction/dispatch path was added.
+Design: `docs/design/AssureRail_Enterprise_Integration_Product_AR29.md`; evidence:
+`docs/qa/AssureRail_AR29_Enterprise_Integration_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR29_Deployer_Handoff.md`.
+
+The complete API corpus passed 357/357 with zero skipped; all ten current web boundary checks and
+the 24-page production build passed. A disposable PostgreSQL rehearsal applied all 31 migrations
+from zero and proved the nine-gate lender-registry service flow, maker/checker, case performer
+binding, currentness-driven safe pause, zero external instruction, schema parity and backup/restore.
+This is synthetic software evidence only, not certification of a provider or production readiness.
+
+AR-30 remains the final unimplemented first-spine product stage. This checkpoint does not approve
+controlled-live or production operation.
 
 ---
 

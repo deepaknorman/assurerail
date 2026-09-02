@@ -7,6 +7,7 @@ import {
   type DurableRelayMode,
   type DaReplayMode,
   type DeveloperPortalMode,
+  type EnterpriseIntegrationMode,
   type ExternalActionSagaMode,
   type HostedAlphaMode,
   type InstitutionalProductMode,
@@ -90,6 +91,7 @@ export interface RuntimeEnvironmentProfile {
     primaryVenueProduct: PrimaryVenueProductMode;
     secondaryProduct: SecondaryProductMode;
     tokenisedProduct: TokenisedProductMode;
+    enterpriseIntegration: EnterpriseIntegrationMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -311,6 +313,12 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || persistenceFlags.externalActionSaga !== "required" || persistenceFlags.internalRbac === "off")) {
     errors.push("ARAIL_TOKENISED_PRODUCT_V1=shadow requires institutional, DA, PTC and lifecycle products in shadow; tokenised DA allow-list; tokenised PTC shadow; required saga; and internal RBAC");
   }
+  if (persistenceFlags.enterpriseIntegration !== "off"
+    && (persistenceFlags.institutionalProduct !== "shadow" || persistenceFlags.developerPortal !== "shadow"
+      || persistenceFlags.customerOperations !== "shadow" || persistenceFlags.internalRbac === "off"
+      || persistenceFlags.durableRelay !== "shadow")) {
+    errors.push("ARAIL_ENTERPRISE_INTEGRATION_V1=shadow requires institutional product, developer portal, customer operations and durable relay in shadow plus internal RBAC");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -380,6 +388,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.tokenisedProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_TOKENISED_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.enterpriseIntegration !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_ENTERPRISE_INTEGRATION_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -547,6 +558,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         primaryVenueProduct: persistenceFlags.primaryVenueProduct,
         secondaryProduct: persistenceFlags.secondaryProduct,
         tokenisedProduct: persistenceFlags.tokenisedProduct,
+        enterpriseIntegration: persistenceFlags.enterpriseIntegration,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

@@ -8,6 +8,7 @@ export const LIFECYCLE_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_LIFECYCLE_PRODUCT_
 export const PRIMARY_VENUE_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_PRIMARY_VENUE_PRODUCT_V1";
 export const SECONDARY_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_SECONDARY_PRODUCT_V1";
 export const TOKENISED_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_TOKENISED_PRODUCT_V1";
+export const ENTERPRISE_INTEGRATION_FLAG = "NEXT_PUBLIC_ASSURERAIL_ENTERPRISE_INTEGRATION_V1";
 
 export function customerWorkspaceEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1): boolean {
   return value?.trim().toLowerCase() === "shadow";
@@ -46,6 +47,10 @@ export function secondaryProductEnabled(value = process.env.NEXT_PUBLIC_ASSURERA
 }
 
 export function tokenisedProductEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_TOKENISED_PRODUCT_V1): boolean {
+  return value?.trim().toLowerCase() === "shadow";
+}
+
+export function enterpriseIntegrationEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_ENTERPRISE_INTEGRATION_V1): boolean {
   return value?.trim().toLowerCase() === "shadow";
 }
 

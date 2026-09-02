@@ -16,7 +16,8 @@
     "check:ar25": "node scripts/ar25-lifecycle-product-check.mjs",
     "check:ar26": "node scripts/ar26-primary-venue-product-check.mjs",
     "check:ar27": "node scripts/ar27-secondary-product-check.mjs",
-    "check:ar28": "node scripts/ar28-tokenised-product-check.mjs"
+    "check:ar28": "node scripts/ar28-tokenised-product-check.mjs",
+    "check:ar29": "node scripts/ar29-enterprise-integration-check.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^8.3.7",

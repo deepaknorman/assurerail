@@ -77,6 +77,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     primaryVenueProduct: "off",
     secondaryProduct: "off",
     tokenisedProduct: "off",
+    enterpriseIntegration: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -611,6 +612,24 @@ test("[CONFIG][AR28] tokenised product requires both governed routes, lifecycle 
   assert.equal(accepted.profile.features.tokenisedProduct, "shadow");
   const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_TOKENISED_PRODUCT_V1: "shadow" });
   assert.match(live.errors.join("\n"), /ARAIL_TOKENISED_PRODUCT_V1 is available only in REPLAY or SHADOW/);
+});
+
+test("[CONFIG][AR29] enterprise integration requires the institutional, developer and operations foundations", () => {
+  const missing = inspectRuntimeEnvironment({ ASSURERAIL_OPERATING_MODE: "SHADOW", ARAIL_ENTERPRISE_INTEGRATION_V1: "shadow" });
+  assert.match(missing.errors.join("\n"), /requires institutional product, developer portal, customer operations and durable relay in shadow plus internal RBAC/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW", DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE, ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_DURABLE_RELAY_MODE: "shadow", ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow", ARAIL_DEVELOPER_PORTAL_V1: "shadow",
+    ARAIL_INTERNAL_RBAC_V1: "shadow", ARAIL_HOSTED_ALPHA_V1: "shadow",
+    ARAIL_INSTITUTIONAL_PRODUCT_V1: "shadow", ARAIL_CUSTOMER_OPERATIONS_V1: "shadow",
+    ARAIL_ENTERPRISE_INTEGRATION_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.enterpriseIntegration, "shadow");
+  const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_ENTERPRISE_INTEGRATION_V1: "shadow" });
+  assert.match(live.errors.join("\n"), /ARAIL_ENTERPRISE_INTEGRATION_V1 is available only in REPLAY or SHADOW/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {

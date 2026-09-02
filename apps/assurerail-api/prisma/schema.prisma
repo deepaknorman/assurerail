@@ -242,6 +242,8 @@ model Institution {
   lifecycleBreaks RailLifecycleBreak[] @relation("LifecycleBreakOwnerInstitution")
   commercialHandoffsOwned CommercialCaseHandoff[] @relation("CommercialHandoffOwnerInstitution")
   commercialHandoffsReceived CommercialCaseHandoff[] @relation("CommercialHandoffCounterpartyInstitution")
+  enterpriseIntegrationProfiles EnterpriseIntegrationProfile[]
+  enterpriseIntegrationBindingsPerformed EnterpriseCaseIntegrationBinding[] @relation("EnterpriseIntegrationPerformer")
 
   @@index([status])
   @@index([applicantUserId])
@@ -929,6 +931,7 @@ model ConnectorRegistration {
   sourceCompletions   SourceCompletion[]
   tokenConnectorBindings TokenConnectorBinding[]
   developerConformanceRuns DeveloperConformanceRun[]
+  enterpriseIntegrationProfiles EnterpriseIntegrationProfile[]
 
   @@unique([institutionId, connectorKey])
   @@index([institutionId, status])
@@ -996,6 +999,7 @@ model DeveloperConformanceRun {
   createdByMandateId      String
   stepUpEvidenceId        String
   createdAt               DateTime              @default(now())
+  enterpriseIntegrationGates EnterpriseIntegrationGate[]
 
   @@index([institutionId, connectorRegistrationId, createdAt], map: "DeveloperConformanceRun_scope_time")
 }
@@ -1409,6 +1413,7 @@ model EvidenceObject {
   tokenOperatingAcceptanceEvidence TokenConnectorBinding[] @relation("TokenOperatingAcceptanceEvidence")
   ptcTokenEvidenceGates PtcTokenEvidenceGate[]
   lifecycleEvents RailLifecycleEvent[]
+  enterpriseIntegrationGates EnterpriseIntegrationGate[]
 
   @@index([institutionId, transactionCaseId])
   @@index([institutionId, status])
@@ -1610,10 +1615,131 @@ model TransactionCase {
   lifecyclePlans          RailLifecyclePlan[]
   lifecycleBreaks         RailLifecycleBreak[]
   commercialHandoffs      CommercialCaseHandoff[]
+  enterpriseIntegrationBindings EnterpriseCaseIntegrationBinding[]
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
   @@index([transactionRoute, representation, operatingMode, status])
+}
+
+// ───────────── enterprise integration governance (AR-29, shadow only) ─────────────
+// Software conformance, external acceptance and case authority are deliberately separate. These
+// records contain references and digests only; credentials stay in the approved secret vault.
+model EnterpriseIntegrationProfile {
+  id                      String                @id
+  institutionId           String
+  institution             Institution           @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  connectorRegistrationId String
+  connectorRegistration   ConnectorRegistration @relation(fields: [connectorRegistrationId], references: [id], onDelete: Restrict, map: "EIP_connector_fkey")
+  version                 Int
+  connectorClass          String
+  direction               String
+  materialFunctions       Json
+  routeScope              Json
+  dataClassification      String
+  serviceLevel            Json
+  reconciliationPolicy    Json
+  authorityPolicy         Json
+  status                  String                @default("DRAFT") // DRAFT | PROPOSED | SHADOW_READY | REJECTED | SUSPENDED | REVOKED
+  profileDigest           String
+  idempotencyKey          String
+  requestDigest           String
+  proposedByUserId        String
+  proposedByMandateId     String
+  proposalStepUpId        String
+  reviewedByUserId        String?
+  reviewStepUpId          String?
+  reviewReason            String?
+  reviewedAt              DateTime?
+  suspendedAt             DateTime?
+  revokedAt               DateTime?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @default(now()) @updatedAt
+  gates                    EnterpriseIntegrationGate[]
+  bindings                 EnterpriseCaseIntegrationBinding[]
+  healthObservations       EnterpriseIntegrationHealthObservation[]
+
+  @@unique([connectorRegistrationId, version], map: "EIP_connector_version_key")
+  @@unique([institutionId, idempotencyKey], map: "EIP_institution_idempotency_key")
+  @@unique([institutionId, profileDigest], map: "EIP_institution_digest_key")
+  @@index([institutionId, connectorClass, status], map: "EIP_institution_class_status_idx")
+}
+
+model EnterpriseIntegrationGate {
+  id                         String                       @id
+  enterpriseIntegrationProfileId String
+  enterpriseIntegrationProfile EnterpriseIntegrationProfile @relation(fields: [enterpriseIntegrationProfileId], references: [id], onDelete: Restrict, map: "EIG_profile_fkey")
+  gateCode                   String
+  gateKind                   String // SOFTWARE_CONFORMANCE | EXTERNAL_EVIDENCE
+  status                     String                       @default("OPEN") // OPEN | SOFTWARE_PASSED | VERIFIED | FAILED | EXPIRED | REVIEW_REQUIRED
+  accountableParty           String
+  developerConformanceRunId  String?
+  developerConformanceRun    DeveloperConformanceRun?     @relation(fields: [developerConformanceRunId], references: [id], onDelete: Restrict, map: "EIG_conformance_fkey")
+  evidenceObjectId           String?
+  evidenceObject             EvidenceObject?              @relation(fields: [evidenceObjectId], references: [id], onDelete: Restrict, map: "EIG_evidence_fkey")
+  evidenceDigest             String?
+  sourceAsOfAt               DateTime?
+  expiresAt                  DateTime?
+  qualifications             Json
+  recordedByUserId           String?
+  recordedByMandateId        String?
+  stepUpEvidenceId           String?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @default(now()) @updatedAt
+
+  @@unique([enterpriseIntegrationProfileId, gateCode], map: "EIG_profile_code_key")
+  @@index([enterpriseIntegrationProfileId, status], map: "EIG_profile_status_idx")
+  @@index([developerConformanceRunId], map: "EIG_conformance_idx")
+  @@index([evidenceObjectId], map: "EIG_evidence_idx")
+}
+
+model EnterpriseCaseIntegrationBinding {
+  id                         String                       @id
+  transactionCaseId          String
+  transactionCase            TransactionCase              @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict, map: "ECIB_case_fkey")
+  enterpriseIntegrationProfileId String
+  enterpriseIntegrationProfile EnterpriseIntegrationProfile @relation(fields: [enterpriseIntegrationProfileId], references: [id], onDelete: Restrict, map: "ECIB_profile_fkey")
+  materialFunction           String
+  performerInstitutionId     String
+  performerInstitution       Institution                  @relation("EnterpriseIntegrationPerformer", fields: [performerInstitutionId], references: [id], onDelete: Restrict, map: "ECIB_performer_fkey")
+  direction                  String
+  authorityClass             String
+  status                     String                       @default("PROPOSED") // PROPOSED | SHADOW_READY | REJECTED | SUSPENDED
+  idempotencyKey             String
+  requestDigest              String
+  proposedByUserId           String
+  proposedByMandateId        String
+  proposalStepUpId           String
+  reviewedByUserId           String?
+  reviewStepUpId             String?
+  reviewReason               String?
+  reviewedAt                 DateTime?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @default(now()) @updatedAt
+
+  @@unique([transactionCaseId, materialFunction], map: "ECIB_case_function_key")
+  @@unique([transactionCaseId, idempotencyKey], map: "ECIB_case_idempotency_key")
+  @@index([enterpriseIntegrationProfileId, status], map: "ECIB_profile_status_idx")
+  @@index([performerInstitutionId, status], map: "ECIB_performer_status_idx")
+}
+
+model EnterpriseIntegrationHealthObservation {
+  id                         String                       @id
+  enterpriseIntegrationProfileId String
+  enterpriseIntegrationProfile EnterpriseIntegrationProfile @relation(fields: [enterpriseIntegrationProfileId], references: [id], onDelete: Restrict, map: "EIHO_profile_fkey")
+  sequence                   Int
+  observedStatus             String // HEALTHY | DEGRADED | UNAVAILABLE | UNKNOWN
+  source                     String
+  sourceAsOfAt               DateTime
+  evidenceDigest             String
+  detail                     Json
+  recordedByUserId           String
+  recordedByMandateId        String
+  createdAt                  DateTime                     @default(now())
+
+  @@unique([enterpriseIntegrationProfileId, sequence], map: "EIHO_profile_sequence_key")
+  @@unique([enterpriseIntegrationProfileId, evidenceDigest], map: "EIHO_profile_digest_key")
+  @@index([enterpriseIntegrationProfileId, sourceAsOfAt], map: "EIHO_profile_asof_idx")
 }
 
 // ───────────────── route-neutral lifecycle product (AR-25) ─────────────────
