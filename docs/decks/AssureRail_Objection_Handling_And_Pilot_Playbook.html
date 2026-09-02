@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AssureRail — Objection Handling and Pilot Playbook</title>
+  <style>
+    :root{--bg:#F2F0EA;--panel:#FFFDF9;--raise:#F6F3EC;--ink:#111A24;--body:#48545E;--muted:#7B858D;--line:#D8D2C7;--line2:#BEB5A7;--amber:#A76A10;--amber-soft:#F6E8CA;--blue:#176E8D;--blue-soft:#DCEEF3;--green:#24725D;--green-soft:#DCEDE7;--red:#A14633;--red-soft:#F2DDD7;--shadow:0 12px 34px rgba(18,27,36,.08);--pad:clamp(28px,4.7vw,66px)}
+    :root[data-theme="dark"]{--bg:#080D13;--panel:#101821;--raise:#16212C;--ink:#F2F5F7;--body:#BDC7CF;--muted:#7E8C98;--line:#263440;--line2:#40515E;--amber:#F2B24B;--amber-soft:#342716;--blue:#6AC8E8;--blue-soft:#132E39;--green:#6AD0AD;--green-soft:#123128;--red:#EE927D;--red-soft:#38201C;--shadow:0 18px 50px rgba(0,0,0,.36)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--body);font:15px/1.45 Inter,"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums}a{color:var(--blue)}
+    .top{position:sticky;top:0;z-index:9;display:flex;align-items:center;gap:12px;padding:10px max(18px,calc((100vw - 1180px)/2));background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}.brand{font-weight:900;color:var(--amber);letter-spacing:.12em;text-transform:uppercase}.meta{font:11px "SFMono-Regular",Consolas,monospace;color:var(--muted)}button{margin-left:auto;border:1px solid var(--line2);border-radius:8px;background:var(--panel);color:var(--body);padding:7px 11px;cursor:pointer}
+    .deck{max-width:1180px;margin:auto;padding:22px 18px 80px;counter-reset:s}.slide{counter-increment:s;position:relative;min-height:650px;margin-bottom:24px;padding:var(--pad);display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}.slide::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:linear-gradient(var(--amber),#FFD27E)}
+    .eye{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase}.pill{padding:3px 9px;border:1px solid color-mix(in srgb,var(--amber) 38%,var(--line));border-radius:999px;color:var(--amber);background:var(--amber-soft)}.dot{width:4px;height:4px;background:var(--line2);border-radius:50%}
+    h1{margin:16px 0 7px;max-width:30ch;color:var(--ink);font-size:clamp(27px,3.5vw,45px);line-height:1.06;letter-spacing:-.025em;text-wrap:balance}h1.wide{max-width:42ch}.sub{margin:0;max-width:70ch;font-size:clamp(14px,1.45vw,18px)}.body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 0 8px}.foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);display:flex;gap:18px;align-items:flex-end;color:var(--muted);font-size:10.5px}.foot>:first-child{flex:1}.pg{white-space:nowrap;font-weight:800}.pg::after{content:" · " counter(s,decimal-leading-zero)}
+    .grid{display:grid;gap:13px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.card{padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--raise)}.card h3{margin:0 0 7px;color:var(--ink);font-size:14px}.card p,.card ul{margin:0;font-size:12.5px}.card ul{padding-left:17px}.card li{margin:4px 0}.card.true{border-top:3px solid var(--green)}.card.answer{border-top:3px solid var(--amber)}.card.never{border-top:3px solid var(--red)}.card.ask{border-top:3px solid var(--blue)}
+    .objection{padding:17px 19px;border-radius:12px;background:var(--red-soft);border:1px solid color-mix(in srgb,var(--red) 35%,var(--line));color:var(--ink);font-size:18px;font-weight:850}.response{padding:17px 19px;border-radius:12px;background:var(--amber-soft);border:1px solid color-mix(in srgb,var(--amber) 35%,var(--line));color:var(--ink);font-size:15px;font-weight:760}
+    table{width:100%;border-collapse:collapse;font-size:11.5px}th,td{padding:9px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}td:first-child{color:var(--ink);font-weight:800}
+    .flow{display:flex;gap:28px}.step{position:relative;flex:1;padding:15px;border:1px solid var(--line);border-radius:11px;background:var(--raise)}.step:not(:last-child)::after{content:"→";position:absolute;right:-22px;top:50%;transform:translateY(-50%);font-weight:900;font-size:22px;color:var(--amber)}.step b{display:block;font-size:10px;color:var(--amber);letter-spacing:.1em;text-transform:uppercase}.step h3{margin:5px 0;color:var(--ink);font-size:14px}.step p{margin:0;font-size:12px}
+    .callout{padding:15px 17px;border:1px solid color-mix(in srgb,var(--blue) 40%,var(--line));border-radius:11px;background:var(--blue-soft);color:var(--ink);font-weight:750}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:5px 10px;border:1px solid var(--line2);border-radius:999px;background:var(--raise);font-size:11px;font-weight:750}.chip.good{color:var(--green);background:var(--green-soft)}.chip.stop{color:var(--red);background:var(--red-soft)}
+    .cover{justify-content:center;background:radial-gradient(circle at 82% 16%,color-mix(in srgb,var(--amber) 16%,transparent),transparent 38%),var(--panel)}.cover h1{font-size:clamp(38px,6vw,70px);max-width:17ch}.cover .lead{max-width:56ch;font-size:clamp(16px,2vw,22px)}.internal{margin-top:28px;font:11px "SFMono-Regular",Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+    @media(max-width:800px){.slide{min-height:auto}.g2,.g3,.g4{grid-template-columns:1fr}.flow{flex-direction:column;gap:24px}.step:not(:last-child)::after{right:50%;top:auto;bottom:-22px;transform:translateX(50%) rotate(90deg)}.meta{display:none}}
+    @media print{body{background:#fff}.top{display:none}.deck{max-width:none;padding:0}.slide{height:100vh;min-height:0;margin:0;border:0;border-radius:0;box-shadow:none;break-after:page;page-break-after:always}*{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+  </style>
+</head>
+<body>
+  <div class="top"><span class="brand">AssureRail</span><span class="meta">Field guide · objections + pilot proof · v0.2 · 3 Sep 2026</span><button id="theme" type="button">◐ Theme</button></div>
+  <main class="deck">
+
+    <section class="slide cover">
+      <div class="eye"><span class="pill">Sales enablement</span><span class="dot"></span><span>Institutional conversations</span></div>
+      <h1>Answer the risk behind the objection.</h1>
+      <p class="lead">A field guide for selling AssureRail’s DA/PTC replay, shadow and controlled-conventional journey without overclaiming authorisation, production capability, neutrality or replacement value.</p>
+      <div class="chips" style="margin-top:24px"><span class="chip">Originators</span><span class="chip">Banks / investors</span><span class="chip">Trustees</span><span class="chip">Arrangers / platforms</span><span class="chip">Risk · ops · tech · procurement</span></div>
+      <p class="internal">Internal / confidential · not customer leave-behind without claims review</p>
+      <div class="foot"><div>Canonical source: AssureRail Generic Transfer Infrastructure Scope. If this deck and that scope disagree, the scope wins.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Method</span><span class="dot"></span><span>Five moves</span></div>
+      <h1 class="wide">Do not rebut immediately. Locate the control they are protecting.</h1>
+      <div class="body"><div class="flow">
+        <div class="step"><b>1</b><h3>Acknowledge</h3><p>Confirm the concern is legitimate.</p></div><div class="step"><b>2</b><h3>Diagnose</h3><p>Ask which system, duty or failure they mean.</p></div><div class="step"><b>3</b><h3>Answer</h3><p>State the exact product boundary.</p></div><div class="step"><b>4</b><h3>Prove</h3><p>Offer an artefact or pilot test.</p></div><div class="step"><b>5</b><h3>Advance</h3><p>Ask for the smallest next commitment.</p></div>
+      </div><div class="callout" style="margin-top:18px">The goal is not to “win” the objection. It is to turn an abstract risk into a testable pilot proposition.</div></div>
+      <div class="foot"><div>Never answer a regulatory objection with architecture alone, or an operating objection with a legal-entity diagram alone.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Qualification</span><span class="dot"></span><span>Before the pitch</span></div>
+      <h1 class="wide">A qualified opportunity has a transaction, an accountable owner and a measurable break.</h1>
+      <div class="body"><div class="g3 grid">
+        <div class="card true"><h3>Route and flow</h3><ul><li>DA, PTC or both?</li><li>Primary, subsequent transfer or secondary trade?</li><li>Repeat asset class and expected flow?</li></ul></div>
+        <div class="card true"><h3>Authority and systems</h3><ul><li>Who is trustee/arranger/investor?</li><li>Which system creates legal completion?</li><li>Who owns each current hand-off?</li></ul></div>
+        <div class="card true"><h3>Proof and sponsor</h3><ul><li>One closed case available?</li><li>Named risk/ops/tech owners?</li><li>What must be measurably better?</li></ul></div>
+      </div><div class="chips" style="margin-top:18px"><span class="chip good">Strong: repeat flow + visible reconciliation pain</span><span class="chip stop">Weak: “show us tokenisation” with no route owner</span></div></div>
+      <div class="foot"><div>Do not start solution design from a generic innovation or blockchain brief. Start from a transaction and its accountable parties.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 01</span><span class="dot"></span><span>Existing platform</span></div>
+      <h1>“We already use Yubi, an arranger platform and our own systems.”</h1>
+      <div class="body"><div class="objection">Risk underneath: replacement cost, disruption and an unproven new dependency.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>Those platforms may already perform essential origination, arrangement or workflow functions.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>“Keep them. We begin with one replay and shadow case across them. Your incumbent remains authoritative.”</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“We replace the arranger,” “one platform for everything,” or “migration is easy.”</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Where do you currently reconcile tape, documents, payment, trustee and holding records?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: completed-deal replay + system-of-record map + comparison workbook. No production integration.</div></div>
+      <div class="foot"><div>The coexistence wedge is stronger when the incumbent participates in the first consortium rather than being treated as an enemy.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 02</span><span class="dot"></span><span>Workflow commodity</span></div>
+      <h1>“This sounds like another deal room or workflow tool.”</h1>
+      <div class="body"><div class="objection">Risk underneath: no differentiated economic or control value.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>A portion of the UX will resemble workflow because institutions need tasks, evidence and approvals.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>The product is the governed case: authority, evidence provenance, deterministic gates, external acknowledgements and legal-record reconciliation.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Blockchain makes it unique,” or “single source of truth” when an external register is operative.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Can your present room deterministically replay who decided, on which evidence and what made completion operative?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: rerun the same case twice; export it; reconcile the final state to the external register.</div></div>
+      <div class="foot"><div>Lead with control outcomes and portability, not UI novelty.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 03</span><span class="dot"></span><span>Regulation and licence</span></div>
+      <h1>“Are you licensed to operate this venue?”</h1>
+      <div class="body"><div class="objection">Risk underneath: unlawful venue activity and institutional liability for participating.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>AssureRail is not presented as holding a generic venue licence. Live permission is function- and mode-specific.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>“Replay/shadow performs no live matching or legal-record write. Live functions will be AssureRail-owned only when authorised, otherwise partner-executed.”</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“We are only software, so regulation does not apply,” or “invite-only makes it unregulated.”</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which function concerns you—term display, RFQ, matching, issuance, secondary execution, settlement or recordkeeping?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: mode/function licensed-performer matrix reviewed by transaction counsel and the relevant partner.</div></div>
+      <div class="foot"><div>Primary SDI EBP, secondary RFQ/reporting/clearing, DA transfer and IT-outsourcing questions are different analyses—not one licence.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 04</span><span class="dot"></span><span>Company structure</span></div>
+      <h1 class="wide">“A separate AssureRail company does not solve the conflict.”</h1>
+      <div class="body"><div class="objection">Risk underneath: form without operating substance.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>Correct. Incorporation alone does not create independence or compliance.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>It creates real contracting, liability, capital, governance, inspection and funding separation—then operational controls make it substantive.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Ring-fenced, so AssureLocker has no exposure,” or “separate company eliminates all conflicts.”</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which separation matters most to you: assurance, data, people, fees, decisions, capital or incident accountability?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: separate RACI, access/keys, contracts, fee records, board accountabilities, reconciliations, incident routes and provider-exit test.</div></div>
+      <div class="foot"><div>Planning presumes a separate domestic AssureRail OpCo before regulated live venue activity; exact IP, funding and ownership remain for counsel.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 05</span><span class="dot"></span><span>Assurance conflict</span></div>
+      <h1>“Are you assuring transactions on your own venue?”</h1>
+      <div class="body"><div class="objection">Risk underneath: commercial pressure could suppress or alter adverse findings.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>The trustee or accountable party organises the assurance. AssurePlane, the AssureCLA assurance product, is optional.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>AssureRail validates the appointment, scope, signature, freshness and evidence object. It does not convert it into its own grade.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“AssurePlane is independent because it is in another division,” or imply compulsory routing.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Who appoints and can replace the reviewer today, and what exact output does the trustee require?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: provider-neutral schema, signed appointment, related-party disclosure, access separation and substitution/export exercise.</div></div>
+      <div class="foot"><div>Independent assurance fees remain separately commissioned and outcome-independent.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 05A</span><span class="dot"></span><span>Existing identity and access stack</span></div>
+      <h1>“We already have SSO, KYC and user administration.”</h1>
+      <div class="body"><div class="objection">Risk underneath: duplicate onboarding, inconsistent authority and unnecessary dependence on another group product.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>Your IdP and approved KYC/KYB providers should remain usable. A second identity database is not the customer value.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>AssureRail adds transaction authority: legal entity, membership, mandate, maker-checker, route role, limits, connector certification and suspension.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“DigiKYC onboarding makes the institution eligible,” or require an AssureLocker product merely to participate.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which system proves identity, which record proves signing authority, and who suspends a person or institution today?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: federated/provider-neutral evidence intake, two-person mandate rehearsal, route-scoped activation, immediate suspension and tested exit/export.</div></div>
+      <div class="foot"><div>Rail auth and wider institution/membership/onboarding controls are reusable foundations; they are not yet integrated into Rail admission. That integration is explicit Stage 1 work.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 06</span><span class="dot"></span><span>Trustee and depository</span></div>
+      <h1>“Whose record wins if AssureRail and the depository disagree?”</h1>
+      <div class="body"><div class="objection">Risk underneath: double ownership truth and an invalid completion.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>The trustee is final for the PTC workflow; the route-defined depository/RTA/register retains legal force.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>AssureRail freezes. The trustee accepts/rejects and directs correction through the operative recordkeeper. Release follows acknowledgement.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“The trustee’s email overrides the depository,” or “AssureRail is the single legal source of truth.”</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“For this placement and holding form, which record legally establishes the holder and when?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: deliberately inject a mismatch and demonstrate freeze, correction authority, acknowledgement and before/after reconciliation.</div></div>
+      <div class="foot"><div>No internal status, token or informal message is permitted to create a competing title record.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 07</span><span class="dot"></span><span>Tokenisation</span></div>
+      <h1>“We do not want blockchain or tokens.”</h1>
+      <div class="body"><div class="objection">Risk underneath: regulatory novelty, custody/key risk and forced technology change.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>Conventional DA and PTC are first-class modes and lead in shadow. Tokenisation is not required.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>“Use AssureRail conventionally. Add a token representation only where the route is authorised and it creates measurable value.”</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Tokens are safer,” “token transfer equals title,” or “CBDC makes settlement automatic.”</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which current reconciliation, secondary-transfer or settlement problem would tokenisation need to improve?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: conventional file/API replay and shadow. Token adapter excluded from scope unless separately requested and gated.</div></div>
+      <div class="foot"><div>“Conventional” may still be end-to-end digital, API-enabled, signed and tamper-evident.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 08</span><span class="dot"></span><span>Scope breadth</span></div>
+      <h1>“DA and PTC are too different for one product.”</h1>
+      <div class="body"><div class="objection">Risk underneath: a generic workflow will flatten legally important differences.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>They are different routes. PTC is not “DA plus a certificate.”</p></div>
+        <div class="card answer"><h3>Answer</h3><p>One common kernel covers evidence, authority, state, audit and reconciliation; separate route adapters own parties, documents, gates and lifecycle.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Same process with different templates,” or imply AssurePool structures PTC.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which controls are genuinely common, and which PTC trustee/issue/lifecycle duties must never be abstracted?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: replay one of each; customer validates the implemented common-versus-route-specific control map before shadow acceptance.</div></div>
+      <div class="foot"><div>AssurePool is DA-only and optional. PTC enters AssureRail directly.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 09</span><span class="dot"></span><span>Credit decision</span></div>
+      <h1>“Are you deciding which loans or pools are acceptable?”</h1>
+      <div class="body"><div class="objection">Risk underneath: unlawful outsourcing of lender judgement and hidden investment advice.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>The transferee owns DA diligence and credit decision; the investor owns its investment decision.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>AssureRail organises facts, terms, evidence, exceptions and approvals. It records—not replaces—the participant decision.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Approved by AssureRail,” “investment grade,” or “eligible” without the rule, authority and decision owner.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which facts can be computed centrally, and which policy/judgement must remain inside your team?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: decision-rights matrix and separate records for platform control, participant decision and external opinion.</div></div>
+      <div class="foot"><div>RBI’s transfer framework states that the transferee’s loan due diligence cannot be outsourced.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 10</span><span class="dot"></span><span>Data and security</span></div>
+      <h1>“We cannot put borrower or transaction data on another platform.”</h1>
+      <div class="body"><div class="objection">Risk underneath: confidentiality, residency, cyber concentration and regulator access.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>Real-data use needs classification, minimisation, India-residency design, contracts, VAPT and access/retention controls. Those external gates are open.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>Start redacted/file-based. The selected application target is Azure India—Hyderabad primary and Pune recovery—subject to service-by-service design, VAPT and exercised failover. Keep privileged-source access inside participant boundaries where required. Never put borrower PII on an immutable ledger.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Hashes mean there is no privacy risk,” “blockchain is immutable so it is secure,” or claim certifications not obtained.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which fields cannot leave, which can be tokenised/redacted, and which acknowledgement can be referenced rather than copied?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: field-level data map, threat model, role/access demonstration, audit export, restore and provider-exit test.</div></div>
+      <div class="foot"><div>Security is a production gate, not a marketing adjective. Shadow scope should minimise data before expanding integrations.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 11</span><span class="dot"></span><span>Liquidity and network</span></div>
+      <h1>“A venue without buyers and sellers has no value.”</h1>
+      <div class="body"><div class="objection">Risk underneath: cold-start, fragmented liquidity and dependence on speculative future adoption.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>Matching value requires participant density. AssureRail does not yet claim an active liquidity network.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>Pre-liquidity value comes from controlled transaction state, evidence, reconciliation and lifecycle. First flow comes from a committed consortium and incumbent channels.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Build it and liquidity will come,” or cite total securitisation flow as captive AssureRail volume.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which repeat programme already has originator, investor and trustee demand but suffers execution friction?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: committed pipeline and participant roles before matching build; partner-executed RFQ first; repeat-programme conversion criterion.</div></div>
+      <div class="foot"><div>Do not launch an anonymous order book first. Institutional invite-only RFQ is the working hypothesis, subject to permission.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 12</span><span class="dot"></span><span>Integration and burden</span></div>
+      <h1>“Our technology team has no capacity for another integration.”</h1>
+      <div class="body"><div class="objection">Risk underneath: an innovation pilot becoming an uncontrolled enterprise programme.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>A production rail will eventually require serious integrations and operating ownership.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>Replay and first shadow are file-in/workbook-out. API is a later carrier over the same schema, not a prerequisite.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Zero integration forever,” “plug and play,” or conceal security/procurement work required for live use.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Can operations export one closed case and name the person who knows each file?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: signed manifest, reference templates, rejected-record report, deterministic outputs and incumbent mapping—before API discussion.</div></div>
+      <div class="foot"><div>Make the initial ask small enough for the customer to say yes without borrowing an engineering roadmap.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 13</span><span class="dot"></span><span>Fees and neutrality</span></div>
+      <h1>“A transaction-linked fee will bias the platform toward closure.”</h1>
+      <div class="body"><div class="objection">Risk underneath: suppressed exceptions, conflicted admission or distorted matching.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>Fee design can create conduct conflicts. A separate company does not make a percentage fee safe.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>Replay/shadow are fixed-scope. Venue economics are route/function-specific, disclosed and counsel-approved. Current PTC illustrations are 0.30% conventional and 0.50% tokenised; neither is a hard-coded default. Assurance is separately appointed and outcome-independent.</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Percentage fees are allowed because exchanges charge them,” or blur assurance and venue invoices.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“Which action is being paid for, by whom, and does payment depend on acceptance, execution, value or completion?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: fee map by function, payer, trigger, cap, cancellation/refund, disclosure and related-party treatment.</div></div>
+      <div class="foot"><div>Fixed versus percentage is a conduct/commercial question, not the reason to incorporate AssureRail.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Objection 14</span><span class="dot"></span><span>Track record</span></div>
+      <h1>“You have no production venue track record.”</h1>
+      <div class="body"><div class="objection">Risk underneath: institutional, operational and continuity risk—not merely software maturity.</div><div class="g4 grid" style="margin-top:14px">
+        <div class="card true"><h3>What is true</h3><p>Correct. The generic DA/PTC product journeys are built and deployed behind disabled controls, but there is no customer-accepted or controlled-live production venue.</p></div>
+        <div class="card answer"><h3>Answer</h3><p>“Do not trust a production claim. Judge a replay, shadow comparison, failure test and complete export against your own cases.”</p></div>
+        <div class="card never"><h3>Do not say</h3><p>“Live,” “production-ready,” “atomic,” or cite built/deployed code or a working endpoint as market-infrastructure proof.</p></div>
+        <div class="card ask"><h3>Next question</h3><p>“What evidence would let your risk, operations and technology owners approve the next—not final—stage?”</p></div>
+      </div><div class="response" style="margin-top:14px">Proof offered: four-part programme with signed gates, independent participant review and the ability to stop after every part.</div></div>
+      <div class="foot"><div>Honest status is a sales asset in regulated infrastructure. Never trade it for false immediacy.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Pilot</span><span class="dot"></span><span>Four cumulative proofs</span></div>
+      <h1 class="wide">Every objection maps to something the customer can test.</h1>
+      <div class="body"><div class="flow">
+        <div class="step"><b>Part 1</b><h3>Replay</h3><p>One closed DA + PTC. Scope and baseline.</p></div><div class="step"><b>Part 2</b><h3>Shadow</h3><p>Parallel live observation. Comparison and exceptions.</p></div><div class="step"><b>Part 3</b><h3>Stress</h3><p>Failures, restore, reconciliation and export.</p></div><div class="step"><b>Part 4</b><h3>Convert</h3><p>One approved conventional transaction.</p></div>
+      </div><table style="margin-top:18px"><thead><tr><th>Approver</th><th>Question answered</th><th>Evidence</th></tr></thead><tbody>
+        <tr><td>Business / sponsor</td><td>Is there a repeatable transaction and adoption case?</td><td>Time/effort baseline, proof result, repeat-programme commitment.</td></tr>
+        <tr><td>Risk / compliance / counsel</td><td>Are decisions and regulated functions correctly bounded?</td><td>Route pack, RACI, function-performer matrix, exception record.</td></tr>
+        <tr><td>Operations / trustee</td><td>Can completion and lifecycle breaks be controlled?</td><td>Reconciliation, mismatch, settlement-break and recovery proof.</td></tr>
+        <tr><td>Technology / CISO</td><td>Is the dependency secure, resilient and exit-ready?</td><td>Data map, access, deterministic replay, restore and export.</td></tr>
+      </tbody></table></div>
+      <div class="foot"><div>Progression is never automatic. Each approver signs its own acceptance evidence and open conditions.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Scorecard</span><span class="dot"></span><span>Before the pilot</span></div>
+      <h1 class="wide">Convert “prove value” into measurements with owners and stop rules.</h1>
+      <div class="body"><table><thead><tr><th>Proof family</th><th>Example metric</th><th>Stop / hold condition</th></tr></thead><tbody>
+        <tr><td>Evidence</td><td>Required evidence coverage, provenance, freshness and attributable gaps.</td><td>Material required field cannot be sourced or lawfully processed.</td></tr>
+        <tr><td>Accuracy</td><td>Agreement/disagreement with source records; false-positive and unresolved-unknown rate.</td><td>Positive state possible with missing or contradictory governing facts.</td></tr>
+        <tr><td>Efficiency</td><td>Repeated requests, participant hours, hand-offs and elapsed time versus baseline.</td><td>Added burden exceeds measured benefit without a credible automation path.</td></tr>
+        <tr><td>Completion</td><td>Tape/document/payment/register reconciliation and acknowledged final state.</td><td>AssureRail can show completion without the route-defined external evidence.</td></tr>
+        <tr><td>Resilience</td><td>Recovery time, replay integrity, external divergence resolution and provider exit.</td><td>Restore creates data loss, duplicate action or irreconcilable state.</td></tr>
+        <tr><td>Adoption</td><td>Named owners accept target model and commit repeat flow.</td><td>No accountable party will own an essential operational duty.</td></tr>
+      </tbody></table><div class="callout" style="margin-top:16px">A deal closing is not a pilot success metric. It can conceal missed exceptions and biased behaviour.</div></div>
+      <div class="foot"><div>Record baseline, target, data source, measurement owner, acceptance authority and exceptions before Part 1 begins.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Disqualifiers</span><span class="dot"></span><span>Know when to stop</span></div>
+      <h1 class="wide">Not every prospect should become an AssureRail pilot.</h1>
+      <div class="body"><div class="g2 grid">
+        <div class="card true"><h3>Proceed when</h3><ul><li>There is repeat DA/PTC flow and a named executive sponsor.</li><li>Risk, operations and technology owners will participate.</li><li>A closed case and current process artefacts are available.</li><li>The customer accepts replay/shadow before live claims.</li><li>The trustee/recordkeeper will define authority and reconciliation.</li></ul></div>
+        <div class="card never"><h3>Stop or hold when</h3><ul><li>They want a token demo but no legal transaction owner.</li><li>They require AssureRail to make or outsource the credit decision.</li><li>They want undisclosed matching or use of another party’s data.</li><li>No one will own register, settlement or lifecycle breaks.</li><li>They demand production claims before security/legal gates.</li></ul></div>
+      </div><div class="response" style="margin-top:16px">A disciplined “not yet” protects the regulator relationship, product credibility and the first reference customer.</div></div>
+      <div class="foot"><div>Do not expand the pilot to rescue a weak sponsor. Narrow it until accountability and proof are clear.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide cover">
+      <div class="eye"><span class="pill">Close</span><span class="dot"></span><span>The smallest credible next step</span></div>
+      <h1>Ask for artefacts and owners—not belief.</h1>
+      <p class="lead">“Nominate one closed DA and one closed PTC. Give us the people responsible for transaction operations, trustee/recordkeeping, risk and technology. We will return the artefact inventory, proof scorecard and fixed replay scope.”</p>
+      <div class="g4 grid" style="margin-top:24px"><div class="card"><h3>2 cases</h3><p>One closed conventional DA and one closed conventional PTC.</p></div><div class="card"><h3>4 owners</h3><p>Business, risk/counsel, operations/trustee and technology/security.</p></div><div class="card"><h3>1 workshop</h3><p>Map systems, authority, evidence, breaks and baseline.</p></div><div class="card"><h3>1 proposal</h3><p>Fixed Part 1 scope with stop criteria and no live claim.</p></div></div>
+      <p class="internal">Internal reminder: answer only within the current claim tier and mode-readiness status.</p>
+      <div class="foot"><div><b>AssureRail</b> · Full-stack destination, evidence-led adoption, function-specific authorisation.</div><div class="pg">Field guide</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eye"><span class="pill">Reference</span><span class="dot"></span><span>Primary anchors</span></div>
+      <h1 class="wide">Use sources to frame the question—not to improvise a legal conclusion.</h1>
+      <div class="body"><div class="g2 grid">
+        <div class="card"><h3>RBI</h3><p><a href="https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12166&amp;Mode=0">Transfer of Loan Exposures Directions</a><br/><a href="https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12165&amp;Mode=0">Securitisation of Standard Assets Directions</a><br/><a href="https://www.rbi.org.in/scripts/FS_Notification.aspx?Id=12486&amp;Mode=0&amp;fn=14">IT Outsourcing Directions</a></p></div>
+        <div class="card"><h3>SEBI / statutory record</h3><p><a href="https://www.sebi.gov.in/legal/regulations/jul-2026/securities-and-exchange-board-of-india-issue-and-listing-of-securitised-debt-instruments-and-security-receipts-regulations-2008-last-amended-on-july-06-2026-_102674.html">SDI Regulations, amended 6 Jul 2026</a><br/><a href="https://www.sebi.gov.in/sebi_data/attachdocs/oct-2025/1760532257519.pdf">Debt/SDI Master Circular, 15 Oct 2025</a><br/><a href="https://www.indiacode.nic.in/bitstream/123456789/1955/1/aA1996-22.pdf">Depositories Act, as on 1 Jun 2026</a></p></div>
+      </div><div class="callout" style="margin-top:18px">When a customer asks “is this allowed?”, the safe answer is the exact function, current working hypothesis, required authority and named confirmation path.</div></div>
+      <div class="foot"><div>Legal and regulatory positions must be effective-dated for the parties, asset class, transaction and mode.</div><div class="pg">Field guide</div></div>
+    </section>
+
+  </main>
+  <script>document.getElementById('theme').addEventListener('click',function(){var r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark')});</script>
+</body>
+</html>

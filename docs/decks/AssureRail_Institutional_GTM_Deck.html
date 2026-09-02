@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AssureRail — Institutional GTM and Pilot Proof</title>
+  <style>
+    :root{
+      --ground:#F2F0EB;--panel:#FFFDF8;--raise:#F7F4ED;--ink:#111A24;--body:#46515C;--muted:#77818A;
+      --hair:#D9D3C8;--hair2:#BEB5A7;--amber:#A56A12;--amber2:#D89B37;--amber-soft:#F5E7C9;
+      --blue:#176B87;--blue-soft:#DCECF1;--green:#24725D;--green-soft:#DCEDE7;--red:#9D4635;--red-soft:#F2DDD7;
+      --shadow:0 12px 36px rgba(24,31,38,.08);--pad:clamp(28px,4.8vw,68px)
+    }
+    :root[data-theme="dark"]{
+      --ground:#090E14;--panel:#101821;--raise:#16212C;--ink:#F2F5F7;--body:#BEC7CF;--muted:#7F8D99;
+      --hair:#263440;--hair2:#40505D;--amber:#F2B24B;--amber2:#FFD27E;--amber-soft:#332717;
+      --blue:#69C5E5;--blue-soft:#132D38;--green:#6AD0AD;--green-soft:#123228;--red:#ED927C;--red-soft:#38201C;
+      --shadow:0 18px 52px rgba(0,0,0,.34)
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+    body{margin:0;background:var(--ground);color:var(--body);font-family:Inter,"Helvetica Neue",Arial,sans-serif;line-height:1.45;font-variant-numeric:tabular-nums}
+    a{color:var(--blue)} button{font:inherit}.mono{font-family:"SFMono-Regular",Consolas,monospace}
+    .bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:10px max(18px,calc((100vw - 1180px)/2));background:color-mix(in srgb,var(--ground) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--hair)}
+    .bar .brand{font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+    .bar .meta{font-size:11px;color:var(--muted)}.bar button{margin-left:auto;border:1px solid var(--hair2);background:var(--panel);color:var(--body);border-radius:8px;padding:7px 11px;cursor:pointer}
+    .deck{max-width:1180px;margin:0 auto;padding:22px 18px 80px;counter-reset:slide}
+    .slide{counter-increment:slide;position:relative;min-height:650px;margin:0 0 24px;padding:var(--pad);display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--hair);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+    .slide::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--amber),var(--amber2))}
+    .eyebrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+    .eyebrow .subject{color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 34%,var(--hair));background:var(--amber-soft);padding:3px 9px;border-radius:999px}.dot{width:4px;height:4px;border-radius:50%;background:var(--hair2)}
+    h1{margin:16px 0 7px;max-width:27ch;font-size:clamp(26px,3.5vw,46px);line-height:1.06;letter-spacing:-.025em;color:var(--ink);text-wrap:balance}h1.wide{max-width:42ch}
+    .sub{margin:0;max-width:68ch;font-size:clamp(14px,1.45vw,18px);color:var(--body)}
+    .body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:18px 0 8px;min-height:0}
+    .foot{margin-top:auto;padding-top:11px;border-top:1px solid var(--hair);display:flex;align-items:flex-end;gap:18px;font-size:10.5px;color:var(--muted)}.foot .src{flex:1}.page{white-space:nowrap;font-weight:800}.page::after{content:" · " counter(slide,decimal-leading-zero)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}.chip{display:inline-flex;gap:6px;align-items:center;padding:5px 10px;border-radius:999px;border:1px solid var(--hair2);background:var(--raise);font-size:11px;font-weight:750;color:var(--body)}.chip.amber{color:var(--amber);background:var(--amber-soft);border-color:color-mix(in srgb,var(--amber) 38%,var(--hair))}.chip.green{color:var(--green);background:var(--green-soft)}
+    .grid{display:grid;gap:13px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{padding:16px;border:1px solid var(--hair);border-radius:12px;background:var(--raise)}.card h3{margin:0 0 7px;color:var(--ink);font-size:14px}.card p{margin:0;font-size:12.5px}.card small{display:block;margin-top:8px;color:var(--muted);font-size:10.5px}.card.amber{border-top:3px solid var(--amber)}.card.blue{border-top:3px solid var(--blue)}.card.green{border-top:3px solid var(--green)}.card.red{border-top:3px solid var(--red)}
+    .quad{display:grid;grid-template-columns:130px 1fr 1fr;gap:8px}.quad>div{padding:13px;border:1px solid var(--hair);background:var(--raise);border-radius:9px;font-size:12px}.quad .head{background:var(--amber-soft);color:var(--amber);font-weight:850;text-align:center}.quad .axis{display:flex;align-items:center;font-weight:850;color:var(--ink)}
+    .flow{display:flex;gap:28px;align-items:stretch}.step{position:relative;flex:1;padding:16px;border:1px solid var(--hair);border-radius:12px;background:var(--raise)}.step:not(:last-child)::after{content:"→";position:absolute;right:-22px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--amber);font-weight:900}.step b{display:block;color:var(--amber);font-size:10px;letter-spacing:.1em;text-transform:uppercase}.step h3{margin:5px 0;color:var(--ink);font-size:15px}.step p{margin:0;font-size:12px}
+    table{width:100%;border-collapse:collapse;font-size:11.5px}th,td{padding:9px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--hair)}th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}td:first-child{font-weight:800;color:var(--ink)}
+    .callout{padding:16px 18px;border-radius:12px;border:1px solid color-mix(in srgb,var(--amber) 40%,var(--hair));background:var(--amber-soft);color:var(--ink);font-weight:760}.callout.blue{border-color:color-mix(in srgb,var(--blue) 40%,var(--hair));background:var(--blue-soft)}
+    .metric{padding:14px;border:1px solid var(--hair);border-radius:10px;background:var(--raise)}.metric b{display:block;color:var(--ink);font-size:13px}.metric span{display:block;margin-top:4px;font-size:11px;color:var(--muted)}
+    .status{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.status .now{border-top:3px solid var(--green)}.status .next{border-top:3px solid var(--amber)}.status .gated{border-top:3px solid var(--red)}
+    details.notes{margin-top:9px;border:1px dashed var(--hair2);border-radius:8px;padding:7px 10px;font-size:10.5px;color:var(--muted)}details.notes summary{cursor:pointer;font-weight:750;color:var(--body)}
+    .cover{justify-content:center;background:radial-gradient(circle at 80% 18%,color-mix(in srgb,var(--amber) 16%,transparent),transparent 38%),var(--panel)}.cover h1{font-size:clamp(38px,6vw,72px);max-width:16ch}.cover .lead{max-width:54ch;font-size:clamp(16px,2vw,22px)}.cover .stamp{margin-top:30px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+    @media(max-width:800px){.slide{min-height:auto}.g3,.g4,.status{grid-template-columns:1fr}.g2{grid-template-columns:1fr}.flow{flex-direction:column;gap:24px}.step:not(:last-child)::after{right:50%;top:auto;bottom:-22px;transform:translateX(50%) rotate(90deg)}.quad{grid-template-columns:1fr}.quad .head{display:none}.bar .meta{display:none}}
+    @media print{body{background:#fff}.bar,details.notes{display:none}.deck{max-width:none;padding:0}.slide{height:100vh;min-height:0;margin:0;border:0;border-radius:0;box-shadow:none;break-after:page;page-break-after:always}*{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+  </style>
+</head>
+<body>
+  <div class="bar"><span class="brand">AssureRail</span><span class="meta mono">Institutional GTM · customer deck · v0.2 · 3 Sep 2026</span><button id="theme" type="button">◐ Theme</button></div>
+  <main class="deck">
+
+    <section class="slide cover">
+      <div class="eyebrow"><span class="subject">Institutional transaction infrastructure</span><span class="dot"></span><span>Domestic India first</span></div>
+      <h1>Keep your systems. Add one governed rail across the transaction.</h1>
+      <p class="lead">AssureRail is built to connect the parties, evidence, approvals, terms, completion and lifecycle of <b>direct assignments and PTC transactions</b>—deployed behind disabled controls, conventional first, tokenised only where authorised.</p>
+      <div class="chips" style="margin-top:24px"><span class="chip amber">DA + PTC</span><span class="chip">Conventional + authorised tokenised</span><span class="chip">Primary + secondary</span><span class="chip green">Provider-neutral</span></div>
+      <p class="stamp mono">Design-partner material · not a claim of regulatory authorisation or production availability</p>
+      <div class="foot"><div class="src">Working proposition for eligible institutional participants. Each live function remains subject to its applicable legal, regulatory, partner and operating gates.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">The problem</span><span class="dot"></span><span>One transaction, many partial truths</span></div>
+      <h1 class="wide">The deal is not trapped in one bad system. It is fragmented across many good ones.</h1>
+      <p class="sub">LMS, arranger, trustee, rating, document, payment, depository and participant books each do a necessary job. None gives every accountable party the same governed transaction state.</p>
+      <div class="body"><div class="g4 grid">
+        <div class="card red"><h3>Repeated diligence</h3><p>The same pool, documents and exceptions are rebuilt for each party and each transaction.</p></div>
+        <div class="card red"><h3>Completion ambiguity</h3><p>“Done” can mean signed, funded, allotted, registered or merely updated on one internal screen.</p></div>
+        <div class="card red"><h3>Reconciliation debt</h3><p>Tape, contract, payment, trustee and holding records drift until operations resolves them manually.</p></div>
+        <div class="card red"><h3>Lifecycle fragmentation</h3><p>Servicing, waterfalls, triggers, reporting and secondary changes split into email and spreadsheets.</p></div>
+      </div><div class="callout" style="margin-top:16px">The opportunity is not to replace every system. It is to create one controlled transaction case across them.</div></div>
+      <div class="foot"><div class="src">AssureRail begins as a coexistence and reconciliation layer. Incumbent systems remain authoritative during replay and shadow.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Product scope</span><span class="dot"></span><span>One kernel · four explicit modes</span></div>
+      <h1 class="wide">The legal route and the digital representation are separate choices.</h1>
+      <div class="body"><div class="quad">
+        <div></div><div class="head">Conventional record</div><div class="head">Authorised tokenised representation</div>
+        <div class="axis">Direct assignment</div><div><b>Conventional DA</b><br/>Bilateral transfer, transferee-owned diligence, completion and subsequent transfer evidence.</div><div><b>Tokenised DA</b><br/>The same DA controls plus authorised token lifecycle, holder permissions and one-to-one reconciliation.</div>
+        <div class="axis">PTC securitisation</div><div><b>Conventional PTC</b><br/>Trust/SPE, issue/allotment, holding record, waterfall, surveillance and secondary hand-offs.</div><div><b>Tokenised PTC</b><br/>The same PTC lifecycle plus authorised digital holding/transfer and corporate-action controls.</div>
+      </div><p class="sub" style="margin-top:18px">The common kernel governs identity, roles, evidence, documents, gates, audit, settlement orchestration, reconciliation and lifecycle. Route adapters preserve the differences that matter.</p></div>
+      <div class="foot"><div class="src">Current implementation reality: the four-mode product journeys and shared controls are built behind fail-closed flags; customer acceptance, external evidence and controlled-live activation remain open.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Coexistence</span><span class="dot"></span><span>No rip-and-replace opening move</span></div>
+      <h1>Keep the systems that already carry authority.</h1>
+      <div class="body"><div class="flow">
+        <div class="step"><b>Inputs</b><h3>Your current estate</h3><p>LMS/LOS, data warehouse, arranger platform, trustee stack, RTA/depository files, documents and payment confirmations.</p></div>
+        <div class="step"><b>Control case</b><h3>AssureRail</h3><p>Versioned intake, party authority, evidence, gates, exceptions, transaction state, acknowledgements and audit trail.</p></div>
+        <div class="step"><b>Outputs</b><h3>Back to every party</h3><p>Comparison workbook, missing-evidence list, approvals, completion pack, register reconciliation and lifecycle events.</p></div>
+      </div><div class="g3 grid" style="margin-top:18px">
+        <div class="card"><h3>File first</h3><p>Signed manifests and downloadable workbooks for the first replay and shadow.</p></div>
+        <div class="card"><h3>API when earned</h3><p>The same schema through authenticated, idempotent interfaces—not a different product.</p></div>
+        <div class="card"><h3>Operator workspace</h3><p>Controlled screens for participants without an upstream integration.</p></div>
+      </div></div>
+      <div class="foot"><div class="src">AssurePool is an optional DA feeder. PTC enters AssureRail directly. No customer must use AssureLocker as its upstream evidence provider.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Destination</span><span class="dot"></span><span>Full-stack experience · explicit performer</span></div>
+      <h1 class="wide">One customer journey does not mean one company performs every regulated role.</h1>
+      <div class="body"><div class="flow">
+        <div class="step"><b>Discover</b><h3>Terms and counterparties</h3><p>Admission, controlled disclosure, RFQ, negotiation and matching—only in the approved mode.</p></div>
+        <div class="step"><b>Complete</b><h3>DA or PTC</h3><p>Decision, documents, issuance/allotment, payment and authoritative-record acknowledgements.</p></div>
+        <div class="step"><b>Continue</b><h3>Secondary and lifecycle</h3><p>Subsequent transfers/trades, servicing, waterfalls, surveillance, reporting and redemption.</p></div>
+      </div><table style="margin-top:18px"><thead><tr><th>Per function</th><th>Meaning</th></tr></thead><tbody>
+        <tr><td>AssureRail-owned</td><td>AssureRail is expressly permitted, staffed, controlled and accountable.</td></tr>
+        <tr><td>Licensed partner</td><td>A recognised exchange/EBP, broker or other authorised intermediary performs the regulated act inside the journey.</td></tr>
+        <tr><td>Participant-owned</td><td>The lender, investor, issuer or trustee retains its non-delegable decision or duty.</td></tr>
+        <tr><td>External authority</td><td>Depository, RTA, clearing corporation, bank or route-defined register creates the operative result.</td></tr>
+      </tbody></table></div>
+      <div class="foot"><div class="src">The mode/function matrix is the product control: no generic “venue enabled” flag and no regulatory function hidden behind UX language.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Stakeholder value</span><span class="dot"></span><span>Different job · shared transaction</span></div>
+      <h1 class="wide">Each participant gets a better control surface without surrendering its authority.</h1>
+      <div class="body"><div class="g4 grid">
+        <div class="card amber"><h3>Originator</h3><p>Reusable transaction package, fewer repeated requests, controlled document versions, clear exceptions and faster repeat programmes.</p></div>
+        <div class="card blue"><h3>Investor / transferee</h3><p>Own diligence workspace, provenance, comparable terms, exception ownership and evidence of what legally completed.</p></div>
+        <div class="card green"><h3>Trustee</h3><p>Control over appointments and acceptance, complete evidence lineage, register reconciliation, waterfall and surveillance packs.</p></div>
+        <div class="card"><h3>Arranger / incumbent platform</h3><p>A standard hand-off and lifecycle rail that can extend reach rather than requiring immediate displacement.</p></div>
+      </div><div class="callout blue" style="margin-top:17px">The customer proposition: “Keep your stack. Prove one transaction across it. Replace only what the evidence later shows should be replaced.”</div></div>
+      <div class="foot"><div class="src">Best first programme: repeat originator + anchor investor/transferee + trustee + incumbent arranger/platform + transaction counsel.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Institutional admission</span><span class="dot"></span><span>Built · externally gated</span></div>
+      <h1 class="wide">A login proves identity. It does not prove who may bind an institution.</h1>
+      <div class="body"><div class="g4 grid">
+        <div class="card green"><h3>Institution</h3><p>Legal identity, regulatory status, ownership/control, appointed roles and effective evidence.</p></div>
+        <div class="card blue"><h3>People + mandate</h3><p>Membership, signing authority, maker-checker, delegation, limits, recertification and revocation.</p></div>
+        <div class="card amber"><h3>Route permission</h3><p>DA/PTC, representation, jurisdiction, asset, primary/secondary leg, role, conditions and readiness ceiling.</p></div>
+        <div class="card"><h3>Operational connection</h3><p>Certified data source, settlement/register references, security contacts, suspension, export and exit.</p></div>
+      </div><div class="callout" style="margin-top:18px">Rail now has provider-neutral institution, evidence snapshot, membership, mandate, appointment, route-entitlement, maker-checker, step-up, SSO/service-identity metadata and connector-governance records. They remain disabled and do not authenticate a real institution until provider validation, customer UAT and exact activation evidence exist. No AssureLocker purchase is required.</div></div>
+      <div class="foot"><div class="src">Admission is effective-dated and route-scoped: active for one role never implies authorised for every mode.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Trust model</span><span class="dot"></span><span>Assurance organised by the trustee</span></div>
+      <h1>AssureRail does not mark its own transaction.</h1>
+      <div class="body"><div class="g3 grid">
+        <div class="card green"><h3>1 · Appoint</h3><p>The trustee or other accountable party selects the independent assurer/reviewer. It may choose AssurePlane in the AssureCLA suite, another provider or its own permitted process.</p></div>
+        <div class="card amber"><h3>2 · Validate</h3><p>AssureRail checks that the required conclusion is signed, scoped, current, attributable and in the route-defined schema.</p></div>
+        <div class="card blue"><h3>3 · Preserve</h3><p>AssureRail records the provider, appointment, scope, qualifications, exceptions and supersession without upgrading the claim.</p></div>
+      </div><div class="callout" style="margin-top:18px">No commercial employee can alter an assurance result. Related-party use is disclosed. Provider substitution and export are tested.</div></div>
+      <div class="foot"><div class="src">Provider-neutral assurance is a binding product rule, not a promise that depends on AssurePlane or AssureLocker availability.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">PTC authority</span><span class="dot"></span><span>Trustee control · no competing title record</span></div>
+      <h1 class="wide">The trustee is final for the workflow; the route-defined register keeps its legal force.</h1>
+      <div class="body"><div class="g3 grid">
+        <div class="card green"><h3>Transaction-control authority</h3><p><b>Trustee.</b> It accepts or rejects the PTC completion state and identifies the evidence on which it relies.</p></div>
+        <div class="card blue"><h3>Legal system of record</h3><p><b>Route-defined.</b> Depository, RTA or another recognised register as applicable to that PTC.</p></div>
+        <div class="card amber"><h3>AssureRail record</h3><p><b>Reconciled evidence.</b> Never an informal or unapproved substitute for the operative holding record.</p></div>
+      </div><div class="flow" style="margin-top:18px"><div class="step"><b>Mismatch</b><h3>Freeze</h3><p>Block affected issue, transfer, settlement release and token movement.</p></div><div class="step"><b>Authority</b><h3>Trustee directs</h3><p>The trustee determines acceptance and directs the correction route.</p></div><div class="step"><b>Evidence</b><h3>Recordkeeper confirms</h3><p>Release only after the operative system acknowledges the correction.</p></div></div></div>
+      <div class="foot"><div class="src">This model prevents an internal status, token or email from becoming a second ownership truth.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Sequence</span><span class="dot"></span><span>Conventional proof first</span></div>
+      <h1>Tokenisation is an adapter—not the entry ticket.</h1>
+      <div class="body"><div class="flow">
+        <div class="step"><b>Now</b><h3>Replay + shadow</h3><p>Conventional DA and conventional PTC in parallel. Incumbent process remains authoritative.</p></div>
+        <div class="step"><b>Then</b><h3>Controlled conventional</h3><p>Approved external-register and payment integrations, operational controls and participant contracts.</p></div>
+        <div class="step"><b>When authorised</b><h3>Tokenised representation</h3><p>Permissioned holder, custody/key, token/register reconciliation and approved settlement semantics.</p></div>
+      </div><div class="callout blue" style="margin-top:18px">A conventional transaction can still be fully digital, API-enabled and tamper-evident. “Conventional” does not mean manual.</div></div>
+      <div class="foot"><div class="src">Domestic India is Phase 1. GIFT IFSC is a later, separately justified expansion—not an assumption embedded in the first design.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Why change</span><span class="dot"></span><span>For customers with an existing platform</span></div>
+      <h1 class="wide">Do not buy a migration. Buy a controlled comparison on one transaction.</h1>
+      <div class="body"><table><thead><tr><th>Existing strength</th><th>What stays</th><th>What the AssureRail proof adds</th></tr></thead><tbody>
+        <tr><td>LMS / loan data</td><td>Customer and lender book remain authoritative.</td><td>Versioned package, party permissions, tape/document checks and completion lineage.</td></tr>
+        <tr><td>Arranger workflow</td><td>Counterparty access and existing origination relationships.</td><td>Portable evidence, common transaction state and auditable hand-offs.</td></tr>
+        <tr><td>Trustee / RTA / depository</td><td>Legal duties and holding records remain where they belong.</td><td>Signed acknowledgement, mismatch control and cross-party reconciliation.</td></tr>
+        <tr><td>Payment / clearing rail</td><td>Money and securities stay with authorised providers.</td><td>Conditional readiness, references, break ownership and recovery evidence.</td></tr>
+      </tbody></table><div class="callout" style="margin-top:18px">The sale is coexistence first. Replacement is an evidence-based later decision—not a condition of the pilot.</div></div>
+      <div class="foot"><div class="src">AssureRail is designed to be useful before it has network liquidity: transaction control, evidence and reconciliation create standalone value.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Pilot proof</span><span class="dot"></span><span>Four parts · separately reviewable</span></div>
+      <h1 class="wide">Prove the transaction before asking anyone to trust the venue.</h1>
+      <div class="body"><div class="g4 grid">
+        <div class="card amber"><h3>1 · Completed-deal replay</h3><p>One closed DA and one closed PTC. Reconstruct roles, evidence, decisions, state, breaks and completion.</p><small>Zero effect on a live transaction.</small></div>
+        <div class="card blue"><h3>2 · Parallel shadow</h3><p>Run one live conventional DA and PTC beside the incumbent process; produce comparison and exception workbooks.</p><small>Incumbent remains authoritative.</small></div>
+        <div class="card green"><h3>3 · Operational proof</h3><p>Exercise missing data, duplicate events, signer failure, register mismatch, settlement break, restore and full export.</p><small>Proves accuracy, resilience and exit.</small></div>
+        <div class="card"><h3>4 · Controlled conversion</h3><p>One net-new conventional transaction under counsel-approved roles, contracts and licensed-partner hand-offs.</p><small>Only after Parts 1–3 and readiness gates.</small></div>
+      </div><p class="sub" style="margin-top:18px">The programme can stop after any part. Progression is earned by signed evidence, not by a calendar promise.</p></div>
+      <div class="foot"><div class="src">Both DA and PTC lead at replay/shadow. The first controlled-live route is selected only after the evidence and operating model are reviewed.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Part 1</span><span class="dot"></span><span>Completed-deal replay</span></div>
+      <h1 class="wide">Derive the real requirements from transactions that actually closed.</h1>
+      <div class="body"><div class="g2 grid">
+        <div class="card"><h3>Customer supplies</h3><p>Redacted tape/pool data, role and mandate records, term sheet, negotiated/executed documents, condition evidence, payment and register acknowledgements, lifecycle outputs and known breaks.</p></div>
+        <div class="card"><h3>AssureRail produces</h3><p>Canonical case replay, evidence lineage, state reconstruction, missing/duplicated evidence list, decision-rights map, completion test, reconciliation workbook and proposed route taxonomy.</p></div>
+      </div><div class="g4 grid" style="margin-top:16px">
+        <div class="metric"><b>Coverage baseline</b><span>% required evidence represented and attributable</span></div>
+        <div class="metric"><b>Break baseline</b><span>Data, document, payment and register differences</span></div>
+        <div class="metric"><b>Effort baseline</b><span>People-hours and hand-offs by participant</span></div>
+        <div class="metric"><b>Time baseline</b><span>Elapsed time by transaction stage</span></div>
+      </div></div>
+      <div class="foot"><div class="src">Replay output is a diagnostic record, not a retroactive legal or assurance opinion on the closed transaction.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Part 2</span><span class="dot"></span><span>Parallel DA + PTC shadow</span></div>
+      <h1 class="wide">Compare the same facts, at the same time, without changing the transaction.</h1>
+      <div class="body"><div class="flow">
+        <div class="step"><b>Observe</b><h3>Signed/file intake</h3><p>Receive agreed artefacts with manifests, provenance, versions and timestamps.</p></div>
+        <div class="step"><b>Compare</b><h3>Independent state</h3><p>Run rules, gates, document/tape checks and acknowledgement reconciliation in shadow.</p></div>
+        <div class="step"><b>Review</b><h3>Participant decisions</h3><p>Each responsible party accepts, challenges, qualifies or resolves the observed difference.</p></div>
+      </div><div class="g3 grid" style="margin-top:18px">
+        <div class="card amber"><h3>DA proof</h3><p>Transferee-owned diligence, transfer terms, consideration, notices, source-book update and servicing continuity.</p></div>
+        <div class="card blue"><h3>PTC proof</h3><p>Trust roles, review, rating/counsel gates, issue/allotment, holding record, waterfall and surveillance.</p></div>
+        <div class="card green"><h3>Cross-route proof</h3><p>Same common evidence, authority, audit, exception and reconciliation controls without erasing route differences.</p></div>
+      </div></div>
+      <div class="foot"><div class="src">No live matching, issuance, settlement release or legal-record write occurs in shadow. The comparison workbook is the commercial proof.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Part 3</span><span class="dot"></span><span>Accuracy, resilience and portability</span></div>
+      <h1 class="wide">A clean happy path proves very little. Make the pilot fail on purpose.</h1>
+      <div class="body"><table><thead><tr><th>Injected condition</th><th>Required behaviour</th><th>Proof retained</th></tr></thead><tbody>
+        <tr><td>Missing or contradictory governing fact</td><td>Fail closed; no pass/completion state.</td><td>Reason, owner, rule version and resolution.</td></tr>
+        <tr><td>Duplicate or out-of-order event</td><td>Idempotent processing; no duplicated transfer/issue.</td><td>Receipt, replay and final deterministic state.</td></tr>
+        <tr><td>Trustee/register disagreement</td><td>Freeze; trustee directs; operative record acknowledges correction.</td><td>Before/after snapshots and signed authority.</td></tr>
+        <tr><td>Payment or external-provider failure</td><td>No partial completion; explicit break, retry/cancel and reconciliation.</td><td>Instruction, acknowledgement and recovery trail.</td></tr>
+        <tr><td>Restore or provider exit</td><td>Recover within target; replay queued events; export a complete portable case.</td><td>Restore report, reconciliation and independent import test.</td></tr>
+      </tbody></table></div>
+      <div class="foot"><div class="src">Production requires deterministic reruns, maker-checker, restore/replay, external-register reconciliation, audited export and named accountable operators.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Part 4</span><span class="dot"></span><span>Controlled conventional conversion</span></div>
+      <h1 class="wide">Move one transaction only when every performer and authority is explicit.</h1>
+      <div class="body"><div class="g3 grid">
+        <div class="card green"><h3>Legal and role gate</h3><p>Effective route pack, counsel conclusion, participant eligibility, contracts, authority and responsibility matrix.</p></div>
+        <div class="card blue"><h3>Operational gate</h3><p>Staffing, maker-checker, security/VAPT, incident/complaint handling, DR, reconciliation and support readiness.</p></div>
+        <div class="card amber"><h3>External-authority gate</h3><p>Approved register, payment, clearing and licensed-market hand-offs with tested acknowledgements and failure treatment.</p></div>
+      </div><div class="callout" style="margin-top:18px">The close is not “the transaction completed.” The close is “all parties can prove what happened, who decided it, which system made it operative and how a break would be recovered.”</div></div>
+      <div class="foot"><div class="src">Matching and secondary functions may be partner-executed inside the AssureRail journey before AssureRail owns any such authorised function.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Scorecard</span><span class="dot"></span><span>Agreed before data arrives</span></div>
+      <h1 class="wide">Measure proof—not whether the deal happened to close.</h1>
+      <div class="body"><div class="g4 grid">
+        <div class="metric"><b>Evidence readiness</b><span>Coverage, provenance, freshness and required conditions by due date</span></div>
+        <div class="metric"><b>Exception performance</b><span>Breaks found, false positives, owner, age and time to resolution</span></div>
+        <div class="metric"><b>Completion integrity</b><span>Document/tape/payment/register reconciliation at the final gate</span></div>
+        <div class="metric"><b>Operational effort</b><span>Participant hours, hand-offs, repeated requests and elapsed cycle time</span></div>
+        <div class="metric"><b>Determinism</b><span>Same inputs + versions produce the same case and outputs</span></div>
+        <div class="metric"><b>Resilience</b><span>Failure containment, restore, replay and post-recovery reconciliation</span></div>
+        <div class="metric"><b>Portability</b><span>Complete export, provider substitution and independent replay/import</span></div>
+        <div class="metric"><b>Adoption proof</b><span>Named owners sign the target model and commit a repeat programme</span></div>
+      </div><p class="sub" style="margin-top:17px">A pilot is not graded on closure: rewarding closure would reward suppressed findings.</p></div>
+      <div class="foot"><div class="src">Baseline, target, measurement owner, source and acceptance rule are signed before the first replay.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Commercial path</span><span class="dot"></span><span>Earn the next commitment</span></div>
+      <h1 class="wide">Each commercial step buys a separately useful result.</h1>
+      <div class="body"><table><thead><tr><th>Stage</th><th>Customer buys</th><th>Commercial posture</th></tr></thead><tbody>
+        <tr><td>Completed-deal replay</td><td>Evidence/state map, gap report and baseline.</td><td>Fixed discovery/replay fee or funded design partnership.</td></tr>
+        <tr><td>DA + PTC shadow</td><td>Comparison workbooks, proof metrics and target operating model.</td><td>Fixed programme fee, independent of transaction closure.</td></tr>
+        <tr><td>Controlled conventional</td><td>Approved workflow, adapters, operations and one net-new transaction.</td><td>Implementation plus route/function-specific transaction economics, subject to counsel and contract.</td></tr>
+        <tr><td>Repeat programme</td><td>Ongoing DA/PTC journey in specifically approved modes.</td><td>Current commercial illustrations: conventional PTC 0.30%; tokenised PTC 0.50%. Neither is a hard-coded platform default.</td></tr>
+      </tbody></table><div class="callout blue" style="margin-top:18px">Independent assurance remains separately appointed and outcome-independent. A permitted venue fee and an assurance fee are different commercial relationships. Every rate requires a customer contract, payer, metric, trigger, currency, rounding and conflict controls.</div></div>
+      <div class="foot"><div class="src">Fee basis, payer, caps, trigger, cancellation/refund and conflicts remain route- and function-specific counsel/commercial work.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Honest status</span><span class="dot"></span><span>What is true now</span></div>
+      <h1 class="wide">The software is built. Customer proof and live authority are not.</h1>
+      <div class="body"><div class="status">
+        <div class="card now"><h3>Built and deployed inert</h3><p>Institution control, DA/PTC replay, lifecycle, named-audience primary, conventional secondary, token mirrors, enterprise integration, customer operations and production-gate tooling.</p></div>
+        <div class="card next"><h3>Evidence still required</h3><p>Authorised historic DA/PTC replays, customer/trustee/provider UAT, VAPT remediation, counsel route packs, real connector and DR/exit evidence.</p></div>
+        <div class="card gated"><h3>Not activated</h3><p>Controlled-live or production matching, issuance, secondary execution, custody, money/securities holding, operative token title and settlement.</p></div>
+      </div><div class="chips" style="margin-top:18px"><span class="chip amber">Domestic India first</span><span class="chip">Separate AssureRail OpCo presumed before regulated live activity</span><span class="chip">GIFT later if justified</span></div></div>
+      <div class="foot"><div class="src">Code baseline 718e28d0a is deployed with product flags off and operating mode DEMO. No endpoint, screen, token ID or simulation is evidence of legal issuance, title, cash finality or production readiness.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide cover">
+      <div class="eyebrow"><span class="subject">The ask</span><span class="dot"></span><span>Founding design consortium</span></div>
+      <h1>Give us one closed DA, one closed PTC—and the people who know where the work really happens.</h1>
+      <p class="lead">We will replay both, define the common and route-specific controls, agree the proof scorecard, and return a fixed-scope proposal for the parallel shadows. No system replacement and no live venue claim.</p>
+      <div class="g4 grid" style="margin-top:24px">
+        <div class="card"><h3>Repeat originator</h3><p>Transaction pipeline and source artefacts.</p></div><div class="card"><h3>Investor / transferee</h3><p>Acceptance evidence and decision rights.</p></div><div class="card"><h3>Trustee</h3><p>PTC authority, assurance and lifecycle model.</p></div><div class="card"><h3>Incumbent + counsel</h3><p>Current workflow, integrations and route boundaries.</p></div>
+      </div>
+      <p class="stamp mono">First meeting output: candidate cases · named owners · artefact inventory · proof workshop date</p>
+      <div class="foot"><div class="src"><b>AssureRail</b> · One institutional rail for DA and PTC—conventional or authorised tokenised. Working design-partner proposition; legal and regulatory perimeter subject to confirmation.</div><div class="page">AssureRail</div></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow"><span class="subject">Regulatory reference</span><span class="dot"></span><span>Primary anchors for discussion</span></div>
+      <h1 class="wide">The product follows the route—not the other way around.</h1>
+      <div class="body"><div class="g2 grid">
+        <div class="card"><h3>RBI</h3><p><a href="https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12166&amp;Mode=0">Transfer of Loan Exposures Directions, 2021</a><br/><a href="https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12165&amp;Mode=0">Securitisation of Standard Assets Directions, 2021</a><br/><a href="https://www.rbi.org.in/scripts/FS_Notification.aspx?Id=12486&amp;Mode=0&amp;fn=14">IT Outsourcing Directions, 2023</a></p></div>
+        <div class="card"><h3>SEBI and statutory records</h3><p><a href="https://www.sebi.gov.in/legal/regulations/jul-2026/securities-and-exchange-board-of-india-issue-and-listing-of-securitised-debt-instruments-and-security-receipts-regulations-2008-last-amended-on-july-06-2026-_102674.html">SDI Regulations, amended 6 Jul 2026</a><br/><a href="https://www.sebi.gov.in/sebi_data/attachdocs/oct-2025/1760532257519.pdf">Debt/SDI Master Circular, 15 Oct 2025</a><br/><a href="https://www.indiacode.nic.in/bitstream/123456789/1955/1/aA1996-22.pdf">Depositories Act, as on 1 Jun 2026</a></p></div>
+      </div><div class="callout" style="margin-top:18px">References identify issue areas; they are not a legal opinion on AssureRail’s proposed functions.</div></div>
+      <div class="foot"><div class="src">Counsel must confirm the versions and application current for the transaction date, parties, asset class, placement/listing context and function.</div><div class="page">AssureRail</div></div>
+    </section>
+
+  </main>
+  <script>
+    document.getElementById('theme').addEventListener('click',function(){
+      var root=document.documentElement;
+      root.setAttribute('data-theme',root.getAttribute('data-theme')==='dark'?'light':'dark');
+    });
+  </script>
+</body>
+</html>
