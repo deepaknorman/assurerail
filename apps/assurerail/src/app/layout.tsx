@@ -10,8 +10,23 @@ const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"], variabl
 const plex = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-plex-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "AssureRail — securitisation & tokenisation venue",
-  description: "Turn a verified loan pool into a compliance-gated, tokenised Note that settles atomically and stays under continuous surveillance.",
+  metadataBase: new URL("https://assurerail.com"),
+  title: {
+    default: "AssureRail | Institutional infrastructure for DA and PTC",
+    template: "%s | AssureRail",
+  },
+  description:
+    "Provider-neutral transaction infrastructure for direct assignment and PTC securitisation, designed to work beside existing lender, trustee, recordkeeper and payment systems.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "https://assurerail.com",
+    siteName: "AssureRail",
+    title: "One governed rail for loan transfers and securitisation",
+    description:
+      "Direct assignment and PTC transaction infrastructure—conventional first, with tokenised representations only where separately approved.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
