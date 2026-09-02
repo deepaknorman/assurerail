@@ -21,19 +21,28 @@ const activeSysadmin = {
 } as const;
 
 test("[OP01][RBAC] each role is a bounded permission bundle, not a global administrator", () => {
-  assert.deepEqual(evaluateInternalAssignment({
-    ...activeSysadmin,
-    permission: "SYSTEM_HEALTH_VIEW",
-    requestedScopeType: "ENVIRONMENT",
-    requestedScopeRef: "prod-in",
-  }), { allowed: true, code: "INTERNAL_AUTHORISED", matchedRole: "SYSADMIN" });
-  assert.equal(evaluateInternalAssignment({
-    ...activeSysadmin,
-    permission: "SECURITY_IDENTITY_MANAGE",
-    requestedScopeType: "ENVIRONMENT",
-    requestedScopeRef: "prod-in",
-  }).code, "INTERNAL_PERMISSION_NOT_GRANTED");
-  assert.equal(permissionsForInternalRole("SUPERADMIN").includes("CASE_TASK_PREPARE"), false);
+  assert.deepEqual(
+    evaluateInternalAssignment({
+      ...activeSysadmin,
+      permission: "SYSTEM_HEALTH_VIEW",
+      requestedScopeType: "ENVIRONMENT",
+      requestedScopeRef: "prod-in",
+    }),
+    { allowed: true, code: "INTERNAL_AUTHORISED", matchedRole: "SYSADMIN" }
+  );
+  assert.equal(
+    evaluateInternalAssignment({
+      ...activeSysadmin,
+      permission: "SECURITY_IDENTITY_MANAGE",
+      requestedScopeType: "ENVIRONMENT",
+      requestedScopeRef: "prod-in",
+    }).code,
+    "INTERNAL_PERMISSION_NOT_GRANTED"
+  );
+  assert.equal(
+    permissionsForInternalRole("SUPERADMIN").includes("CASE_TASK_PREPARE"),
+    false
+  );
 });
 
 test("[OP01][RBAC] inactive, expired and wrong-scope assignments fail closed", () => {
@@ -43,11 +52,27 @@ test("[OP01][RBAC] inactive, expired and wrong-scope assignments fail closed", (
     requestedScopeType: "ENVIRONMENT" as const,
     requestedScopeRef: "prod-in",
   };
-  assert.equal(evaluateInternalAssignment({ ...request, status: "SUSPENDED" }).code, "INTERNAL_ASSIGNMENT_NOT_ACTIVE");
-  assert.equal(evaluateInternalAssignment({ ...request, effectiveAt: null }).code, "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED");
-  assert.equal(evaluateInternalAssignment({ ...request, expiresAt: null }).code, "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED");
-  assert.equal(evaluateInternalAssignment({ ...request, expiresAt: NOW }).code, "INTERNAL_ASSIGNMENT_OUTSIDE_EFFECTIVE_PERIOD");
-  assert.equal(evaluateInternalAssignment({ ...request, requestedScopeRef: "staging-in" }).code, "INTERNAL_SCOPE_MISMATCH");
+  assert.equal(
+    evaluateInternalAssignment({ ...request, status: "SUSPENDED" }).code,
+    "INTERNAL_ASSIGNMENT_NOT_ACTIVE"
+  );
+  assert.equal(
+    evaluateInternalAssignment({ ...request, effectiveAt: null }).code,
+    "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED"
+  );
+  assert.equal(
+    evaluateInternalAssignment({ ...request, expiresAt: null }).code,
+    "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED"
+  );
+  assert.equal(
+    evaluateInternalAssignment({ ...request, expiresAt: NOW }).code,
+    "INTERNAL_ASSIGNMENT_OUTSIDE_EFFECTIVE_PERIOD"
+  );
+  assert.equal(
+    evaluateInternalAssignment({ ...request, requestedScopeRef: "staging-in" })
+      .code,
+    "INTERNAL_SCOPE_MISMATCH"
+  );
 });
 
 test("[OP01][RBAC] global reporting does not make a viewer a customer-data or operating role", () => {
@@ -60,27 +85,58 @@ test("[OP01][RBAC] global reporting does not make a viewer a customer-data or op
     expiresAt: new Date("2026-10-01T00:00:00.000Z"),
     now: NOW,
   };
-  assert.equal(evaluateInternalAssignment({
-    ...viewer,
-    permission: "REPORT_VIEW",
-    requestedScopeType: "OPERATING_UNIT",
-    requestedScopeRef: "governance",
-  }).allowed, true);
-  assert.equal(evaluateInternalAssignment({
-    ...viewer,
-    permission: "CASE_TASK_PREPARE",
-    requestedScopeType: "CASE",
-    requestedScopeRef: "case-1",
-  }).code, "INTERNAL_PERMISSION_NOT_GRANTED");
+  assert.equal(
+    evaluateInternalAssignment({
+      ...viewer,
+      permission: "REPORT_VIEW",
+      requestedScopeType: "OPERATING_UNIT",
+      requestedScopeRef: "governance",
+    }).allowed,
+    true
+  );
+  assert.equal(
+    evaluateInternalAssignment({
+      ...viewer,
+      permission: "CASE_TASK_PREPARE",
+      requestedScopeType: "CASE",
+      requestedScopeRef: "case-1",
+    }).code,
+    "INTERNAL_PERMISSION_NOT_GRANTED"
+  );
 });
 
 test("[OP01][RBAC] maker-checker prevents self approval and self reconciliation closure", () => {
-  assert.equal(evaluateIndependentApproval({ actorUserId: "u1", proposerUserId: "u1" }).code, "SELF_APPROVAL_PROHIBITED");
-  assert.equal(evaluateIndependentApproval({ actorUserId: "u2", proposerUserId: "u1", subjectUserId: "u2" }).code, "SUBJECT_CANNOT_APPROVE_OWN_ASSIGNMENT");
-  assert.equal(evaluateIndependentApproval({
-    actorUserId: "u2", proposerUserId: "u1", priorExecutorUserId: "u2", requiresIndependentExecutor: true,
-  }).code, "EXECUTOR_CANNOT_INDEPENDENTLY_REVIEW");
-  assert.equal(evaluateIndependentApproval({ actorUserId: "u3", proposerUserId: "u1", priorExecutorUserId: "u2", requiresIndependentExecutor: true }).allowed, true);
+  assert.equal(
+    evaluateIndependentApproval({ actorUserId: "u1", proposerUserId: "u1" })
+      .code,
+    "SELF_APPROVAL_PROHIBITED"
+  );
+  assert.equal(
+    evaluateIndependentApproval({
+      actorUserId: "u2",
+      proposerUserId: "u1",
+      subjectUserId: "u2",
+    }).code,
+    "SUBJECT_CANNOT_APPROVE_OWN_ASSIGNMENT"
+  );
+  assert.equal(
+    evaluateIndependentApproval({
+      actorUserId: "u2",
+      proposerUserId: "u1",
+      priorExecutorUserId: "u2",
+      requiresIndependentExecutor: true,
+    }).code,
+    "EXECUTOR_CANNOT_INDEPENDENTLY_REVIEW"
+  );
+  assert.equal(
+    evaluateIndependentApproval({
+      actorUserId: "u3",
+      proposerUserId: "u1",
+      priorExecutorUserId: "u2",
+      requiresIndependentExecutor: true,
+    }).allowed,
+    true
+  );
 });
 
 test("[OP01][RBAC] staff access can never become external transaction authority", () => {
@@ -88,22 +144,143 @@ test("[OP01][RBAC] staff access can never become external transaction authority"
 });
 
 test("[PR17][RBAC] queue operation and independent conduct-policy review remain separate", () => {
-  assert.equal(permissionsForInternalRole("MANAGER").includes("CONDUCT_SIGNAL_RECORD"), true);
-  assert.equal(permissionsForInternalRole("MANAGER").includes("CONDUCT_POLICY_REVIEW"), false);
-  assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("CONDUCT_POLICY_REVIEW"), true);
-  assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("CONDUCT_CONTROL_REVIEW"), true);
-  assert.equal(permissionsForInternalRole("SUPERADMIN").includes("CONDUCT_SIGNAL_RECORD"), false);
+  assert.equal(
+    permissionsForInternalRole("MANAGER").includes("CONDUCT_SIGNAL_RECORD"),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("MANAGER").includes("CONDUCT_POLICY_REVIEW"),
+    false
+  );
+  assert.equal(
+    permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes(
+      "CONDUCT_POLICY_REVIEW"
+    ),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes(
+      "CONDUCT_CONTROL_REVIEW"
+    ),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("SUPERADMIN").includes("CONDUCT_SIGNAL_RECORD"),
+    false
+  );
 });
 
 test("[PR20][RBAC] commercial makers, reviewers and support are separated", () => {
-  assert.equal(permissionsForInternalRole("MANAGER").includes("COMMERCIAL_CONTRACT_PROPOSE"), true);
-  assert.equal(permissionsForInternalRole("MANAGER").includes("COMMERCIAL_INVOICE_PREPARE"), true);
-  assert.equal(permissionsForInternalRole("MANAGER").includes("COMMERCIAL_INVOICE_REVIEW"), false);
-  assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("COMMERCIAL_INVOICE_REVIEW"), true);
-  assert.equal(permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes("COMMERCIAL_INVOICE_PREPARE"), false);
-  assert.equal(permissionsForInternalRole("SUPPORT_ANALYST").includes("CUSTOMER_SERVICE_MANAGE"), true);
-  assert.equal(permissionsForInternalRole("SUPPORT_ANALYST").includes("COMMERCIAL_CREDIT_PROPOSE"), false);
-  assert.equal(permissionsForInternalRole("SUPERADMIN").includes("COMMERCIAL_CONTRACT_PROPOSE"), false);
-  const managerWorkspaces = resolveInternalWorkspaces({ assignments: [{ id: "assignment-manager", role: "MANAGER", status: "ACTIVE", scopeType: "GLOBAL", scopeRef: null, effectiveAt: new Date("2026-08-01T00:00:00.000Z"), expiresAt: new Date("2026-10-01T00:00:00.000Z") }], elevations: [], now: NOW });
-  assert.equal(managerWorkspaces.some((item) => item.id === "CUSTOMER_OPERATIONS" && item.permissions.includes("COMMERCIAL_INVOICE_PREPARE")), true);
+  assert.equal(
+    permissionsForInternalRole("MANAGER").includes(
+      "COMMERCIAL_CONTRACT_PROPOSE"
+    ),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("MANAGER").includes(
+      "COMMERCIAL_INVOICE_PREPARE"
+    ),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("MANAGER").includes("COMMERCIAL_INVOICE_REVIEW"),
+    false
+  );
+  assert.equal(
+    permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes(
+      "COMMERCIAL_INVOICE_REVIEW"
+    ),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes(
+      "COMMERCIAL_INVOICE_PREPARE"
+    ),
+    false
+  );
+  assert.equal(
+    permissionsForInternalRole("SUPPORT_ANALYST").includes(
+      "CUSTOMER_SERVICE_MANAGE"
+    ),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("SUPPORT_ANALYST").includes(
+      "COMMERCIAL_CREDIT_PROPOSE"
+    ),
+    false
+  );
+  assert.equal(
+    permissionsForInternalRole("SUPERADMIN").includes(
+      "COMMERCIAL_CONTRACT_PROPOSE"
+    ),
+    false
+  );
+  const managerWorkspaces = resolveInternalWorkspaces({
+    assignments: [
+      {
+        id: "assignment-manager",
+        role: "MANAGER",
+        status: "ACTIVE",
+        scopeType: "GLOBAL",
+        scopeRef: null,
+        effectiveAt: new Date("2026-08-01T00:00:00.000Z"),
+        expiresAt: new Date("2026-10-01T00:00:00.000Z"),
+      },
+    ],
+    elevations: [],
+    now: NOW,
+  });
+  assert.equal(
+    managerWorkspaces.some(
+      (item) =>
+        item.id === "CUSTOMER_OPERATIONS" &&
+        item.permissions.includes("COMMERCIAL_INVOICE_PREPARE")
+    ),
+    true
+  );
+});
+
+test("[AR30][RBAC] production-scale assessment, review and activation authority remain separated", () => {
+  assert.equal(
+    permissionsForInternalRole("SYSADMIN").includes("PRODUCTION_SCALE_ASSESS"),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("SYSADMIN").includes("PRODUCTION_SCALE_REVIEW"),
+    false
+  );
+  assert.equal(
+    permissionsForInternalRole("MANAGER").includes("PRODUCTION_SCALE_ASSESS"),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("MANAGER").includes("PRODUCTION_SCALE_REVIEW"),
+    false
+  );
+  assert.equal(
+    permissionsForInternalRole("SECURITY_ADMIN").includes(
+      "PRODUCTION_SCALE_REVIEW"
+    ),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("RISK_COMPLIANCE_OFFICER").includes(
+      "PRODUCTION_SCALE_REVIEW"
+    ),
+    true
+  );
+  assert.equal(
+    permissionsForInternalRole("SUPERADMIN").includes(
+      "PRODUCTION_SCALE_ASSESS"
+    ),
+    false
+  );
+  assert.equal(
+    permissionsForInternalRole("SUPERADMIN").includes(
+      "PRODUCTION_SCALE_REVIEW"
+    ),
+    false
+  );
 });

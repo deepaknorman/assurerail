@@ -136,6 +136,8 @@ export const STEP_UP_PURPOSES = [
   "ENTERPRISE_HEALTH_RECORD",
   "ENTERPRISE_BINDING_PROPOSE",
   "ENTERPRISE_BINDING_REVIEW",
+  "PRODUCTION_SCALE_ASSESS",
+  "PRODUCTION_SCALE_REVIEW",
   "CUSTOMER_CONTRACT_ACKNOWLEDGE",
   "CUSTOMER_SERVICE_REQUEST_CREATE",
   "CUSTOMER_SERVICE_REQUEST_MESSAGE",
@@ -209,36 +211,65 @@ export interface PolicyDecision {
   code: string;
 }
 
-function activeDuring(now: Date, effectiveAt: Date | null, expiresAt: Date | null): boolean {
-  return (!effectiveAt || effectiveAt.getTime() <= now.getTime())
-    && (!expiresAt || expiresAt.getTime() > now.getTime());
+function activeDuring(
+  now: Date,
+  effectiveAt: Date | null,
+  expiresAt: Date | null
+): boolean {
+  return (
+    (!effectiveAt || effectiveAt.getTime() <= now.getTime()) &&
+    (!expiresAt || expiresAt.getTime() > now.getTime())
+  );
 }
 
 /**
  * Pure, fail-closed human-authority evaluation. Platform employment or a legacy global role is not
  * an input and therefore can never become participant authority through this policy.
  */
-export function evaluateInstitutionAuthority(input: AuthorityPolicyInput): PolicyDecision {
-  if (input.institutionStatus !== "ACTIVE") return { allowed: false, code: "INSTITUTION_NOT_ACTIVE" };
-  if (input.admissionStatus !== "ADMITTED") return { allowed: false, code: "PARTICIPANT_NOT_ADMITTED" };
-  if (!activeDuring(input.now, input.admissionEffectiveAt, input.admissionExpiresAt)) {
+export function evaluateInstitutionAuthority(
+  input: AuthorityPolicyInput
+): PolicyDecision {
+  if (input.institutionStatus !== "ACTIVE")
+    return { allowed: false, code: "INSTITUTION_NOT_ACTIVE" };
+  if (input.admissionStatus !== "ADMITTED")
+    return { allowed: false, code: "PARTICIPANT_NOT_ADMITTED" };
+  if (
+    !activeDuring(
+      input.now,
+      input.admissionEffectiveAt,
+      input.admissionExpiresAt
+    )
+  ) {
     return { allowed: false, code: "ADMISSION_OUTSIDE_EFFECTIVE_PERIOD" };
   }
-  if (input.memberStatus !== "ACTIVE") return { allowed: false, code: "MEMBERSHIP_NOT_ACTIVE" };
-  if (!activeDuring(input.now, input.memberEffectiveAt, input.memberExpiresAt)) {
+  if (input.memberStatus !== "ACTIVE")
+    return { allowed: false, code: "MEMBERSHIP_NOT_ACTIVE" };
+  if (
+    !activeDuring(input.now, input.memberEffectiveAt, input.memberExpiresAt)
+  ) {
     return { allowed: false, code: "MEMBERSHIP_OUTSIDE_EFFECTIVE_PERIOD" };
   }
-  if (input.mandateStatus !== "ACTIVE") return { allowed: false, code: "MANDATE_NOT_ACTIVE" };
-  if (!activeDuring(input.now, input.mandateEffectiveAt, input.mandateExpiresAt)) {
+  if (input.mandateStatus !== "ACTIVE")
+    return { allowed: false, code: "MANDATE_NOT_ACTIVE" };
+  if (
+    !activeDuring(input.now, input.mandateEffectiveAt, input.mandateExpiresAt)
+  ) {
     return { allowed: false, code: "MANDATE_OUTSIDE_EFFECTIVE_PERIOD" };
   }
-  if (input.mandateAction !== input.requestedAction) return { allowed: false, code: "ACTION_NOT_MANDATED" };
+  if (input.mandateAction !== input.requestedAction)
+    return { allowed: false, code: "ACTION_NOT_MANDATED" };
   // An explicitly institution-wide mandate may govern that institution's already-authorised child
   // resources. The calling service must first prove the resource belongs to the acting institution
   // or one of its active case-party relationships. A resource-scoped mandate never broadens this way.
-  const institutionWide = input.mandateScopeType === "INSTITUTION" && input.mandateScopeRef === null;
-  if (!institutionWide && input.mandateScopeType !== input.requestedScopeType) return { allowed: false, code: "SCOPE_TYPE_MISMATCH" };
-  if (!institutionWide && input.mandateScopeRef !== null && input.mandateScopeRef !== (input.requestedScopeRef ?? null)) {
+  const institutionWide =
+    input.mandateScopeType === "INSTITUTION" && input.mandateScopeRef === null;
+  if (!institutionWide && input.mandateScopeType !== input.requestedScopeType)
+    return { allowed: false, code: "SCOPE_TYPE_MISMATCH" };
+  if (
+    !institutionWide &&
+    input.mandateScopeRef !== null &&
+    input.mandateScopeRef !== (input.requestedScopeRef ?? null)
+  ) {
     return { allowed: false, code: "SCOPE_REFERENCE_MISMATCH" };
   }
   return { allowed: true, code: "AUTHORISED" };
@@ -255,21 +286,44 @@ export interface EvidencePolicyInput {
 
 function checkNames(value: unknown, achieved: boolean): Set<string> {
   if (Array.isArray(value)) {
-    return new Set(value.filter((entry): entry is string => typeof entry === "string" && entry.length > 0));
+    return new Set(
+      value.filter(
+        (entry): entry is string =>
+          typeof entry === "string" && entry.length > 0
+      )
+    );
   }
   if (!value || typeof value !== "object") return new Set();
-  return new Set(Object.entries(value as Record<string, unknown>)
-    .filter(([, result]) => !achieved || result === true || result === "VERIFIED" || result === "ACHIEVED"
-      || Boolean(result && typeof result === "object"
-        && ["VERIFIED", "ACHIEVED"].includes(String((result as Record<string, unknown>).result))))
-    .map(([name]) => name));
+  return new Set(
+    Object.entries(value as Record<string, unknown>)
+      .filter(
+        ([, result]) =>
+          !achieved ||
+          result === true ||
+          result === "VERIFIED" ||
+          result === "ACHIEVED" ||
+          Boolean(
+            result &&
+              typeof result === "object" &&
+              ["VERIFIED", "ACHIEVED"].includes(
+                String((result as Record<string, unknown>).result)
+              )
+          )
+      )
+      .map(([name]) => name)
+  );
 }
 
 /** A retained signed snapshot remains usable during provider outage, but never beyond its expiry. */
-export function evaluateInstitutionEvidence(input: EvidencePolicyInput): PolicyDecision {
-  if (input.expiresAt.getTime() <= input.now.getTime()) return { allowed: false, code: "EVIDENCE_EXPIRED" };
-  if (input.signatureStatus !== "VERIFIED") return { allowed: false, code: "SIGNATURE_NOT_VERIFIED" };
-  if (input.result !== "VERIFIED") return { allowed: false, code: "EVIDENCE_NOT_VERIFIED" };
+export function evaluateInstitutionEvidence(
+  input: EvidencePolicyInput
+): PolicyDecision {
+  if (input.expiresAt.getTime() <= input.now.getTime())
+    return { allowed: false, code: "EVIDENCE_EXPIRED" };
+  if (input.signatureStatus !== "VERIFIED")
+    return { allowed: false, code: "SIGNATURE_NOT_VERIFIED" };
+  if (input.result !== "VERIFIED")
+    return { allowed: false, code: "EVIDENCE_NOT_VERIFIED" };
 
   const expected = checkNames(input.crossCheckExpected, false);
   const achieved = checkNames(input.crossCheckAchieved, true);
@@ -301,8 +355,13 @@ export interface RouteEntitlementPolicyInput {
   };
 }
 
-export function evaluateRouteEntitlement(input: RouteEntitlementPolicyInput): PolicyDecision {
-  if (input.status !== "ACTIVE" || !activeDuring(input.now, input.effectiveAt, input.expiresAt)) {
+export function evaluateRouteEntitlement(
+  input: RouteEntitlementPolicyInput
+): PolicyDecision {
+  if (
+    input.status !== "ACTIVE" ||
+    !activeDuring(input.now, input.effectiveAt, input.expiresAt)
+  ) {
     return { allowed: false, code: "ROUTE_ENTITLEMENT_NOT_ACTIVE" };
   }
   const dimensions = [
@@ -315,8 +374,10 @@ export function evaluateRouteEntitlement(input: RouteEntitlementPolicyInput): Po
   if (dimensions.some(([held, requested]) => held !== requested)) {
     return { allowed: false, code: "ROUTE_DIMENSION_MISMATCH" };
   }
-  if (input.functionPerformer === "PROHIBITED") return { allowed: false, code: "FUNCTION_PROHIBITED" };
+  if (input.functionPerformer === "PROHIBITED")
+    return { allowed: false, code: "FUNCTION_PROHIBITED" };
   const modes = Array.isArray(input.operatingModes) ? input.operatingModes : [];
-  if (!modes.includes(input.requested.operatingMode)) return { allowed: false, code: "OPERATING_MODE_NOT_ENTITLED" };
+  if (!modes.includes(input.requested.operatingMode))
+    return { allowed: false, code: "OPERATING_MODE_NOT_ENTITLED" };
   return { allowed: true, code: "ROUTE_ENTITLED" };
 }

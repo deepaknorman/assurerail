@@ -143,6 +143,9 @@ const dbModules = process.env.DATABASE_URL ? [
   ...(inspectPersistenceFlags(process.env).enterpriseIntegration === "shadow"
     ? [require("./enterprise-integration/enterprise-integration.module").EnterpriseIntegrationModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).productionScale === "shadow"
+    ? [require("./production-scale/production-scale.module").ProductionScaleModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

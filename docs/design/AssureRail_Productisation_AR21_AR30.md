@@ -22,18 +22,18 @@ non-mutating rollback and refuse unavailable external gates rather than substitu
 
 ## 2. Programme map
 
-| Stage | Product outcome | Depends on | Activation boundary |
-|---|---|---|---|
-| **AR-21 Hosted alpha** | Institution-scoped action centre, task/status navigation, coherent customer/operator journeys, accessible unavailable/error states | PR-18–20 deployment | Shadow only; no new transaction action |
-| **AR-22 Institutional productisation** | Application, admission, membership, mandates, appointments, SSO/service identity, connector admission, recertification/suspension/exit | AR-21, PR-03/04/19 | Real provider/customer acceptance remains external |
-| **AR-23 Conventional DA** | One case journey from intake and diligence through partner-executed completion and dossier | AR-21/22, PR-09, PR-12 | Replay/shadow first; controlled-live only with counsel/participant/provider gates |
-| **AR-24 Conventional PTC** | Programme/trust, pool transfer, trustee/counsel/rating/assurance, subscription/allotment, cash and route-defined register workflow | AR-21/22, PR-10, PR-12 | Trustee and route recordkeeper evidence remain controlling |
-| **AR-25 Lifecycle** | Collections, servicing, waterfalls/distributions, notices, triggers, substitutions/repurchases, defaults, maturity/redemption and reconciliation | AR-23/24 | Each external lifecycle act has an assigned performer and acknowledgement |
-| **AR-26 Primary venue** | Usable permissioned discovery, terms, RFQ, negotiation, allocation and conversion to transaction case | AR-21/22/23/24, PR-13/17 | Function-by-function legal/conduct/performer gates |
-| **AR-27 Conventional secondary** | Usable secondary DA/PTC journeys with title chain, restrictions, consent, cash and register reconciliation | AR-25/26, PR-14 | Observation before execution; no Rail ownership inference |
-| **AR-28 Tokenised routes** | Productised tokenised DA and separately governed tokenised PTC representations and lifecycle | AR-23–27, PR-15/16 | Mirror by default; connector/custody/finality gates cannot be internalised |
-| **AR-29 Enterprise integration** | Production-grade lender registry, trustee/RTA/depository, payment, signing/stamping, rating/servicer, finance/tax/CRM and notification boundaries | Stable route contracts | Connector conformance is not counterparty certification |
-| **AR-30 Production scale** | Security operations, VAPT closure, DR, capacity, support, daily controls, audit/export and signed production acceptance | All activated route slices | PR-12 manifest and independent approvals remain mandatory |
+| Stage                                  | Product outcome                                                                                                                                   | Depends on                 | Activation boundary                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------- |
+| **AR-21 Hosted alpha**                 | Institution-scoped action centre, task/status navigation, coherent customer/operator journeys, accessible unavailable/error states                | PR-18–20 deployment        | Shadow only; no new transaction action                                            |
+| **AR-22 Institutional productisation** | Application, admission, membership, mandates, appointments, SSO/service identity, connector admission, recertification/suspension/exit            | AR-21, PR-03/04/19         | Real provider/customer acceptance remains external                                |
+| **AR-23 Conventional DA**              | One case journey from intake and diligence through partner-executed completion and dossier                                                        | AR-21/22, PR-09, PR-12     | Replay/shadow first; controlled-live only with counsel/participant/provider gates |
+| **AR-24 Conventional PTC**             | Programme/trust, pool transfer, trustee/counsel/rating/assurance, subscription/allotment, cash and route-defined register workflow                | AR-21/22, PR-10, PR-12     | Trustee and route recordkeeper evidence remain controlling                        |
+| **AR-25 Lifecycle**                    | Collections, servicing, waterfalls/distributions, notices, triggers, substitutions/repurchases, defaults, maturity/redemption and reconciliation  | AR-23/24                   | Each external lifecycle act has an assigned performer and acknowledgement         |
+| **AR-26 Primary venue**                | Usable permissioned discovery, terms, RFQ, negotiation, allocation and conversion to transaction case                                             | AR-21/22/23/24, PR-13/17   | Function-by-function legal/conduct/performer gates                                |
+| **AR-27 Conventional secondary**       | Usable secondary DA/PTC journeys with title chain, restrictions, consent, cash and register reconciliation                                        | AR-25/26, PR-14            | Observation before execution; no Rail ownership inference                         |
+| **AR-28 Tokenised routes**             | Productised tokenised DA and separately governed tokenised PTC representations and lifecycle                                                      | AR-23–27, PR-15/16         | Mirror by default; connector/custody/finality gates cannot be internalised        |
+| **AR-29 Enterprise integration**       | Production-grade lender registry, trustee/RTA/depository, payment, signing/stamping, rating/servicer, finance/tax/CRM and notification boundaries | Stable route contracts     | Connector conformance is not counterparty certification                           |
+| **AR-30 Production scale**             | Security operations, VAPT closure, DR, capacity, support, daily controls, audit/export and signed production acceptance                           | All activated route slices | PR-12 manifest and independent approvals remain mandatory                         |
 
 ## 3. Cross-stage engineering rules
 
@@ -195,7 +195,35 @@ matching active material-function assignment and performer institution. Later ev
 provider suspension, expiry or stale/degraded health returns the binding `SAFE_PAUSED` without
 rewriting history. AR-29 stores no credentials and dispatches no external action.
 
-## 13. Cumulative verification and stage evidence
+## 13. AR-30 acceptance contract
+
+AR-30 provides the internal production-scale and release board over the controls already built by
+PR-12 through AR-29. It reads the current required readiness-gate decisions, exact signed
+build/environment/mode activation, internal-role enforcement coverage, integrity sweep freshness,
+critical findings, all material reconciliation queues, dead-letter messages, capacity observations
+and critical customer-support SLA breaches. Missing or stale integrity and capacity observations
+are blockers; absence is never interpreted as healthy.
+
+The board may generate an immutable, exact-build assessment. A different authorised person may
+acknowledge or reject it only within 24 hours and only while its control digest is unchanged.
+Acknowledgement records review of the snapshot: it does not accept evidence, close a readiness
+gate, approve or sign an activation, create a live capability, or dispatch an external action.
+External VAPT, counsel, participant, trustee, provider, authoritative-record, DR, pilot and customer
+acceptance remain open until their accountable owners supply real evidence.
+
+The board's gate-code summary answers whether at least one current accepted scope exists for each
+required code. It is not a route/cohort activation decision. The PR-12 activation remains the final
+exact binding: its signed manifest must match the environment, operating mode, 40-character build,
+manifest ID and every retained gate decision/evidence binding. Any stale activation or new
+operational blocker yields `SAFE_PAUSED`.
+
+`ARAIL_PRODUCTION_SCALE_V1=shadow` enables this internal control plane only when durable relay and
+internal RBAC are enabled and an exact environment/build is declared. It is unavailable in demo or
+replay and adds no implemented live capability. The first-spine AR-21–AR-30 code programme is then
+implemented, but production activation, customer acceptance and external evidence remain separate
+work.
+
+## 14. Cumulative verification and stage evidence
 
 `docs/qa/AssureRail_PR01_AR26_Integrated_Release_Audit.md` is the preceding cumulative
 release-candidate checkpoint; `docs/qa/AssureRail_AR27_Conventional_Secondary_Product_Evidence.md`
@@ -205,7 +233,10 @@ records the additive AR-27 code gate and database rehearsal. AR-28 design and bo
 `docs/runbooks/AssureRail_AR28_Deployer_Handoff.md`. AR-29 is recorded in
 `docs/design/AssureRail_Enterprise_Integration_Product_AR29.md`,
 `docs/qa/AssureRail_AR29_Enterprise_Integration_Evidence.md` and
-`docs/runbooks/AssureRail_AR29_Deployer_Handoff.md`. The cumulative
+`docs/runbooks/AssureRail_AR29_Deployer_Handoff.md`. AR-30 is recorded in
+`docs/design/AssureRail_Production_Scale_And_Release_AR30.md`,
+`docs/qa/AssureRail_AR30_Production_Scale_Evidence.md` and
+`docs/runbooks/AssureRail_AR30_Deployer_Handoff.md`. The cumulative
 `scripts/assurerail-integrated-release-check.sh --code` repeats the compile, complete API
 corpus, invariant checks, all web boundary checks and production web build; `--full` also runs every
 available disposable PostgreSQL migration/service/restore rehearsal. Neither mode closes an external

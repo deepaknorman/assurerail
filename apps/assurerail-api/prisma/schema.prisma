@@ -3145,9 +3145,45 @@ model DeploymentActivation {
   revokedAt           DateTime?
   createdAt           DateTime                   @default(now())
   gateBindings        DeploymentActivationGate[]
+  productionScaleAssessments ProductionScaleAssessment[]
 
   @@index([environment, operatingMode, status, expiresAt], map: "DeploymentActivation_environment_mode_status_idx")
   @@index([buildCommit, status], map: "DeploymentActivation_build_status_idx")
+}
+
+// ───────────── production-scale operational assessment (AR-30) ─────────────
+// This is an immutable internal observation of current controls. Review acknowledges the snapshot;
+// it does not close readiness gates, approve an activation or create a live capability.
+model ProductionScaleAssessment {
+  id                       String                @id
+  environment              String
+  targetOperatingMode      String                // CONTROLLED_LIVE | PRODUCTION
+  buildCommit              String
+  deploymentActivationId   String?
+  deploymentActivation     DeploymentActivation? @relation(fields: [deploymentActivationId], references: [id], onDelete: Restrict, map: "PSA_activation_fkey")
+  boardState               String                // OPEN_EXTERNAL_GATES | OPEN_INTERNAL_GATES | OPERATIONAL_BLOCK | AWAITING_SIGNED_ACTIVATION | ACTIVATED | SAFE_PAUSED
+  assessment               Json
+  controlDigest            String
+  assessmentDigest         String                @unique
+  status                   String                @default("GENERATED") // GENERATED | ACKNOWLEDGED | REJECTED
+  idempotencyKey           String
+  requestDigest            String
+  generatedByUserId        String
+  generatorAuthorityRef    String
+  generationStepUpId       String
+  assessedAt               DateTime              @default(now())
+  reviewedByUserId         String?
+  reviewerAuthorityRef     String?
+  reviewStepUpId           String?
+  reviewReason             String?
+  reviewDigest             String?               @unique
+  reviewedAt               DateTime?
+  createdAt                DateTime              @default(now())
+
+  @@unique([environment, idempotencyKey], map: "PSA_environment_idempotency_key")
+  @@index([environment, targetOperatingMode, assessedAt], map: "PSA_environment_target_time_idx")
+  @@index([boardState, status, assessedAt], map: "PSA_state_status_time_idx")
+  @@index([deploymentActivationId], map: "PSA_activation_idx")
 }
 
 model DeploymentActivationGate {

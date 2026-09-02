@@ -30,6 +30,9 @@ export const INTERNAL_PERMISSIONS = [
   "READINESS_GATE_REVIEW",
   "DEPLOYMENT_ACTIVATION_REGISTER",
   "DEPLOYMENT_ACTIVATION_REVOKE",
+  "PRODUCTION_SCALE_VIEW",
+  "PRODUCTION_SCALE_ASSESS",
+  "PRODUCTION_SCALE_REVIEW",
   "SYSTEM_HEALTH_VIEW",
   "SYSTEM_CHANGE_PROPOSE",
   "SYSTEM_CHANGE_APPROVE",
@@ -81,14 +84,38 @@ export const INTERNAL_PERMISSIONS = [
 ] as const;
 export type InternalPermission = (typeof INTERNAL_PERMISSIONS)[number];
 
-export const INTERNAL_SCOPE_TYPES = ["GLOBAL", "OPERATING_UNIT", "ENVIRONMENT", "CASE", "SUPPORT_TICKET"] as const;
+export const INTERNAL_SCOPE_TYPES = [
+  "GLOBAL",
+  "OPERATING_UNIT",
+  "ENVIRONMENT",
+  "CASE",
+  "SUPPORT_TICKET",
+] as const;
 export type InternalScopeType = (typeof INTERNAL_SCOPE_TYPES)[number];
 
-export const INTERNAL_ASSIGNMENT_STATUSES = ["PROPOSED", "ACTIVE", "REJECTED", "SUSPENDED", "EXPIRED", "REVOKED", "SUPERSEDED"] as const;
-export type InternalAssignmentStatus = (typeof INTERNAL_ASSIGNMENT_STATUSES)[number];
+export const INTERNAL_ASSIGNMENT_STATUSES = [
+  "PROPOSED",
+  "ACTIVE",
+  "REJECTED",
+  "SUSPENDED",
+  "EXPIRED",
+  "REVOKED",
+  "SUPERSEDED",
+] as const;
+export type InternalAssignmentStatus =
+  (typeof INTERNAL_ASSIGNMENT_STATUSES)[number];
 
-export const PRIVILEGED_ACCESS_STATUSES = ["REQUESTED", "APPROVED", "ACTIVE", "DENIED", "EXPIRED", "REVOKED", "CLOSED"] as const;
-export type PrivilegedAccessStatus = (typeof PRIVILEGED_ACCESS_STATUSES)[number];
+export const PRIVILEGED_ACCESS_STATUSES = [
+  "REQUESTED",
+  "APPROVED",
+  "ACTIVE",
+  "DENIED",
+  "EXPIRED",
+  "REVOKED",
+  "CLOSED",
+] as const;
+export type PrivilegedAccessStatus =
+  (typeof PRIVILEGED_ACCESS_STATUSES)[number];
 
 const ROLE_PERMISSIONS: Record<InternalRole, readonly InternalPermission[]> = {
   SUPERADMIN: [
@@ -97,6 +124,7 @@ const ROLE_PERMISSIONS: Record<InternalRole, readonly InternalPermission[]> = {
     "GOVERNANCE_RECERTIFY",
     "GOVERNANCE_ELEVATION_APPROVE",
     "READINESS_VIEW",
+    "PRODUCTION_SCALE_VIEW",
     "DEPLOYMENT_ACTIVATION_REVOKE",
   ],
   SYSADMIN: [
@@ -108,6 +136,8 @@ const ROLE_PERMISSIONS: Record<InternalRole, readonly InternalPermission[]> = {
     "READINESS_VIEW",
     "READINESS_GATE_PROPOSE",
     "DEPLOYMENT_ACTIVATION_REGISTER",
+    "PRODUCTION_SCALE_VIEW",
+    "PRODUCTION_SCALE_ASSESS",
   ],
   SECURITY_ADMIN: [
     "SECURITY_POSTURE_VIEW",
@@ -117,11 +147,14 @@ const ROLE_PERMISSIONS: Record<InternalRole, readonly InternalPermission[]> = {
     "SECURITY_INCIDENT_MANAGE",
     "READINESS_VIEW",
     "READINESS_GATE_REVIEW",
+    "PRODUCTION_SCALE_VIEW",
+    "PRODUCTION_SCALE_REVIEW",
   ],
   ORGADMIN: [
     "GOVERNANCE_ASSIGNMENT_PROPOSE",
     "GOVERNANCE_RECERTIFY",
     "READINESS_VIEW",
+    "PRODUCTION_SCALE_VIEW",
   ],
   MANAGER: [
     "OPERATIONS_QUEUE_VIEW",
@@ -137,6 +170,8 @@ const ROLE_PERMISSIONS: Record<InternalRole, readonly InternalPermission[]> = {
     "CAPACITY_BUDGET_MANAGE",
     "READINESS_VIEW",
     "READINESS_GATE_PROPOSE",
+    "PRODUCTION_SCALE_VIEW",
+    "PRODUCTION_SCALE_ASSESS",
     "COMMERCIAL_CONTRACT_PROPOSE",
     "COMMERCIAL_RATE_CARD_PROPOSE",
     "COMMERCIAL_USAGE_RECORD",
@@ -157,10 +192,7 @@ const ROLE_PERMISSIONS: Record<InternalRole, readonly InternalPermission[]> = {
     "RECONCILIATION_REPAIR_REVIEW",
     "RECONCILIATION_BREAK_CLOSE",
   ],
-  INTEGRATION_OPERATOR: [
-    "INTEGRATION_HEALTH_VIEW",
-    "INTEGRATION_JOB_OPERATE",
-  ],
+  INTEGRATION_OPERATOR: ["INTEGRATION_HEALTH_VIEW", "INTEGRATION_JOB_OPERATE"],
   RISK_COMPLIANCE_OFFICER: [
     "RISK_EXCEPTION_REVIEW",
     "RISK_CONFLICT_REVIEW",
@@ -176,6 +208,8 @@ const ROLE_PERMISSIONS: Record<InternalRole, readonly InternalPermission[]> = {
     "RECONCILIATION_VIEW",
     "READINESS_VIEW",
     "READINESS_GATE_REVIEW",
+    "PRODUCTION_SCALE_VIEW",
+    "PRODUCTION_SCALE_REVIEW",
     "COMMERCIAL_CONTRACT_REVIEW",
     "COMMERCIAL_RATE_CARD_REVIEW",
     "COMMERCIAL_INVOICE_REVIEW",
@@ -192,8 +226,9 @@ const ROLE_PERMISSIONS: Record<InternalRole, readonly InternalPermission[]> = {
     "AUDIT_EXPORT_REQUEST",
     "REPORT_VIEW",
     "READINESS_VIEW",
+    "PRODUCTION_SCALE_VIEW",
   ],
-  VIEWER: ["REPORT_VIEW", "READINESS_VIEW"],
+  VIEWER: ["REPORT_VIEW", "READINESS_VIEW", "PRODUCTION_SCALE_VIEW"],
 };
 
 export interface InternalAssignmentPolicyInput {
@@ -215,20 +250,30 @@ export interface InternalPolicyDecision {
   matchedRole?: InternalRole;
 }
 
-function activeDuring(now: Date, effectiveAt: Date | null, expiresAt: Date | null): boolean {
-  return (!effectiveAt || effectiveAt.getTime() <= now.getTime())
-    && (!expiresAt || expiresAt.getTime() > now.getTime());
+function activeDuring(
+  now: Date,
+  effectiveAt: Date | null,
+  expiresAt: Date | null
+): boolean {
+  return (
+    (!effectiveAt || effectiveAt.getTime() <= now.getTime()) &&
+    (!expiresAt || expiresAt.getTime() > now.getTime())
+  );
 }
 
 export function isInternalRole(role: string): role is InternalRole {
   return (INTERNAL_ROLES as readonly string[]).includes(role);
 }
 
-export function isInternalPermission(permission: string): permission is InternalPermission {
+export function isInternalPermission(
+  permission: string
+): permission is InternalPermission {
   return (INTERNAL_PERMISSIONS as readonly string[]).includes(permission);
 }
 
-export function isInternalScopeType(scopeType: string): scopeType is InternalScopeType {
+export function isInternalScopeType(
+  scopeType: string
+): scopeType is InternalScopeType {
   return (INTERNAL_SCOPE_TYPES as readonly string[]).includes(scopeType);
 }
 
@@ -238,24 +283,46 @@ export function isInternalScopeType(scopeType: string): scopeType is InternalSco
  */
 function scopeMatches(input: InternalAssignmentPolicyInput): boolean {
   if (input.scopeType === "GLOBAL") return true;
-  return input.scopeType === input.requestedScopeType && input.scopeRef === input.requestedScopeRef;
+  return (
+    input.scopeType === input.requestedScopeType &&
+    input.scopeRef === input.requestedScopeRef
+  );
 }
 
 /** Pure, fail-closed policy evaluator for one active internal assignment. */
-export function evaluateInternalAssignment(input: InternalAssignmentPolicyInput): InternalPolicyDecision {
-  if (!isInternalRole(input.role)) return { allowed: false, code: "INTERNAL_ROLE_UNRECOGNISED" };
-  if (input.status !== "ACTIVE") return { allowed: false, code: "INTERNAL_ASSIGNMENT_NOT_ACTIVE" };
+export function evaluateInternalAssignment(
+  input: InternalAssignmentPolicyInput
+): InternalPolicyDecision {
+  if (!isInternalRole(input.role))
+    return { allowed: false, code: "INTERNAL_ROLE_UNRECOGNISED" };
+  if (input.status !== "ACTIVE")
+    return { allowed: false, code: "INTERNAL_ASSIGNMENT_NOT_ACTIVE" };
   if (!input.effectiveAt || !input.expiresAt) {
-    return { allowed: false, code: "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED" };
+    return {
+      allowed: false,
+      code: "INTERNAL_ASSIGNMENT_EFFECTIVE_PERIOD_REQUIRED",
+    };
   }
   if (!activeDuring(input.now, input.effectiveAt, input.expiresAt)) {
-    return { allowed: false, code: "INTERNAL_ASSIGNMENT_OUTSIDE_EFFECTIVE_PERIOD" };
+    return {
+      allowed: false,
+      code: "INTERNAL_ASSIGNMENT_OUTSIDE_EFFECTIVE_PERIOD",
+    };
   }
-  if (!scopeMatches(input)) return { allowed: false, code: "INTERNAL_SCOPE_MISMATCH" };
+  if (!scopeMatches(input))
+    return { allowed: false, code: "INTERNAL_SCOPE_MISMATCH" };
   if (!ROLE_PERMISSIONS[input.role].includes(input.permission)) {
-    return { allowed: false, code: "INTERNAL_PERMISSION_NOT_GRANTED", matchedRole: input.role };
+    return {
+      allowed: false,
+      code: "INTERNAL_PERMISSION_NOT_GRANTED",
+      matchedRole: input.role,
+    };
   }
-  return { allowed: true, code: "INTERNAL_AUTHORISED", matchedRole: input.role };
+  return {
+    allowed: true,
+    code: "INTERNAL_AUTHORISED",
+    matchedRole: input.role,
+  };
 }
 
 /** Maker/checker gate used before a reviewer/approver decision is even considered. */
@@ -266,10 +333,16 @@ export function evaluateIndependentApproval(input: {
   priorExecutorUserId?: string | null;
   requiresIndependentExecutor?: boolean;
 }): InternalPolicyDecision {
-  if (!input.actorUserId) return { allowed: false, code: "INTERNAL_ACTOR_REQUIRED" };
-  if (input.actorUserId === input.proposerUserId) return { allowed: false, code: "SELF_APPROVAL_PROHIBITED" };
-  if (input.subjectUserId && input.actorUserId === input.subjectUserId) return { allowed: false, code: "SUBJECT_CANNOT_APPROVE_OWN_ASSIGNMENT" };
-  if (input.requiresIndependentExecutor && input.actorUserId === input.priorExecutorUserId) {
+  if (!input.actorUserId)
+    return { allowed: false, code: "INTERNAL_ACTOR_REQUIRED" };
+  if (input.actorUserId === input.proposerUserId)
+    return { allowed: false, code: "SELF_APPROVAL_PROHIBITED" };
+  if (input.subjectUserId && input.actorUserId === input.subjectUserId)
+    return { allowed: false, code: "SUBJECT_CANNOT_APPROVE_OWN_ASSIGNMENT" };
+  if (
+    input.requiresIndependentExecutor &&
+    input.actorUserId === input.priorExecutorUserId
+  ) {
     return { allowed: false, code: "EXECUTOR_CANNOT_INDEPENDENTLY_REVIEW" };
   }
   return { allowed: true, code: "INDEPENDENT_REVIEWER" };
@@ -283,6 +356,8 @@ export function internalRoleCanSatisfyExternalAuthority(): false {
   return false;
 }
 
-export function permissionsForInternalRole(role: InternalRole): readonly InternalPermission[] {
+export function permissionsForInternalRole(
+  role: InternalRole
+): readonly InternalPermission[] {
   return ROLE_PERMISSIONS[role];
 }

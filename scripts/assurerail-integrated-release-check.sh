@@ -25,7 +25,7 @@ run "scoped diff hygiene" git diff --check -- apps/assurerail-api apps/assurerai
 run "static architecture and safety invariants" node scripts/check-assurerail-invariants.mjs
 run "API compile and complete test corpus" npm test --workspace=@code/assurerail-api
 
-for check in pr18 ar21 ar22 ar23 ar24 ar25 ar26 ar27 ar28 ar29; do
+for check in pr18 ar21 ar22 ar23 ar24 ar25 ar26 ar27 ar28 ar29 ar30; do
   run "web boundary check $check" npm run "check:$check" --workspace=@code/assurerail
 done
 run "web production build" npm run build --workspace=@code/assurerail
@@ -55,6 +55,7 @@ if [[ "$MODE" == "--full" ]]; then
     scripts/assurerail-ar26-db-rehearsal.sh
     scripts/assurerail-ar27-db-rehearsal.sh
     scripts/assurerail-ar29-db-rehearsal.sh
+    scripts/assurerail-ar30-db-rehearsal.sh
   )
   for rehearsal in "${rehearsals[@]}"; do run "database rehearsal $rehearsal" bash "$rehearsal"; done
 fi
