@@ -14,6 +14,7 @@ import {
   type LegacyRoomProxyMode,
   type NeutralIngressMode,
   type ParticipantAdmissionMode,
+  type PtcProductMode,
   type PtcReplayMode,
   type PrimaryCommercialMode,
   type RouteEntitlementMode,
@@ -80,6 +81,7 @@ export interface RuntimeEnvironmentProfile {
     hostedAlpha: HostedAlphaMode;
     institutionalProduct: InstitutionalProductMode;
     daProduct: DaProductMode;
+    ptcProduct: PtcProductMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -272,6 +274,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || persistenceFlags.externalActionSaga !== "required" || persistenceFlags.roomReadSource === "legacy")) {
     errors.push("ARAIL_DA_PRODUCT_V1=shadow requires institutional product shadow, DA replay allow-list, required saga and Rail/compare rooms");
   }
+  if (persistenceFlags.ptcProduct !== "off"
+    && (persistenceFlags.institutionalProduct !== "shadow" || persistenceFlags.ptcReplay !== "allow_list"
+      || persistenceFlags.externalActionSaga !== "required" || persistenceFlags.roomReadSource === "legacy")) {
+    errors.push("ARAIL_PTC_PRODUCT_V1=shadow requires institutional product shadow, PTC replay allow-list, required saga and Rail/compare rooms");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -326,6 +333,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.daProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_DA_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.ptcProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_PTC_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -488,6 +498,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         hostedAlpha: persistenceFlags.hostedAlpha,
         institutionalProduct: persistenceFlags.institutionalProduct,
         daProduct: persistenceFlags.daProduct,
+        ptcProduct: persistenceFlags.ptcProduct,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

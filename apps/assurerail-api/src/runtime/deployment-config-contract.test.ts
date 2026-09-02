@@ -32,6 +32,7 @@ const safeDefaults: Readonly<Record<string, string>> = {
   ARAIL_HOSTED_ALPHA_V1: "off",
   ARAIL_INSTITUTIONAL_PRODUCT_V1: "off",
   ARAIL_DA_PRODUCT_V1: "off",
+  ARAIL_PTC_PRODUCT_V1: "off",
   ARAIL_INTERNAL_RBAC_V1: "off",
 };
 

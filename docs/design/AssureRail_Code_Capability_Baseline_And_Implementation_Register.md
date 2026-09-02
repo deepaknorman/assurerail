@@ -1531,6 +1531,39 @@ ratification, live shadow comparison and controlled-live approval remain open. D
 `docs/qa/AssureRail_AR23_Conventional_DA_Evidence.md`; handoff:
 `docs/runbooks/AssureRail_AR23_Deployer_Handoff.md`.
 
+### AR-24 — Conventional PTC customer journey
+
+**Dependencies:** AR-21/22, PR-05–10 and PR-12's activation boundary
+
+Productise the conventional-PTC replay foundation as one function-separated, case-scoped journey
+without changing its trustee-controlled, partner-executed, observe-only perimeter.
+
+**AR-24 implementation checkpoint (2 September 2026):** implemented for review under EX-28; not
+deployed or activated. A new PTC product overview and `/workspace/cases/[caseId]/ptc` journey expose
+case/diligence/replay governance, programme/trust and appointment, pool transfer/eligibility,
+route-required counsel/rating/assurance, documents/tranche, subscription/consideration, trustee
+control, issue/allotment, authoritative record, lifecycle/notice setup, reconciliation and dossier
+as separate stages. The trustee controls Rail's transaction workflow while the route-defined
+RTA/depository/register remains the legally operative record. Required-review aggregation counts
+every review leg, not merely its shared type. Before the immutable saga exists, visible evidence may
+show preparation but cannot complete a transaction stage; hidden evidence is `UNAVAILABLE` rather
+than inferred absent. Source/evidence/room reads retain ownership/current-grant boundaries and the
+aggregate omits evidence bodies/storage, secret/step-up fields and expected/observed/repair payloads.
+All mutations reuse PR-10 mandate, maker/checker, step-up, ordering, idempotency, reconciliation and
+append-only repair controls. API/web flags default off, are replay/shadow-only and have no live
+capability ID. No schema or dispatch path is added. Any open break blocks its function and aggregate
+reconciliation. Internal reconciliation leaves originator,
+trustee, provider, recordkeeper, counsel and PR-12 acceptance explicitly open. The complete API
+suite passed 320/320 with zero skipped; AR-24 through AR-21 and PR-18 web checks and the production
+web build passed. The disposable PR-10 PostgreSQL rehearsal applied all 27 migrations and proved
+atomic/idempotent service operation, 11 PTC legs, 19 generic evidence links, rejection, append-only
+repair, reconciliation, restrictive history, DA upgrade preservation, schema parity and restore.
+Final security evidence is in the stage evidence record. The named,
+participant/trustee-authorised all-leg historic PTC replay remains open and cannot be replaced by
+synthetic fixtures. Design: `docs/design/AssureRail_Conventional_PTC_Product_AR24.md`; evidence:
+`docs/qa/AssureRail_AR24_Conventional_PTC_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR24_Deployer_Handoff.md`.
+
 ---
 
 ## 9. Test and evidence baseline

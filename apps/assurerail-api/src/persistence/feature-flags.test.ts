@@ -26,6 +26,7 @@ test("[PR02][FLAGS] persistence paths default to inert/legacy-compatible values"
     hostedAlpha: "off",
     institutionalProduct: "off",
     daProduct: "off",
+    ptcProduct: "off",
     internalRbac: "off",
     errors: [],
   });
@@ -55,6 +56,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_HOSTED_ALPHA_V1: "SHADOW",
     ARAIL_INSTITUTIONAL_PRODUCT_V1: "SHADOW",
     ARAIL_DA_PRODUCT_V1: "SHADOW",
+    ARAIL_PTC_PRODUCT_V1: "SHADOW",
     ARAIL_INTERNAL_RBAC_V1: "SHADOW",
   }), {
     neutralIngress: "shadow",
@@ -79,6 +81,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     hostedAlpha: "shadow",
     institutionalProduct: "shadow",
     daProduct: "shadow",
+    ptcProduct: "shadow",
     internalRbac: "shadow",
     errors: [],
   });
@@ -105,6 +108,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_HOSTED_ALPHA_V1: "enabled",
     ARAIL_INSTITUTIONAL_PRODUCT_V1: "enabled",
     ARAIL_DA_PRODUCT_V1: "enabled",
+    ARAIL_PTC_PRODUCT_V1: "enabled",
     ARAIL_INTERNAL_RBAC_V1: "enabled",
   });
   assert.equal(rejected.neutralIngress, "off");
@@ -128,7 +132,8 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
   assert.equal(rejected.customerOperations, "off");
   assert.equal(rejected.hostedAlpha, "off");
   assert.equal(rejected.daProduct, "off");
+  assert.equal(rejected.ptcProduct, "off");
   assert.equal(rejected.institutionalProduct, "off");
   assert.equal(rejected.internalRbac, "off");
-  assert.equal(rejected.errors.length, 22);
+  assert.equal(rejected.errors.length, 23);
 });

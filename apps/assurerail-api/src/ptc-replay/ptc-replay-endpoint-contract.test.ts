@@ -16,7 +16,7 @@ test("[PR10d][ENDPOINTS] PTC replay exposes case-scoped planning, observation, r
     const child = Reflect.getMetadata(PATH_METADATA, handler) as string;
     return [{ method: RequestMethod[method], path: `/${[base, child].filter(Boolean).join("/")}`.replace(/\/+/g, "/") }];
   });
-  assert.equal(found.length, 12);
+  assert.equal(found.length, 13);
   assert.ok(found.every((entry) => entry.path.startsWith("/v1/rail/cases/:caseId/ptc-replay")));
   assert.ok(found.some((entry) => entry.method === "POST" && entry.path.endsWith("/authorisation/:authorisationId/review")));
   assert.ok(found.some((entry) => entry.method === "POST" && entry.path.endsWith("/sagas")));
@@ -26,5 +26,6 @@ test("[PR10d][ENDPOINTS] PTC replay exposes case-scoped planning, observation, r
   assert.ok(found.some((entry) => entry.method === "POST" && entry.path.endsWith("/breaks/:breakId/repairs/:repairId/review")));
   assert.ok(found.some((entry) => entry.method === "GET" && entry.path.endsWith("/comparison")));
   assert.ok(found.some((entry) => entry.method === "GET" && entry.path.endsWith("/evidence-pack")));
+  assert.ok(found.some((entry) => entry.method === "GET" && entry.path.endsWith("/product-overview")));
   assert.ok(found.every((entry) => !/dispatch|settle|allot/.test(entry.path)));
 });

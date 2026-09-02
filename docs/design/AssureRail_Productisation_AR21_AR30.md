@@ -106,7 +106,22 @@ The slice is `OBSERVE_ONLY`: it cannot dispatch funds, title, notices, source-sy
 authoritative-register updates. Counsel route ratification, participant/operator acknowledgements,
 recordkeeper confirmation and PR-12 controlled-live acceptance remain independent external gates.
 
-## 7. Stage evidence and handoff
+## 7. AR-24 acceptance contract
+
+AR-24 must present one conventional-PTC customer journey over PR-10 without collapsing the trustee,
+RTA/depository/register, counsel, rating, assurance, servicer, subscriber or originator functions.
+It includes programme/trust and appointment, pool transfer/eligibility, route-required independent
+reviews, executed documents/tranche terms, subscription/consideration, trustee transaction control,
+issue/allotment, authoritative-record acknowledgement, lifecycle/notice setup, reconciliation and
+the reproducible dossier.
+
+The journey remains `OBSERVE_ONLY`. The trustee is final for Rail transaction control; the legally
+operative record remains the route-defined RTA, depository or register. Internal approval or a
+matched comparison cannot close customer/trustee acceptance, counsel, provider, authoritative-
+record or PR-12 controlled-live gates. AssurePlane is one optional assurance provider and is never a
+mandatory dependency.
+
+## 8. Stage evidence and handoff
 
 Each stage produces:
 

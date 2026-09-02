@@ -72,6 +72,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     hostedAlpha: "off",
     institutionalProduct: "off",
     daProduct: "off",
+    ptcProduct: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -506,6 +507,25 @@ test("[CONFIG][AR23] conventional DA product requires the complete non-mutating 
   assert.equal(accepted.profile.features.daProduct, "shadow");
   const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_DA_PRODUCT_V1: "shadow" });
   assert.match(live.errors.join("\n"), /ARAIL_DA_PRODUCT_V1 is available only in REPLAY or SHADOW/);
+});
+
+test("[CONFIG][AR24] conventional PTC product requires the complete non-mutating product foundation", () => {
+  const missing = inspectRuntimeEnvironment({ ASSURERAIL_OPERATING_MODE: "SHADOW", ARAIL_PTC_PRODUCT_V1: "shadow" });
+  assert.match(missing.errors.join("\n"), /requires institutional product shadow, PTC replay allow-list, required saga and Rail\/compare rooms/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW", DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE, ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_DURABLE_RELAY_MODE: "shadow", ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow", ARAIL_ROOM_READ_SOURCE: "compare",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required", ARAIL_PTC_REPLAY_V1: "allow-list",
+    ARAIL_DEVELOPER_PORTAL_V1: "shadow", ARAIL_INTERNAL_RBAC_V1: "shadow",
+    ARAIL_HOSTED_ALPHA_V1: "shadow", ARAIL_INSTITUTIONAL_PRODUCT_V1: "shadow",
+    ARAIL_PTC_PRODUCT_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.ptcProduct, "shadow");
+  const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_PTC_PRODUCT_V1: "shadow" });
+  assert.match(live.errors.join("\n"), /ARAIL_PTC_PRODUCT_V1 is available only in REPLAY or SHADOW/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {
