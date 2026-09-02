@@ -3,7 +3,7 @@
 set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"; RAIL_DIR="$REPO_ROOT/apps/assurerail-api"
 TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/assurerail-pr16.XXXXXX")"; PG_DATA="$TEST_ROOT/postgres"; PG_SOCKET="$TEST_ROOT/socket"; PG_LOG="$TEST_ROOT/postgres.log"
-PG_PORT="$((65530 + ($$ % 20)))"; PG_USER="$(id -un)"; FRESH_DB="assurerail_pr16_fresh"; RESTORE_DB="assurerail_pr16_restore"
+PG_PORT="$((65300 + ($$ % 100)))"; PG_USER="$(id -un)"; FRESH_DB="assurerail_pr16_fresh"; RESTORE_DB="assurerail_pr16_restore"
 case "$TEST_ROOT" in */assurerail-pr16.*) ;; *) echo "unsafe scratch path" >&2; exit 1 ;; esac
 for item in initdb pg_ctl createdb psql pg_dump pg_restore npx; do command -v "$item" >/dev/null || { echo "missing $item" >&2; exit 1; }; done
 cleanup(){ if [[ -f "$PG_DATA/postmaster.pid" ]]; then pg_ctl -D "$PG_DATA" -m fast -w stop >/dev/null 2>&1 || true; fi; case "$TEST_ROOT" in */assurerail-pr16.*) rm -rf -- "$TEST_ROOT" ;; esac; }; trap cleanup EXIT INT TERM

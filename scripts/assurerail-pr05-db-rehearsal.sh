@@ -59,7 +59,7 @@ psql_db "$FRESH_DB" -c "
 
 echo "[PR05-DB] legacy inline bytes survive upgrade"
 createdb -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" "$UPGRADE_DB"
-while IFS= read -r migration_file; do psql_db "$UPGRADE_DB" -f "$migration_file" >/dev/null; done < <(find "$MIGRATIONS_DIR" -mindepth 2 -maxdepth 2 -name migration.sql ! -path "*/$PR05_MIGRATION/*" | sort)
+while IFS= read -r migration_file; do psql_db "$UPGRADE_DB" -f "$migration_file" >/dev/null; done < <(find "$MIGRATIONS_DIR" -mindepth 2 -maxdepth 2 -name migration.sql | sort | awk -v target="/$PR05_MIGRATION/" 'index($0,target){exit} {print}')
 psql_db "$UPGRADE_DB" -c "INSERT INTO \"Document\" (\"id\",\"filename\",\"contentType\",\"size\",\"data\",\"createdAt\") VALUES ('legacy_doc_pr05','legacy.pdf','application/pdf',4,decode('01020304','hex'),CURRENT_TIMESTAMP);" >/dev/null
 psql_db "$UPGRADE_DB" -f "$MIGRATIONS_DIR/$PR05_MIGRATION/migration.sql" >/dev/null
 legacy_state="$(psql_db "$UPGRADE_DB" -Atc "SELECT concat_ws('|',encode(\"data\",'hex'),coalesce(\"neutralDocumentVersionId\",'<null>')) FROM \"Document\" WHERE \"id\"='legacy_doc_pr05';")"

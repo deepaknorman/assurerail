@@ -140,7 +140,7 @@ test("[DB_MODE_GUARD_HARNESS][CURRENT] platform admin and superadmin gates remai
   );
 });
 
-test("[PR12][OP01c] enforcement retires every legacy platform-admin bypass", () => {
+test("[PR12][OP01c] enforcement retires the complete legacy role and platform-admin surface", () => {
   const previous = process.env.ARAIL_INTERNAL_RBAC_V1;
   process.env.ARAIL_INTERNAL_RBAC_V1 = "enforce";
   try {
@@ -155,7 +155,15 @@ test("[PR12][OP01c] enforcement retires every legacy platform-admin bypass", () 
     );
     assert.throws(
       () => new RolesGuard(reflector({ [ROLES_KEY]: ["TRUSTEE"] }) as never).canActivate(context({ user: superadmin })),
-      ForbiddenException,
+      /legacy function-role route is disabled/,
+    );
+    assert.throws(
+      () => new RolesGuard(reflector({ [ROLES_KEY]: ["ISSUER"] }) as never).canActivate(context({ user: activeIssuer })),
+      /legacy function-role route is disabled/,
+    );
+    assert.throws(
+      () => new RolesGuard(reflector({ [ENTITY_ROLES_KEY]: ["OPERATOR"] }) as never).canActivate(context({ user: activeIssuer })),
+      /legacy entity-role route is disabled/,
     );
   } finally {
     if (previous === undefined) delete process.env.ARAIL_INTERNAL_RBAC_V1;

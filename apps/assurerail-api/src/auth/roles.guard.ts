@@ -8,7 +8,9 @@ import { inspectPersistenceFlags } from "../persistence/feature-flags";
 //   @AdminOnly       → platform admin (isAdmin — SUPERADMIN or ADMIN)
 //   @EntityRoles(…)  → one of the given entity roles (platform admin bypasses)
 //   @Roles(…)        → one of the function roles AND onboarded (ACTIVE + allow-listed); admin bypasses
-// A route with none of these is authentication-only.
+// A route with none of these is authentication-only. When the neutral internal control plane is
+// enforced, every legacy decorator-gated route is retired: new Rail services perform their own
+// institution/case/internal-permission checks and must not fall back to global legacy roles.
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -36,6 +38,9 @@ export class RolesGuard implements CanActivate {
 
     const entityRoles = this.reflector.getAllAndOverride<string[]>(ENTITY_ROLES_KEY, [ctx.getHandler(), ctx.getClass()]);
     if (entityRoles && entityRoles.length > 0) {
+      if (internalEnforced) {
+        throw new ForbiddenException("legacy entity-role route is disabled while internal RBAC enforcement is active");
+      }
       if (user?.isAdmin && !internalEnforced) return true; // legacy-only bypass
       if (user?.status !== "ACTIVE" || !user.allowlisted) {
         throw new ForbiddenException("legacy entity-role access requires an active allow-listed account");
@@ -50,6 +55,9 @@ export class RolesGuard implements CanActivate {
     if (!roles || roles.length === 0) return true;
 
     if (!user) throw new ForbiddenException("authentication required");
+    if (internalEnforced) {
+      throw new ForbiddenException("legacy function-role route is disabled while internal RBAC enforcement is active");
+    }
     if (user.isAdmin && !internalEnforced) return true; // legacy-only bypass
 
     if (user.status !== "ACTIVE" || !user.allowlisted) {

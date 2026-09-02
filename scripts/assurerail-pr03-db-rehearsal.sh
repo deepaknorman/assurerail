@@ -104,7 +104,7 @@ echo "[PR03-DB] legacy projection is inert and identity binding is distinct"
 createdb -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" "$UPGRADE_DB"
 while IFS= read -r migration_file; do
   psql_db "$UPGRADE_DB" -f "$migration_file" >/dev/null
-done < <(find "$MIGRATIONS_DIR" -mindepth 2 -maxdepth 2 -name migration.sql ! -path "*/$PR03_MIGRATION/*" | sort)
+done < <(find "$MIGRATIONS_DIR" -mindepth 2 -maxdepth 2 -name migration.sql | sort | awk -v target="/$PR03_MIGRATION/" 'index($0,target){exit} {print}')
 
 psql_db "$UPGRADE_DB" -c "
   INSERT INTO \"VenueUser\" (

@@ -156,6 +156,10 @@ if (has(stepUp, "consumedAt: null") && has(stepUp, "expiresAt: { gt: now }") && 
 if (has(appModule, 'participantAdmission === "shadow"') && has(institutionGovernance, "PR-03 may record only REPLAY/SHADOW entitlements")) {
   pass("institution APIs are shadow-gated and cannot create controlled-live/production route entitlement");
 } else bad("PR-03 runtime/route-entitlement boundary is not safely gated");
+if (has(rolesGuard, "legacy function-role route is disabled while internal RBAC enforcement is active")
+  && has(rolesGuard, "legacy entity-role route is disabled while internal RBAC enforcement is active")) {
+  pass("controlled-live/production internal-RBAC enforcement retires the complete legacy role-gated surface");
+} else bad("internal RBAC enforcement must block legacy function/entity-role endpoints, not merely remove the admin bypass");
 
 // ── 7. Ledger value-path is transactional (P3 hardening must not regress) ─────
 console.log("── ledger atomicity ──");
