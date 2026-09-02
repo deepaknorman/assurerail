@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "accounts": {
+    "participantOrgAdminA": {
+      "email": "replace-orgadmin-a@example.invalid",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "institutionId": "replace-institution-a"
+    },
+    "participantViewerA": {
+      "email": "replace-viewer-a@example.invalid",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "institutionId": "replace-institution-a"
+    },
+    "participantViewerB": {
+      "email": "replace-viewer-b@example.invalid",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "institutionId": "replace-institution-b"
+    },
+    "internalViewer": {
+      "email": "replace-internal-viewer@example.invalid",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "expectedWorkspace": "Audit and reporting"
+    },
+    "internalManager": {
+      "email": "replace-internal-manager@example.invalid",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "expectedWorkspace": "Operations"
+    },
+    "internalSysadmin": {
+      "email": "replace-sysadmin@example.invalid",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "expectedWorkspace": "System operations"
+    },
+    "internalSecurityAdmin": {
+      "email": "replace-security-admin@example.invalid",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "expectedWorkspace": "Security"
+    },
+    "internalSuperadmin": {
+      "email": "replace-superadmin@example.invalid",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "expectedWorkspace": "Governance"
+    }
+  }
+}

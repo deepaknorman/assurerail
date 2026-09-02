@@ -41,7 +41,7 @@ export default function Login() {
       <main className="wrap auth-wrap">
         <div className="auth-card">
           <h1>Sign in</h1>
-          <p className="auth-sub">Access is gated on an existing AssureLocker DigiKYC identity.</p>
+          <p className="auth-sub">Access requires a verified identity and an active institutional admission. Supported identity providers depend on the approved deployment configuration.</p>
           {error && <div className="msg err">{error}</div>}
 
           <button className="btn btn-google" disabled={busy} onClick={() => go(loginGoogle)}>Continue with Google</button>

@@ -1733,6 +1733,39 @@ customer-exit evidence remain open until performed by their accountable owners. 
 covenant-monitoring second spine is excluded and requires separate founder authority after the
 written discovery verdict and counsel/company-formation decisions.
 
+### SEC-01 — Security closure tranche before external VAPT
+
+**Dependencies:** AR-30 code boundary, intended Azure India topology and external-firm procurement
+**Build authority:** founder, 3 September 2026
+**Status:** internal controls/harness implemented; Azure execution, authenticated runs and independent
+VAPT/retest remain open external-environment evidence gates
+
+SEC-01 has four deliberately separate outcomes:
+
+1. production-scoped dependency remediation for the Rail API/web, with an executable gate requiring
+   zero critical/high findings and an exact, time-bounded monitored set for residual moderates;
+2. a machine-checkable Azure target baseline and threat model for Hyderabad primary/Pune recovery,
+   private data services, Front Door/WAF, managed identity, Key Vault, deny-by-default egress,
+   security telemetry, restore/failover and Rail/Locker segregation;
+3. an authenticated E2E and DAST harness requiring two synthetic tenants and named participant,
+   viewer, manager, sysadmin, security-admin and superadmin identities; and
+4. a procurement, rules-of-engagement, finding and retest closure pack for an independent,
+   currently CERT-In-empanelled VAPT firm.
+
+The target Azure baseline is not IaC or proof that Azure has been configured. Playwright discovery is
+not an authenticated run. A DAST preflight or scan does not replace manual VAPT. The external VAPT
+gate remains open until the exact staged build/configuration has been tested, findings remediated and
+the firm has issued its signed retest/closure evidence.
+
+Assets: `docs/security/AssureRail_SEC01_Dependency_Posture.md`,
+`docs/security/AssureRail_Azure_India_Threat_Model_And_Config_Baseline.md`,
+`docs/qa/AssureRail_SEC01_Authenticated_E2E_DAST_Runbook.md` and
+`docs/qa/AssureRail_VAPT_Firm_Engagement_And_Closure_Pack.md`.
+
+The future five-to-seven-node HashSphere or other approved HTS network remains outside SEC-01 and
+outside the current Azure topology. Its hosting provider remains open; it requires its own explicit
+build authority and threat model.
+
 ---
 
 ## 9. Test and evidence baseline

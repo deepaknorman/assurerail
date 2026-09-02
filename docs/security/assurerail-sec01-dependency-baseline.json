@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "scope": {
+    "workspaces": ["@code/assurerail-api", "@code/assurerail"],
+    "omit": "dev",
+    "threshold": "high"
+  },
+  "maximum": {
+    "critical": 0,
+    "high": 0,
+    "moderate": 6,
+    "low": 0
+  },
+  "acceptedModeratePackages": [
+    "@google-cloud/storage",
+    "firebase-admin",
+    "gaxios",
+    "retry-request",
+    "teeny-request",
+    "uuid"
+  ],
+  "owner": "AssureRail security owner",
+  "reviewBy": "2026-10-03",
+  "decision": "Monitor upstream and re-test each dependency change. The affected Google Cloud Storage transport chain is transitive from Firebase Admin; AssureRail imports Firebase authentication only. This is a bounded reachability decision, not a finding closure or a VAPT substitute."
+}
