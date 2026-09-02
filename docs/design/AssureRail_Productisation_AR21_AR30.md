@@ -121,7 +121,19 @@ matched comparison cannot close customer/trustee acceptance, counsel, provider, 
 record or PR-12 controlled-live gates. AssurePlane is one optional assurance provider and is never a
 mandatory dependency.
 
-## 8. Stage evidence and handoff
+## 8. AR-25 acceptance contract
+
+AR-25 adds route-neutral lifecycle plans only after an observe-only DA/PTC completion has reconciled
+with no open completion break. Every ordered obligation names a material function, accountable
+institution, performer class, due time, canonical expected fact and optional exact amount. Signed,
+verified evidence records the assigned performer's actual acknowledgement; a different authorised
+human reconciles it. Mismatches open a durable break and corrections append rather than overwrite.
+
+The slice remains `OBSERVE_ONLY`: it cannot service assets, move funds, deliver legal notices,
+exercise trustee discretion or alter an authoritative register. External performer, payment,
+trustee/recordkeeper and controlled-live acceptance remain open.
+
+## 9. Stage evidence and handoff
 
 Each stage produces:
 

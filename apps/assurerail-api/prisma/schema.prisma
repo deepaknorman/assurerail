@@ -237,6 +237,8 @@ model Institution {
   ptcTokenRecordkeeperRepresentations PtcTokenRepresentation[] @relation("PtcTokenRecordkeeperInstitution")
   ptcTokenAssuranceRepresentations PtcTokenRepresentation[] @relation("PtcTokenAssuranceInstitution")
   ptcTokenEvidenceResponsibilities PtcTokenEvidenceGate[] @relation("PtcTokenGateAccountableInstitution")
+  lifecycleObligations RailLifecycleObligation[] @relation("LifecycleObligationOwnerInstitution")
+  lifecycleBreaks RailLifecycleBreak[] @relation("LifecycleBreakOwnerInstitution")
 
   @@index([status])
   @@index([applicantUserId])
@@ -1402,6 +1404,7 @@ model EvidenceObject {
   tokenLegalFinalityEvidence TokenConnectorBinding[] @relation("TokenLegalFinalityEvidence")
   tokenOperatingAcceptanceEvidence TokenConnectorBinding[] @relation("TokenOperatingAcceptanceEvidence")
   ptcTokenEvidenceGates PtcTokenEvidenceGate[]
+  lifecycleEvents RailLifecycleEvent[]
 
   @@index([institutionId, transactionCaseId])
   @@index([institutionId, status])
@@ -1600,10 +1603,139 @@ model TransactionCase {
   commercialOpportunities CommercialOpportunity[]
   secondaryTransfer       SecondaryTransfer?
   ptcTokenRepresentation  PtcTokenRepresentation?
+  lifecyclePlans          RailLifecyclePlan[]
+  lifecycleBreaks         RailLifecycleBreak[]
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
   @@index([transactionRoute, representation, operatingMode, status])
+}
+
+// ───────────────── route-neutral lifecycle product (AR-25) ─────────────────
+// Observe-only lifecycle facts. These records neither dispatch an external action nor replace the
+// trustee, payment provider, servicer, RTA, depository or other route-defined authoritative record.
+model RailLifecyclePlan {
+  id                    String          @id
+  transactionCaseId     String
+  transactionCase       TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  version               Int
+  periodStartAt         DateTime
+  periodEndAt           DateTime
+  executionMode         String          @default("OBSERVE_ONLY")
+  status                String          @default("ACTIVE") // ACTIVE | BREAK_OPEN | RECONCILED | PAUSED | CLOSED
+  routePackRef          String
+  routePackVersion      String
+  idempotencyKey        String
+  requestDigest         String
+  planDigest            String
+  createdByUserId       String
+  createdByMandateId    String
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @default(now()) @updatedAt
+  reconciledAt          DateTime?
+  obligations           RailLifecycleObligation[]
+  breaks                RailLifecycleBreak[]
+
+  @@unique([transactionCaseId, version])
+  @@unique([transactionCaseId, idempotencyKey])
+  @@index([transactionCaseId, status, periodEndAt])
+}
+
+model RailLifecycleObligation {
+  id                       String            @id
+  lifecyclePlanId          String
+  lifecyclePlan            RailLifecyclePlan @relation(fields: [lifecyclePlanId], references: [id], onDelete: Restrict)
+  obligationKey            String
+  eventType                String
+  sequence                 Int
+  materialFunction         String
+  accountableInstitutionId String
+  accountableInstitution   Institution      @relation("LifecycleObligationOwnerInstitution", fields: [accountableInstitutionId], references: [id], onDelete: Restrict)
+  performerClass           String
+  dueAt                    DateTime
+  required                 Boolean           @default(true)
+  expected                 Json
+  expectedDigest           String
+  amountCurrency           String?
+  amountMinorUnits         String?
+  amountScale              Int?
+  state                    String            @default("PLANNED") // PLANNED | OBSERVED | RECONCILED | BREAK_OPEN | PAUSED
+  currentEventVersion      Int               @default(0)
+  reconciledByUserId       String?
+  reconciliationStepUpId   String?
+  reconciliationReason     String?
+  reconciliationIdempotencyKey String?
+  reconciliationRequestDigest  String?
+  reconciledAt             DateTime?
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @default(now()) @updatedAt
+  events                   RailLifecycleEvent[]
+  breaks                   RailLifecycleBreak[]
+
+  @@unique([lifecyclePlanId, obligationKey])
+  @@unique([lifecyclePlanId, sequence])
+  @@unique([lifecyclePlanId, reconciliationIdempotencyKey], map: "RailLifecycleObligation_plan_reconcile_key")
+  @@index([lifecyclePlanId, state, sequence])
+  @@index([accountableInstitutionId, dueAt, state], map: "RailLifecycleObligation_owner_due_state_idx")
+}
+
+model RailLifecycleEvent {
+  id                    String                  @id
+  lifecycleObligationId String
+  lifecycleObligation   RailLifecycleObligation @relation(fields: [lifecycleObligationId], references: [id], onDelete: Restrict)
+  version               Int
+  idempotencyKey        String
+  requestDigest         String
+  observed              Json
+  observedDigest        String
+  externalReference     String
+  finalityClass         String
+  signatureStatus       String
+  evidenceObjectId      String
+  evidenceObject        EvidenceObject          @relation(fields: [evidenceObjectId], references: [id], onDelete: Restrict)
+  observedAt            DateTime
+  recordedByUserId      String
+  recordedByMandateId   String
+  comparisonResult      String // MATCHED | BREAK_OPEN
+  comparison            Json
+  createdAt             DateTime                @default(now())
+  break                 RailLifecycleBreak?
+
+  @@unique([lifecycleObligationId, version])
+  @@unique([lifecycleObligationId, idempotencyKey])
+  @@index([evidenceObjectId])
+}
+
+model RailLifecycleBreak {
+  id                    String                  @id
+  transactionCaseId     String
+  transactionCase       TransactionCase         @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  lifecyclePlanId       String
+  lifecyclePlan         RailLifecyclePlan        @relation(fields: [lifecyclePlanId], references: [id], onDelete: Restrict)
+  lifecycleObligationId String
+  lifecycleObligation   RailLifecycleObligation  @relation(fields: [lifecycleObligationId], references: [id], onDelete: Restrict)
+  lifecycleEventId      String                  @unique
+  lifecycleEvent        RailLifecycleEvent       @relation(fields: [lifecycleEventId], references: [id], onDelete: Restrict)
+  breakCode             String
+  severity              String
+  expectedDigest        String
+  observedDigest        String
+  blockedCapabilities   Json
+  status                String                  @default("OPEN") // OPEN | RESOLVED
+  ownerInstitutionId    String
+  ownerInstitution      Institution             @relation("LifecycleBreakOwnerInstitution", fields: [ownerInstitutionId], references: [id], onDelete: Restrict)
+  dueAt                 DateTime
+  openedByUserId        String
+  resolutionEvidenceRef String?
+  resolvedByUserId      String?
+  resolvedAt            DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now()) @updatedAt
+
+  @@index([transactionCaseId, status, dueAt])
+  @@index([lifecyclePlanId, status])
+  @@index([lifecycleObligationId, status])
+  @@index([ownerInstitutionId, status, dueAt])
 }
 
 model CaseVersion {

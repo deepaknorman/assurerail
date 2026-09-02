@@ -12,7 +12,8 @@
     "check:ar21": "node scripts/ar21-hosted-alpha-check.mjs",
     "check:ar22": "node scripts/ar22-institutional-product-check.mjs",
     "check:ar23": "node scripts/ar23-da-product-check.mjs",
-    "check:ar24": "node scripts/ar24-ptc-product-check.mjs"
+    "check:ar24": "node scripts/ar24-ptc-product-check.mjs",
+    "check:ar25": "node scripts/ar25-lifecycle-product-check.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^8.3.7",

@@ -12,6 +12,7 @@ import {
   type InstitutionalProductMode,
   type InternalRbacMode,
   type LegacyRoomProxyMode,
+  type LifecycleProductMode,
   type NeutralIngressMode,
   type ParticipantAdmissionMode,
   type PtcProductMode,
@@ -82,6 +83,7 @@ export interface RuntimeEnvironmentProfile {
     institutionalProduct: InstitutionalProductMode;
     daProduct: DaProductMode;
     ptcProduct: PtcProductMode;
+    lifecycleProduct: LifecycleProductMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -279,6 +281,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || persistenceFlags.externalActionSaga !== "required" || persistenceFlags.roomReadSource === "legacy")) {
     errors.push("ARAIL_PTC_PRODUCT_V1=shadow requires institutional product shadow, PTC replay allow-list, required saga and Rail/compare rooms");
   }
+  if (persistenceFlags.lifecycleProduct !== "off"
+    && (persistenceFlags.institutionalProduct !== "shadow" || persistenceFlags.externalActionSaga !== "required"
+      || (persistenceFlags.daProduct !== "shadow" && persistenceFlags.ptcProduct !== "shadow"))) {
+    errors.push("ARAIL_LIFECYCLE_PRODUCT_V1=shadow requires institutional product shadow, required saga and at least one DA/PTC product in shadow");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -336,6 +343,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.ptcProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_PTC_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.lifecycleProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_LIFECYCLE_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -499,6 +509,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         institutionalProduct: persistenceFlags.institutionalProduct,
         daProduct: persistenceFlags.daProduct,
         ptcProduct: persistenceFlags.ptcProduct,
+        lifecycleProduct: persistenceFlags.lifecycleProduct,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

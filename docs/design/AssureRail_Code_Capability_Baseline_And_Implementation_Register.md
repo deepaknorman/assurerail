@@ -1564,6 +1564,34 @@ synthetic fixtures. Design: `docs/design/AssureRail_Conventional_PTC_Product_AR2
 `docs/qa/AssureRail_AR24_Conventional_PTC_Evidence.md`; handoff:
 `docs/runbooks/AssureRail_AR24_Deployer_Handoff.md`.
 
+### AR-25 — Route-neutral lifecycle product
+
+**Dependencies:** AR-22 and a reconciled AR-23 or AR-24 observe-only completion
+
+**AR-25 implementation checkpoint (2 September 2026):** implemented for review under EX-28; not
+deployed or activated. Four additive Rail-owned records define immutable lifecycle plans, ordered
+obligations, append-only observed events and durable reconciliation breaks across DA/PTC and
+conventional/tokenised representations. The route-neutral policy covers collections, servicing,
+waterfalls/distributions, notices, triggers, substitutions/repurchases, defaults and
+maturity/redemption. A plan cannot start without a reconciled observe-only completion and no open
+completion break. Every obligation must match an active case function assignment and named
+accountable institution. Actual facts require current valid, signed, verified, case-scoped evidence
+whose digest matches the observation; exact canonical comparison opens a break on divergence. A
+different authorised human reconciles matched evidence. Corrections append a new event version and
+cannot rewrite the original. Function authority and route entitlement are revalidated for each
+governed operation, evidence is revalidated at reconciliation, acknowledgement finality is exact,
+and API projections omit confidential fact bodies and command/security material. The four
+case-scoped endpoints and lifecycle workspace contain no
+external instruction or dispatch path. API/web flags default off and are limited to replay/shadow.
+External performer, payment/account, trustee/recordkeeper, counsel, VAPT, customer and PR-12 gates
+remain open. The complete API suite passed 329/329 with zero skipped; the AR-25 through PR-18 web
+checks and production web build passed; and a disposable 28-migration PostgreSQL rehearsal proved
+database constraints, authorization/finality rejections, idempotent append-only repair,
+evidence-freshness reconciliation, restrictive history and restore. Design:
+`docs/design/AssureRail_Lifecycle_Product_AR25.md`; evidence:
+`docs/qa/AssureRail_AR25_Lifecycle_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR25_Deployer_Handoff.md`.
+
 ---
 
 ## 9. Test and evidence baseline
