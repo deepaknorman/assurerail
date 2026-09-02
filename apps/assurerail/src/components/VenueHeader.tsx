@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { hostedAlphaEnabled, institutionalProductEnabled, type HostedAlphaTask, type HostedAlphaTaskResponse } from "@/lib/customer-workspace";
+import { guidedJourneyEnabled, hostedAlphaEnabled, institutionalProductEnabled, type HostedAlphaTask, type HostedAlphaTaskResponse } from "@/lib/customer-workspace";
 import { vget, shortDid } from "@/lib/venue";
 import { Logo } from "./Logo";
 
@@ -74,6 +74,7 @@ export function VenueHeader() {
   const initial = (email[0] ?? "?").toUpperCase();
   const nav = [
     ...(activeInstitutionId && process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1 === "shadow" ? [{ href: "/workspace", label: "Workspace" }] : []),
+    ...(activeInstitutionId && guidedJourneyEnabled() ? [{ href: "/workspace/start", label: "Get started" }] : []),
     ...(activeInstitutionId && hostedAlphaEnabled() ? [{ href: "/workspace/tasks", label: "Actions" }] : []),
     ...(activeInstitutionId && institutionalProductEnabled() ? [{ href: "/workspace/institution", label: "Institution" }] : []),
     { href: "/institutions", label: "Institutions" },

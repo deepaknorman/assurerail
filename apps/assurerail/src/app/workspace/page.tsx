@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { type InstitutionWorkspace } from "@/lib/institutions";
-import { activeMandateActions, availability, customerWorkspaceEnabled, enterpriseIntegrationEnabled, hostedAlphaEnabled, hostedAlphaTaskTone, institutionalProductEnabled, primaryVenueProductEnabled, secondaryProductEnabled, tokenisedProductEnabled, type Availability, type HostedAlphaTaskResponse } from "@/lib/customer-workspace";
+import { activeMandateActions, availability, customerWorkspaceEnabled, enterpriseIntegrationEnabled, guidedJourneyEnabled, hostedAlphaEnabled, hostedAlphaTaskTone, institutionalProductEnabled, primaryVenueProductEnabled, secondaryProductEnabled, tokenisedProductEnabled, type Availability, type HostedAlphaTaskResponse } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
 
 type CaseRow = { id: string; caseReference: string; transactionRoute: string; representation: string; assetClass: string; operatingMode: string; status: string; aggregateVersion: number; updatedAt: string };
@@ -55,6 +55,7 @@ export default function CustomerWorkspacePage() {
     {!activeInstitutionId && <div className="msg err">Select an admitted institution before opening its workspace.</div>}
     {error && <div className="msg err" role="alert">{error}</div>}
     {enabled && institution && <>
+      {guidedJourneyEnabled() && <section className="panel hosted-alpha-summary"><div className="workspace-module-head"><div><span className="workspace-step">START</span><h2>Guided replay or shadow setup</h2></div><Link className="btn btn-primary" href="/workspace/start">Choose the route</Link></div><p>Translate your institution, transaction route and proof objective into a visible readiness path. The guide does not create authority or submit a transaction.</p></section>}
       <section className="workspace-hero" aria-label="Institution authority summary">
         <div><span className="workspace-label">Relationship</span><strong>{currentMember?.membershipRole ?? "No active membership"}</strong><small>{institution.institution.admission?.status ?? "NO_ADMISSION"} · {institution.institution.status}</small></div>
         <div><span className="workspace-label">Active mandates</span><strong>{mandateActions.size}</strong><small>Server-enforced actions</small></div>

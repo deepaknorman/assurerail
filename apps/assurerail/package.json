@@ -10,6 +10,7 @@
     "clean": "rm -rf .next",
     "check:cx00": "node scripts/cx00-capability-baseline-check.mjs",
     "check:pub00": "node scripts/pub00-public-claims-check.mjs",
+    "check:cx01-sim01": "node scripts/cx01-sim01-check.mjs",
     "check:pr18": "node scripts/pr18-customer-workspace-check.mjs",
     "check:ar21": "node scripts/ar21-hosted-alpha-check.mjs",
     "check:ar22": "node scripts/ar22-institutional-product-check.mjs",

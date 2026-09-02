@@ -19,6 +19,9 @@ export const ENTERPRISE_INTEGRATION_FLAG =
   "NEXT_PUBLIC_ASSURERAIL_ENTERPRISE_INTEGRATION_V1";
 export const PRODUCTION_SCALE_FLAG =
   "NEXT_PUBLIC_ASSURERAIL_PRODUCTION_SCALE_V1";
+export const GUIDED_JOURNEY_FLAG =
+  "NEXT_PUBLIC_ASSURERAIL_GUIDED_JOURNEY_V1";
+export const SANDBOX_FLAG = "NEXT_PUBLIC_ASSURERAIL_SANDBOX_V1";
 
 export function customerWorkspaceEnabled(
   value = process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1
@@ -88,6 +91,18 @@ export function enterpriseIntegrationEnabled(
 
 export function productionScaleEnabled(
   value = process.env.NEXT_PUBLIC_ASSURERAIL_PRODUCTION_SCALE_V1
+): boolean {
+  return value?.trim().toLowerCase() === "shadow";
+}
+
+export function guidedJourneyEnabled(
+  value = process.env.NEXT_PUBLIC_ASSURERAIL_GUIDED_JOURNEY_V1
+): boolean {
+  return value?.trim().toLowerCase() === "shadow";
+}
+
+export function sandboxEnabled(
+  value = process.env.NEXT_PUBLIC_ASSURERAIL_SANDBOX_V1
 ): boolean {
   return value?.trim().toLowerCase() === "shadow";
 }
