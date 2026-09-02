@@ -150,10 +150,26 @@ The slice remains `REPLAY/SHADOW` only. Function-by-function counsel, conduct an
 performer gates remain open, and no payment, title, issue, allotment, register, token or external
 instruction is emitted.
 
-## 10. Cumulative verification and stage evidence
+## 10. AR-27 acceptance contract
 
-`docs/qa/AssureRail_PR01_AR26_Integrated_Release_Audit.md` is the cumulative release-candidate
-checkpoint. `scripts/assurerail-integrated-release-check.sh --code` repeats the compile, complete API
+AR-27 turns the PR-14 observation layer into a conventional DA/PTC secondary register and guided
+case journey. It requires current-holder/prior-chain, restriction/consent, seller authority,
+executed-document, exact cash-observation and before/after authoritative-record evidence; PTC retains
+a separate trustee transaction-control fact. Seller proposal/review and break-owner repair/review
+use independent humans, scoped mandates, purpose-bound step-up and idempotency.
+
+Corrections append a new verified evidence version and preserve the original break. Comparison CSV
+and digest-bound evidence-pack exports require evidence authority and assert no legal effect. The
+slice remains `OBSERVE_ONLY` in replay/shadow, with no trade execution, funds/title/token/notice or
+register mutation. Counsel, participant, trustee/recordkeeper, VAPT and controlled-live acceptance
+remain open external gates.
+
+## 11. Cumulative verification and stage evidence
+
+`docs/qa/AssureRail_PR01_AR26_Integrated_Release_Audit.md` is the preceding cumulative
+release-candidate checkpoint; `docs/qa/AssureRail_AR27_Conventional_Secondary_Product_Evidence.md`
+records the additive AR-27 code gate and database rehearsal. The cumulative
+`scripts/assurerail-integrated-release-check.sh --code` repeats the compile, complete API
 corpus, invariant checks, all web boundary checks and production web build; `--full` also runs every
 available disposable PostgreSQL migration/service/restore rehearsal. Neither mode closes an external
 gate.

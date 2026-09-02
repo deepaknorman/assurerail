@@ -1615,7 +1615,37 @@ review, corrections, test scope and open gates are recorded in
 `docs/qa/AssureRail_AR26_Primary_Venue_Evidence.md`; handoff:
 `docs/runbooks/AssureRail_AR26_Deployer_Handoff.md`.
 
-AR-27–AR-30 remain unimplemented product stages. This checkpoint does not approve controlled-live
+### AR-27 — Conventional DA/PTC secondary product
+
+**Dependencies:** AR-22–AR-26 and PR-14
+
+**AR-27 implementation checkpoint (2 September 2026):** implemented for review under EX-28; not
+deployed or activated. The PR-14 observation layer now has an institution-scoped secondary register
+and guided DA/PTC case journey covering current holder, prior chain, transfer restrictions,
+consents/notices, seller authority, executed documents, exact cash observations, independent seller
+review and authoritative-record reconciliation. PTC retains a distinct trustee-control stage and a
+trustee decision cannot replace its route-defined RTA/depository/register fact.
+
+The additive `SecondaryTransferRepair` record provides idempotent, purpose-bound, maker-checker
+correction owned by the accountable break institution. Approval appends a new signed, verified,
+current evidence version; it never rewrites the earlier evidence or erases the original break.
+Evidence linking now also proves payload-digest equality, verified signature, active provider and
+current owner/grant visibility. `VIEW_CASE` without `VIEW_EVIDENCE` receives redacted secondary
+records; CSV and digest-bound JSON evidence packs require both permissions and assert no legal
+effect. API/web flags default `off`, accept only `shadow`, and require the institutional,
+conventional-secondary, saga, internal-RBAC and applicable DA/PTC product foundations. No live
+capability ID or external instruction was added.
+
+The complete API suite passed 341/341 with zero skipped; all eight current web boundary checks and
+the 22-page production build passed. A disposable PostgreSQL rehearsal applied all 30 migrations,
+proved idempotent maker-checker repair through the real service, appended rather than replaced
+evidence, reconciled the retained break, and passed restrictive-history, schema-parity and
+backup/restore checks. The rehearsal is synthetic software evidence only. Design:
+`docs/design/AssureRail_Conventional_Secondary_Product_AR27.md`; evidence:
+`docs/qa/AssureRail_AR27_Conventional_Secondary_Product_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR27_Deployer_Handoff.md`.
+
+AR-28–AR-30 remain unimplemented product stages. This checkpoint does not approve controlled-live
 or production operation.
 
 ---

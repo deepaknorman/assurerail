@@ -232,6 +232,7 @@ model Institution {
   customerDataExitExports  CustomerDataExitExport[]
   secondaryTransferEvidence   SecondaryTransferEvidence[]
   secondaryTransferBreaks     SecondaryTransferBreak[] @relation("SecondaryTransferBreakOwnerInstitution")
+  secondaryTransferRepairs    SecondaryTransferRepair[] @relation("SecondaryTransferRepairProviderInstitution")
   tokenCustodyAssignments     TokenConnectorBinding[] @relation("TokenCustodyInstitution")
   ptcTokenTrusteeRepresentations PtcTokenRepresentation[] @relation("PtcTokenTrusteeInstitution")
   ptcTokenRecordkeeperRepresentations PtcTokenRepresentation[] @relation("PtcTokenRecordkeeperInstitution")
@@ -1402,6 +1403,7 @@ model EvidenceObject {
   authoritativeRecordDeclarations AuthoritativeRecordDeclaration[] @relation("DaRecordDeclarationEvidence")
   tokenReconciliationSnapshots TokenReconciliationSnapshot[]
   secondaryTransferEvidence SecondaryTransferEvidence[]
+  secondaryTransferRepairs SecondaryTransferRepair[]
   tokenCustodyEvidence TokenConnectorBinding[] @relation("TokenCustodyEvidence")
   tokenLegalFinalityEvidence TokenConnectorBinding[] @relation("TokenLegalFinalityEvidence")
   tokenOperatingAcceptanceEvidence TokenConnectorBinding[] @relation("TokenOperatingAcceptanceEvidence")
@@ -3469,12 +3471,45 @@ model SecondaryTransferBreak {
   status                String            @default("OPEN") // OPEN | RESOLVED
   detail                Json
   openedByUserId        String
+  repairs               SecondaryTransferRepair[]
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now()) @updatedAt
 
   @@unique([secondaryTransferId, breakCode], map: "SecondaryTransferBreak_transfer_code_key")
   @@index([secondaryTransferId, status, severity], map: "SecondaryTransferBreak_transfer_status_severity_idx")
   @@index([ownerInstitutionId, status, createdAt])
+}
+
+model SecondaryTransferRepair {
+  id                         String                 @id
+  secondaryTransferBreakId   String
+  secondaryTransferBreak     SecondaryTransferBreak @relation(fields: [secondaryTransferBreakId], references: [id], onDelete: Restrict)
+  replacementEvidenceType    String
+  providerInstitutionId      String
+  providerInstitution        Institution            @relation("SecondaryTransferRepairProviderInstitution", fields: [providerInstitutionId], references: [id], onDelete: Restrict)
+  evidenceObjectId           String
+  evidenceObject             EvidenceObject         @relation(fields: [evidenceObjectId], references: [id], onDelete: Restrict)
+  assertionDigest            String
+  authorityEvidenceRef       String
+  idempotencyKey             String
+  requestDigest              String
+  status                     String                 @default("PROPOSED") // PROPOSED | APPROVED | REJECTED
+  proposedByUserId           String
+  proposedByMandateId        String
+  proposalStepUpId           String
+  reviewedByUserId           String?
+  reviewedByMandateId        String?
+  reviewStepUpId             String?
+  reviewReason               String?
+  appliedEvidenceRecordId    String?                @unique
+  proposedAt                 DateTime               @default(now())
+  reviewedAt                 DateTime?
+  createdAt                  DateTime               @default(now())
+  updatedAt                  DateTime               @default(now()) @updatedAt
+
+  @@unique([secondaryTransferBreakId, idempotencyKey], map: "SecondaryTransferRepair_break_idem_key")
+  @@index([secondaryTransferBreakId, status, createdAt], map: "SecondaryTransferRepair_break_status_created_idx")
+  @@index([evidenceObjectId])
 }
 
 /// Append-only, hash-chained audit trail. Written via a single-writer/advisory-locked append so

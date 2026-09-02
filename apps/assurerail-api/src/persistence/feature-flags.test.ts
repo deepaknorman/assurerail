@@ -29,6 +29,7 @@ test("[PR02][FLAGS] persistence paths default to inert/legacy-compatible values"
     ptcProduct: "off",
     lifecycleProduct: "off",
     primaryVenueProduct: "off",
+    secondaryProduct: "off",
     internalRbac: "off",
     errors: [],
   });
@@ -61,6 +62,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_PTC_PRODUCT_V1: "SHADOW",
     ARAIL_LIFECYCLE_PRODUCT_V1: "SHADOW",
     ARAIL_PRIMARY_VENUE_PRODUCT_V1: "SHADOW",
+    ARAIL_SECONDARY_PRODUCT_V1: "SHADOW",
     ARAIL_INTERNAL_RBAC_V1: "SHADOW",
   }), {
     neutralIngress: "shadow",
@@ -88,6 +90,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ptcProduct: "shadow",
     lifecycleProduct: "shadow",
     primaryVenueProduct: "shadow",
+    secondaryProduct: "shadow",
     internalRbac: "shadow",
     errors: [],
   });
@@ -117,6 +120,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_PTC_PRODUCT_V1: "enabled",
     ARAIL_LIFECYCLE_PRODUCT_V1: "enabled",
     ARAIL_PRIMARY_VENUE_PRODUCT_V1: "enabled",
+    ARAIL_SECONDARY_PRODUCT_V1: "enabled",
     ARAIL_INTERNAL_RBAC_V1: "enabled",
   });
   assert.equal(rejected.neutralIngress, "off");
@@ -143,7 +147,8 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
   assert.equal(rejected.ptcProduct, "off");
   assert.equal(rejected.lifecycleProduct, "off");
   assert.equal(rejected.primaryVenueProduct, "off");
+  assert.equal(rejected.secondaryProduct, "off");
   assert.equal(rejected.institutionalProduct, "off");
   assert.equal(rejected.internalRbac, "off");
-  assert.equal(rejected.errors.length, 25);
+  assert.equal(rejected.errors.length, 26);
 });
