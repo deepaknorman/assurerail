@@ -27,6 +27,7 @@ import {
   type DaReplayNoticePlan,
 } from "./da-route-pack";
 import { daReplayCsvCell } from "./da-replay-export";
+import { deriveDaProductJourney } from "./da-product";
 
 const FINALITY_CLASSES = ["FINAL"] as const;
 const SIGNATURE_STATUSES = ["VERIFIED"] as const;
@@ -39,6 +40,13 @@ function enabled(): void {
     flags.daReplay !== "allow_list"
   ) {
     throw new ForbiddenException("conventional DA replay is disabled");
+  }
+}
+
+function productEnabled(): void {
+  enabled();
+  if (inspectPersistenceFlags(process.env).daProduct !== "shadow") {
+    throw new ForbiddenException("conventional DA product journey is disabled");
   }
 }
 
@@ -174,6 +182,100 @@ export class DaReplayService {
     private readonly access: InstitutionAccessService,
     private readonly stepUp: StepUpService
   ) {}
+
+  async productOverview(actor: RoomActor, caseId: string) {
+    productEnabled();
+    const { transactionCase } = await this.requireCase(actor, caseId, "VIEW_CASE");
+    this.assertDaRoute(transactionCase);
+    const now = new Date();
+    const canOperateCase = await this.may(actor, caseId, "OPERATE_CASE");
+    const canOperateRoute = await this.may(actor, caseId, "OPERATE_ROUTE");
+    const canViewEvidence = await this.may(actor, caseId, "VIEW_EVIDENCE", "INSTITUTION");
+    const canViewRooms = await this.may(actor, caseId, "VIEW_CASE_ROOM");
+    const owner = transactionCase.ownerInstitutionId === actor.actingInstitutionId;
+    const [detail, authorisation, evidence, rooms, sources, sagas, breaks] = await Promise.all([
+      this.db.transactionCase.findUniqueOrThrow({
+        where: { id: caseId },
+        select: {
+          id: true, caseReference: true, ownerInstitutionId: true, transactionRoute: true,
+          representation: true, operatingMode: true, status: true, routeState: true,
+          routePackRef: true, routePackVersion: true, aggregateVersion: true, evidenceLockedAt: true,
+          parties: { orderBy: { partyRole: "asc" }, select: { id: true, institutionId: true, partyRole: true, status: true } },
+          functionAssignments: { orderBy: { materialFunction: "asc" }, select: { id: true, materialFunction: true, performer: true, performerInstitutionId: true, status: true } },
+          conditions: { orderBy: { code: "asc" }, select: { id: true, code: true, conditionKind: true, status: true, ownerInstitutionId: true, dueAt: true } },
+          decisions: { orderBy: { createdAt: "asc" }, select: { id: true, decisionType: true, status: true } },
+        },
+      }),
+      this.db.daReplayAuthorisation.findUnique({ where: { transactionCaseId: caseId }, select: { id: true, status: true, authorityEvidenceRef: true, reason: true, proposedByUserId: true, reviewedByUserId: true, reviewReason: true, effectiveAt: true, createdAt: true } }),
+      canViewEvidence ? this.db.evidenceObject.findMany({
+        where: {
+          transactionCaseId: caseId,
+          OR: [
+            { institutionId: actor.actingInstitutionId },
+            { grants: { some: { granteeInstitutionId: actor.actingInstitutionId, status: "ACTIVE", OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } } },
+          ],
+        },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, institutionId: true, evidenceType: true, purpose: true, status: true, currentVersion: true, retentionUntilAt: true, legalHold: true, versions: { orderBy: { version: "desc" }, take: 1, select: { id: true, version: true, payloadDigest: true, signatureStatus: true, result: true, validationStatus: true, sourceAsOfAt: true, expiresAt: true, qualifications: true } } },
+      }) : Promise.resolve(null),
+      canViewRooms ? this.db.caseRoom.findMany({
+        where: owner
+          ? { transactionCaseId: caseId }
+          : { transactionCaseId: caseId, grants: { some: { granteeInstitutionId: actor.actingInstitutionId, status: "ACTIVE", OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] } } },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, purpose: true, status: true, policyVersion: true, sourceManifestDigest: true, openedAt: true, closedAt: true },
+      }) : Promise.resolve(null),
+      canViewEvidence ? this.db.sourceReference.findMany({ where: { transactionCaseId: caseId, institutionId: actor.actingInstitutionId }, orderBy: { createdAt: "asc" }, select: { id: true, sourceSystem: true, sourceObjectType: true, sourceObjectId: true, sourceVersion: true, payloadDigest: true, authoritativeStatus: true } }) : Promise.resolve(null),
+      this.db.settlementSaga.findMany({ where: { transactionCaseId: caseId, transactionRoute: "DA" }, orderBy: { sagaVersion: "asc" }, select: {
+        id: true, sagaVersion: true, state: true, executionMode: true, routePackRef: true, routePackVersion: true,
+        planDigest: true, routeEvidenceBundleDigest: true, legalMechanism: true, considerationCurrency: true,
+        considerationMinorUnits: true, considerationScale: true, historicOutcomeRef: true, historicOutcomeDigest: true,
+        createdAt: true, reconciledAt: true,
+        legs: { orderBy: { sequence: "asc" }, select: { id: true, legKey: true, legType: true, sequence: true, required: true, participantOwnerInstitutionId: true, performerClass: true, expectedDigest: true, state: true, currentObservationVersion: true, reconciledAt: true, observations: { orderBy: { version: "asc" }, select: { id: true, version: true, observationDigest: true, externalReference: true, finalityClass: true, signatureStatus: true, observedAt: true, comparisonResult: true, createdAt: true } } } },
+      } }),
+      this.db.reconciliationBreak.findMany({ where: { transactionCaseId: caseId }, orderBy: [{ status: "asc" }, { dueAt: "asc" }], select: { id: true, settlementSagaId: true, settlementLegId: true, breakCode: true, severity: true, status: true, ownerInstitutionId: true, dueAt: true, expectedDigest: true, observedDigest: true, createdAt: true, resolvedAt: true, repairActions: { orderBy: { proposedAt: "asc" }, select: { id: true, status: true, actionType: true, reason: true, proposedByUserId: true, reviewedByUserId: true, reviewReason: true, proposedAt: true, reviewedAt: true, appliedAt: true } } } }),
+    ]);
+    const evidenceSatisfied = (type: string) => evidence?.some((item) => {
+      const latest = item.versions[0];
+      return item.evidenceType === type && item.status === "AVAILABLE" && latest?.validationStatus === "VALID"
+        && latest.result === "VERIFIED" && latest.signatureStatus === "VERIFIED"
+        && (!latest.expiresAt || latest.expiresAt > now);
+    }) ?? false;
+    const activeParties = new Set(detail.parties.filter((item) => item.status === "ACTIVE").map((item) => item.partyRole));
+    const validEvidenceCount = evidence?.filter((item) => {
+      const latest = item.versions[0];
+      return item.status === "AVAILABLE" && latest?.validationStatus === "VALID"
+        && latest.signatureStatus === "VERIFIED" && (!latest.expiresAt || latest.expiresAt > now);
+    }).length ?? 0;
+    const currentSaga = sagas.at(-1) ?? null;
+    const requiredLegs = currentSaga?.legs.filter((item) => item.required) ?? [];
+    const observed = requiredLegs.filter((item) => ["OBSERVED", "RECONCILED"].includes(item.state)).length;
+    const reconciled = requiredLegs.filter((item) => item.state === "RECONCILED").length;
+    const openBreaks = breaks.filter((item) => item.status !== "RESOLVED").length;
+    const journey = deriveDaProductJourney({
+      canViewEvidence, canViewRooms, sourceCount: sources?.length ?? 0,
+      evidenceCount: evidence?.length ?? 0, validEvidenceCount, roomCount: rooms?.length ?? 0,
+      hasOpenRoom: rooms?.some((item) => item.status === "OPEN") ?? false,
+      hasCompletedRoom: rooms?.some((item) => item.status === "CLOSED") ?? false,
+      creditEvidenceSatisfied: evidenceSatisfied("TRANSFEREE_CREDIT_DECISION"),
+      documentEvidenceSatisfied: evidenceSatisfied("EXECUTED_TRANSFER_DOCUMENT"),
+      caseStatus: detail.status,
+      requiredPartiesActive: activeParties.has("TRANSFEROR") && activeParties.has("TRANSFEREE"),
+      authorisationStatus: authorisation?.status ?? null, sagaPresent: Boolean(currentSaga),
+      requiredLegCount: requiredLegs.length, observedLegCount: observed,
+      reconciledLegCount: reconciled, openBreakCount: openBreaks,
+      recordkeeperReconciled: requiredLegs.some((item) => item.legType === "AUTHORITATIVE_REGISTER_UPDATE" && item.state === "RECONCILED"),
+    });
+    return {
+      generatedAt: now.toISOString(), operatingBoundary: "OBSERVE_ONLY", case: detail,
+      authorityNotice: "AssureRail coordinates and records this conventional DA journey. Participant and recordkeeper acknowledgements remain controlling; Rail performs no funds, title, notice or register act in this mode.",
+      capabilities: { canOperateCase, canOperateRoute, canViewEvidence, canViewRooms, canGovernReplay: owner && canOperateCase },
+      ...journey,
+      authorisation, evidence: evidence === null ? { availability: "UNAVAILABLE", items: [] } : { availability: "AVAILABLE", items: evidence },
+      rooms: rooms === null ? { availability: "UNAVAILABLE", items: [] } : { availability: "AVAILABLE", items: rooms },
+      sources: sources === null ? { availability: "UNAVAILABLE", items: [] } : { availability: "AVAILABLE", items: sources }, sagas, breaks,
+    };
+  }
 
   async getAuthorisation(actor: RoomActor, caseId: string) {
     await this.requireCase(actor, caseId, "VIEW_CASE");
@@ -2031,6 +2133,27 @@ export class DaReplayService {
     if (result.transactionCase.ownerInstitutionId !== actor.actingInstitutionId)
       throw new ForbiddenException("only the case owner may govern DA replay");
     return result;
+  }
+
+  private async may(
+    actor: RoomActor,
+    caseId: string,
+    action: "OPERATE_CASE" | "OPERATE_ROUTE" | "VIEW_EVIDENCE" | "VIEW_CASE_ROOM",
+    scopeType = "TRANSACTION_CASE"
+  ): Promise<boolean> {
+    try {
+      await this.access.requireHuman({
+        userId: actor.actorUserId,
+        institutionId: actor.actingInstitutionId,
+        action,
+        scopeType,
+        scopeRef: scopeType === "TRANSACTION_CASE" ? caseId : undefined,
+      });
+      return true;
+    } catch (error) {
+      if (error instanceof ForbiddenException) return false;
+      throw error;
+    }
   }
 
   private assertDaRoute(transactionCase: {

@@ -1500,6 +1500,37 @@ backup/restore. Design:
 `docs/qa/AssureRail_AR22_Institutional_Product_Evidence.md`; handoff:
 `docs/runbooks/AssureRail_AR22_Deployer_Handoff.md`.
 
+### AR-23 — Conventional DA customer journey
+
+**Dependencies:** AR-21/22, PR-05–09 and PR-12's activation boundary
+
+Productise the conventional-DA replay foundation as a single case-scoped journey without changing
+its partner-executed, observe-only legal perimeter.
+
+**AR-23 implementation checkpoint (2 September 2026):** implemented for review under EX-28; not
+deployed or activated. The DA product overview derives ten stages from scoped source, evidence,
+room, party, function, approval, authorisation, saga, observation, break and reconciliation records.
+The new `/workspace/cases/[caseId]/da` journey supports maker/checker replay authorisation, immutable
+saga planning, assigned-partner observation, independent reconciliation, append-only break repair
+and authenticated comparison/evidence-pack downloads. Client idempotency keys survive ambiguous
+retry. Source identifiers require `VIEW_EVIDENCE` plus source ownership; evidence identifiers
+require `VIEW_EVIDENCE` plus ownership/current grant;
+non-owner rooms require current named grants; aggregate output excludes bytes/storage, secrets,
+step-up references and expected/observed payload bodies. The product always retains counsel,
+participant, performer, recordkeeper and PR-12 acceptance as separate external gates. API and web
+flags default off, are shadow-only and have no live capability ID. No new schema or external dispatch
+path is introduced. An open room is in progress rather than completed; an empty-leg saga fails
+closed; case approval also requires active transferor/transferee parties; and internal replay
+approval leaves participant external acceptance open. The complete API suite passed 312/312 with
+zero skipped; AR-23/AR-22/AR-21/PR-18 web checks and the production web build passed. A disposable
+PostgreSQL rehearsal applied all 27 migrations and proved PR-09 one-plan/idempotency constraints,
+append-only observations, restrictive evidence history, additive upgrade, schema parity and
+backup/restore. Real historic-DA owner evidence, customer acceptance, VAPT, counsel route
+ratification, live shadow comparison and controlled-live approval remain open. Design:
+`docs/design/AssureRail_Conventional_DA_Product_AR23.md`; evidence:
+`docs/qa/AssureRail_AR23_Conventional_DA_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR23_Deployer_Handoff.md`.
+
 ---
 
 ## 9. Test and evidence baseline

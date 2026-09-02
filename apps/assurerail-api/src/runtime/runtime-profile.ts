@@ -3,6 +3,7 @@ import {
   type CompletionAcknowledgementMode,
   type ConventionalSecondaryMode,
   type CustomerOperationsMode,
+  type DaProductMode,
   type DurableRelayMode,
   type DaReplayMode,
   type DeveloperPortalMode,
@@ -78,6 +79,7 @@ export interface RuntimeEnvironmentProfile {
     customerOperations: CustomerOperationsMode;
     hostedAlpha: HostedAlphaMode;
     institutionalProduct: InstitutionalProductMode;
+    daProduct: DaProductMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -265,6 +267,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || persistenceFlags.developerPortal !== "shadow" || persistenceFlags.internalRbac === "off")) {
     errors.push("ARAIL_INSTITUTIONAL_PRODUCT_V1=shadow requires hosted alpha, participant admission and developer portal in shadow plus internal RBAC");
   }
+  if (persistenceFlags.daProduct !== "off"
+    && (persistenceFlags.institutionalProduct !== "shadow" || persistenceFlags.daReplay !== "allow_list"
+      || persistenceFlags.externalActionSaga !== "required" || persistenceFlags.roomReadSource === "legacy")) {
+    errors.push("ARAIL_DA_PRODUCT_V1=shadow requires institutional product shadow, DA replay allow-list, required saga and Rail/compare rooms");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -316,6 +323,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.institutionalProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_INSTITUTIONAL_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.daProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_DA_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -477,6 +487,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         customerOperations: persistenceFlags.customerOperations,
         hostedAlpha: persistenceFlags.hostedAlpha,
         institutionalProduct: persistenceFlags.institutionalProduct,
+        daProduct: persistenceFlags.daProduct,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

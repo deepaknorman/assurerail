@@ -30,7 +30,7 @@ function endpoints(controller: abstract new (...args: never[]) => object) {
 
 test("[PR09][ENDPOINTS] DA replay is case-scoped and exposes governance, saga, repair and export separately", () => {
   const found = endpoints(DaReplayController);
-  assert.equal(found.length, 13);
+  assert.equal(found.length, 14);
   assert.ok(
     found.every((entry) =>
       entry.path.startsWith("/v1/rail/cases/:caseId/da-replay")
@@ -72,6 +72,11 @@ test("[PR09][ENDPOINTS] DA replay is case-scoped and exposes governance, saga, r
   assert.ok(
     found.some(
       (entry) => entry.method === "GET" && entry.path.endsWith("/evidence-pack")
+    )
+  );
+  assert.ok(
+    found.some(
+      (entry) => entry.method === "GET" && entry.path.endsWith("/product-overview")
     )
   );
 });

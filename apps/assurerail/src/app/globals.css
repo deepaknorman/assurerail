@@ -304,6 +304,7 @@ textarea.field { min-height: 72px; resize: vertical; }
 .boundary-note { border: 1px solid var(--arail-warning-border); border-radius: var(--arail-radius-sm); background: var(--arail-warning-bg); color: var(--arail-warning-text); font-size: 12px; line-height: 1.5; padding: 10px 12px; margin-top: 10px; }
 .governance-ceremony { border-left: 3px solid var(--arail-accent-text); }
 .governance-code { max-width: 180px; }
+.mono-json { width: 100%; resize: vertical; font-family: var(--arail-font-mono); font-size: 11px; line-height: 1.55; }
 .review-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; margin-top: 10px; }
 .breakable { overflow-wrap: anywhere; word-break: break-word; }
 .institution-admin-layout { display: grid; grid-template-columns: minmax(240px, .7fr) minmax(0, 2fr); gap: 18px; align-items: start; }

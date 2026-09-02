@@ -41,6 +41,11 @@ function context(req: RailRequest): RoomActor {
 export class DaReplayController {
   constructor(private readonly replay: DaReplayService) {}
 
+  @Get("product-overview")
+  productOverview(@Req() req: RailRequest, @Param("caseId") caseId: string) {
+    return this.replay.productOverview(context(req), caseId);
+  }
+
   @Get("authorisation")
   authorisation(@Req() req: RailRequest, @Param("caseId") caseId: string) {
     return this.replay.getAuthorisation(context(req), caseId);

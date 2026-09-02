@@ -94,7 +94,19 @@ It provides:
 Real identity-provider validation, login mapping, client-secret issuance, customer acceptance and
 executed exit remain AR-29 or external evidence. Approval in AR-22 cannot silently perform them.
 
-## 6. Stage evidence and handoff
+## 6. AR-23 acceptance contract
+
+AR-23 must present one conventional-DA customer journey over the proven PR-09 controls. It includes
+intake, diligence, transferee-owned credit decision, executed documentation, governed replay
+authority, immutable completion planning, partner observations, reconciliation, append-only repair
+and downloadable dossier. Evidence and room visibility remain separately scoped. Expected facts are
+never offered as observed facts.
+
+The slice is `OBSERVE_ONLY`: it cannot dispatch funds, title, notices, source-system updates or
+authoritative-register updates. Counsel route ratification, participant/operator acknowledgements,
+recordkeeper confirmation and PR-12 controlled-live acceptance remain independent external gates.
+
+## 7. Stage evidence and handoff
 
 Each stage produces:
 
