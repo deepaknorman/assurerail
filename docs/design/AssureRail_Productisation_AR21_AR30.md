@@ -164,11 +164,31 @@ slice remains `OBSERVE_ONLY` in replay/shadow, with no trade execution, funds/ti
 register mutation. Counsel, participant, trustee/recordkeeper, VAPT and controlled-live acceptance
 remain open external gates.
 
-## 11. Cumulative verification and stage evidence
+## 11. AR-28 acceptance contract
+
+AR-28 productises the PR-11/15 tokenised-DA adapter and PR-16 tokenised-PTC shadow route without
+merging them. One institution-scoped register opens a route-specific case cockpit. DA links a Note
+only as a mirror, records authenticated observe-only action results and performs four-way token
+supply/holding/economic-interest/authoritative-record reconciliation. PTC retains programme, trust,
+class, trustee, recordkeeper and optional assurance-provider boundaries, 14 current external
+evidence gates, independent review and five dormant action plans.
+
+The product derives state from existing governed records and adds no duplicate product-status
+schema. Evidence IDs/digests and the digest-bound export require `VIEW_EVIDENCE`; ordinary case
+visibility remains redacted. Token legal finality, custody, connector/provider acceptance,
+authoritative-record acceptance and PR-12 controlled-live approval remain open external gates.
+`ARAIL_TOKENISED_PRODUCT_V1=shadow` is replay/shadow-only and requires both route products,
+lifecycle, tokenised DA allow-list, tokenised PTC shadow, saga and internal-RBAC foundations. It adds
+no live capability, external dispatch or authority claim.
+
+## 12. Cumulative verification and stage evidence
 
 `docs/qa/AssureRail_PR01_AR26_Integrated_Release_Audit.md` is the preceding cumulative
 release-candidate checkpoint; `docs/qa/AssureRail_AR27_Conventional_Secondary_Product_Evidence.md`
-records the additive AR-27 code gate and database rehearsal. The cumulative
+records the additive AR-27 code gate and database rehearsal. AR-28 design and boundaries are in
+`docs/design/AssureRail_Tokenised_Route_Product_AR28.md`, with implementation evidence in
+`docs/qa/AssureRail_AR28_Tokenised_Route_Product_Evidence.md` and deployer handoff in
+`docs/runbooks/AssureRail_AR28_Deployer_Handoff.md`. The cumulative
 `scripts/assurerail-integrated-release-check.sh --code` repeats the compile, complete API
 corpus, invariant checks, all web boundary checks and production web build; `--full` also runs every
 available disposable PostgreSQL migration/service/restore rehearsal. Neither mode closes an external

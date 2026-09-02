@@ -76,6 +76,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     lifecycleProduct: "off",
     primaryVenueProduct: "off",
     secondaryProduct: "off",
+    tokenisedProduct: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -588,6 +589,28 @@ test("[CONFIG][AR27] secondary product requires the governed conventional-second
   assert.equal(accepted.profile.features.secondaryProduct, "shadow");
   const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_SECONDARY_PRODUCT_V1: "shadow" });
   assert.match(live.errors.join("\n"), /ARAIL_SECONDARY_PRODUCT_V1 is available only in REPLAY or SHADOW/);
+});
+
+test("[CONFIG][AR28] tokenised product requires both governed routes, lifecycle and token mirror foundations", () => {
+  const missing = inspectRuntimeEnvironment({ ASSURERAIL_OPERATING_MODE: "SHADOW", ARAIL_TOKENISED_PRODUCT_V1: "shadow" });
+  assert.match(missing.errors.join("\n"), /requires institutional, DA, PTC and lifecycle products in shadow; tokenised DA allow-list; tokenised PTC shadow; required saga; and internal RBAC/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW", DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE, ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_DURABLE_RELAY_MODE: "shadow", ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow", ARAIL_ROOM_READ_SOURCE: "compare",
+    ARAIL_EXTERNAL_ACTION_SAGA_V1: "required", ARAIL_DA_REPLAY_V1: "allow-list",
+    ARAIL_PTC_REPLAY_V1: "allow-list", ARAIL_TOKENISED_DA_V1: "allow-list",
+    ARAIL_TOKENISED_PTC_V1: "shadow", ARAIL_DEVELOPER_PORTAL_V1: "shadow",
+    ARAIL_INTERNAL_RBAC_V1: "shadow", ARAIL_HOSTED_ALPHA_V1: "shadow",
+    ARAIL_INSTITUTIONAL_PRODUCT_V1: "shadow", ARAIL_DA_PRODUCT_V1: "shadow",
+    ARAIL_PTC_PRODUCT_V1: "shadow", ARAIL_LIFECYCLE_PRODUCT_V1: "shadow",
+    ARAIL_TOKENISED_PRODUCT_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.tokenisedProduct, "shadow");
+  const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_TOKENISED_PRODUCT_V1: "shadow" });
+  assert.match(live.errors.join("\n"), /ARAIL_TOKENISED_PRODUCT_V1 is available only in REPLAY or SHADOW/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {

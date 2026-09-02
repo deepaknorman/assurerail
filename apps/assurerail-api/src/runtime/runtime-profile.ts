@@ -25,6 +25,7 @@ import {
   type RoomWriteSource,
   type TransactionCaseMode,
   type TokenisedDaMode,
+  type TokenisedProductMode,
   type TokenisedPtcMode,
   type VenueConductMode,
 } from "../persistence/feature-flags";
@@ -88,6 +89,7 @@ export interface RuntimeEnvironmentProfile {
     lifecycleProduct: LifecycleProductMode;
     primaryVenueProduct: PrimaryVenueProductMode;
     secondaryProduct: SecondaryProductMode;
+    tokenisedProduct: TokenisedProductMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -302,6 +304,13 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || (persistenceFlags.daProduct !== "shadow" && persistenceFlags.ptcProduct !== "shadow"))) {
     errors.push("ARAIL_SECONDARY_PRODUCT_V1=shadow requires institutional product and conventional secondary in shadow, required saga, internal RBAC, and at least one DA/PTC product in shadow");
   }
+  if (persistenceFlags.tokenisedProduct !== "off"
+    && (persistenceFlags.institutionalProduct !== "shadow" || persistenceFlags.daProduct !== "shadow"
+      || persistenceFlags.ptcProduct !== "shadow" || persistenceFlags.lifecycleProduct !== "shadow"
+      || persistenceFlags.tokenisedDa !== "allow_list" || persistenceFlags.tokenisedPtc !== "shadow"
+      || persistenceFlags.externalActionSaga !== "required" || persistenceFlags.internalRbac === "off")) {
+    errors.push("ARAIL_TOKENISED_PRODUCT_V1=shadow requires institutional, DA, PTC and lifecycle products in shadow; tokenised DA allow-list; tokenised PTC shadow; required saga; and internal RBAC");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -368,6 +377,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.secondaryProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_SECONDARY_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.tokenisedProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_TOKENISED_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -534,6 +546,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         lifecycleProduct: persistenceFlags.lifecycleProduct,
         primaryVenueProduct: persistenceFlags.primaryVenueProduct,
         secondaryProduct: persistenceFlags.secondaryProduct,
+        tokenisedProduct: persistenceFlags.tokenisedProduct,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

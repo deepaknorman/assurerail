@@ -1645,7 +1645,37 @@ backup/restore checks. The rehearsal is synthetic software evidence only. Design
 `docs/qa/AssureRail_AR27_Conventional_Secondary_Product_Evidence.md`; handoff:
 `docs/runbooks/AssureRail_AR27_Deployer_Handoff.md`.
 
-AR-28–AR-30 remain unimplemented product stages. This checkpoint does not approve controlled-live
+### AR-28 — Tokenised DA/PTC product journeys
+
+**Dependencies:** AR-23–AR-27, PR-11, PR-15 and PR-16
+
+**AR-28 implementation checkpoint (3 September 2026):** implemented for review under EX-28; not
+deployed or activated. The pre-existing durable token records now have one institution-scoped
+register and a route-aware case cockpit, while DA and PTC remain separate products. Tokenised DA
+links the Note adapter only as a `MIRROR`, exposes connector/custody status without promoting it to
+acceptance, records authenticated observe-only actions and reconciles token supply, holdings,
+economic interests and the declared authoritative record. Tokenised PTC retains programme, trust,
+class, trustee, recordkeeper and optional assurance-provider boundaries, all 14 external evidence
+gates, independent maker-checker review and five dormant action plans.
+
+The stage adds no schema because PR-11/15/16 already own the necessary authoritative product
+records; journey state is derived rather than duplicated. Register and case reads are owner/active-
+party scoped, evidence details are redacted without `VIEW_EVIDENCE`, and the digest-bound JSON pack
+requires it explicitly. The product flag defaults `off`, is replay/shadow-only, and requires both
+route products, lifecycle, tokenised-DA allow-list, tokenised-PTC shadow, saga and internal-RBAC
+foundations. No live capability, connector dispatch or legal-title inference was added. Token legal
+finality, custody/provider acceptance, authoritative-record acceptance, VAPT and PR-12 acceptance
+remain open. Design: `docs/design/AssureRail_Tokenised_Route_Product_AR28.md`; evidence:
+`docs/qa/AssureRail_AR28_Tokenised_Route_Product_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR28_Deployer_Handoff.md`.
+
+The cumulative API suite passed 349/349 with zero skipped; all nine web boundary checks and the
+23-page production build passed. The reused PR-11 and PR-16 persistence foundations were each
+rehearsed against a disposable PostgreSQL database after applying all 30 migrations from zero;
+linkage/observation/reconciliation, mirror/open-gate state, parity and restore all passed. These are
+software and synthetic database checks only, not external acceptance.
+
+AR-29–AR-30 remain unimplemented product stages. This checkpoint does not approve controlled-live
 or production operation.
 
 ---

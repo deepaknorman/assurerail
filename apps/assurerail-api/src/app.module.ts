@@ -83,6 +83,9 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).tokenisedPtc === "shadow"
     ? [require("./ptc-token/ptc-token.module").PtcTokenModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).tokenisedProduct === "shadow"
+    ? [require("./tokenised-product/tokenised-product.module").TokenisedProductModule]
+    : []),
   ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
     && inspectPersistenceFlags(process.env).neutralIngress !== "off"
     && inspectPersistenceFlags(process.env).transactionCase !== "off"
