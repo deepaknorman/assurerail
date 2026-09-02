@@ -1470,6 +1470,36 @@ notification delivery and all external activation evidence remain open. Programm
 `docs/qa/AssureRail_AR21_Hosted_Alpha_Evidence.md`; handoff:
 `docs/runbooks/AssureRail_AR21_Deployer_Handoff.md`.
 
+### AR-22 — Institutional productisation
+
+**Dependencies:** AR-21 and the PR-03/04/19 admission, authority and developer-integration
+foundations
+
+Complete the institution journey without confusing recorded readiness with an activated identity,
+credential, authority or exit. Federation, service access, recertification and exit require
+separately governed records and actions.
+
+**AR-22 implementation checkpoint (2 September 2026):** implemented for review under EX-28; not
+deployed or activated. A new institution-product API and `/workspace/institution` journey combine
+application, evidence, admission, membership, authority, appointments, connectors, identity/access,
+recertification and exit as independently evaluated stages. The additive schema records SAML/OIDC
+configuration metadata, bounded service identities, access reviews and exit plans with unique
+references, restrictive history, maker/checker provenance and purpose-bound step-up. Four distinct
+mandate actions are enforced, pending reviews feed the scoped AR-21 action centre, and duplicate
+natural references return governed conflicts. Identity and service approvals stop at
+`SHADOW_APPROVED`; APIs accept no credential material, access-review approval changes no authority,
+and exit approval executes no suspension, revocation or deletion. Generic reinstatement cannot
+promote a shadow access record into active authentication. The feature defaults off, is limited to
+`REPLAY/SHADOW`, requires its admission/developer/hosted-alpha/RBAC foundations and has no live
+capability ID. Real identity-provider verification, customer acceptance, secret issuance/rotation,
+VAPT and executed recertification/exit remain open. The complete API suite passed 304/304 with zero
+skipped; AR-22/AR-21/PR-18 web checks and the production web build passed; and a disposable
+PostgreSQL rehearsal proved all 27 migrations, uniqueness, restrictive history, schema parity and
+backup/restore. Design:
+`docs/design/AssureRail_Institutional_Product_AR22.md`; evidence:
+`docs/qa/AssureRail_AR22_Institutional_Product_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR22_Deployer_Handoff.md`.
+
 ---
 
 ## 9. Test and evidence baseline

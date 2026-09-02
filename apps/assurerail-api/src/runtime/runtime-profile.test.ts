@@ -70,6 +70,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     developerPortal: "off",
     customerOperations: "off",
     hostedAlpha: "off",
+    institutionalProduct: "off",
     internalRbac: "off",
   });
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "development" }), true);
@@ -468,6 +469,23 @@ test("[CONFIG][AR21] hosted alpha requires admission and case foundations and re
   assert.equal(accepted.profile.features.hostedAlpha, "shadow");
   const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_HOSTED_ALPHA_V1: "shadow" });
   assert.match(live.errors.join("\n"), /ARAIL_HOSTED_ALPHA_V1 is available only in REPLAY or SHADOW/);
+});
+
+test("[CONFIG][AR22] institutional product requires the governed shadow foundation and remains non-live", () => {
+  const missing = inspectRuntimeEnvironment({ ASSURERAIL_OPERATING_MODE: "SHADOW", ARAIL_INSTITUTIONAL_PRODUCT_V1: "shadow" });
+  assert.match(missing.errors.join("\n"), /requires hosted alpha, participant admission and developer portal in shadow plus internal RBAC/);
+  const accepted = inspectRuntimeEnvironment({
+    ASSURERAIL_OPERATING_MODE: "SHADOW", DATABASE_URL: "postgresql://example.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE, ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_DURABLE_RELAY_MODE: "shadow", ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow", ARAIL_DEVELOPER_PORTAL_V1: "shadow",
+    ARAIL_INTERNAL_RBAC_V1: "shadow", ARAIL_HOSTED_ALPHA_V1: "shadow",
+    ARAIL_INSTITUTIONAL_PRODUCT_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+  assert.equal(accepted.profile.features.institutionalProduct, "shadow");
+  const live = inspectRuntimeEnvironment({ ...LIVE_ENV, ARAIL_INSTITUTIONAL_PRODUCT_V1: "shadow" });
+  assert.match(live.errors.join("\n"), /ARAIL_INSTITUTIONAL_PRODUCT_V1 is available only in REPLAY or SHADOW/);
 });
 
 test("[CONFIG][OP01c] internal RBAC enforcement is an explicit mode and is mandatory for any later live activation", () => {

@@ -194,6 +194,9 @@ model Institution {
   appointments            Appointment[]
   routeEntitlements       RouteEntitlement[]
   servicePrincipals       InstitutionServicePrincipal[]
+  identityConnections     InstitutionIdentityConnection[]
+  accessReviews           InstitutionAccessReview[]
+  exitPlans               InstitutionExitPlan[]
   changeProposals         InstitutionChangeProposal[]
   connectorRegistrations  ConnectorRegistration[]
   evidenceObjects         EvidenceObject[]
@@ -455,9 +458,16 @@ model InstitutionServicePrincipal {
   institutionId      String
   institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
   clientId           String      @unique
+  displayName        String      @default("Legacy service principal")
   credentialVaultRef String
-  status             String      @default("PENDING") // PENDING | ACTIVE | SUSPENDED | REVOKED | EXPIRED
+  credentialFingerprint String?
+  status             String      @default("PENDING") // PENDING | SHADOW_APPROVED | ACTIVE | SUSPENDED | REVOKED | EXPIRED
   allowedActions     Json
+  proposedByUserId   String?
+  proposalStepUpId   String?
+  approvedByUserId   String?
+  approvalStepUpId   String?
+  approvalReason     String?
   lastUsedAt         DateTime?
   effectiveAt        DateTime?
   expiresAt          DateTime?
@@ -470,11 +480,86 @@ model InstitutionServicePrincipal {
   @@index([expiresAt])
 }
 
+model InstitutionIdentityConnection {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  connectionKey      String
+  protocol           String // SAML | OIDC
+  displayName        String
+  issuer             String
+  audience           String
+  metadataDigest     String
+  emailDomains       Json
+  status             String      @default("PROPOSED") // PROPOSED | SHADOW_APPROVED | REJECTED | SUSPENDED | REVOKED | EXPIRED
+  proposedByUserId   String
+  proposalStepUpId   String
+  reviewedByUserId   String?
+  reviewStepUpId     String?
+  reviewReason       String?
+  effectiveAt        DateTime?
+  expiresAt          DateTime?
+  suspendedAt        DateTime?
+  revokedAt          DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @default(now()) @updatedAt
+
+  @@unique([institutionId, connectionKey])
+  @@index([institutionId, status])
+  @@index([expiresAt])
+}
+
+model InstitutionAccessReview {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  reviewRef          String
+  scope              Json
+  evidenceRefs       Json
+  dueAt              DateTime
+  status             String      @default("PROPOSED") // PROPOSED | APPROVED | REJECTED | SUPERSEDED
+  conclusion         String?
+  proposedByUserId   String
+  proposalStepUpId   String
+  reviewedByUserId   String?
+  reviewStepUpId     String?
+  reviewReason       String?
+  reviewedAt         DateTime?
+  createdAt          DateTime    @default(now())
+
+  @@unique([institutionId, reviewRef])
+  @@index([institutionId, status, dueAt])
+}
+
+model InstitutionExitPlan {
+  id                   String      @id
+  institutionId        String
+  institution          Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  exitRef               String
+  reason                String
+  requestedEffectiveAt DateTime
+  scope                 Json
+  evidenceRefs          Json
+  status                String      @default("PROPOSED") // PROPOSED | APPROVED | REJECTED | CANCELLED | COMPLETED
+  proposedByUserId      String
+  proposalStepUpId      String
+  reviewedByUserId      String?
+  reviewStepUpId        String?
+  reviewReason          String?
+  reviewedAt            DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @default(now()) @updatedAt
+
+  @@unique([institutionId, exitRef])
+  @@index([institutionId, status])
+  @@index([requestedEffectiveAt])
+}
+
 model InstitutionChangeProposal {
   id               String      @id
   institutionId    String
   institution      Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
-  targetType       String // MEMBER | MANDATE | APPOINTMENT | ROUTE_ENTITLEMENT | SERVICE_PRINCIPAL
+  targetType       String // MEMBER | MANDATE | APPOINTMENT | ROUTE_ENTITLEMENT | SERVICE_PRINCIPAL | IDENTITY_CONNECTION
   targetId         String
   changeType       String // SUSPEND | REVOKE | REINSTATE
   fromStatus       String

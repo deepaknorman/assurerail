@@ -76,7 +76,25 @@ AR-21 must provide:
 AR-21 does not activate PR-13–20, add external egress, create public claims, or treat the hosted
 alpha as a customer-accepted pilot.
 
-## 5. Stage evidence and handoff
+## 5. AR-22 acceptance contract
+
+AR-22 turns institutional controls into a usable journey without treating configuration as access.
+It provides:
+
+- one institution-scoped overview of application, evidence, admission, membership, mandates,
+  appointments, connectors, identity/access, recertification and exit;
+- maker/checker records for SAML/OIDC configuration, bounded service identities, access reviews and
+  exit plans;
+- purpose-bound step-up and exact mandate actions for every mutation;
+- digest/fingerprint-only configuration surfaces that accept no secret material;
+- explicit `SHADOW_APPROVED` states that cannot authenticate or grant route authority;
+- scoped action-centre review work and safe suspension/revocation proposals; and
+- an additive migration with uniqueness, restrictive history and backup/restore evidence.
+
+Real identity-provider validation, login mapping, client-secret issuance, customer acceptance and
+executed exit remain AR-29 or external evidence. Approval in AR-22 cannot silently perform them.
+
+## 6. Stage evidence and handoff
 
 Each stage produces:
 

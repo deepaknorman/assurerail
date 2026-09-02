@@ -41,7 +41,8 @@ export class HostedAlphaService {
     const now = new Date();
     const evidenceWindow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1_000);
     const [canApproveAuthority, canManageAppointments, canViewCase, canOperateCase, canViewEvidence,
-      canRespondOpportunity, canViewCustomerOperations] = await Promise.all([
+      canRespondOpportunity, canViewCustomerOperations, canManageIdentityConnections,
+      canManageServiceIdentities, canManageAccessReviews, canManageParticipantExit] = await Promise.all([
       this.allowed(actorUserId, actingInstitutionId, "APPROVE_AUTHORITY"),
       this.allowed(actorUserId, actingInstitutionId, "MANAGE_APPOINTMENTS"),
       this.allowed(actorUserId, actingInstitutionId, "VIEW_CASE"),
@@ -49,6 +50,10 @@ export class HostedAlphaService {
       this.allowed(actorUserId, actingInstitutionId, "VIEW_EVIDENCE"),
       this.allowed(actorUserId, actingInstitutionId, "RESPOND_OPPORTUNITY"),
       this.allowed(actorUserId, actingInstitutionId, "VIEW_CUSTOMER_OPERATIONS"),
+      this.allowed(actorUserId, actingInstitutionId, "MANAGE_IDENTITY_CONNECTIONS"),
+      this.allowed(actorUserId, actingInstitutionId, "MANAGE_SERVICE_IDENTITIES"),
+      this.allowed(actorUserId, actingInstitutionId, "MANAGE_ACCESS_REVIEWS"),
+      this.allowed(actorUserId, actingInstitutionId, "MANAGE_PARTICIPANT_EXIT"),
     ]);
     const tasks: HostedAlphaTask[] = [];
     const add = (task: HostedAlphaTask) => tasks.push(task);
@@ -57,7 +62,7 @@ export class HostedAlphaService {
       const [mandates, entitlements, changes] = await Promise.all([
         this.db.authorityMandate.findMany({ where: { institutionId: actingInstitutionId, status: "PROPOSED", proposedByUserId: { not: actorUserId } }, select: { id: true, action: true, member: { select: { invitedEmail: true } }, expiresAt: true } }),
         this.db.routeEntitlement.findMany({ where: { institutionId: actingInstitutionId, status: "PROPOSED", proposedByUserId: { not: actorUserId } }, select: { id: true, transactionRoute: true, representation: true, materialFunction: true, expiresAt: true } }),
-        this.db.institutionChangeProposal.findMany({ where: { institutionId: actingInstitutionId, status: "PENDING", proposedByUserId: { not: actorUserId } }, select: { id: true, targetType: true, changeType: true, proposedAt: true } }),
+        this.db.institutionChangeProposal.findMany({ where: { institutionId: actingInstitutionId, status: "PENDING", proposedByUserId: { not: actorUserId }, targetType: { notIn: ["IDENTITY_CONNECTION", "SERVICE_PRINCIPAL"] } }, select: { id: true, targetType: true, changeType: true, proposedAt: true } }),
       ]);
       for (const item of mandates) add({ id: `mandate:${item.id}`, category: "GOVERNANCE", priority: "HIGH", dueState: dueState(item.expiresAt, now), title: "Review authority mandate", summary: `${item.action} for ${item.member.invitedEmail}; independent review required.`, href: `/institutions/${encoded(actingInstitutionId)}`, sourceType: "AUTHORITY_MANDATE", sourceId: item.id, transactionCaseId: null, requiredAction: "APPROVE_AUTHORITY", dueAt: iso(item.expiresAt), operatingBoundary: "SHADOW" });
       for (const item of entitlements) add({ id: `entitlement:${item.id}`, category: "GOVERNANCE", priority: "HIGH", dueState: dueState(item.expiresAt, now), title: "Review route entitlement", summary: `${item.transactionRoute} · ${item.representation} · ${item.materialFunction}`, href: `/institutions/${encoded(actingInstitutionId)}`, sourceType: "ROUTE_ENTITLEMENT", sourceId: item.id, transactionCaseId: null, requiredAction: "APPROVE_AUTHORITY", dueAt: iso(item.expiresAt), operatingBoundary: "SHADOW" });
@@ -67,6 +72,31 @@ export class HostedAlphaService {
     if (canManageAppointments) {
       const appointments = await this.db.appointment.findMany({ where: { appointeeInstitutionId: actingInstitutionId, status: "PROPOSED", proposedByUserId: { not: actorUserId } }, select: { id: true, institutionId: true, transactionCaseId: true, appointmentRole: true, expiresAt: true } });
       for (const item of appointments) add({ id: `appointment:${item.id}`, category: "GOVERNANCE", priority: "HIGH", dueState: dueState(item.expiresAt, now), title: "Accept or decline appointment", summary: `${item.appointmentRole} appointment proposed by ${item.institutionId}.`, href: `/institutions/${encoded(actingInstitutionId)}`, sourceType: "APPOINTMENT", sourceId: item.id, transactionCaseId: item.transactionCaseId, requiredAction: "MANAGE_APPOINTMENTS", dueAt: iso(item.expiresAt), operatingBoundary: "SHADOW" });
+    }
+
+    if (canManageIdentityConnections) {
+      const [connections, changes] = await Promise.all([
+        this.db.institutionIdentityConnection.findMany({ where: { institutionId: actingInstitutionId, status: "PROPOSED", proposedByUserId: { not: actorUserId } }, select: { id: true, displayName: true, protocol: true, expiresAt: true } }),
+        this.db.institutionChangeProposal.findMany({ where: { institutionId: actingInstitutionId, targetType: "IDENTITY_CONNECTION", status: "PENDING", proposedByUserId: { not: actorUserId } }, select: { id: true, changeType: true, targetId: true } }),
+      ]);
+      for (const item of connections) add({ id: `identity-connection:${item.id}`, category: "GOVERNANCE", priority: "HIGH", dueState: dueState(item.expiresAt, now), title: "Review identity federation metadata", summary: `${item.displayName} · ${item.protocol} · shadow metadata only`, href: "/workspace/institution", sourceType: "INSTITUTION_IDENTITY_CONNECTION", sourceId: item.id, transactionCaseId: null, requiredAction: "MANAGE_IDENTITY_CONNECTIONS", dueAt: iso(item.expiresAt), operatingBoundary: "SHADOW" });
+      for (const item of changes) add({ id: `identity-connection-change:${item.id}`, category: "GOVERNANCE", priority: "HIGH", dueState: "OPEN", title: "Review identity federation status change", summary: `${item.changeType} · ${item.targetId}`, href: "/workspace/institution", sourceType: "INSTITUTION_CHANGE", sourceId: item.id, transactionCaseId: null, requiredAction: "MANAGE_IDENTITY_CONNECTIONS", dueAt: null, operatingBoundary: "SHADOW" });
+    }
+    if (canManageServiceIdentities) {
+      const [principals, changes] = await Promise.all([
+        this.db.institutionServicePrincipal.findMany({ where: { institutionId: actingInstitutionId, status: "PENDING", proposedByUserId: { not: actorUserId } }, select: { id: true, displayName: true, clientId: true, expiresAt: true } }),
+        this.db.institutionChangeProposal.findMany({ where: { institutionId: actingInstitutionId, targetType: "SERVICE_PRINCIPAL", status: "PENDING", proposedByUserId: { not: actorUserId } }, select: { id: true, changeType: true, targetId: true } }),
+      ]);
+      for (const item of principals) add({ id: `service-identity:${item.id}`, category: "GOVERNANCE", priority: "HIGH", dueState: dueState(item.expiresAt, now), title: "Review service identity", summary: `${item.displayName} · ${item.clientId} · authentication remains disabled`, href: "/workspace/institution", sourceType: "INSTITUTION_SERVICE_PRINCIPAL", sourceId: item.id, transactionCaseId: null, requiredAction: "MANAGE_SERVICE_IDENTITIES", dueAt: iso(item.expiresAt), operatingBoundary: "SHADOW" });
+      for (const item of changes) add({ id: `service-identity-change:${item.id}`, category: "GOVERNANCE", priority: "HIGH", dueState: "OPEN", title: "Review service identity status change", summary: `${item.changeType} · ${item.targetId}`, href: "/workspace/institution", sourceType: "INSTITUTION_CHANGE", sourceId: item.id, transactionCaseId: null, requiredAction: "MANAGE_SERVICE_IDENTITIES", dueAt: null, operatingBoundary: "SHADOW" });
+    }
+    if (canManageAccessReviews) {
+      const reviews = await this.db.institutionAccessReview.findMany({ where: { institutionId: actingInstitutionId, status: "PROPOSED", proposedByUserId: { not: actorUserId } }, select: { id: true, reviewRef: true, dueAt: true } });
+      for (const item of reviews) add({ id: `access-review:${item.id}`, category: "GOVERNANCE", priority: priorityForDue("HIGH", item.dueAt, now), dueState: dueState(item.dueAt, now), title: "Complete periodic access review", summary: `${item.reviewRef} · independent conclusion required`, href: "/workspace/institution", sourceType: "INSTITUTION_ACCESS_REVIEW", sourceId: item.id, transactionCaseId: null, requiredAction: "MANAGE_ACCESS_REVIEWS", dueAt: iso(item.dueAt), operatingBoundary: "SHADOW" });
+    }
+    if (canManageParticipantExit) {
+      const exits = await this.db.institutionExitPlan.findMany({ where: { institutionId: actingInstitutionId, status: "PROPOSED", proposedByUserId: { not: actorUserId } }, select: { id: true, exitRef: true, requestedEffectiveAt: true } });
+      for (const item of exits) add({ id: `exit-plan:${item.id}`, category: "SERVICE", priority: "HIGH", dueState: dueState(item.requestedEffectiveAt, now), title: "Review participant exit plan", summary: `${item.exitRef} · approval does not execute suspension, revocation or deletion`, href: "/workspace/institution", sourceType: "INSTITUTION_EXIT_PLAN", sourceId: item.id, transactionCaseId: null, requiredAction: "MANAGE_PARTICIPANT_EXIT", dueAt: iso(item.requestedEffectiveAt), operatingBoundary: "SHADOW" });
     }
 
     const visibleCases = canViewCase ? await this.db.transactionCase.findMany({

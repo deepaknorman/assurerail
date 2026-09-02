@@ -124,6 +124,13 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).transactionCase !== "off"
     ? [require("./hosted-alpha/hosted-alpha.module").HostedAlphaModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).institutionalProduct === "shadow"
+    && inspectPersistenceFlags(process.env).hostedAlpha === "shadow"
+    && inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    && inspectPersistenceFlags(process.env).developerPortal === "shadow"
+    && inspectPersistenceFlags(process.env).internalRbac !== "off"
+    ? [require("./institutional-product/institutional-product.module").InstitutionalProductModule]
+    : []),
 ] : [];
 const demoModules = shouldMountDemoEndpoints(process.env) ? [DemoModule] : [];
 

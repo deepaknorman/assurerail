@@ -20,7 +20,7 @@ import { INSTITUTION_ACTIONS, type InstitutionAction, type StepUpPurpose } from 
 import { StepUpService } from "./step-up.service";
 
 const MEMBERSHIP_ROLES = ["ADMIN", "MEMBER", "AUDITOR", "INTEGRATION_OPERATOR"] as const;
-const CHANGE_TARGETS = ["MEMBER", "MANDATE", "APPOINTMENT", "ROUTE_ENTITLEMENT", "SERVICE_PRINCIPAL"] as const;
+const CHANGE_TARGETS = ["MEMBER", "MANDATE", "APPOINTMENT", "ROUTE_ENTITLEMENT", "SERVICE_PRINCIPAL", "IDENTITY_CONNECTION"] as const;
 const CHANGE_TYPES = ["SUSPEND", "REVOKE", "REINSTATE"] as const;
 const PR03_OPERATING_MODES = ["REPLAY", "SHADOW"] as const;
 
@@ -533,12 +533,16 @@ export class InstitutionGovernanceService {
     const changeType = oneOf(body.changeType, "changeType", CHANGE_TYPES);
     const targetId = required(body.targetId, "targetId", 160);
     const requiredAction: InstitutionAction = targetType === "MEMBER" ? "ADMINISTER_MEMBERS"
-      : targetType === "APPOINTMENT" ? "MANAGE_APPOINTMENTS" : "PROPOSE_AUTHORITY";
+      : targetType === "APPOINTMENT" ? "MANAGE_APPOINTMENTS"
+        : targetType === "SERVICE_PRINCIPAL" ? "MANAGE_SERVICE_IDENTITIES"
+          : targetType === "IDENTITY_CONNECTION" ? "MANAGE_IDENTITY_CONNECTIONS" : "PROPOSE_AUTHORITY";
     await this.access.requireHuman({ userId: actorUserId, institutionId, action: requiredAction });
     const targetStatus = await this.assertTargetInstitution(targetType, targetId, institutionId);
-    const validStatus = changeType === "SUSPEND" ? targetStatus === "ACTIVE"
-      : changeType === "REVOKE" ? ["ACTIVE", "SUSPENDED", "PROPOSED"].includes(targetStatus)
-        : targetStatus === "SUSPENDED";
+    const shadowAccessTarget = ["SERVICE_PRINCIPAL", "IDENTITY_CONNECTION"].includes(targetType);
+    const validStatus = shadowAccessTarget && changeType === "REINSTATE" ? false
+      : changeType === "SUSPEND" ? ["ACTIVE", "SHADOW_APPROVED"].includes(targetStatus)
+        : changeType === "REVOKE" ? ["ACTIVE", "SHADOW_APPROVED", "SUSPENDED", "PROPOSED", "PENDING"].includes(targetStatus)
+          : targetStatus === "SUSPENDED";
     if (!validStatus) throw new ConflictException(`${changeType} is not allowed from target status ${targetStatus}`);
     const purpose = this.changePurpose(targetType);
     const stepUpEvidenceId = required(body.stepUpEvidenceId, "stepUpEvidenceId", 160);
@@ -592,7 +596,9 @@ export class InstitutionGovernanceService {
     if (proposal.status !== "PENDING") throw new ConflictException("status-change proposal is already terminal");
     if (proposal.proposedByUserId === actorUserId) throw new ForbiddenException("maker cannot review their own status change");
     const requiredAction: InstitutionAction = proposal.targetType === "MEMBER" ? "ADMINISTER_MEMBERS"
-      : proposal.targetType === "APPOINTMENT" ? "MANAGE_APPOINTMENTS" : "APPROVE_AUTHORITY";
+      : proposal.targetType === "APPOINTMENT" ? "MANAGE_APPOINTMENTS"
+        : proposal.targetType === "SERVICE_PRINCIPAL" ? "MANAGE_SERVICE_IDENTITIES"
+          : proposal.targetType === "IDENTITY_CONNECTION" ? "MANAGE_IDENTITY_CONNECTIONS" : "APPROVE_AUTHORITY";
     await this.access.requireHuman({ userId: actorUserId, institutionId: proposal.institutionId, action: requiredAction });
     const purpose = this.changePurpose(proposal.targetType);
     const stepUpEvidenceId = required(body.stepUpEvidenceId, "stepUpEvidenceId", 160);
@@ -629,6 +635,7 @@ export class InstitutionGovernanceService {
     if (targetType === "MANDATE") return "MANDATE_STATUS_CHANGE";
     if (targetType === "APPOINTMENT") return "APPOINTMENT_STATUS_CHANGE";
     if (targetType === "SERVICE_PRINCIPAL") return "SERVICE_PRINCIPAL_STATUS_CHANGE";
+    if (targetType === "IDENTITY_CONNECTION") return "IDENTITY_CONNECTION_STATUS_CHANGE";
     return "ROUTE_ENTITLEMENT_STATUS_CHANGE";
   }
 
@@ -644,7 +651,8 @@ export class InstitutionGovernanceService {
       : targetType === "MANDATE" ? await this.db.authorityMandate.findUnique({ where: { id: targetId } })
         : targetType === "APPOINTMENT" ? await this.db.appointment.findUnique({ where: { id: targetId } })
           : targetType === "ROUTE_ENTITLEMENT" ? await this.db.routeEntitlement.findUnique({ where: { id: targetId } })
-            : await this.db.institutionServicePrincipal.findUnique({ where: { id: targetId } });
+            : targetType === "SERVICE_PRINCIPAL" ? await this.db.institutionServicePrincipal.findUnique({ where: { id: targetId } })
+              : await this.db.institutionIdentityConnection.findUnique({ where: { id: targetId } });
     if (!target || target.institutionId !== institutionId) throw new NotFoundException("governance target not found in institution");
     return target.status;
   }
@@ -683,9 +691,12 @@ export class InstitutionGovernanceService {
     } else if (proposal.targetType === "ROUTE_ENTITLEMENT") {
       const changed = await tx.routeEntitlement.updateMany({ where: { id: proposal.targetId, status: proposal.fromStatus }, data: { status, ...timeFields } });
       if (changed.count !== 1) throw new ConflictException("route entitlement status changed after the proposal was made");
-    } else {
+    } else if (proposal.targetType === "SERVICE_PRINCIPAL") {
       const changed = await tx.institutionServicePrincipal.updateMany({ where: { id: proposal.targetId, status: proposal.fromStatus }, data: { status, ...timeFields } });
       if (changed.count !== 1) throw new ConflictException("service-principal status changed after the proposal was made");
+    } else {
+      const changed = await tx.institutionIdentityConnection.updateMany({ where: { id: proposal.targetId, status: proposal.fromStatus }, data: { status, ...timeFields } });
+      if (changed.count !== 1) throw new ConflictException("identity-connection status changed after the proposal was made");
     }
   }
 }

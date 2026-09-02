@@ -9,7 +9,8 @@
     "start": "next start -p 3007",
     "clean": "rm -rf .next",
     "check:pr18": "node scripts/pr18-customer-workspace-check.mjs",
-    "check:ar21": "node scripts/ar21-hosted-alpha-check.mjs"
+    "check:ar21": "node scripts/ar21-hosted-alpha-check.mjs",
+    "check:ar22": "node scripts/ar22-institutional-product-check.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^8.3.7",

@@ -1,0 +1,95 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { VenueHeader } from "@/components/VenueHeader";
+import { useAuth } from "@/lib/auth-context";
+import { activeMandateActions, institutionalProductEnabled } from "@/lib/customer-workspace";
+import { requestTotpStepUp, type InstitutionWorkspace } from "@/lib/institutions";
+import { vget, vpost } from "@/lib/venue";
+
+type Stage = { code: string; state: string; summary: string };
+type Connection = { id: string; connectionKey: string; protocol: string; displayName: string; issuer: string; audience: string; metadataDigest: string; emailDomains: unknown; status: string; proposedByUserId: string; reviewReason: string | null; activationStatus: "NOT_ACTIVE" };
+type Principal = { id: string; clientId: string; displayName: string; credentialFingerprint: string | null; status: string; allowedActions: unknown; proposedByUserId: string | null; approvalReason: string | null; secretMaterialExcluded: true; authenticationEnabled: false };
+type AccessReview = { id: string; reviewRef: string; scope: unknown; evidenceRefs: unknown; dueAt: string; status: string; conclusion: string | null; proposedByUserId: string; reviewReason: string | null };
+type ExitPlan = { id: string; exitRef: string; reason: string; requestedEffectiveAt: string; scope: unknown; evidenceRefs: unknown; status: string; proposedByUserId: string; reviewReason: string | null; executionStatus: "NOT_EXECUTED" };
+type StatusChange = { id: string; targetType: "IDENTITY_CONNECTION" | "SERVICE_PRINCIPAL"; targetId: string; changeType: string; fromStatus: string; reason: string; status: string; proposedByUserId: string; proposedAt: string };
+type Overview = { generatedAt: string; institutionId: string; operatingBoundary: "SHADOW"; authorityNotice: string; summary: { admissionActive: boolean; activeMembers: number; activeMandates: number; verifiedEvidence: number; certifiedConnectors: number }; stages: Stage[]; identityConnections: Connection[]; servicePrincipals: Principal[]; accessReviews: AccessReview[]; exitPlans: ExitPlan[]; accessStatusChanges: StatusChange[] };
+
+const future = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 16);
+const jsonObject = (value: string, name: string) => { const result = JSON.parse(value) as unknown; if (!result || typeof result !== "object" || Array.isArray(result)) throw new Error(`${name} must be a JSON object.`); return result; };
+const csv = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean);
+
+export default function InstitutionalProductPage() {
+  const router = useRouter();
+  const { loading, firebaseUser, venueUser, needsOnboarding, activeInstitutionId } = useAuth();
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [workspace, setWorkspace] = useState<InstitutionWorkspace | null>(null);
+  const [totp, setTotp] = useState("");
+  const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [busy, setBusy] = useState("");
+  const [connection, setConnection] = useState({ connectionKey: "", protocol: "SAML", displayName: "", issuer: "", audience: "", metadataDigest: "", emailDomains: "", expiresAt: future(365) });
+  const [principal, setPrincipal] = useState({ clientId: "", displayName: "", credentialFingerprint: "", allowedActions: "OPERATE_CONNECTORS, VIEW_EVIDENCE", expiresAt: future(180) });
+  const [review, setReview] = useState({ reviewRef: "", scope: "{}", evidenceRefs: "", dueAt: future(90) });
+  const [exit, setExit] = useState({ exitRef: "", reason: "", requestedEffectiveAt: future(30), scope: "{}", evidenceRefs: "" });
+  const enabled = institutionalProductEnabled();
+  const root = activeInstitutionId ? `/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}/product` : "";
+  const currentMember = workspace?.institution.members.find((item) => item.userId === venueUser?.id && item.status === "ACTIVE");
+  const actions = useMemo(() => activeMandateActions(currentMember?.mandates ?? []), [currentMember]);
+
+  const load = useCallback(async () => {
+    if (!enabled || !activeInstitutionId) return;
+    try {
+      const [product, institution] = await Promise.all([vget<Overview>(`${root}/overview`), vget<InstitutionWorkspace>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}`)]);
+      setOverview(product); setWorkspace(institution); setError("");
+    } catch (cause) { setError((cause as Error).message); }
+  }, [enabled, activeInstitutionId, root]);
+  useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
+  useEffect(() => { if (firebaseUser && activeInstitutionId && enabled) void load(); }, [firebaseUser, activeInstitutionId, enabled, load]);
+
+  async function governed(key: string, purpose: string, path: string, body: Record<string, unknown>) {
+    if (!activeInstitutionId) return;
+    setBusy(key); setError(""); setNotice("");
+    try { const stepUpEvidenceId = await requestTotpStepUp({ code: totp, purpose, institutionId: activeInstitutionId }); await vpost(path, { ...body, stepUpEvidenceId }); setNotice("Governed shadow record saved. No authentication, route authority or exit action was activated."); await load(); }
+    catch (cause) { setError((cause as Error).message); } finally { setBusy(""); }
+  }
+  async function decide(kind: "connection" | "principal" | "review" | "exit", id: string, approve: boolean) {
+    const config = kind === "connection" ? ["IDENTITY_CONNECTION_REVIEW", `${root}/identity-connections/${id}/review`, { approve, reason: approve ? "Approved for shadow configuration review" : "Rejected after configuration review" }]
+      : kind === "principal" ? ["SERVICE_IDENTITY_REVIEW", `${root}/service-identities/${id}/review`, { approve, reason: approve ? "Approved as shadow metadata; credential activation remains blocked" : "Rejected after service-identity review" }]
+        : kind === "review" ? ["INSTITUTION_ACCESS_REVIEW_REVIEW", `${root}/access-reviews/${id}/review`, { approve, reason: "Independent institutional access review", conclusion: approve ? "Reviewed records retained; no authority changed automatically" : "Review rejected; remediation required" }]
+          : ["PARTICIPANT_EXIT_REVIEW", `${root}/exit-plans/${id}/review`, { approve, reason: approve ? "Exit plan approved for separate execution planning" : "Exit plan rejected" }];
+    await governed(`${kind}:${id}`, config[0] as string, config[1] as string, config[2] as Record<string, unknown>);
+  }
+  async function proposeAccessStatus(targetType: StatusChange["targetType"], targetId: string, changeType: "SUSPEND" | "REVOKE") {
+    const purpose = targetType === "IDENTITY_CONNECTION" ? "IDENTITY_CONNECTION_STATUS_CHANGE" : "SERVICE_PRINCIPAL_STATUS_CHANGE";
+    await governed(`status:${targetId}`, purpose, `/v1/rail/institutions/${encodeURIComponent(activeInstitutionId!)}/status-changes`, { targetType, targetId, changeType, reason: `${changeType} requested through the institutional access journey` });
+  }
+  async function reviewAccessStatus(item: StatusChange, approve: boolean) {
+    const purpose = item.targetType === "IDENTITY_CONNECTION" ? "IDENTITY_CONNECTION_STATUS_CHANGE" : "SERVICE_PRINCIPAL_STATUS_CHANGE";
+    await governed(`status-review:${item.id}`, purpose, `/v1/rail/institutions/status-changes/${encodeURIComponent(item.id)}/review`, { approve, reviewNote: approve ? "Approved after independent access review" : "Rejected after independent access review" });
+  }
+
+  return <><VenueHeader/><main className="wrap institutional-page customer-workspace">
+    <Link className="back-link" href="/workspace">← Institution workspace</Link>
+    <div className="console-head"><p className="eyebrow">Institution product · shadow</p><h1>Admission, authority and access journey</h1><p>Application through admission, member authority, federation, service identity, connector readiness, recertification and planned exit.</p></div>
+    <div className="boundary-note">{overview?.authorityNotice ?? "Readiness labels do not grant route authority, activate SSO, enable service credentials or satisfy external evidence gates."}</div>
+    {!enabled && <div className="msg err">Institutional productisation is disabled. API and web flags must both be shadow in an approved environment.</div>}{!activeInstitutionId && <div className="msg err">Select an admitted institution.</div>}
+    {error && <div className="msg err" role="alert">{error}</div>}{notice && <div className="msg ok" aria-live="polite">{notice}</div>}
+    {enabled && overview && <>
+      <section className="onboarding-stage-grid" aria-label="Institution readiness journey">{overview.stages.map((stage, index) => <article className="onboarding-stage" key={stage.code}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{stage.code.replaceAll("_", " ")}</strong><p>{stage.summary}</p></div><em className="pill">{stage.state}</em></article>)}</section>
+      <section className="workspace-hero"><div><span className="workspace-label">Members</span><strong>{overview.summary.activeMembers}</strong><small>Active and effective</small></div><div><span className="workspace-label">Mandates</span><strong>{overview.summary.activeMandates}</strong><small>Active and effective</small></div><div><span className="workspace-label">Verified evidence</span><strong>{overview.summary.verifiedEvidence}</strong><small>Current signed snapshots</small></div><div><span className="workspace-label">Connectors</span><strong>{overview.summary.certifiedConnectors}</strong><small>Approved shadow profiles</small></div></section>
+      <section className="panel governance-ceremony"><h2 className="section-title">Governed action ceremony</h2><label className="lbl">Authenticator code<input className="field governance-code" inputMode="numeric" autoComplete="one-time-code" value={totp} onChange={(event) => setTotp(event.target.value.replace(/\D/g, "").slice(0, 8))}/></label><p className="meta">Every proposal and independent review consumes purpose- and institution-bound step-up evidence.</p></section>
+      <section className="workspace-grid">
+        <article className="panel workspace-module"><h2>Identity federation</h2><p>SAML/OIDC metadata is digest-bound. Shadow approval does not activate login or trust an IdP.</p>{overview.identityConnections.map((item) => <Record key={item.id} title={`${item.displayName} · ${item.protocol}`} status={item.status} detail={`${item.connectionKey} · ${item.metadataDigest} · activation ${item.activationStatus}`} review={item.status === "PROPOSED" && item.proposedByUserId !== venueUser?.id && actions.has("MANAGE_IDENTITY_CONNECTIONS") ? (approve) => void decide("connection", item.id, approve) : undefined} canSuspend={item.status === "SHADOW_APPROVED"} statusChange={actions.has("MANAGE_IDENTITY_CONNECTIONS") && ["SHADOW_APPROVED","SUSPENDED"].includes(item.status) ? (change) => void proposeAccessStatus("IDENTITY_CONNECTION", item.id, change) : undefined}/>) }{actions.has("MANAGE_IDENTITY_CONNECTIONS") && <details className="governance-form"><summary>Propose federation metadata</summary><div className="form-grid">{(["connectionKey","displayName","issuer","audience","metadataDigest","emailDomains","expiresAt"] as const).map((key) => <label className="lbl" key={key}>{key}<input className="field" type={key === "expiresAt" ? "datetime-local" : "text"} value={connection[key]} onChange={(event) => setConnection({ ...connection, [key]: event.target.value })}/></label>)}<label className="lbl">protocol<select className="field" value={connection.protocol} onChange={(event) => setConnection({ ...connection, protocol: event.target.value })}><option>SAML</option><option>OIDC</option></select></label></div><button className="btn btn-primary" disabled={!!busy || totp.length < 6} onClick={() => void governed("connection", "IDENTITY_CONNECTION_PROPOSE", `${root}/identity-connections`, { ...connection, emailDomains: csv(connection.emailDomains), expiresAt: new Date(connection.expiresAt).toISOString() })}>Propose metadata</button></details>}</article>
+        <article className="panel workspace-module"><h2>Service identities</h2><p>Only bounded integration actions are allowed. Secret material is never accepted here and authentication remains disabled.</p>{overview.servicePrincipals.map((item) => <Record key={item.id} title={item.displayName} status={item.status} detail={`${item.clientId} · ${JSON.stringify(item.allowedActions)} · authentication disabled`} review={item.status === "PENDING" && item.proposedByUserId !== venueUser?.id && actions.has("MANAGE_SERVICE_IDENTITIES") ? (approve) => void decide("principal", item.id, approve) : undefined} canSuspend={["SHADOW_APPROVED","ACTIVE"].includes(item.status)} statusChange={actions.has("MANAGE_SERVICE_IDENTITIES") && ["SHADOW_APPROVED","ACTIVE","SUSPENDED"].includes(item.status) ? (change) => void proposeAccessStatus("SERVICE_PRINCIPAL", item.id, change) : undefined}/>) }{actions.has("MANAGE_SERVICE_IDENTITIES") && <details className="governance-form"><summary>Propose service identity</summary><div className="form-grid">{(["clientId","displayName","credentialFingerprint","allowedActions","expiresAt"] as const).map((key) => <label className="lbl" key={key}>{key}<input className="field" type={key === "expiresAt" ? "datetime-local" : "text"} value={principal[key]} onChange={(event) => setPrincipal({ ...principal, [key]: event.target.value })}/></label>)}</div><button className="btn btn-primary" disabled={!!busy || totp.length < 6} onClick={() => void governed("principal", "SERVICE_IDENTITY_PROPOSE", `${root}/service-identities`, { ...principal, allowedActions: csv(principal.allowedActions), expiresAt: new Date(principal.expiresAt).toISOString() })}>Propose service identity</button></details>}</article>
+        <article className="panel workspace-module"><h2>Periodic access reviews</h2><p>Retain scope, evidence and an independent conclusion. Approval does not silently change authority.</p>{overview.accessReviews.map((item) => <Record key={item.id} title={item.reviewRef} status={item.status} detail={`Due ${new Date(item.dueAt).toLocaleString("en-IN")} · ${item.conclusion ?? "No conclusion"}`} review={item.status === "PROPOSED" && item.proposedByUserId !== venueUser?.id && actions.has("MANAGE_ACCESS_REVIEWS") ? (approve) => void decide("review", item.id, approve) : undefined}/>) }{actions.has("MANAGE_ACCESS_REVIEWS") && <details className="governance-form"><summary>Start access review</summary><div className="form-grid">{(["reviewRef","scope","evidenceRefs","dueAt"] as const).map((key) => <label className="lbl" key={key}>{key}<input className="field" type={key === "dueAt" ? "datetime-local" : "text"} value={review[key]} onChange={(event) => setReview({ ...review, [key]: event.target.value })}/></label>)}</div><button className="btn btn-primary" disabled={!!busy || totp.length < 6} onClick={() => { try { void governed("review", "INSTITUTION_ACCESS_REVIEW_PROPOSE", `${root}/access-reviews`, { ...review, scope: jsonObject(review.scope, "Scope"), evidenceRefs: csv(review.evidenceRefs), dueAt: new Date(review.dueAt).toISOString() }); } catch (cause) { setError((cause as Error).message); } }}>Start review</button></details>}</article>
+        <article className="panel workspace-module"><h2>Planned exit</h2><p>Exit approval creates a plan only. Suspension, revocation, evidence export/retention and case transfer remain separate governed actions.</p>{overview.exitPlans.map((item) => <Record key={item.id} title={item.exitRef} status={item.status} detail={`${item.reason} · requested ${new Date(item.requestedEffectiveAt).toLocaleString("en-IN")} · ${item.executionStatus}`} review={item.status === "PROPOSED" && item.proposedByUserId !== venueUser?.id && actions.has("MANAGE_PARTICIPANT_EXIT") ? (approve) => void decide("exit", item.id, approve) : undefined}/>) }{actions.has("MANAGE_PARTICIPANT_EXIT") && <details className="governance-form"><summary>Propose exit plan</summary><div className="form-grid">{(["exitRef","reason","requestedEffectiveAt","scope","evidenceRefs"] as const).map((key) => <label className="lbl" key={key}>{key}<input className="field" type={key === "requestedEffectiveAt" ? "datetime-local" : "text"} value={exit[key]} onChange={(event) => setExit({ ...exit, [key]: event.target.value })}/></label>)}</div><button className="btn btn-primary" disabled={!!busy || totp.length < 6} onClick={() => { try { void governed("exit", "PARTICIPANT_EXIT_PROPOSE", `${root}/exit-plans`, { ...exit, requestedEffectiveAt: new Date(exit.requestedEffectiveAt).toISOString(), scope: jsonObject(exit.scope, "Scope"), evidenceRefs: csv(exit.evidenceRefs) }); } catch (cause) { setError((cause as Error).message); } }}>Propose exit plan</button></details>}</article>
+        {!!overview.accessStatusChanges.length && <article className="panel workspace-module workspace-wide"><h2>Pending access status changes</h2>{overview.accessStatusChanges.map((item) => <Record key={item.id} title={`${item.changeType} ${item.targetType}`} status={item.status} detail={`${item.reason} · from ${item.fromStatus}`} review={item.proposedByUserId !== venueUser?.id ? (approve) => void reviewAccessStatus(item, approve) : undefined}/>)}</article>}
+      </section>
+    </>}
+  </main></>;
+}
+
+function Record(props: { title: string; status: string; detail: string; review?: (approve: boolean) => void; canSuspend?: boolean; statusChange?: (change: "SUSPEND" | "REVOKE") => void }) {
+  return <div className="record-card"><div className="record-head"><strong>{props.title}</strong><span className="pill">{props.status}</span></div><p className="meta breakable">{props.detail}</p>{props.review && <div className="button-row"><button className="btn btn-primary" onClick={() => props.review?.(true)}>Approve shadow record</button><button className="btn btn-danger" onClick={() => props.review?.(false)}>Reject</button></div>}{props.statusChange && <div className="button-row">{props.canSuspend && <button className="btn" onClick={() => props.statusChange?.("SUSPEND")}>Propose suspension</button>}<button className="btn btn-danger" onClick={() => props.statusChange?.("REVOKE")}>Propose revocation</button></div>}</div>;
+}

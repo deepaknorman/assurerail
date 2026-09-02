@@ -8,6 +8,7 @@ import {
   type DeveloperPortalMode,
   type ExternalActionSagaMode,
   type HostedAlphaMode,
+  type InstitutionalProductMode,
   type InternalRbacMode,
   type LegacyRoomProxyMode,
   type NeutralIngressMode,
@@ -76,6 +77,7 @@ export interface RuntimeEnvironmentProfile {
     developerPortal: DeveloperPortalMode;
     customerOperations: CustomerOperationsMode;
     hostedAlpha: HostedAlphaMode;
+    institutionalProduct: InstitutionalProductMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -258,6 +260,11 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
     && (persistenceFlags.participantAdmission === "off" || persistenceFlags.transactionCase === "off")) {
     errors.push("ARAIL_HOSTED_ALPHA_V1=shadow requires participant admission and transaction cases");
   }
+  if (persistenceFlags.institutionalProduct !== "off"
+    && (persistenceFlags.hostedAlpha !== "shadow" || persistenceFlags.participantAdmission !== "shadow"
+      || persistenceFlags.developerPortal !== "shadow" || persistenceFlags.internalRbac === "off")) {
+    errors.push("ARAIL_INSTITUTIONAL_PRODUCT_V1=shadow requires hosted alpha, participant admission and developer portal in shadow plus internal RBAC");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -306,6 +313,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.hostedAlpha !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_HOSTED_ALPHA_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.institutionalProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_INSTITUTIONAL_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -466,6 +476,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         developerPortal: persistenceFlags.developerPortal,
         customerOperations: persistenceFlags.customerOperations,
         hostedAlpha: persistenceFlags.hostedAlpha,
+        institutionalProduct: persistenceFlags.institutionalProduct,
         internalRbac: persistenceFlags.internalRbac,
       },
     },
