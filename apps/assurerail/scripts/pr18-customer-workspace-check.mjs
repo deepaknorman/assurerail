@@ -17,7 +17,7 @@ assert.match(home, /membership, mandate, appointment, case role and route entitl
 assert.match(detail, /Source as-of/);
 assert.match(detail, /Qualifications/);
 assert.match(detail, /Support cannot close a break/);
-assert.match(opportunity, /not an order book, automatic match, legal completion or ownership record/i);
+assert.match(opportunity, /not a match, executed trade, completed transaction or ownership record/i);
 assert.match(header, /Legacy console/);
 assert.match(header, /NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1/);
 for (const flag of [

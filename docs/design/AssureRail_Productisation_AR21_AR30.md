@@ -133,7 +133,30 @@ The slice remains `OBSERVE_ONLY`: it cannot service assets, move funds, deliver 
 exercise trustee discretion or alter an authoritative register. External performer, payment,
 trustee/recordkeeper and controlled-live acceptance remain open.
 
-## 9. Stage evidence and handoff
+## 9. AR-26 acceptance contract
+
+AR-26 turns the PR-13 record layer into a named-audience primary venue without widening the legal
+perimeter. It provides an opportunity register and detail workspace for governed term display,
+invitations, interest, RFQ, negotiation and allocation, followed by an immutable accepted-allocation
+handoff to the already-associated transaction case.
+
+The handoff binds the exact term, allocation, audience grant, route-eligibility decision and proposed
+case role. It does not create a second case, match parties, complete the transaction or accept a case
+role for the counterparty. Owner and counterparty use separate mandates and step-up ceremonies. Once
+audience access ends, retained handoff access is limited to the exact frozen handoff evidence and
+does not reveal later terms or ongoing commercial records.
+
+The slice remains `REPLAY/SHADOW` only. Function-by-function counsel, conduct and authorised-
+performer gates remain open, and no payment, title, issue, allotment, register, token or external
+instruction is emitted.
+
+## 10. Cumulative verification and stage evidence
+
+`docs/qa/AssureRail_PR01_AR26_Integrated_Release_Audit.md` is the cumulative release-candidate
+checkpoint. `scripts/assurerail-integrated-release-check.sh --code` repeats the compile, complete API
+corpus, invariant checks, all web boundary checks and production web build; `--full` also runs every
+available disposable PostgreSQL migration/service/restore rehearsal. Neither mode closes an external
+gate.
 
 Each stage produces:
 

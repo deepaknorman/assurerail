@@ -1592,6 +1592,32 @@ evidence-freshness reconciliation, restrictive history and restore. Design:
 `docs/qa/AssureRail_AR25_Lifecycle_Evidence.md`; handoff:
 `docs/runbooks/AssureRail_AR25_Deployer_Handoff.md`.
 
+### AR-26 — Named-audience primary venue product
+
+**Dependencies:** AR-21–AR-24, PR-13 and PR-17
+
+**AR-26 implementation checkpoint (2 September 2026):** implemented for review under EX-28; not
+deployed or activated. The primary venue now has a customer-facing opportunity register and detail
+workspace over the existing term, invitation, interest, RFQ, negotiation and allocation records.
+An accepted allocation can create one immutable handoff receipt to the opportunity's existing case
+and propose the counterparty's DA transferee or PTC investor case role. It cannot create a second
+case, accept that role for the counterparty, match or execute a transaction, dispatch an external
+instruction or imply legal completion.
+
+Handoff binds the exact current term, accepted allocation, active named-audience grant and route-
+eligibility result. State, expiry and authority are checked before and inside the transaction;
+idempotent retry returns the retained receipt. A revoked/expired audience with a retained handoff
+can see only the exact handoff-bound term/allocation/grant/receipt, not later terms or continuing
+commercial conversations. API/web flags default off and accept only replay/shadow. The cumulative
+review, corrections, test scope and open gates are recorded in
+`docs/qa/AssureRail_PR01_AR26_Integrated_Release_Audit.md`; design:
+`docs/design/AssureRail_Primary_Venue_Product_AR26.md`; stage evidence:
+`docs/qa/AssureRail_AR26_Primary_Venue_Evidence.md`; handoff:
+`docs/runbooks/AssureRail_AR26_Deployer_Handoff.md`.
+
+AR-27–AR-30 remain unimplemented product stages. This checkpoint does not approve controlled-live
+or production operation.
+
 ---
 
 ## 9. Test and evidence baseline

@@ -5,6 +5,7 @@ export const INSTITUTIONAL_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_INSTITUTIONAL_
 export const DA_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_DA_PRODUCT_V1";
 export const PTC_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_PTC_PRODUCT_V1";
 export const LIFECYCLE_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_LIFECYCLE_PRODUCT_V1";
+export const PRIMARY_VENUE_PRODUCT_FLAG = "NEXT_PUBLIC_ASSURERAIL_PRIMARY_VENUE_PRODUCT_V1";
 
 export function customerWorkspaceEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1): boolean {
   return value?.trim().toLowerCase() === "shadow";
@@ -31,6 +32,10 @@ export function ptcProductEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_PTC
 }
 
 export function lifecycleProductEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_LIFECYCLE_PRODUCT_V1): boolean {
+  return value?.trim().toLowerCase() === "shadow";
+}
+
+export function primaryVenueProductEnabled(value = process.env.NEXT_PUBLIC_ASSURERAIL_PRIMARY_VENUE_PRODUCT_V1): boolean {
   return value?.trim().toLowerCase() === "shadow";
 }
 

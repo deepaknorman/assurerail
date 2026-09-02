@@ -83,6 +83,30 @@ test("[PR03][ACCESS] route comparison requires active admission and an exact act
   assert.equal((await service.evaluateRoute("inst-1", { ...route, representation: "TOKENISED" }, now)).allowed, false);
 });
 
+test("[PR03][ACCESS] route comparison can use the caller's transaction client", async () => {
+  const route = {
+    transactionRoute: "DA",
+    representation: "CONVENTIONAL",
+    assetClass: "RECEIVABLES",
+    lifecycleLeg: "INITIAL_TRANSFER_OR_ISSUE",
+    materialFunction: "ALLOCATION",
+    operatingMode: "SHADOW",
+  };
+  const outside = { institution: { findUnique: async () => { throw new Error("outside client used"); } } };
+  const transaction = { institution: { findUnique: async () => ({
+    id: "inst-1",
+    status: "ACTIVE",
+    admission: { status: "ADMITTED", effectiveAt: null, expiresAt: null },
+    routeEntitlements: [{ ...route, status: "ACTIVE", effectiveAt: null, expiresAt: null,
+      functionPerformer: "PARTICIPANT_OWNED", operatingModes: ["SHADOW"] }],
+  }) } };
+  const service = new InstitutionAccessService(outside as never);
+  assert.deepEqual(await service.evaluateRoute("inst-1", route, now, transaction as never), {
+    allowed: true,
+    code: "ROUTE_ENTITLED",
+  });
+});
+
 test("[PR03][ACCESS] a suspended service principal fails despite a matching action", async () => {
   const service = new InstitutionAccessService({
     institutionServicePrincipal: {

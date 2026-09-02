@@ -92,4 +92,9 @@ export class CommercialController {
   respondAllocation(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("opportunityId") opportunityId: string, @Param("allocationId") allocationId: string, @Body() body: Parameters<CommercialService["respondAllocation"]>[4]) {
     return this.commercial.respondAllocation(context(req), caseId, opportunityId, allocationId, body);
   }
+
+  @Post("cases/:caseId/commercial/opportunities/:opportunityId/allocations/:allocationId/case-handoff")
+  prepareCaseHandoff(@Req() req: RailRequest, @Param("caseId") caseId: string, @Param("opportunityId") opportunityId: string, @Param("allocationId") allocationId: string, @Body() body: Parameters<CommercialService["prepareCaseHandoff"]>[4]) {
+    return this.commercial.prepareCaseHandoff(context(req), caseId, opportunityId, allocationId, body);
+  }
 }

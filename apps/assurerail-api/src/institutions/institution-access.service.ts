@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
+import type { Prisma } from "@prisma/assurerail-client";
 import { PrismaService } from "../store/prisma.service";
 import {
   evaluateInstitutionAuthority,
@@ -102,8 +103,13 @@ export class InstitutionAccessService {
     return result;
   }
 
-  async evaluateRoute(institutionId: string, requested: RequestedRouteFunction, now = new Date()): Promise<PolicyDecision> {
-    const institution = await this.db.institution.findUnique({
+  async evaluateRoute(
+    institutionId: string,
+    requested: RequestedRouteFunction,
+    now = new Date(),
+    database: Pick<Prisma.TransactionClient, "institution"> = this.db,
+  ): Promise<PolicyDecision> {
+    const institution = await database.institution.findUnique({
       where: { id: institutionId },
       include: { admission: true, routeEntitlements: true },
     });

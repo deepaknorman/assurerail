@@ -14,6 +14,7 @@ import {
   type LegacyRoomProxyMode,
   type LifecycleProductMode,
   type NeutralIngressMode,
+  type PrimaryVenueProductMode,
   type ParticipantAdmissionMode,
   type PtcProductMode,
   type PtcReplayMode,
@@ -84,6 +85,7 @@ export interface RuntimeEnvironmentProfile {
     daProduct: DaProductMode;
     ptcProduct: PtcProductMode;
     lifecycleProduct: LifecycleProductMode;
+    primaryVenueProduct: PrimaryVenueProductMode;
     internalRbac: InternalRbacMode;
   };
 }
@@ -286,6 +288,12 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
       || (persistenceFlags.daProduct !== "shadow" && persistenceFlags.ptcProduct !== "shadow"))) {
     errors.push("ARAIL_LIFECYCLE_PRODUCT_V1=shadow requires institutional product shadow, required saga and at least one DA/PTC product in shadow");
   }
+  if (persistenceFlags.primaryVenueProduct !== "off"
+    && (persistenceFlags.institutionalProduct !== "shadow" || persistenceFlags.primaryCommercial !== "shadow"
+      || persistenceFlags.venueConduct !== "shadow" || persistenceFlags.internalRbac === "off"
+      || (persistenceFlags.daProduct !== "shadow" && persistenceFlags.ptcProduct !== "shadow"))) {
+    errors.push("ARAIL_PRIMARY_VENUE_PRODUCT_V1=shadow requires institutional product, primary commercial and venue conduct in shadow, internal RBAC, and at least one DA/PTC product in shadow");
+  }
   const resolvedMode = normaliseOperatingMode(env.ASSURERAIL_OPERATING_MODE, env.NODE_ENV);
   if (resolvedMode.error) errors.push(resolvedMode.error);
   const operatingMode = resolvedMode.mode;
@@ -346,6 +354,9 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
   }
   if (persistenceFlags.lifecycleProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
     errors.push(`ARAIL_LIFECYCLE_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
+  }
+  if (persistenceFlags.primaryVenueProduct !== "off" && !["REPLAY", "SHADOW"].includes(operatingMode)) {
+    errors.push(`ARAIL_PRIMARY_VENUE_PRODUCT_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`);
   }
 
   const demoEndpointsEnabled = booleanValue(
@@ -510,6 +521,7 @@ export function inspectRuntimeEnvironment(env: Environment): RuntimeEnvironmentI
         daProduct: persistenceFlags.daProduct,
         ptcProduct: persistenceFlags.ptcProduct,
         lifecycleProduct: persistenceFlags.lifecycleProduct,
+        primaryVenueProduct: persistenceFlags.primaryVenueProduct,
         internalRbac: persistenceFlags.internalRbac,
       },
     },

@@ -239,6 +239,8 @@ model Institution {
   ptcTokenEvidenceResponsibilities PtcTokenEvidenceGate[] @relation("PtcTokenGateAccountableInstitution")
   lifecycleObligations RailLifecycleObligation[] @relation("LifecycleObligationOwnerInstitution")
   lifecycleBreaks RailLifecycleBreak[] @relation("LifecycleBreakOwnerInstitution")
+  commercialHandoffsOwned CommercialCaseHandoff[] @relation("CommercialHandoffOwnerInstitution")
+  commercialHandoffsReceived CommercialCaseHandoff[] @relation("CommercialHandoffCounterpartyInstitution")
 
   @@index([status])
   @@index([applicantUserId])
@@ -1605,6 +1607,7 @@ model TransactionCase {
   ptcTokenRepresentation  PtcTokenRepresentation?
   lifecyclePlans          RailLifecyclePlan[]
   lifecycleBreaks         RailLifecycleBreak[]
+  commercialHandoffs      CommercialCaseHandoff[]
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
@@ -1771,6 +1774,7 @@ model CaseParty {
   createdByUserId      String
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @default(now()) @updatedAt
+  commercialHandoffs   CommercialCaseHandoff[]
 
   @@unique([transactionCaseId, institutionId, partyRole])
   @@index([institutionId, status])
@@ -3065,6 +3069,7 @@ model CommercialOpportunity {
   rfqs                   CommercialRfq[]
   threads                CommercialNegotiationThread[]
   allocations            CommercialAllocation[]
+  caseHandoffs           CommercialCaseHandoff[]
 
   @@unique([transactionCaseId, opportunityReference])
   @@unique([ownerInstitutionId, creationIdempotencyKey])
@@ -3097,6 +3102,7 @@ model CommercialTermVersion {
   interests                CommercialInterestIndication[]
   rfqs                     CommercialRfq[]
   allocations              CommercialAllocation[]
+  caseHandoffs              CommercialCaseHandoff[]
 
   @@unique([commercialOpportunityId, version])
   @@unique([commercialOpportunityId, termDigest])
@@ -3122,6 +3128,7 @@ model CommercialAudienceGrant {
   revocationReason        String?
   revokedAt               DateTime?
   createdAt               DateTime              @default(now())
+  caseHandoffs             CommercialCaseHandoff[]
 
   @@unique([commercialOpportunityId, institutionId])
   @@index([institutionId, status, expiresAt])
@@ -3292,11 +3299,53 @@ model CommercialAllocation {
   respondedAt             DateTime?
   expiresAt               DateTime
   createdAt               DateTime              @default(now())
+  caseHandoff             CommercialCaseHandoff?
 
   @@unique([commercialOpportunityId, allocationReference])
   @@unique([commercialOpportunityId, idempotencyKey])
   @@index([commercialOpportunityId, status, createdAt])
   @@index([offereeInstitutionId, status, createdAt])
+}
+
+// AR-26: immutable commercial-to-case handoff. The opportunity already belongs to a transaction
+// case; this receipt binds an accepted allocation to that case and proposes, but never accepts, the
+// counterparty's case role. It does not execute, settle, issue or change an authoritative record.
+model CommercialCaseHandoff {
+  id                        String                 @id
+  commercialOpportunityId   String
+  commercialOpportunity     CommercialOpportunity @relation(fields: [commercialOpportunityId], references: [id], onDelete: Restrict, map: "CommercialCaseHandoff_opportunity_fkey")
+  commercialAllocationId    String                 @unique(map: "CommercialCaseHandoff_commercialAllocationId_key")
+  commercialAllocation      CommercialAllocation  @relation(fields: [commercialAllocationId], references: [id], onDelete: Restrict, map: "CommercialCaseHandoff_allocation_fkey")
+  transactionCaseId         String
+  transactionCase           TransactionCase        @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict, map: "CommercialCaseHandoff_case_fkey")
+  termVersionId             String
+  termVersion               CommercialTermVersion  @relation(fields: [termVersionId], references: [id], onDelete: Restrict, map: "CommercialCaseHandoff_term_fkey")
+  audienceGrantId           String
+  audienceGrant             CommercialAudienceGrant @relation(fields: [audienceGrantId], references: [id], onDelete: Restrict, map: "CommercialCaseHandoff_audience_grant_fkey")
+  casePartyId               String
+  caseParty                 CaseParty               @relation(fields: [casePartyId], references: [id], onDelete: Restrict, map: "CommercialCaseHandoff_party_fkey")
+  ownerInstitutionId        String
+  ownerInstitution          Institution             @relation("CommercialHandoffOwnerInstitution", fields: [ownerInstitutionId], references: [id], onDelete: Restrict, map: "CommercialCaseHandoff_owner_fkey")
+  counterpartyInstitutionId String
+  counterpartyInstitution   Institution             @relation("CommercialHandoffCounterpartyInstitution", fields: [counterpartyInstitutionId], references: [id], onDelete: Restrict, map: "CommercialCaseHandoff_counterparty_fkey")
+  counterpartyPartyRole     String
+  status                    String                  @default("HANDOFF_RECORDED")
+  termDigest                String
+  audienceGrantDigest       String
+  allocationDigest          String
+  eligibilityDecisionCode   String
+  eligibilityCheckedAt      DateTime
+  handoffDigest             String                  @unique(map: "CommercialCaseHandoff_handoffDigest_key")
+  idempotencyKey            String
+  requestDigest             String
+  createdByUserId           String
+  createdByMandateId        String
+  stepUpEvidenceId          String
+  createdAt                 DateTime                @default(now())
+
+  @@unique([commercialOpportunityId, idempotencyKey], map: "CommercialCaseHandoff_opportunity_idempotency_key")
+  @@index([transactionCaseId, status, createdAt], map: "CommercialCaseHandoff_case_status_created_idx")
+  @@index([counterpartyInstitutionId, status, createdAt], map: "CommercialCaseHandoff_counterparty_status_created_idx")
 }
 
 // ───────────────── conventional secondary DA/PTC replay (PR-14) ─────────────────

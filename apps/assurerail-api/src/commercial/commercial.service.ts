@@ -7,6 +7,7 @@ import { InstitutionAccessService } from "../institutions/institution-access.ser
 import type { InstitutionAction } from "../institutions/institution-policy";
 import { StepUpService } from "../institutions/step-up.service";
 import { inspectPersistenceFlags } from "../persistence/feature-flags";
+import { appendGovernedAudit } from "../rooms/governed-audit";
 import { PrismaService } from "../store/prisma.service";
 import {
   COMMERCIAL_ALLOCATION_BASIS,
@@ -32,6 +33,12 @@ const RFQ_OUTCOMES = ["RESPOND", "DECLINE"] as const;
 function enabled(): void {
   if (inspectPersistenceFlags(process.env).primaryCommercial !== "shadow") {
     throw new ForbiddenException("permissioned primary commercial venue is disabled");
+  }
+}
+
+function productEnabled(): void {
+  if (inspectPersistenceFlags(process.env).primaryVenueProduct !== "shadow") {
+    throw new ForbiddenException("primary venue product is disabled");
   }
 }
 
@@ -81,6 +88,38 @@ function policy<T>(callback: () => T): T {
 }
 
 function unique(error: unknown): boolean { return (error as { code?: string } | null)?.code === "P2002"; }
+
+const safeTermSelect = {
+  id: true, version: true, currency: true, amountUnits: true, amountScale: true,
+  minimumParticipationUnits: true, maximumParticipationUnits: true, pricingType: true,
+  pricingValue: true, commercialTerms: true, termSheetEvidenceObjectId: true,
+  validFrom: true, expiresAt: true, termDigest: true, createdAt: true,
+} satisfies Prisma.CommercialTermVersionSelect;
+
+const safeOpportunitySummarySelect = {
+  id: true, transactionCaseId: true, ownerInstitutionId: true, opportunityReference: true,
+  status: true, audienceMode: true, currentTermVersion: true, aggregateVersion: true,
+  opensAt: true, closesAt: true, createdAt: true, updatedAt: true,
+  transactionCase: { select: { caseReference: true, transactionRoute: true, representation: true, lifecycleLeg: true, assetClass: true, operatingMode: true, status: true } },
+  terms: { orderBy: { version: "desc" as const }, select: safeTermSelect },
+  audienceGrants: { select: { institutionId: true, status: true, effectiveAt: true, expiresAt: true } },
+  caseHandoffs: { select: { counterpartyInstitutionId: true, termVersionId: true } },
+} satisfies Prisma.CommercialOpportunitySelect;
+
+const safeOpportunityDetailSelect = {
+  id: true, transactionCaseId: true, ownerInstitutionId: true, opportunityReference: true,
+  status: true, audienceMode: true, currentTermVersion: true, aggregateVersion: true,
+  opensAt: true, closesAt: true, createdAt: true, updatedAt: true,
+  transactionCase: { select: { id: true, caseReference: true, ownerInstitutionId: true, transactionRoute: true, representation: true, lifecycleLeg: true, assetClass: true, operatingMode: true, status: true, aggregateVersion: true, evidenceLockedAt: true } },
+  terms: { orderBy: { version: "asc" as const }, select: safeTermSelect },
+  audienceGrants: { orderBy: { createdAt: "asc" as const }, select: { id: true, institutionId: true, status: true, purpose: true, conflictDisclosure: true, effectiveAt: true, expiresAt: true, revokedAt: true, createdAt: true } },
+  changes: { orderBy: { proposedAt: "asc" as const }, select: { id: true, action: true, expectedVersion: true, fromStatus: true, toStatus: true, reason: true, status: true, proposedByUserId: true, reviewedByUserId: true, reviewReason: true, proposedAt: true, reviewedAt: true, appliedAt: true } },
+  interests: { orderBy: { createdAt: "asc" as const }, select: { id: true, institutionId: true, termVersionId: true, currency: true, amountUnits: true, amountScale: true, status: true, qualifications: true, submittedByUserId: true, withdrawnByUserId: true, withdrawalReason: true, withdrawnAt: true, expiresAt: true, createdAt: true } },
+  rfqs: { orderBy: { createdAt: "asc" as const }, select: { id: true, requesterInstitutionId: true, termVersionId: true, currency: true, amountUnits: true, amountScale: true, requestedTerms: true, requestedTermsDigest: true, status: true, responseTerms: true, responseTermsDigest: true, responseReason: true, requestedByUserId: true, respondedByUserId: true, respondedAt: true, expiresAt: true, createdAt: true } },
+  threads: { orderBy: { createdAt: "asc" as const }, select: { id: true, commercialRfqId: true, ownerInstitutionId: true, counterpartyInstitutionId: true, status: true, createdAt: true, messages: { orderBy: { occurredAt: "asc" as const }, select: { id: true, senderInstitutionId: true, messageKind: true, body: true, termSnapshot: true, termSnapshotDigest: true, previousMessageId: true, sentByUserId: true, occurredAt: true } } } },
+  allocations: { orderBy: { createdAt: "asc" as const }, select: { id: true, allocationReference: true, offereeInstitutionId: true, termVersionId: true, basisType: true, basisId: true, currency: true, amountUnits: true, amountScale: true, status: true, proposedByUserId: true, reviewedByUserId: true, reviewReason: true, reviewedAt: true, respondedByUserId: true, responseReason: true, respondedAt: true, expiresAt: true, createdAt: true } },
+  caseHandoffs: { orderBy: { createdAt: "asc" as const }, select: { id: true, commercialAllocationId: true, transactionCaseId: true, termVersionId: true, audienceGrantId: true, casePartyId: true, ownerInstitutionId: true, counterpartyInstitutionId: true, counterpartyPartyRole: true, status: true, termDigest: true, audienceGrantDigest: true, allocationDigest: true, eligibilityDecisionCode: true, eligibilityCheckedAt: true, handoffDigest: true, createdByUserId: true, createdAt: true, caseParty: { select: { status: true, acceptedByUserId: true, acceptedAt: true } } } },
+} satisfies Prisma.CommercialOpportunitySelect;
 
 @Injectable()
 export class CommercialService {
@@ -206,10 +245,11 @@ export class CommercialService {
     enabled();
     await this.authority(context, "VIEW_OPPORTUNITY");
     const now = new Date();
-    return this.db.commercialOpportunity.findMany({
+    const opportunities = await this.db.commercialOpportunity.findMany({
       where: {
         OR: [
           { ownerInstitutionId: context.actingInstitutionId },
+          { caseHandoffs: { some: { counterpartyInstitutionId: context.actingInstitutionId } } },
           {
             status: "PUBLISHED",
             AND: [{ OR: [{ opensAt: null }, { opensAt: { lte: now } }] }, { OR: [{ closesAt: null }, { closesAt: { gt: now } }] }],
@@ -217,14 +257,20 @@ export class CommercialService {
           },
         ],
       },
-      select: {
-        id: true, transactionCaseId: true, ownerInstitutionId: true, opportunityReference: true,
-        status: true, audienceMode: true, currentTermVersion: true, aggregateVersion: true,
-        opensAt: true, closesAt: true, createdAt: true, updatedAt: true,
-        transactionCase: { select: { transactionRoute: true, representation: true, lifecycleLeg: true, assetClass: true, operatingMode: true } },
-        terms: { orderBy: { version: "desc" }, take: 1 },
-      },
+      select: safeOpportunitySummarySelect,
       orderBy: { createdAt: "desc" },
+    });
+    return opportunities.map((opportunity) => {
+      const { audienceGrants, caseHandoffs, terms, ...summary } = opportunity;
+      const owner = opportunity.ownerInstitutionId === context.actingInstitutionId;
+      const currentAudienceAccess = ["PUBLISHED", "PAUSED"].includes(opportunity.status)
+        && audienceGrants.some((grant) => grant.institutionId === context.actingInstitutionId
+          && grant.status === "ACTIVE" && grant.effectiveAt <= now && grant.expiresAt > now);
+      if (owner || currentAudienceAccess) return { ...summary, terms: terms.slice(0, 1) };
+      const retainedTermIds = new Set(caseHandoffs
+        .filter((handoff) => handoff.counterpartyInstitutionId === context.actingInstitutionId)
+        .map((handoff) => handoff.termVersionId));
+      return { ...summary, terms: terms.filter((term) => retainedTermIds.has(term.id)) };
     });
   }
 
@@ -235,24 +281,32 @@ export class CommercialService {
     if (owner) await this.authority(context, "VIEW_OPPORTUNITY", caseId);
     else {
       const now = new Date();
-      const grant = await this.db.commercialAudienceGrant.findUnique({ where: { commercialOpportunityId_institutionId: { commercialOpportunityId: opportunityId, institutionId: context.actingInstitutionId } } });
-      if (!grant || grant.status !== "ACTIVE" || grant.effectiveAt > now || grant.expiresAt <= now
-        || !["PUBLISHED", "PAUSED"].includes(opportunity.status)) throw new NotFoundException("commercial opportunity not found");
+      const [grant, handoffs] = await Promise.all([
+        this.db.commercialAudienceGrant.findUnique({ where: { commercialOpportunityId_institutionId: { commercialOpportunityId: opportunityId, institutionId: context.actingInstitutionId } } }),
+        this.db.commercialCaseHandoff.findMany({ where: { commercialOpportunityId: opportunityId, counterpartyInstitutionId: context.actingInstitutionId }, select: { id: true, termVersionId: true, commercialAllocationId: true } }),
+      ]);
+      const currentAudienceAccess = Boolean(grant && grant.status === "ACTIVE" && grant.effectiveAt <= now
+        && grant.expiresAt > now && ["PUBLISHED", "PAUSED"].includes(opportunity.status));
+      if (!currentAudienceAccess && handoffs.length === 0) throw new NotFoundException("commercial opportunity not found");
       await this.authority(context, "VIEW_OPPORTUNITY", caseId);
+      if (!currentAudienceAccess) {
+        const retainedTermIds = new Set(handoffs.map((handoff) => handoff.termVersionId));
+        const retainedAllocationIds = new Set(handoffs.map((handoff) => handoff.commercialAllocationId));
+        const detail = await this.db.commercialOpportunity.findUniqueOrThrow({ where: { id: opportunityId }, select: safeOpportunityDetailSelect });
+        return {
+          ...detail,
+          terms: detail.terms.filter((entry) => retainedTermIds.has(entry.id)),
+          audienceGrants: detail.audienceGrants.filter((entry) => entry.institutionId === context.actingInstitutionId),
+          changes: [],
+          interests: [],
+          rfqs: [],
+          threads: [],
+          allocations: detail.allocations.filter((entry) => retainedAllocationIds.has(entry.id)),
+          caseHandoffs: detail.caseHandoffs.filter((entry) => entry.counterpartyInstitutionId === context.actingInstitutionId),
+        };
+      }
     }
-    const detail = await this.db.commercialOpportunity.findUniqueOrThrow({
-      where: { id: opportunityId },
-      include: {
-        transactionCase: true, terms: { orderBy: { version: "asc" } },
-        audienceGrants: { orderBy: { createdAt: "asc" } }, changes: { orderBy: { proposedAt: "asc" } },
-        interests: { orderBy: { createdAt: "asc" } }, rfqs: { orderBy: { createdAt: "asc" } },
-        threads: {
-          orderBy: { createdAt: "asc" },
-          include: { messages: { orderBy: { occurredAt: "asc" } } },
-        },
-        allocations: { orderBy: { createdAt: "asc" } },
-      },
-    });
+    const detail = await this.db.commercialOpportunity.findUniqueOrThrow({ where: { id: opportunityId }, select: safeOpportunityDetailSelect });
     if (owner) return detail;
     return {
       ...detail,
@@ -262,6 +316,7 @@ export class CommercialService {
       rfqs: detail.rfqs.filter((entry) => entry.requesterInstitutionId === context.actingInstitutionId),
       threads: detail.threads.filter((entry) => entry.counterpartyInstitutionId === context.actingInstitutionId),
       allocations: detail.allocations.filter((entry) => entry.offereeInstitutionId === context.actingInstitutionId),
+      caseHandoffs: detail.caseHandoffs.filter((entry) => entry.counterpartyInstitutionId === context.actingInstitutionId),
     };
   }
 
@@ -933,5 +988,105 @@ export class CommercialService {
       audit("rail.commercial.allocation_responded", { opportunityId, allocationId, accepted: accept, actorUserId: context.actorUserId });
       return tx.commercialAllocation.findUniqueOrThrow({ where: { id: allocationId } });
     });
+  }
+
+  async prepareCaseHandoff(context: CommercialActorContext, caseId: string, opportunityId: string, allocationId: string, body: {
+    idempotencyKey?: unknown; reason?: unknown; stepUpEvidenceId?: unknown;
+  }) {
+    productEnabled();
+    const { opportunity, authority } = await this.requireOwner(context, caseId, opportunityId, "MANAGE_ALLOCATION");
+    const idempotencyKey = required(body.idempotencyKey, "idempotencyKey", 200);
+    const reason = required(body.reason, "reason", 1_000);
+    const requestDigest = sha256Digest({ caseId, opportunityId, allocationId, reason });
+    const replay = await this.db.commercialCaseHandoff.findUnique({ where: { commercialOpportunityId_idempotencyKey: { commercialOpportunityId: opportunityId, idempotencyKey } }, select: { id: true, requestDigest: true } });
+    if (replay) {
+      if (replay.requestDigest !== requestDigest) throw new ConflictException("case handoff idempotency key conflicts with retained content");
+      return this.loadCaseHandoff(replay.id);
+    }
+    if (!["DRAFT", "INTAKE_OPEN"].includes(opportunity.transactionCase.status) || opportunity.transactionCase.evidenceLockedAt) {
+      throw new ConflictException("commercial handoff requires an unlocked draft or intake-open transaction case");
+    }
+    await this.requireRouteFunction(context.actingInstitutionId, opportunity.transactionCase, "ALLOCATION");
+    const allocation = await this.db.commercialAllocation.findUnique({ where: { id: allocationId }, include: { termVersion: true } });
+    if (!allocation || allocation.commercialOpportunityId !== opportunityId) throw new NotFoundException("accepted allocation not found");
+    const now = new Date();
+    if (allocation.status !== "ACCEPTED" || !allocation.respondedAt) throw new ConflictException("counterparty acceptance of the allocation is required before case handoff");
+    if (opportunity.status !== "PUBLISHED" || (opportunity.opensAt && opportunity.opensAt > now)
+      || (opportunity.closesAt && opportunity.closesAt <= now) || allocation.expiresAt <= now
+      || allocation.termVersion.validFrom > now || allocation.termVersion.expiresAt <= now) {
+      throw new ConflictException("opportunity, accepted allocation and current term must remain open and current for case handoff");
+    }
+    if (allocation.termVersion.version !== opportunity.currentTermVersion) throw new ConflictException("accepted allocation no longer references the current opportunity term");
+    const existingForAllocation = await this.db.commercialCaseHandoff.findUnique({ where: { commercialAllocationId: allocationId } });
+    if (existingForAllocation) throw new ConflictException("accepted allocation already has a case handoff");
+    const [counterparty, grant, route] = await Promise.all([
+      this.db.institution.findUnique({ where: { id: allocation.offereeInstitutionId }, include: { admission: true } }),
+      this.db.commercialAudienceGrant.findUnique({ where: { commercialOpportunityId_institutionId: { commercialOpportunityId: opportunityId, institutionId: allocation.offereeInstitutionId } } }),
+      this.access.evaluateRoute(allocation.offereeInstitutionId, { transactionRoute: opportunity.transactionCase.transactionRoute, representation: opportunity.transactionCase.representation, assetClass: opportunity.transactionCase.assetClass, lifecycleLeg: opportunity.transactionCase.lifecycleLeg, materialFunction: "ALLOCATION", operatingMode: opportunity.transactionCase.operatingMode }),
+    ]);
+    if (!counterparty || counterparty.status !== "ACTIVE" || counterparty.admission?.status !== "ADMITTED") throw new ConflictException("accepted counterparty is not an active admitted participant");
+    if (!grant || grant.status !== "ACTIVE" || grant.effectiveAt > now || grant.expiresAt <= now) throw new ConflictException("accepted counterparty no longer has a current named-audience grant");
+    if (!route.allowed) throw new ForbiddenException(`accepted counterparty allocation route denied: ${route.code}`);
+    const counterpartyPartyRole = opportunity.transactionCase.transactionRoute === "DA" ? "TRANSFEREE" : "INVESTOR";
+    const handoffId = `chand_${randomUUID()}`;
+    const stepUpEvidenceId = required(body.stepUpEvidenceId, "stepUpEvidenceId", 160);
+    try {
+      const handoff = await this.db.$transaction(async (tx) => {
+        const current = await this.lockOpportunity(tx, opportunityId);
+        const [currentCase, currentAllocation, currentGrant, currentAssignment] = await Promise.all([
+          tx.transactionCase.findUniqueOrThrow({ where: { id: caseId } }),
+          tx.commercialAllocation.findUniqueOrThrow({ where: { id: allocationId }, include: { termVersion: true } }),
+          tx.commercialAudienceGrant.findUniqueOrThrow({ where: { commercialOpportunityId_institutionId: { commercialOpportunityId: opportunityId, institutionId: allocation.offereeInstitutionId } } }),
+          tx.caseFunctionAssignment.findUnique({ where: { transactionCaseId_materialFunction: { transactionCaseId: caseId, materialFunction: "ALLOCATION" } } }),
+        ]);
+        const checkedAt = new Date();
+        if (current.transactionCaseId !== caseId || current.currentTermVersion !== currentAllocation.termVersion.version
+          || current.status !== "PUBLISHED" || (current.opensAt && current.opensAt > checkedAt)
+          || (current.closesAt && current.closesAt <= checkedAt)
+          || currentAllocation.commercialOpportunityId !== opportunityId || currentAllocation.status !== "ACCEPTED"
+          || !currentAllocation.respondedAt || !["DRAFT", "INTAKE_OPEN"].includes(currentCase.status) || currentCase.evidenceLockedAt
+          || currentAllocation.expiresAt <= checkedAt || currentAllocation.termVersion.validFrom > checkedAt
+          || currentAllocation.termVersion.expiresAt <= checkedAt || currentGrant.status !== "ACTIVE"
+          || currentGrant.effectiveAt > checkedAt || currentGrant.expiresAt <= checkedAt
+          || !currentAssignment || currentAssignment.status !== "ACTIVE" || currentAssignment.performer === "PROHIBITED"
+          || (currentAssignment.effectiveAt && currentAssignment.effectiveAt > checkedAt)
+          || (currentAssignment.expiresAt && currentAssignment.expiresAt <= checkedAt)) {
+          throw new ConflictException("opportunity, allocation, case or audience authority changed before handoff");
+        }
+        const currentRoute = await this.access.evaluateRoute(currentAllocation.offereeInstitutionId, {
+          transactionRoute: currentCase.transactionRoute,
+          representation: currentCase.representation,
+          assetClass: currentCase.assetClass,
+          lifecycleLeg: currentCase.lifecycleLeg,
+          materialFunction: "ALLOCATION",
+          operatingMode: currentCase.operatingMode,
+        }, checkedAt, tx);
+        if (!currentRoute.allowed) throw new ForbiddenException(`accepted counterparty allocation route changed before handoff: ${currentRoute.code}`);
+        const allocationDigest = sha256Digest({ allocationId: currentAllocation.id, allocationReference: currentAllocation.allocationReference, offereeInstitutionId: currentAllocation.offereeInstitutionId, termVersionId: currentAllocation.termVersionId, currency: currentAllocation.currency, amountUnits: currentAllocation.amountUnits, amountScale: currentAllocation.amountScale, status: currentAllocation.status, proposalDigest: currentAllocation.proposalDigest, respondedAt: currentAllocation.respondedAt.toISOString() });
+        const handoffDigest = sha256Digest({ caseId, opportunityId, allocationId, termVersionId: currentAllocation.termVersionId, termDigest: currentAllocation.termVersion.termDigest, audienceGrantId: currentGrant.id, audienceGrantDigest: currentGrant.invitationDigest, allocationDigest, ownerInstitutionId: current.ownerInstitutionId, counterpartyInstitutionId: currentAllocation.offereeInstitutionId, counterpartyPartyRole, eligibilityDecisionCode: currentRoute.code, eligibilityCheckedAt: checkedAt.toISOString() });
+        await this.stepUp.consume({ evidenceId: stepUpEvidenceId, userId: context.actorUserId, sessionId: context.actorSessionId, purpose: "COMMERCIAL_CASE_HANDOFF", institutionId: context.actingInstitutionId }, tx);
+        let party = await tx.caseParty.findUnique({ where: { transactionCaseId_institutionId_partyRole: { transactionCaseId: caseId, institutionId: currentAllocation.offereeInstitutionId, partyRole: counterpartyPartyRole } } });
+        if (party && !["PROPOSED", "ACTIVE"].includes(party.status)) throw new ConflictException("the counterparty case role is no longer available for handoff");
+        if (!party) {
+          party = await tx.caseParty.create({ data: { id: `cparty_${randomUUID()}`, transactionCaseId: caseId, institutionId: currentAllocation.offereeInstitutionId, partyRole: counterpartyPartyRole, status: "PROPOSED", authorityEvidenceRef: `commercial-handoff:${handoffId}`, createdByUserId: context.actorUserId } });
+          await tx.transactionCase.update({ where: { id: caseId }, data: { aggregateVersion: { increment: 1 } } });
+        }
+        const status = "HANDOFF_RECORDED";
+        const created = await tx.commercialCaseHandoff.create({ data: { id: handoffId, commercialOpportunityId: opportunityId, commercialAllocationId: allocationId, transactionCaseId: caseId, termVersionId: currentAllocation.termVersionId, audienceGrantId: currentGrant.id, casePartyId: party.id, ownerInstitutionId: current.ownerInstitutionId, counterpartyInstitutionId: currentAllocation.offereeInstitutionId, counterpartyPartyRole, status, termDigest: currentAllocation.termVersion.termDigest, audienceGrantDigest: currentGrant.invitationDigest, allocationDigest, eligibilityDecisionCode: currentRoute.code, eligibilityCheckedAt: checkedAt, handoffDigest, idempotencyKey, requestDigest, createdByUserId: context.actorUserId, createdByMandateId: authority.mandateId!, stepUpEvidenceId } });
+        await appendGovernedAudit(tx, { actor: `user:${context.actorUserId}@institution:${context.actingInstitutionId}`, event: "rail.commercial.case_handoff_prepared", detail: { caseId, opportunityId, allocationId, handoffId, handoffDigest, counterpartyInstitutionId: currentAllocation.offereeInstitutionId, counterpartyPartyRole, status, reason } });
+        return created;
+      });
+      audit("rail.commercial.case_handoff_prepared", { caseId, opportunityId, allocationId, handoffId: handoff.id, actorUserId: context.actorUserId });
+      return this.loadCaseHandoff(handoff.id);
+    } catch (error) {
+      const retained = await this.db.commercialCaseHandoff.findUnique({ where: { commercialOpportunityId_idempotencyKey: { commercialOpportunityId: opportunityId, idempotencyKey } }, select: { id: true, requestDigest: true } });
+      if (retained?.requestDigest === requestDigest) return this.loadCaseHandoff(retained.id);
+      if (unique(error)) throw new ConflictException("accepted allocation or idempotency key already has a retained handoff");
+      throw error;
+    }
+  }
+
+  private loadCaseHandoff(id: string) {
+    return this.db.commercialCaseHandoff.findUniqueOrThrow({ where: { id }, select: { id: true, commercialOpportunityId: true, commercialAllocationId: true, transactionCaseId: true, termVersionId: true, audienceGrantId: true, casePartyId: true, ownerInstitutionId: true, counterpartyInstitutionId: true, counterpartyPartyRole: true, status: true, termDigest: true, audienceGrantDigest: true, allocationDigest: true, eligibilityDecisionCode: true, eligibilityCheckedAt: true, handoffDigest: true, createdByUserId: true, createdAt: true, caseParty: { select: { status: true, acceptedByUserId: true, acceptedAt: true } } } });
   }
 }
