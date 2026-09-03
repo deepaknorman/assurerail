@@ -1,0 +1,7 @@
+proof_id,proof_family,metric,baseline_source,baseline_value,target_value,result_value,result_source,measurement_owner,acceptance_authority,status,exception_or_stop_rule
+EVD-01,Evidence,Required evidence coverage,,,,,,,Business and risk owner,NOT_RUN,"Hold if a material required family cannot be sourced or lawfully processed"
+ACC-01,Accuracy,Agreement with declared source records,,,,,,,Risk and operations owner,NOT_RUN,"Hold if missing or contradictory governing facts can produce a positive state"
+EFF-01,Efficiency,Participant hours and repeated requests,,,,,,,Business sponsor,NOT_RUN,"Hold if added burden exceeds measured value without an agreed automation path"
+CMP-01,Completion,Required completion acknowledgements reconciled,,,,,,,Operations or trustee owner,NOT_RUN,"Hold if Rail can display completion without route-defined external evidence"
+RES-01,Resilience,Replay/export integrity after approved recovery test,,,,,,,Technology and security owner,NOT_RUN,"Hold if recovery loses evidence or creates a duplicate/irreconcilable state"
+ADP-01,Adoption,Named owners accept the target operating model,,,,,,,Executive sponsor,NOT_RUN,"Hold if an essential operating duty has no accountable owner"
