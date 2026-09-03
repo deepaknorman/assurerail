@@ -25,6 +25,18 @@ PUB-02 does not populate customer-result sections because no participant-authori
 evidence exists. When real evidence matures, add only the exact route, date, owner-approved metric and
 qualification. Never promote a result from a synthetic sandbox.
 
+### PUB-01A correction — public minimisation and protected diligence
+
+Founder preview review found that the first publication candidate exposed too much implementation,
+security and readiness detail. Anonymous pages are therefore reduced to proposition, high-level
+route/responsibility language, current external availability and replay contact. Work-package IDs,
+infrastructure locations, security worklists and detailed open gates move to `/diligence`, which is
+server-gated, disabled by default, no-store and excluded from indexing/navigation.
+
+Public and diligence sources now carry separate review windows. Stakeholder milestones update the
+protected register first; public promotion requires a separate claims decision. Governance:
+`docs/gtm/AssureRail_Public_And_Diligence_Content_Governance.md`.
+
 ## Verification
 
 ```bash
