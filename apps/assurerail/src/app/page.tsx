@@ -51,9 +51,12 @@ export default function Home() {
             <Logo />
           </Link>
           <nav className={styles.nav} aria-label="Primary navigation">
-            <a href="#routes">DA + PTC</a>
+            <Link href="/routes/direct-assignment">DA</Link>
+            <Link href="/routes/ptc">PTC</Link>
             <a href="#proof">Proof path</a>
-            <a href="#status">Scope &amp; status</a>
+            <Link href="/trust">Trust</Link>
+            <Link href="/resources">Resources</Link>
+            <Link href="/status">Status</Link>
             <Link href="/login" className={styles.signIn}>Institution sign in</Link>
           </nav>
         </div>
@@ -72,12 +75,12 @@ export default function Home() {
                 representations only where separately approved.
               </p>
               <div className={styles.actions}>
-                <a
+                <Link
                   className={styles.primaryAction}
-                  href="mailto:contact@assurelocker.com?subject=AssureRail%20completed-deal%20replay"
+                  href="/replay"
                 >
                   Propose a completed-deal replay <ArrowRight size={17} />
-                </a>
+                </Link>
                 <a className={styles.secondaryAction} href="#status">View scope and status</a>
               </div>
               <div className={styles.statusLine} aria-label="Current product status">
@@ -214,9 +217,9 @@ export default function Home() {
             <Building2 size={26} aria-hidden="true" />
             <h2>Start with a transaction you have already completed.</h2>
             <p>Under an agreed NDA and data scope, replay the evidence and hand-offs without changing the authoritative process.</p>
-            <a href="mailto:contact@assurelocker.com?subject=AssureRail%20completed-deal%20replay">
+            <Link href="/replay">
               Discuss a replay <ArrowRight size={17} />
-            </a>
+            </Link>
           </div>
         </section>
       </main>
@@ -232,7 +235,9 @@ export default function Home() {
           </p>
           <div className={styles.footerLinks}>
             <Link href="/login">Institution sign in</Link>
-            <a href="mailto:contact@assurelocker.com">Contact</a>
+            <Link href="/resources">Resources</Link>
+            <Link href="/trust">Trust</Link>
+            <Link href="/replay">Contact</Link>
           </div>
         </div>
       </footer>

@@ -2,7 +2,7 @@
   "name": "@code/assurerail",
   "version": "0.1.0",
   "private": true,
-  "description": "AssureRail — standalone web app for the securitisation & tokenisation venue (own brand/auth/DB/domain). Consumes the venue API.",
+  "description": "AssureRail — standalone web application for provider-neutral DA and PTC transaction infrastructure.",
   "scripts": {
     "dev": "next dev -p 3007",
     "build": "next build",
@@ -11,6 +11,8 @@
     "check:cx00": "node scripts/cx00-capability-baseline-check.mjs",
     "check:pub00": "node scripts/pub00-public-claims-check.mjs",
     "check:cx01-sim01": "node scripts/cx01-sim01-check.mjs",
+    "check:inbound01": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/inbound-contract.test.ts",
+    "check:public-growth": "node scripts/public-growth-check.mjs",
     "check:pr18": "node scripts/pr18-customer-workspace-check.mjs",
     "check:ar21": "node scripts/ar21-hosted-alpha-check.mjs",
     "check:ar22": "node scripts/ar22-institutional-product-check.mjs",

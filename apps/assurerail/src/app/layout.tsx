@@ -35,6 +35,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Apply the persisted theme before paint (no flash); "system" leaves data-theme unset. */}
         <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('arail-theme');if(t&&t!=='system')document.documentElement.setAttribute('data-theme',t);}catch(e){}" }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "AssureRail",
+          url: "https://assurerail.com",
+          logo: "https://assurerail.com/logo.svg",
+          description: "Provider-neutral institutional transaction infrastructure for direct assignment and PTC transactions.",
+          areaServed: { "@type": "Country", name: "India" },
+        }).replace(/</g, "\\u003c") }} />
       </head>
       <body>
         <AuthProvider>{children}</AuthProvider>
