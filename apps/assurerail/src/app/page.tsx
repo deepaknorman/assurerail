@@ -40,7 +40,7 @@ const PROBLEMS = [
   },
 ] as const;
 
-const SYSTEMS = ["Lender / LMS", "Trustee", "RTA / depository", "Bank / payment", "Servicer / rating"];
+const SYSTEMS = ["Originator systems", "Investor systems", "Trustee and service providers", "Payment and record systems"];
 
 export default function Home() {
   return (
@@ -53,10 +53,10 @@ export default function Home() {
           <nav className={styles.nav} aria-label="Primary navigation">
             <Link href="/routes/direct-assignment">DA</Link>
             <Link href="/routes/ptc">PTC</Link>
-            <a href="#proof">Proof path</a>
-            <Link href="/trust">Trust</Link>
+            <a href="#proof">How it works</a>
+            <Link href="/trust">How we work</Link>
             <Link href="/resources">Resources</Link>
-            <Link href="/status">Status</Link>
+            <Link href="/status">Availability</Link>
             <Link href="/login" className={styles.signIn}>Institution sign in</Link>
           </nav>
         </div>
@@ -81,19 +81,19 @@ export default function Home() {
                 >
                   Propose a completed-deal replay <ArrowRight size={17} />
                 </Link>
-                <a className={styles.secondaryAction} href="#status">View scope and status</a>
+                <a className={styles.secondaryAction} href="#status">Current availability</a>
               </div>
               <div className={styles.statusLine} aria-label="Current product status">
-                <span><i className={styles.statusDot} /> Design-partner stage</span>
-                <span>DA + PTC replay prepared</span>
-                <span>No controlled-live claim</span>
+                <span><i className={styles.statusDot} /> Private institutional evaluation</span>
+                <span>DA and PTC</span>
+                <span>Live services not currently offered</span>
               </div>
             </div>
 
             <div className={styles.systemMap} aria-label="AssureRail coordinates a governed case across existing institutional systems">
               <div className={styles.mapHeader}>
                 <span>Existing systems retain their role</span>
-                <span className={styles.mapMode}>REPLAY / SHADOW</span>
+                <span className={styles.mapMode}>COORDINATED REVIEW</span>
               </div>
               <div className={styles.systemList}>
                 {SYSTEMS.map((system) => <span key={system}>{system}</span>)}
@@ -101,15 +101,11 @@ export default function Home() {
               <div className={styles.railCase}>
                 <LogoMark />
                 <div>
-                  <strong>Governed transaction case</strong>
-                  <small>authority · evidence · decisions · reconciliation · lifecycle</small>
+                  <strong>One coordinated transaction view</strong>
+                  <small>participants · evidence · progress · exceptions</small>
                 </div>
               </div>
-              <div className={styles.ackRow}>
-                <span>Expected</span><ArrowRight size={14} /><span>Received</span><ArrowRight size={14} />
-                <span>Verified</span><ArrowRight size={14} /><span>Reconciled</span>
-              </div>
-              <p>AssureRail does not become the legal record merely because it coordinates the workflow.</p>
+              <p>Existing institutions and systems keep the roles assigned to them.</p>
             </div>
           </div>
         </section>
@@ -136,9 +132,9 @@ export default function Home() {
         <section className={styles.section} id="routes">
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>Two routes · two representations</p>
-              <h2>The legal route and its digital representation are separate choices.</h2>
-              <p>Conventional DA and PTC are first-class journeys. Tokenisation is an adapter—not the entry ticket.</p>
+              <p className={styles.eyebrow}>Two transaction routes</p>
+              <h2>Direct assignment and PTC each retain their own institutional structure.</h2>
+              <p>AssureRail is designed for conventional transactions first. Any future digital representation is evaluated separately.</p>
             </div>
             <div className={styles.modeMatrix} role="table" aria-label="AssureRail transaction routes and representations">
               <div className={`${styles.modeCell} ${styles.modeCorner}`} role="columnheader">Route</div>
@@ -158,9 +154,9 @@ export default function Home() {
         <section className={`${styles.section} ${styles.proofSection}`} id="proof">
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>Adopt without replacing first</p>
-              <h2>Prove the rail one controlled rung at a time.</h2>
-              <p>Each stage produces evidence for the next. Nothing live is inferred from a demonstration or software test.</p>
+              <p className={styles.eyebrow}>Evaluate before changing systems</p>
+              <h2>Start small and progress by agreement.</h2>
+              <p>Begin with a completed transaction and decide together whether a further evaluation is worthwhile.</p>
             </div>
             <ol className={styles.proofGrid}>
               {PUBLIC_PROOF_LADDER.map((item) => (
@@ -177,20 +173,18 @@ export default function Home() {
         <section className={styles.section} id="status">
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>Capability register · reviewed {PUBLIC_CAPABILITY_REVIEWED_AT}</p>
-              <h2>Built, evidenced and activated are different states.</h2>
-              <p>The software is deployed behind fail-closed controls. External evidence and exact activation remain controlling.</p>
+              <p className={styles.eyebrow}>Current availability · updated {PUBLIC_CAPABILITY_REVIEWED_AT}</p>
+              <h2>Private evaluation now. Live transaction services are not currently offered.</h2>
+              <p>Detailed product, security and readiness information is shared with authorised parties through controlled diligence.</p>
             </div>
             <div className={styles.capabilityList}>
               {PUBLIC_CAPABILITIES.map((capability) => (
                 <article key={capability.id} className={styles.capability}>
                   <div className={styles.capabilityTitle}>
                     <span className={`${styles.capabilityState} ${styles[capability.state.toLowerCase()]}`}>{capability.publicLabel}</span>
-                    <span className={styles.evidenceRef}>{capability.evidenceRef}</span>
                   </div>
                   <h3>{capability.label}</h3>
                   <p>{capability.summary}</p>
-                  <small>{capability.boundary}</small>
                 </article>
               ))}
             </div>
@@ -200,14 +194,14 @@ export default function Home() {
         <section className={styles.boundarySection}>
           <div className={`${styles.container} ${styles.boundaryGrid}`}>
             <div>
-              <p className={styles.eyebrow}>Provider-neutral by design</p>
-              <h2>Keep the systems and accountable institutions that already carry authority.</h2>
+              <p className={styles.eyebrow}>Designed to coexist</p>
+              <h2>Keep the institutions and systems already responsible for the transaction.</h2>
             </div>
             <ul>
-              <li><CheckCircle2 size={18} /> The transferee or investor retains its credit and investment decision.</li>
-              <li><CheckCircle2 size={18} /> The trustee controls the PTC workflow; the route-defined register retains its legal role.</li>
-              <li><CheckCircle2 size={18} /> The accountable party may appoint AssurePlane, another assurer or its own permitted process.</li>
-              <li><CheckCircle2 size={18} /> AssurePool may supply a DA tape, but it is not mandatory and never becomes the PTC route.</li>
+              <li><CheckCircle2 size={18} /> Each institution retains its own decision and accountability.</li>
+              <li><CheckCircle2 size={18} /> Trustees and appointed providers retain their established roles.</li>
+              <li><CheckCircle2 size={18} /> Existing systems can remain in place during evaluation.</li>
+              <li><CheckCircle2 size={18} /> Any progression is separately agreed and appropriately governed.</li>
             </ul>
           </div>
         </section>
@@ -228,15 +222,14 @@ export default function Home() {
         <div className={styles.container}>
           <Logo />
           <p>
-            AssureRail is at design-partner and replay/shadow preparation stage. No live matching,
-            issuance, secondary execution, token-title, custody or production-settlement availability
-            is claimed. Any regulated or externally operative function requires the approved performer,
-            route and activation. Institutional counterparties only; not investment, legal, tax or financial advice.
+            AssureRail is available for private institutional evaluation. Live transaction services,
+            custody, funds handling and settlement are not currently offered. Institutional counterparties
+            only; not investment, legal, tax or financial advice.
           </p>
           <div className={styles.footerLinks}>
             <Link href="/login">Institution sign in</Link>
             <Link href="/resources">Resources</Link>
-            <Link href="/trust">Trust</Link>
+            <Link href="/trust">How we work</Link>
             <Link href="/replay">Contact</Link>
           </div>
         </div>

@@ -16,28 +16,24 @@ export const PUBLIC_ROUTE_PAGES: readonly PublicRoutePage[] = [
     shortLabel: "Direct assignment",
     title: "A governed transaction case for conventional direct assignment",
     summary:
-      "Reconstruct the tape, parties, diligence, approvals, documents, consideration, notices and source-record acknowledgements without replacing the transferor or transferee systems.",
+      "Bring the participating institutions and their transaction information into one coordinated process without requiring immediate system replacement.",
     whoDecides:
       "The transferee retains its credit, eligibility and purchase decision. Each institution remains accountable for the acts assigned to it.",
     authoritativeRecord:
-      "The approved route pack identifies the operative source/register acknowledgements for the transaction. AssureRail is not legal title merely because it records the workflow.",
+      "The institutions continue to rely on the records applicable to their transaction. AssureRail does not become the ownership record merely because it coordinates the process.",
     replayInputs: [
-      "Final tape or pool version and source references",
-      "Diligence requests, exceptions, decisions and conditions",
-      "Executed assignment and transaction documents",
-      "Consideration, notice and source-book acknowledgements",
-      "Completion decision, known breaks and lifecycle hand-off",
+      "One representative completed transaction",
+      "The accountable business and operations owners",
+      "An agreed, minimised information scope",
     ],
     railCoordinates: [
-      "Named parties, memberships, mandates and action authority",
-      "Immutable evidence versions, access receipts and decisions",
-      "Expected-versus-observed completion and reconciliation",
-      "Case timeline, exception register and exportable dossier",
+      "A shared view of progress and responsibility",
+      "Transaction evidence and open exceptions",
+      "A reproducible review output",
     ],
     unavailable: [
-      "No live matching, funds movement or title transfer is offered",
-      "No lender credit decision is made or outsourced by AssureRail",
-      "No controlled-live route exists before counsel, security and operating gates close",
+      "No live matching, funds movement or title transfer is currently offered",
+      "Each lender retains its own credit and purchase decision",
     ],
   },
   {
@@ -45,28 +41,24 @@ export const PUBLIC_ROUTE_PAGES: readonly PublicRoutePage[] = [
     shortLabel: "PTC",
     title: "Trustee-controlled PTC orchestration with the legal record left intact",
     summary:
-      "Bring programme and trust evidence, pool transfer, rating, assurance, subscription, allotment, recordkeeper acknowledgements and lifecycle setup into one governed case.",
+      "Coordinate the issuer, investors, trustee and appointed providers through one transaction view while preserving their respective roles.",
     whoDecides:
       "The trustee is the final transaction-control authority in the AssureRail workflow. Investors retain their investment decisions and appointed parties retain their regulated functions.",
     authoritativeRecord:
-      "The route-defined depository, RTA or register remains legally operative where applicable. Trustee acceptance cannot conceal a disagreement with that record.",
+      "The transaction continues to rely on its applicable holding and ownership records. AssureRail is designed to surface rather than override a disagreement.",
     replayInputs: [
-      "Programme, trust and appointment documents",
-      "Pool transfer, eligibility and retained-interest evidence",
-      "Tranche terms, rating, assurance and subscription records",
-      "Consideration, allotment and RTA/depository acknowledgements",
-      "Waterfall, surveillance and lifecycle setup",
+      "One representative completed transaction",
+      "The trustee and accountable transaction owners",
+      "An agreed, minimised information scope",
     ],
     railCoordinates: [
-      "Trustee decision, reliance and referenced external acknowledgements",
-      "Function-by-function performer and authority assignments",
-      "Document, tranche and allotment version reconciliation",
-      "Lifecycle obligations, notices, breaks and evidence export",
+      "A shared view of progress and responsibility",
+      "Transaction evidence and open exceptions",
+      "A reproducible review output",
     ],
     unavailable: [
-      "No public offer, placement, issuance or trading function is claimed",
-      "No compulsory AssureLocker, AssurePlane or named trustee dependency",
-      "Tokenised PTC remains a separately gated representation and is not inferred from conventional PTC",
+      "No public offer, placement, issuance or trading function is currently offered",
+      "PTC decisions and appointed-provider roles remain with the appropriate institutions",
     ],
   },
 ] as const;
@@ -99,7 +91,7 @@ export const PERSONA_PAGES: readonly PersonaPage[] = [
     lead:
       "AssureRail is designed to present scoped, attributable evidence and exceptions while leaving credit and investment judgement with the institution making it.",
     retains: ["Credit or investment decision", "Risk policy, limits and approvals", "Reliance position and conditions"],
-    gains: ["Named and expiring diligence access", "Evidence source, as-of date and qualification", "Reconciliation and unresolved-break visibility"],
+    gains: ["Controlled transaction access", "Clear evidence status", "Visibility of unresolved exceptions"],
     firstProof: "Review the reconstructed evidence pack from a transaction in which your institution already participated.",
   },
   {
@@ -108,9 +100,9 @@ export const PERSONA_PAGES: readonly PersonaPage[] = [
     title: "Make the transaction-control record easier to reproduce",
     lead:
       "The trustee keeps its authority and its existing recordkeeper relationships. AssureRail records the decision, the evidence relied upon and any unresolved discrepancy.",
-    retains: ["Trustee acceptance and direction", "Appointment and reliance boundaries", "RTA, depository and register operating relationships"],
-    gains: ["Structured condition and evidence tracking", "A visible trustee-versus-recordkeeper reconciliation", "Exportable decision and lifecycle history"],
-    firstProof: "Authorise one all-leg historic PTC replay and identify the RTA/depository/register evidence relied upon at completion.",
+    retains: ["Trustee acceptance and direction", "Appointment and reliance boundaries", "Existing recordkeeping relationships"],
+    gains: ["Structured condition and evidence tracking", "Visible unresolved differences", "Exportable decision and lifecycle history"],
+    firstProof: "Review one completed PTC with the trustee and other accountable transaction owners.",
   },
 ] as const;
 
@@ -153,7 +145,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
       {
         heading: "What it cannot prove",
         paragraphs: [
-          "Replay does not establish customer acceptance under live pressure, connector finality, production security, recovery performance or permission to perform a regulated function. Those remain separate shadow, pilot and activation gates.",
+          "Replay does not establish that a live service is available or that any regulated function may be performed. Any further evaluation is a separate decision.",
         ],
       },
     ],
@@ -181,13 +173,13 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
       {
         heading: "The PTC route",
         paragraphs: [
-          "A PTC transaction introduces trust or programme evidence, trustee control, classes or tranches, rating and assurance relationships, subscription and allotment, and a route-defined RTA, depository or register. A field called PTC is not the same thing as implementing these controls.",
+          "A PTC transaction brings additional parties, responsibilities and records. It should not be treated as a renamed bilateral transfer workflow.",
         ],
       },
       {
         heading: "Why the distinction matters",
         paragraphs: [
-          "A generic platform should share neutral primitives while making route-specific rules, performers and authoritative records explicit. Unknown or unsupported facts should remain open, not inherit a passing result from the other route.",
+          "A common platform can share a transaction foundation while keeping the responsibilities and records of each route clear.",
         ],
       },
     ],

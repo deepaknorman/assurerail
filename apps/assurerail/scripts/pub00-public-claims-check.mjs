@@ -34,8 +34,8 @@ const historicRbi = await source(
   "apps/web/src/app/downloads/briefings/RBI-July2026/page.tsx",
 );
 
-requireText(railLanding, "Built, evidenced and activated are different states.", "AssureRail landing");
-requireText(railLanding, "No live matching", "AssureRail landing");
+requireText(railLanding, "Private evaluation now", "AssureRail landing");
+requireText(railLanding, "Live transaction services are not currently offered", "AssureRail landing");
 requireText(downloads, "governed transaction infrastructure", "Downloads index");
 requireText(investors, "AssurePool DA preparation", "Investor page");
 requireText(investors, "company, IP, funding and licence", "Investor page");

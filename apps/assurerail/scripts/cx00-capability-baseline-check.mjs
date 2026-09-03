@@ -6,6 +6,7 @@ const root = resolve(import.meta.dirname, "..");
 const read = (path) => readFileSync(resolve(root, path), "utf8");
 
 const capabilitySource = read("src/lib/public-capability.ts");
+const diligenceSource = read("src/lib/diligence-content.ts");
 const envExample = read(".env.example");
 const workspaceSource = read("src/lib/customer-workspace.ts");
 
@@ -63,16 +64,18 @@ for (const id of [
   "enterprise-integration",
   "controlled-live-production",
 ]) {
-  assert.ok(capabilitySource.includes(`id: "${id}"`), `missing public capability: ${id}`);
+  assert.ok(diligenceSource.includes(`id: "${id}"`), `missing protected diligence capability: ${id}`);
 }
 
-assert.match(capabilitySource, /controlled-live[\s\S]*state: "NOT_AVAILABLE"/);
-assert.ok(capabilitySource.includes("No controlled-live or production route is available"));
-assert.ok(capabilitySource.includes("participant/trustee-authorised all-leg historic replay"));
+assert.match(diligenceSource, /controlled-live-production[\s\S]*state: "NOT_ACTIVATED"/);
+assert.ok(diligenceSource.includes("Participant/trustee-authorised all-leg historic replay"));
+assert.ok(capabilitySource.includes("Live transaction services"));
+assert.ok(!capabilitySource.includes("PR-"));
+assert.ok(!capabilitySource.includes("AR-"));
 assert.ok(!capabilitySource.includes("AssurePool Note"));
 assert.ok(!capabilitySource.includes("settlement risk eliminated"));
 assert.ok(!capabilitySource.includes("e₹"));
 
 console.log(
-  `CX-00 capability baseline: ${expectedRoutes.length} customer routes, ${expectedWebFlags.length} fail-closed web flags and 7 publication-safe capability entries verified.`
+  `CX-00 capability baseline: ${expectedRoutes.length} customer routes, ${expectedWebFlags.length} fail-closed web flags and 7 protected diligence capability entries verified.`
 );

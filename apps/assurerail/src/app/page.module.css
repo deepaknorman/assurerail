@@ -95,6 +95,8 @@
 .implemented_gated { color: #1c6958; background: #e2f0e9; }
 .replay_evidence_open { color: #8a5b14; background: #f7ead3; }
 .shadow_evidence_open { color: #365e79; background: #e4edf2; }
+.private_evaluation { color: #1c6958; background: #e2f0e9; }
+.by_arrangement { color: #8a5b14; background: #f7ead3; }
 .not_available { color: #8a4139; background: #f3e1de; }
 .evidenceRef { color: #7c8b8f; }
 .capability h3 { margin-top: 18px; font-size: 19px; }

@@ -28,7 +28,7 @@ export function SandboxExperience() {
   return <main className={styles.shell}>
     <header className={styles.header}><Link href="/"><Logo /></Link><span>Synthetic customer sandbox</span></header>
     <section className={styles.hero}>
-      <div><p className={styles.eyebrow}>SIM-01 · deterministic · no external effects</p><h1>See how AssureRail refuses an incomplete completion story.</h1><p>Walk a synthetic DA or PTC record through evidence, authority and reconciliation. No API write, money, title, issuance, register or token action occurs.</p></div>
+      <div><p className={styles.eyebrow}>Synthetic demonstration · no external effects</p><h1>See how AssureRail refuses an incomplete completion story.</h1><p>Walk a synthetic DA or PTC record through evidence, authority and reconciliation. No API write, money, title, issuance, register or token action occurs.</p></div>
       <div className={styles.fixture}><strong>SYNTHETIC ONLY</strong><span>{scenario.fixtureNotice}</span></div>
     </section>
     <section className={styles.controls} aria-label="Sandbox scenario controls">

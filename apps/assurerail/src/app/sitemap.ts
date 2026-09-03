@@ -10,7 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/replay`, lastModified: reviewedAt, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/trust`, lastModified: reviewedAt, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/resources`, lastModified: reviewedAt, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${base}/sandbox`, lastModified: reviewedAt, changeFrequency: "monthly", priority: 0.6 },
     ...PUBLIC_ROUTE_PAGES.map((item) => ({ url: `${base}/routes/${item.slug}`, lastModified: reviewedAt, changeFrequency: "monthly" as const, priority: 0.8 })),
     ...PERSONA_PAGES.map((item) => ({ url: `${base}/for/${item.slug}`, lastModified: reviewedAt, changeFrequency: "monthly" as const, priority: 0.7 })),
     ...RESOURCE_ARTICLES.map((item) => ({ url: `${base}/resources/${item.slug}`, lastModified: new Date(`${item.reviewedAt}T00:00:00+05:30`), changeFrequency: "monthly" as const, priority: 0.65 })),

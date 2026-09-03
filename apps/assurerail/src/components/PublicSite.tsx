@@ -12,9 +12,9 @@ export function PublicHeader() {
         <nav className={styles.nav} aria-label="Public navigation">
           <Link href="/routes/direct-assignment">Direct assignment</Link>
           <Link href="/routes/ptc">PTC</Link>
-          <Link href="/trust">Trust</Link>
+          <Link href="/trust">How we work</Link>
           <Link href="/resources">Resources</Link>
-          <Link href="/status">Status</Link>
+          <Link href="/status">Availability</Link>
           <Link href="/replay" className={styles.navCta}>Propose a replay</Link>
           <Link href="/login" className={styles.signIn}>Sign in</Link>
         </nav>
@@ -32,7 +32,7 @@ export function PublicFooter() {
           <strong>Routes</strong>
           <Link href="/routes/direct-assignment">Direct assignment</Link>
           <Link href="/routes/ptc">PTC</Link>
-          <Link href="/status">Capability status</Link>
+          <Link href="/status">Current availability</Link>
         </div>
         <div>
           <strong>Participants</strong>
@@ -41,17 +41,15 @@ export function PublicFooter() {
           <Link href="/for/trustees">Trustees</Link>
         </div>
         <div>
-          <strong>Proof</strong>
-          <Link href="/sandbox">Synthetic sandbox</Link>
+          <strong>Explore</strong>
           <Link href="/resources">Resources</Link>
           <Link href="/replay">Completed-deal replay</Link>
         </div>
       </div>
       <div className={styles.disclaimer}>
-        AssureRail is at design-partner and replay/shadow preparation stage. No controlled-live or
-        production matching, issuance, secondary execution, token title, custody, funds handling or
-        settlement availability is claimed. Any operative function requires the approved performer,
-        route and activation. Institutional counterparties only; not investment, legal, tax or financial advice.
+        AssureRail is available for private institutional evaluation. Live transaction services,
+        custody, funds handling and settlement are not currently offered. Institutional counterparties
+        only; not investment, legal, tax or financial advice.
       </div>
     </footer>
   );
@@ -81,7 +79,7 @@ export function ReplayAction({ label = "Propose a completed-deal replay" }: { la
   return <Link href="/replay" className={styles.primaryAction}>{label}<ArrowRight size={17} /></Link>;
 }
 
-export function StatusStamp({ children = "Design-partner stage · no controlled-live claim" }: { children?: ReactNode }) {
+export function StatusStamp({ children = "Private institutional evaluation" }: { children?: ReactNode }) {
   return <span className={styles.statusStamp}>{children}</span>;
 }
 

@@ -5,8 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/routes/", "/for/", "/trust", "/status", "/resources/", "/replay", "/sandbox"],
-        disallow: ["/admin/", "/internal/", "/workspace/", "/institutions/", "/cases/", "/console", "/settings", "/activity", "/onboard", "/login", "/api/"],
+        allow: ["/$", "/routes/", "/for/", "/trust", "/status", "/resources", "/resources/", "/replay"],
+        disallow: "/",
       },
     ],
     sitemap: "https://assurerail.com/sitemap.xml",

@@ -49,18 +49,18 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
       </section>
       <section className={styles.sectionAlt}>
         <div className={styles.container}>
-          <h2>Begin with the evidence from a completed transaction.</h2>
+          <h2>Begin with a completed transaction.</h2>
           <div className={styles.grid2}>
-            <article className={styles.card}><h3>Replay inputs</h3><ul>{page.replayInputs.map((item) => <li key={item}>{item}</li>)}</ul></article>
-            <article className={styles.card}><h3>What Rail coordinates</h3><ul>{page.railCoordinates.map((item) => <li key={item}>{item}</li>)}</ul></article>
+            <article className={styles.card}><h3>What is needed</h3><ul>{page.replayInputs.map((item) => <li key={item}>{item}</li>)}</ul></article>
+            <article className={styles.card}><h3>What the review provides</h3><ul>{page.railCoordinates.map((item) => <li key={item}>{item}</li>)}</ul></article>
           </div>
-          <div className={styles.boundary}><strong>Current boundary.</strong> The software journey is implemented behind controls. A real historic replay, customer acceptance, independent VAPT, counsel and route-specific operating evidence remain open.</div>
+          <div className={styles.boundary}><strong>Current availability.</strong> Private evaluation is available by arrangement. Live transaction services are not currently offered.</div>
         </div>
       </section>
       <section className={styles.sectionDark}>
         <div className={styles.container}>
-          <p className={styles.eyebrow}>Not offered as a current live service</p>
-          <h2>The interface cannot create authority that the route does not grant.</h2>
+          <p className={styles.eyebrow}>Institutional responsibility remains</p>
+          <h2>Technology does not replace the decisions assigned to each institution.</h2>
           <div className={styles.grid3}>{page.unavailable.map((item) => <article className={styles.card} key={item}><p>{item}</p></article>)}</div>
         </div>
       </section>

@@ -46,7 +46,7 @@ const allPublic = [
 for (const claim of ["VAPT complete", "production-ready", "atomic settlement", "token transfer equals title", "RBI approved", "SEBI approved", "guaranteed return"]) {
   if (allPublic.toLowerCase().includes(claim.toLowerCase())) failures.push(`unsafe public claim present: ${claim}`);
 }
-if (!allPublic.includes("No controlled-live") && !allPublic.includes("no controlled-live")) failures.push("controlled-live boundary is absent");
+if (!allPublic.includes("Live transaction services are not currently offered")) failures.push("current public availability boundary is absent");
 
 if (failures.length) {
   console.error("GTM-01/PUB-01/INBOUND-01/PUB-02/CONTENT-01 check FAILED");
