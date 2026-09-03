@@ -17,6 +17,11 @@ disabled controls; this supersedes the pre-build status language in the 30 Augus
 - `docs/decks/AssureRail_Institutional_GTM_Deck.html`
 - `docs/decks/AssureRail_Objection_Handling_And_Pilot_Playbook.html`
 
+**Implementation checkpoint, 3 September 2026:** the AssureRail web application now contains the
+accurate root proposition plus DA/PTC route pages, participant pages, trust/status, replay intake
+surface and effective-dated resources described by PUB-01, PUB-02, CONTENT-01 and INBOUND-01. The
+code is not published by that implementation checkpoint; inbound remains disabled by default.
+
 ---
 
 ## 1. Executive decision
@@ -142,11 +147,11 @@ External short form, after claims review:
 
 ---
 
-## 4. Proposed first public AssureRail page
+## 4. Implemented first public AssureRail page
 
-**Route:** `/assurerail`
+**Route:** `/` on the dedicated AssureRail public application/domain
 
-This should be the first build, before creating a full sub-site.
+This is the first build and the source from which the accurate route/persona sub-site now extends.
 
 ### 4.1 Metadata
 
@@ -254,9 +259,9 @@ Four labels:
 4. `Operations` — connector certification, settlement/register references, security readiness,
    suspension and exit.
 
-Status note: `Individual Rail authentication, MFA/passkey and basic roles exist. The wider codebase
-also contains institution application/membership and AssureCLA arrangement-onboarding controls
-that can be adapted. They are not yet wired into Rail; route-scoped admission is Stage 1 work.`
+Status note: `Rail-local institution, membership, mandate, appointment and route-entitlement
+controls are implemented behind disabled controls. Provider validation, real assignments,
+enforcement rehearsal and customer acceptance remain open.`
 
 #### Section D — Full-stack destination
 
@@ -343,26 +348,26 @@ happens.`
 
 ---
 
-## 5. Eventual AssureRail website structure
+## 5. AssureRail website structure
 
-Build these only as evidence and route work justifies them.
+The first eight route groups below are implemented in the dedicated AssureRail application. Publication
+still requires the stated gate. The remaining routes are later additions to be earned through
+evidence and participant co-design.
 
 | Route | Customer job | Publication gate |
 |---|---|---|
-| `/assurerail` | Understand the category, boundaries, status and first proof | Canonical copy + claims review |
-| `/assurerail/pilot` | Nominate replay/shadow cases and understand the four-part proof | Replay templates, scorecard and intake owner ready |
-| `/assurerail/direct-assignment` | Understand first/subsequent DA lifecycle and non-delegable lender decisions | DA mode card + counsel issue matrix reviewed |
-| `/assurerail/ptc` | Understand primary issuance, holding record, trustee/lifecycle and secondary scope | PTC mode card co-designed with trustee/counsel |
-| `/assurerail/conventional` | Understand digital transaction control without tokens | Conventional adapter and authoritative-record patterns agreed |
-| `/assurerail/tokenised` | Understand the gated representation adapter | Legal-character and authority status can be stated precisely |
-| `/assurerail/originators` | Repeat programme preparation, evidence, hand-offs and lifecycle | Originator design-partner language validated |
-| `/assurerail/investors` | Diligence, terms, allocation, completion, holding and secondary workflows | Investor/transferee design partner validates the journey |
-| `/assurerail/trustees` | Appointments, control, authoritative records, waterfall and surveillance | Trustee signs the operating propositions |
-| `/assurerail/arrangers-and-platforms` | Coexistence, referral, integration and licensed-function partnership | At least one incumbent/arranger engagement confirms partner story |
-| `/assurerail/integrations` | File/API schema, receipts, idempotency, acknowledgements and export | Reference schema and sample adapters exist |
-| `/assurerail/trust-security` | Governance, separation, data, resilience, audit and provider exit | Threat model, architecture and readiness evidence reviewed |
-| `/assurerail/status` | Mode/function readiness and claim tier | Mode-readiness register has a governed publisher |
-| `/assurerail/resources` | Decks, route explainers, pilot artefacts and regulatory references | Claims-reviewed resources available |
+| `/` | Understand the category, boundaries, status and first proof | Implemented; owner claims/publication review open |
+| `/replay` | Nominate a completed case without sending transaction data | Implemented; form withheld until INBOUND-01 gates close |
+| `/routes/direct-assignment` | Understand conventional DA authority, evidence and replay | Implemented; counsel/customer evidence open |
+| `/routes/ptc` | Understand PTC trustee, issue/allotment, record and lifecycle boundaries | Implemented; trustee/counsel/customer evidence open |
+| `/for/originators`, `/for/transferees-investors`, `/for/trustees` | Understand participant-specific responsibility and proof | Implemented; participant validation open |
+| `/trust` | Understand authority, provider, record and security boundaries | Implemented; Azure/VAPT evidence open |
+| `/status` | See effective-dated mode/function claim tiers | Implemented; governed publisher and promotion process open |
+| `/resources` | Read effective-dated route/proof/control notes | Implemented; owner publication review open |
+| `/for/arrangers-platforms` | Coexistence, referral, integration and licensed-function partnership | Later; incumbent validation required |
+| `/integrations` | Public file/API schema, receipts, idempotency, acknowledgements and export | Later; public contract/connector evidence required |
+| `/routes/conventional` | Cross-route conventional transaction-control patterns | Later; publish only if it adds clarity beyond DA/PTC pages |
+| `/routes/tokenised` | Gated representation adapter and authoritative-record model | Later; legal character, infrastructure and authority status required |
 
 Do not mirror the full AssureLocker navigation on day one. AssureRail earns breadth through route
 evidence and participant co-design.
@@ -498,19 +503,12 @@ The eventual site should feel related to AssureLocker but not indistinguishable 
 
 ### Replay intake fields
 
-- organisation and role;
-- DA, PTC or both;
-- asset class and repeat annual flow;
-- completed case availability;
-- incumbent arranger/platform;
-- trustee/RTA/depository as applicable;
-- business, risk/counsel, operations and technology owners;
-- principal break or cost to measure;
-- data-sharing constraints; and
-- desired first workshop timing.
-
-The intake must not request raw loan/borrower data. Data transfer follows NDA, scope, classification
-and approved channel.
+INBOUND-01 deliberately limits the public form to organisation, work email, job role, institution
+type, DA/PTC/both, current stage, completed-deal owner status, timing and explicit contact consent.
+It has no file or free-text field. Asset class, volume, named counterparties, systems, transaction
+references, constraints and problems are collected only in an authorised discovery process after
+the appropriate scope and confidentiality steps. Data transfer follows NDA, classification and an
+approved channel.
 
 ---
 

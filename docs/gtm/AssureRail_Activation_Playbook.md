@@ -177,14 +177,29 @@ AssureRail application-region design.
 The parked AssurePlane bond-trustee assurance work is outside this activation playbook and has no
 build authority under the first-spine exceptions.
 
+### 10.1 Public/GTM implementation checkpoint — 3 September 2026
+
+The repository now contains the GTM-01 replay/pilot kit, PUB-01 foundation, a disabled-by-default
+INBOUND-01 CRM handoff, PUB-02 route/persona depth and CONTENT-01 resources/structured data. These
+assets are **code-ready, not published by this checkpoint**. They do not change the deployed
+`718e28d0a` capability posture stated in this document.
+
+PUB-02 currently publishes operating boundaries and replay inputs, not customer outcomes. No real
+replay/shadow result exists to populate a case study. INBOUND-01 accepts fixed business-contact and
+qualification fields only; it has no file or free-text transaction-data intake and remains disabled
+until privacy, CRM receiver, WAF, egress and operating evidence is approved.
+
 ## 11. Immediate execution order
 
-1. Complete CX-00/PUB-00 and reconcile the public/GTM story to AR-30.
-2. Complete CX-01 persona/negative-access acceptance and SIM-01 synthetic sandbox.
-3. Execute SEC-01 internal work and appoint the independent VAPT firm.
-4. Secure the named historic DA data owner and issue the replay intake under NDA.
-5. Secure the named historic PTC/trustee data owner and issue the PTC evidence intake.
-6. Produce and independently review both replay dossiers.
+1. Review and deliberately publish CX-00/PUB-00, CX-01/SIM-01 and the new GTM/public/content build;
+   keep INBOUND-01 off until its separate enablement evidence is signed.
+2. Appoint the independent VAPT firm and execute SEC-01 against the exact synthetic Azure
+   pre-production build; remediate and obtain clean retest evidence.
+3. Secure the named historic DA data owner and issue the replay intake under NDA.
+4. Secure the named historic PTC/trustee data owner and issue the PTC evidence intake.
+5. Produce and independently review both replay dossiers.
+6. Add customer-result content only from owner-approved replay evidence with route/date/source and
+   qualifications; never from SIM-01.
 7. Begin minimised DA/PTC shadow only after security acceptance.
 8. Prepare the partner-executed pilot only after counsel, provider, operations and PR-12 gates are
    current.

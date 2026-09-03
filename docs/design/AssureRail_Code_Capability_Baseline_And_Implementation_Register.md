@@ -1766,6 +1766,25 @@ The future five-to-seven-node HashSphere or other approved HTS network remains o
 outside the current Azure topology. Its hosting provider remains open; it requires its own explicit
 build authority and threat model.
 
+### GTM-01 / PUB-01 / INBOUND-01 / PUB-02 / CONTENT-01 — customer acquisition foundation
+
+**Dependencies:** CX-00, PUB-00, CX-01, SIM-01 and the internal SEC-01 harness
+**Build authority:** founder, 3 September 2026
+**Status:** implemented in repository; publication, inbound enablement and customer-result evidence
+remain open
+
+This tranche adds an institutional replay/pilot sales kit; DA/PTC route and originator,
+transferee/investor and trustee pages; trust and effective-dated capability status; a completed-deal
+replay qualification page; three effective-dated educational resources; sitemap, robots and
+Organization/Service/Article structured data; and a disabled-by-default signed CRM-adapter handoff.
+
+The public form accepts no file, free text, borrower or transaction data. It retains no local lead
+copy and cannot operate without an exact origin, HTTPS destination host, HMAC secret and explicit
+enablement. Public pages describe software and proof boundaries only. Customer outcomes, VAPT
+closure, Azure configuration, route permission, controlled-live and production remain open.
+
+Detailed record: `docs/design/AssureRail_Public_GTM_Inbound_Content_Tranches.md`.
+
 ---
 
 ## 9. Test and evidence baseline
