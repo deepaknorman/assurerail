@@ -1,7 +1,8 @@
 # AssureRail SEC-01 internal closure evidence
 
-**Date:** 3 September 2026
-**Status:** internal code/config-harness portion complete; staged/Azure/external evidence OPEN
+**Date:** 4 September 2026
+**Status:** internal code/config harness and subscription-inventory preparation complete;
+staged/Azure/external evidence OPEN
 **Deployment:** none performed or authorised by this record
 
 ## Delivered
@@ -9,6 +10,8 @@
 - AssureRail production dependency upgrades and a scoped, fail-closed audit command.
 - Exact residual-moderate baseline with owner and 3 October 2026 review date.
 - Azure India machine-readable target baseline plus threat model for Hyderabad primary/Pune recovery.
+- AssureRail-specific pre-production runbook plus a read-only Azure subscription/region/provider
+  inventory capture script; no subscription inventory or resource deployment is claimed.
 - Authenticated Playwright suite covering anonymous boundaries, two-tenant header/path attacks,
   participant/staff context separation and five internal privilege classes.
 - Authenticated ZAP wrapper that proxies the eight-account Playwright suite, with a target allow-list,
@@ -43,8 +46,10 @@
 |---|---|---|
 | Azure service availability and final regional design | OPEN | Subscription/service inventory and approved per-service Hyderabad/Pune topology |
 | Azure IaC/Policy/private networking/identity/logging | OPEN | Reviewed deployment plan, policy negatives and resource/configuration exports |
+| Public/private web artifact and host separation | OPEN | Anonymous-origin negative scan shows no operational route chunks; protected application has a separate origin/build and server-side access boundary |
 | Backup/restore and regional failover | OPEN | Timed restore/failover/failback with provider and authoritative-record reconciliation |
 | Authenticated E2E | OPEN | Exact deployed build plus private eight-account role matrix and signed results |
+| Server-authenticated operational UI boundary | OPEN | Edge/BFF session enforcement or separately restricted application host, including anonymous route-shell negatives; the mount flag alone is not authentication |
 | Authenticated DAST | OPEN | Authorised synthetic pre-production run, triage, remediation and rerun |
 | Independent VAPT | OPEN | Signed initial report, remediation evidence, independent retest and closure report |
 | Six moderate Firebase transport-chain advisories | MONITORED OPEN | Patched compatible upstream or reassessment by review date; external assessor may supersede |
