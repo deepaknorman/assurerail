@@ -38,8 +38,11 @@ const proxy = readFileSync(resolve(root, "src/proxy.ts"), "utf8");
 if (sitemap.includes("/diligence") || sitemap.includes("/sandbox")) failures.push("controlled routes must not appear in the public sitemap");
 if (footer.includes('href="/diligence"') || footer.includes('href="/sandbox"')) failures.push("controlled routes must not appear in anonymous navigation");
 if (!diligence.startsWith('import "server-only";')) failures.push("diligence content must be server-only");
-for (const token of ["ASSURERAIL_DILIGENCE_ENABLED", "ASSURERAIL_DILIGENCE_USERNAME", "ASSURERAIL_DILIGENCE_PASSWORD", 'matcher: ["/diligence/:path*"]', "X-Robots-Tag", "no-store", "Referrer-Policy", "X-Content-Type-Options"]) {
+for (const token of ["ASSURERAIL_DILIGENCE_ENABLED", "ASSURERAIL_DILIGENCE_USERNAME", "ASSURERAIL_DILIGENCE_PASSWORD", '"/diligence/:path*"', "X-Robots-Tag", "no-store", "Referrer-Policy", "X-Content-Type-Options"]) {
   if (!proxy.includes(token)) failures.push(`diligence proxy is missing ${token}`);
+}
+for (const token of ["ASSURERAIL_PRIVATE_UI_ENABLED", '"/internal/:path*"', '"/workspace/:path*"', '"/admin/:path*"']) {
+  if (!proxy.includes(token)) failures.push(`private operational UI proxy is missing ${token}`);
 }
 if (failures.length) {
   console.error("Public exposure boundary FAILED");

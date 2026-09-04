@@ -16,6 +16,17 @@ Anonymous pages and diligence material are not two copies of the same status pag
 Detailed material moves into diligence first. It reaches the public register only after a separate,
 recorded promotion decision. Access to diligence is not permission to quote or redistribute it.
 
+The authenticated operational application is a third surface, not part of either publication
+register. A public-only release keeps `ASSURERAIL_PRIVATE_UI_ENABLED=no`, so `/activity`, `/admin`,
+`/cases`, `/console`, `/institutions`, `/internal`, `/onboard`, `/settings` and `/workspace` return
+404 before rendering. Enabling that server-only mount gate does not replace Firebase/session/API
+authorization and is reserved for an explicitly protected application deployment profile.
+
+The anonymous domain must also use a public-only artifact or static origin that does not serve the
+operational pages' client chunks. A route-level 404 is defence in depth, not confidentiality for
+hashed JavaScript assets. The authenticated application belongs on a separately protected host/build
+with its own server-side session boundary.
+
 ## 2. Milestone-driven update rule
 
 Review the protected register whenever any of these events occurs, even if the scheduled review date
@@ -84,6 +95,7 @@ watermarking and access logs—or use an approved investor data-room provider.
 
 ```bash
 npm --workspace @code/assurerail run check:diligence-access
+npm --workspace @code/assurerail run check:private-ui-access
 npm --workspace @code/assurerail run check:public-exposure
 npm --workspace @code/assurerail run check:content-freshness
 npm --workspace @code/assurerail run check:public-growth
