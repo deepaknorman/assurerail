@@ -1,6 +1,6 @@
 # AssureRail activation playbook — replay → shadow → partner-executed pilot
 
-**Status:** current operating/GTM baseline, 3 September 2026
+**Status:** current operating/GTM baseline, 4 September 2026
 
 **Code baseline:** `718e28d0a`
 
@@ -28,6 +28,15 @@ The first AssureRail product spine is implemented through AR-30. It includes:
 
 These facts establish a serious software product. They do not establish real transaction accuracy,
 customer acceptance, legal permission, provider finality, VAPT closure or production operations.
+
+### 1.1 Company-formation planning fact
+
+AssureRail company registration is expected to begin shortly, with **no committed completion date
+and no planning assumption earlier than mid-October 2026**. Incorporation is not represented as
+complete and elapsed time cannot close the gate. Public-page preparation, synthetic security work
+and authorised historic replay preparation may continue, but contracting entity, novation, IP,
+licence split, Azure tenant/subscription ownership and any owned regulated function remain subject to
+their own founder/counsel/authority decisions. No public page should advertise the target date.
 
 ## 2. Current capability posture
 
@@ -171,7 +180,7 @@ AssureRail application-region design.
 | `SIM-01` | Guided synthetic demo and resettable customer sandbox | Every fixture labelled non-evidence; no external mutation |
 | `PUB-01` | Foundation website, scope/status and replay CTA | Publication-safe capability register controls claims |
 | `GTM-01` | Decks, replay proposal, scorecard, security/integration and objection packs | Results remain blank until real evidence exists |
-| `INBOUND-01` | Lead/CRM qualification from replay request to pilot | No raw borrower/transaction data through public forms |
+| `INBOUND-01` | Lead/CRM qualification into the existing Control Tower, Brevo and Agile CRM arrangement through a secure Azure receiver | No raw borrower/transaction data through public forms; direct Apps Script delivery is not an approved Rail ingress |
 | `PUB-02` / `CONTENT-01` | Route/persona/trust depth and effective-dated education | Expand only as design-partner and route evidence matures |
 
 The parked AssurePlane bond-trustee assurance work is outside this activation playbook and has no
@@ -191,7 +200,8 @@ until privacy, CRM receiver, WAF, egress and operating evidence is approved.
 
 ## 11. Immediate execution order
 
-1. Review and deliberately publish CX-00/PUB-00, CX-01/SIM-01 and the new GTM/public/content build;
+1. Review and deliberately publish the static CX-00/PUB-00, CX-01/SIM-01 and GTM/public/content
+   build; keep protected diligence gated and
    keep INBOUND-01 off until its separate enablement evidence is signed.
 2. Appoint the independent VAPT firm and execute SEC-01 against the exact synthetic Azure
    pre-production build; remediate and obtain clean retest evidence.

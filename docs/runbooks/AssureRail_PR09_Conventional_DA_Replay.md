@@ -44,6 +44,10 @@ data-use purpose.
 
 ## 3. Evidence preparation
 
+Complete and approve
+`docs/templates/AssureRail_Historic_DA_Replay_Evidence_Intake_v1.md` before loading any real
+transaction material.
+
 Retain and verify these exact case-scoped objects before evidence lock:
 
 - transferee-owned `TRANSFEREE_CREDIT_DECISION`;

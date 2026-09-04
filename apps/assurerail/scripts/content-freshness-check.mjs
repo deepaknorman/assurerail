@@ -25,11 +25,12 @@ function verifyWindow(label, reviewedText, dueText) {
 
 const publicDue = verifyWindow("Public", value(publicSource, "PUBLIC_CAPABILITY_REVIEWED_AT"), value(publicSource, "PUBLIC_CAPABILITY_NEXT_REVIEW_AT"));
 const diligenceDue = verifyWindow("Diligence", value(diligenceSource, "DILIGENCE_REVIEWED_AT"), value(diligenceSource, "DILIGENCE_NEXT_REVIEW_AT"));
-for (const milestone of ["COUNSEL_ROUTE_REVIEW", "INDEPENDENT_SECURITY_TEST", "DA_HISTORIC_REPLAY", "PTC_HISTORIC_REPLAY", "DA_PTC_SHADOW", "PARTNER_EXECUTED_PILOT"]) {
+const requiredMilestones = ["ASSURERAIL_COMPANY_FORMATION", "COUNSEL_ROUTE_REVIEW", "INDEPENDENT_SECURITY_TEST", "DA_HISTORIC_REPLAY", "PTC_HISTORIC_REPLAY", "DA_PTC_SHADOW", "PARTNER_EXECUTED_PILOT"];
+for (const milestone of requiredMilestones) {
   if (!diligenceSource.includes(`id: "${milestone}"`)) throw new Error(`Missing stakeholder milestone ${milestone}`);
 }
 const milestoneRows = [...diligenceSource.matchAll(/\{ id: "([A-Z_]+)", label: "[^"]+", state: "[A-Z_]+", owner: "([^"]+)", lastCheckedAt: "([^"]+)", nextEvidence: "([^"]+)"/g)];
-if (milestoneRows.length !== 6) throw new Error(`Expected 6 complete milestone ownership rows, found ${milestoneRows.length}`);
+if (milestoneRows.length !== requiredMilestones.length) throw new Error(`Expected ${requiredMilestones.length} complete milestone ownership rows, found ${milestoneRows.length}`);
 for (const [, milestone, owner, checkedAt, nextEvidence] of milestoneRows) {
   if (!owner.trim() || !nextEvidence.trim()) throw new Error(`${milestone} is missing an owner or next-evidence requirement`);
   const checked = new Date(`${checkedAt}T00:00:00+05:30`);
