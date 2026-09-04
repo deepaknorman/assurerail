@@ -1783,6 +1783,14 @@ copy and cannot operate without an exact origin, HTTPS destination host, HMAC se
 enablement. Public pages describe software and proof boundaries only. Customer outcomes, VAPT
 closure, Azure configuration, route permission, controlled-live and production remain open.
 
+**4 September 2026 checkpoint:** the commercial destinations are now selected to match the existing
+AssureLocker arrangement—Control Tower as operating record, with Brevo and Agile CRM mirrors and
+Calendly for booking—but Rail remains separately scoped. The public endpoint must first reach an
+Azure receiver that verifies the HMAC, durably rejects replay and reconciles downstream receipt;
+direct Google Apps Script ingress is not approved. Public copy is a review candidate only: the
+anonymous site requires a public-only artifact/host that does not serve operational UI chunks, while
+the authenticated application requires its own server-side access boundary.
+
 Detailed record: `docs/design/AssureRail_Public_GTM_Inbound_Content_Tranches.md`.
 
 ---

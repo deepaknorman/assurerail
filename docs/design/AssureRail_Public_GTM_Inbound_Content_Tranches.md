@@ -1,6 +1,6 @@
 # AssureRail GTM-01, PUB-01, INBOUND-01, PUB-02 and CONTENT-01
 
-**Status:** implementation record, 3 September 2026
+**Status:** implementation record, updated 4 September 2026
 **Authority:** founder instruction to proceed with the named tranches
 **Deployment:** not performed by this tranche
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | GTM-01 | Current customer deck and objection playbook plus discovery, proposal, proof-scorecard and security/integration templates | No fabricated result, customer logo, testimonial or live claim |
 | PUB-01 | Public status, trust and completed-deal replay foundation with reusable site navigation/footer | Code-ready is not published, customer-accepted or live |
-| INBOUND-01 | Minimal fixed-field enquiry form and signed provider-neutral CRM webhook handoff | Disabled by default; no files, free text, borrower or transaction data; no CRM selected |
+| INBOUND-01 | Minimal fixed-field enquiry form and signed provider-neutral webhook; destination mapping to the existing Control Tower, Brevo and Agile CRM arrangement | Disabled by default; no files, free text, borrower or transaction data; Azure HMAC/durable-receipt bridge and operating evidence remain open |
 | PUB-02 | Detailed DA/PTC and originator, transferee/investor and trustee pages | Educational route/persona depth only; capability state remains replay/shadow preparation |
 | CONTENT-01 | Three effective-dated field notes, resource index, sitemap, robots policy and Organization/Service/Article JSON-LD | No legal opinion, regulatory conclusion, SEO-performance or inbound-volume claim |
 
@@ -48,7 +48,7 @@ npm --workspace @code/assurerail run check:cx01-sim01
 npm --workspace @code/assurerail run build
 ```
 
-The checks establish repository and build consistency only. They do not close publication, CRM,
+The checks establish repository and build consistency only. They do not close publication, secure CRM delivery,
 privacy, customer, counsel, VAPT, Azure or production activation gates.
 
 Executed results are recorded in `docs/qa/AssureRail_Public_Growth_Tranches_Evidence.md`.
