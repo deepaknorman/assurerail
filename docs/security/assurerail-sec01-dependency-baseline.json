@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": {
-    "workspaces": ["@code/assurerail-api", "@code/assurerail"],
+    "workspaces": ["@assurerail/api", "@assurerail/web"],
     "omit": "dev",
     "threshold": "high"
   },

@@ -175,6 +175,23 @@ At each signed baseline record:
 No later commit is automatically covered unless the relevant contributor agreement captures future
 work or a supplemental schedule records it.
 
+### 10.1 Standalone extraction baseline — 6 September 2026
+
+| Field | Record |
+|---|---|
+| Source repository | `deepaknorman/assurelocker` |
+| Source branch | `codex/assurerail-pr01-neutral-taxonomy` |
+| Selected source commit | `4d349a4feb93c50e75a4f12f4081eafb2992640f` |
+| Filtered source-tip equivalent | `6cfca890b6896d4e89fc4735aade75d48cc6d6c2` before standalone corrections |
+| Technical evidence | `docs/qa/AssureRail_Standalone_Repository_Separation_Evidence.md` |
+| Intended private remote | `deepaknorman/assurerail` — creation and access controls open |
+| Assignment status | Founder-held pending direct post-incorporation assignment; not yet transferred |
+| Contributor/title status | Open; Git attribution is not treated as conclusive title evidence |
+| External gates | Open; repository extraction does not close replay, VAPT, licence or production gates |
+
+The definitive target commit, signed tag, deterministic file manifest, CycloneDX SBOM and their
+digests will be appended only after the private remote exists and a clean-clone verification passes.
+
 ## 11. Transfer-readiness certificate
 
 The founder and counsel should sign a certificate at AssureRail incorporation confirming:
