@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "baselineId": "ASSURERAIL-AZURE-INDIA-SEC-01",
+  "status": "TARGET_NOT_DEPLOYED",
+  "approvedOn": null,
+  "geography": "India",
+  "regions": {
+    "primary": {
+      "azureName": "indiasouthcentral",
+      "displayName": "India South Central",
+      "city": "Hyderabad",
+      "availabilityZonesRequired": true
+    },
+    "recovery": {
+      "azureName": "centralindia",
+      "displayName": "Central India",
+      "city": "Pune",
+      "availabilityZonesRequired": true
+    },
+    "symmetricManagedRegionPairAssumed": false,
+    "serviceAvailabilityMustBeVerifiedBeforeProvisioning": true,
+    "dataPlaneRestrictedToIndia": true
+  },
+  "network": {
+    "internetIngress": "AZURE_FRONT_DOOR_PREMIUM_WAF_ONLY",
+    "wafModeForControlledLive": "PREVENTION",
+    "minimumTls": "1.2",
+    "originPublicIngressAllowed": false,
+    "privateEndpointsRequired": [
+      "POSTGRESQL",
+      "KEY_VAULT",
+      "OBJECT_STORAGE",
+      "CONTAINER_REGISTRY",
+      "MONITORING_INGEST_WHERE_SUPPORTED"
+    ],
+    "privateDnsRequired": true,
+    "networkSegmentationRequired": true,
+    "ddosNetworkProtectionRequired": true,
+    "egressDefault": "DENY",
+    "egressDestinationsRequireApproval": true,
+    "wafLogScrubbingRequired": true
+  },
+  "identity": {
+    "workloadIdentity": "MANAGED_IDENTITY",
+    "humanControlPlaneIdentity": "MICROSOFT_ENTRA_ID",
+    "phishingResistantMfaForPrivilegedUsers": true,
+    "privilegedIdentityManagementRequired": true,
+    "breakGlassAccounts": 2,
+    "breakGlassMonitoringRequired": true,
+    "sharedAccountsAllowed": false,
+    "localLongLivedCloudKeysAllowed": false
+  },
+  "secrets": {
+    "store": "AZURE_KEY_VAULT",
+    "publicNetworkAccessAllowed": false,
+    "rbacAuthorizationRequired": true,
+    "softDeleteRequired": true,
+    "purgeProtectionRequired": true,
+    "rotationEvidenceRequired": true,
+    "applicationSecretsInEnvironmentFilesAllowed": false
+  },
+  "data": {
+    "database": "AZURE_DATABASE_FOR_POSTGRESQL_FLEXIBLE_SERVER",
+    "databasePublicNetworkAccessAllowed": false,
+    "entraAuthenticationRequired": true,
+    "passwordOnlyAdministrationAllowed": false,
+    "zoneRedundantHighAvailabilityRequired": true,
+    "pointInTimeRestoreRequired": true,
+    "geoRecoveryDesignRequired": true,
+    "backupRestoreTestRequired": true,
+    "connectionThrottlingRequired": true,
+    "encryptionAtRestRequired": true,
+    "customerManagedKeys": "RISK_AND_COUNSEL_DECISION",
+    "objectStoragePublicAccessAllowed": false,
+    "malwareScanningRequired": true,
+    "immutableEvidenceRetentionRequired": true
+  },
+  "platform": {
+    "productionAndNonProductionSubscriptionsSeparated": true,
+    "assureRailAndAssureLockerRuntimeIdentitiesSeparated": true,
+    "infrastructureAsCodeRequired": true,
+    "signedImmutableImagesRequired": true,
+    "defenderForCloudRequired": true,
+    "azurePolicyRequired": true,
+    "productionChangesRequireTwoPeople": true,
+    "demoModesProhibitedInControlledEnvironments": true,
+    "operatingModeMustFailClosed": true
+  },
+  "logging": {
+    "centralWorkspaceRequired": true,
+    "diagnosticSettingsRequiredForAllSupportedResources": true,
+    "securityAlertsRequired": true,
+    "auditLogsImmutableOrWriteOnceRequired": true,
+    "securityRetentionDaysMinimum": 365,
+    "applicationLogsMayContainSecrets": false,
+    "applicationLogsMayContainRawEvidence": false,
+    "clockSynchronizationRequired": true,
+    "alertDeliveryTestRequired": true
+  },
+  "resilience": {
+    "documentedRtoRpoRequired": true,
+    "quarterlyRestoreTestRequired": true,
+    "annualRegionalFailoverExerciseRequired": true,
+    "providerReconciliationAfterRecoveryRequired": true,
+    "manualSafePauseRequired": true,
+    "failbackPlanRequired": true
+  },
+  "securityTesting": {
+    "dependencyGate": "NO_CRITICAL_OR_HIGH",
+    "sastAndSecretScanRequired": true,
+    "authenticatedE2eRequired": true,
+    "authenticatedDastRequired": true,
+    "independentVaptRequiredBeforeControlledLive": true,
+    "vaptRetestRequiredForMaterialFindings": true
+  },
+  "futureTokenNetwork": {
+    "inCurrentTopology": false,
+    "anticipatedNodeCount": "5-7",
+    "technologyAssumption": "HASHSPHERE_OR_OTHER_APPROVED_HTS_NETWORK",
+    "azureHostingRequired": false,
+    "requiresSeparateThreatModelAndApproval": true
+  }
+}

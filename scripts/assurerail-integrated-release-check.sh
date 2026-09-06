@@ -20,8 +20,10 @@ run() {
 }
 
 cd "$REPO_ROOT"
-run "shell syntax" bash -c 'for file in scripts/assurerail-*.sh; do bash -n "$file"; done'
-run "scoped diff hygiene" git diff --check -- apps/assurerail-api apps/assurerail scripts/check-assurerail-invariants.mjs scripts/assurerail-integrated-release-check.sh 'scripts/assurerail-*.sh' docker-compose.assurerail.yml
+run "shell syntax" bash -c 'for file in scripts/*.sh .githooks/*; do bash -n "$file"; done'
+run "repository diff hygiene" git diff --check
+run "repository format and configuration integrity" node scripts/check-assurerail-format.mjs
+run "release-gate architectural tests" node --test scripts/test/*.test.mjs
 run "static architecture and safety invariants" node scripts/check-assurerail-invariants.mjs
 run "API compile and complete test corpus" npm test --workspace=@assurerail/api
 

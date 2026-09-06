@@ -29,6 +29,7 @@ services:
       retries: 12
 
   assurerail-api:
+    image: "assurerail-api:${ASSURERAIL_BUILD_COMMIT:-local}"
     build:
       context: .
       dockerfile: apps/assurerail-api/Dockerfile
@@ -42,6 +43,13 @@ services:
       # optimised. CONTROLLED_LIVE/PRODUCTION fail closed on demo adapters/routes and missing auth.
       NODE_ENV: ${NODE_ENV:-production}
       ASSURERAIL_OPERATING_MODE: ${ASSURERAIL_OPERATING_MODE:-DEMO}
+      ASSURERAIL_BUILD_COMMIT: ${ASSURERAIL_BUILD_COMMIT:-}
+      ASSURERAIL_ENVIRONMENT: ${ASSURERAIL_ENVIRONMENT:-}
+      ASSURERAIL_CORS_ANY: ${ASSURERAIL_CORS_ANY:-false}
+      ASSURERAIL_WEB_ORIGINS: ${ASSURERAIL_WEB_ORIGINS:-http://localhost:3007}
+      ASSURERAIL_WEB_URL: ${ASSURERAIL_WEB_URL:-http://localhost:3007}
+      ASSURERAIL_STARTUP_PROBE: ${ASSURERAIL_STARTUP_PROBE:-false}
+      REQUIRE_DB: ${REQUIRE_DB:-false}
       ARAIL_DEMO_ENDPOINTS_ENABLED: ${ARAIL_DEMO_ENDPOINTS_ENABLED:-true}
       # Product/runtime controls are always explicit in the effective container environment. Safe
       # defaults preserve the current DEMO posture; changing a value does not bypass the dependency,
@@ -77,8 +85,15 @@ services:
       ARAIL_ENTERPRISE_INTEGRATION_V1: ${ARAIL_ENTERPRISE_INTEGRATION_V1:-off}
       ARAIL_PRODUCTION_SCALE_V1: ${ARAIL_PRODUCTION_SCALE_V1:-off}
       ARAIL_INTERNAL_RBAC_V1: ${ARAIL_INTERNAL_RBAC_V1:-off}
+      # Deliberately no compose fallback: controlled-live activation evidence must be supplied by
+      # the reviewed effective environment, never manufactured by this developer convenience file.
+      ARAIL_ACTIVATION_MANIFEST_B64: ${ARAIL_ACTIVATION_MANIFEST_B64}
+      ARAIL_ACTIVATION_SIGNATURE_B64: ${ARAIL_ACTIVATION_SIGNATURE_B64}
+      ARAIL_ACTIVATION_PUBLIC_KEY_B64: ${ARAIL_ACTIVATION_PUBLIC_KEY_B64}
+      ARAIL_WEBHOOK_MAX_ATTEMPTS: ${ARAIL_WEBHOOK_MAX_ATTEMPTS:-8}
+      ARAIL_WEBHOOK_RETRY_BASE_MS: ${ARAIL_WEBHOOK_RETRY_BASE_MS:-1000}
       PORT: "3006"
-      DATABASE_URL: "postgresql://assurerail:${ASSURERAIL_DB_PASSWORD:-assurerail_dev}@assurerail-db:5432/assurerail_venue?connection_limit=10&pool_timeout=10"
+      DATABASE_URL: "${DATABASE_URL:-postgresql://assurerail:${ASSURERAIL_DB_PASSWORD:-assurerail_dev}@assurerail-db:5432/assurerail_venue?connection_limit=10&pool_timeout=10}"
       # Adapters — DEMO by default (deterministic, no external calls).
       TAPE_SOURCE: ${TAPE_SOURCE:-demo}
       HTS_ADAPTER: ${HTS_ADAPTER:-demo}
@@ -96,13 +111,46 @@ services:
       SETTLEMENT_PROVIDER_API_URL: ${SETTLEMENT_PROVIDER_API_URL:-http://host.docker.internal:3003}
       SETTLEMENT_PROVIDER_API_KEY: ${SETTLEMENT_PROVIDER_API_KEY:-}
       DIGIKYC_STATUS_SERVICE_SECRET: ${DIGIKYC_STATUS_SERVICE_SECRET:-}
+      FIREBASE_ADMIN_CONFIG: ${FIREBASE_ADMIN_CONFIG:-}
+      RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY:-}
+      RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
+      RECAPTCHA_PROJECT_ID: ${RECAPTCHA_PROJECT_ID:-}
+      RECAPTCHA_ENFORCE: ${RECAPTCHA_ENFORCE:-false}
+      RECAPTCHA_MIN_SCORE: ${RECAPTCHA_MIN_SCORE:-0.5}
+      VENUE_ADMIN_EMAILS: ${VENUE_ADMIN_EMAILS:-}
+      WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME:-AssureRail}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
+      WEBAUTHN_ORIGIN: ${WEBAUTHN_ORIGIN:-http://localhost:3007}
+      ARAIL_OBJECT_STORE_ENDPOINT: ${ARAIL_OBJECT_STORE_ENDPOINT:-}
+      ARAIL_OBJECT_STORE_REGION: ${ARAIL_OBJECT_STORE_REGION:-ap-south-1}
+      ARAIL_OBJECT_STORE_BUCKET: ${ARAIL_OBJECT_STORE_BUCKET:-}
+      ARAIL_OBJECT_STORE_KMS_KEY_ID: ${ARAIL_OBJECT_STORE_KMS_KEY_ID:-}
+      ARAIL_OBJECT_STORE_FORCE_PATH_STYLE: ${ARAIL_OBJECT_STORE_FORCE_PATH_STYLE:-false}
+      ARAIL_OBJECT_STORE_ALLOW_HTTP: ${ARAIL_OBJECT_STORE_ALLOW_HTTP:-false}
+      ARAIL_OBJECT_STORE_ACCESS_KEY: ${ARAIL_OBJECT_STORE_ACCESS_KEY:-}
+      ARAIL_OBJECT_STORE_SECRET_KEY: ${ARAIL_OBJECT_STORE_SECRET_KEY:-}
+      ARAIL_CLAMAV_HOST: ${ARAIL_CLAMAV_HOST:-}
+      ARAIL_CLAMAV_PORT: ${ARAIL_CLAMAV_PORT:-3310}
+      ARAIL_CLAMAV_TIMEOUT_MS: ${ARAIL_CLAMAV_TIMEOUT_MS:-15000}
+      VAULT_ADDR: ${VAULT_ADDR:-}
+      VAULT_APPROLE_ROLE_ID: ${VAULT_APPROLE_ROLE_ID:-}
+      VAULT_APPROLE_SECRET_ID: ${VAULT_APPROLE_SECRET_ID:-}
+      VAULT_TOKEN: ${VAULT_TOKEN:-}
+      ARAIL_WEBHOOK_VAULT_MOUNT: ${ARAIL_WEBHOOK_VAULT_MOUNT:-secret}
+      ARAIL_WEBHOOK_VAULT_PREFIX: ${ARAIL_WEBHOOK_VAULT_PREFIX:-assurerail/webhooks}
+      ARAIL_CONNECTOR_VAULT_MOUNT: ${ARAIL_CONNECTOR_VAULT_MOUNT:-secret}
+      ARAIL_CONNECTOR_VAULT_PREFIX: ${ARAIL_CONNECTOR_VAULT_PREFIX:-assurerail/connectors}
+      KANON_MIN_VALUE_MINOR: ${KANON_MIN_VALUE_MINOR:-16600000000}
+      KANON_MIN_SEASONING_DAYS: ${KANON_MIN_SEASONING_DAYS:-90}
+      KANON_MAX_CONCENTRATION_BPS: ${KANON_MAX_CONCENTRATION_BPS:-5000}
       # The identity gate stays demo unless its independent provider credentials are configured.
     # Optional server secrets (never committed). Object form → the file is optional.
     env_file:
       - path: ./apps/assurerail-api/.env.docker
         required: false
-    # Apply migrations before boot, then start the server.
-    command: ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+    # Schema changes are an explicit, separately evidenced deployment step after the pre-deployment
+    # gate. Never hide a database mutation inside an application restart.
+    command: ["node", "dist/main.js"]
     ports:
       - "3006:3006"
     healthcheck:
@@ -113,6 +161,7 @@ services:
       start_period: 45s
 
   assurerail-web:
+    image: "assurerail-web:${ASSURERAIL_BUILD_COMMIT:-local}"
     build:
       context: .
       dockerfile: apps/assurerail/Dockerfile
@@ -133,6 +182,8 @@ services:
         NEXT_PUBLIC_ASSURERAIL_TOKENISED_PRODUCT_V1: ${NEXT_PUBLIC_ASSURERAIL_TOKENISED_PRODUCT_V1:-off}
         NEXT_PUBLIC_ASSURERAIL_ENTERPRISE_INTEGRATION_V1: ${NEXT_PUBLIC_ASSURERAIL_ENTERPRISE_INTEGRATION_V1:-off}
         NEXT_PUBLIC_ASSURERAIL_PRODUCTION_SCALE_V1: ${NEXT_PUBLIC_ASSURERAIL_PRODUCTION_SCALE_V1:-off}
+        NEXT_PUBLIC_ASSURERAIL_GUIDED_JOURNEY_V1: ${NEXT_PUBLIC_ASSURERAIL_GUIDED_JOURNEY_V1:-off}
+        NEXT_PUBLIC_ASSURERAIL_SANDBOX_V1: ${NEXT_PUBLIC_ASSURERAIL_SANDBOX_V1:-off}
         NEXT_PUBLIC_ASSURERAIL_CONTACT_EMAIL: ${NEXT_PUBLIC_ASSURERAIL_CONTACT_EMAIL:-}
         NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
         NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}

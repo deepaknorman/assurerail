@@ -29,6 +29,23 @@ npm test
 npm run check
 ```
 
+AssureRail deliberately uses the same local-control pattern as AssureLocker: committed Git hooks,
+local/daily security scans and a deployer-run gate. GitHub Actions are not part of the release trust
+path. Bootstrap a fresh clone with:
+
+```bash
+bash scripts/assurerail-dev-setup.sh --check
+```
+
+The standalone daily workflow, including the independent Strix pass, is
+`scripts/assurerail-daily-qa.sh`; see the release-gate runbook for its launchd installation and
+fail/skip/review semantics.
+
+Before any migration, image promotion or restart, the deployer must run `npm run check:predeploy`
+against the exact signed tag and a private effective-environment file. The gate produces a local
+receipt but performs no deployment. See
+`docs/runbooks/AssureRail_PreDeployment_And_Release_Gate.md`.
+
 The Docker demonstration stack defaults to `ASSURERAIL_OPERATING_MODE=DEMO`; all product and
 controlled-environment capability flags remain off unless expressly configured. Never infer live or
 production readiness from a successful local build.

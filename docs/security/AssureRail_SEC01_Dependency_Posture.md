@@ -1,9 +1,9 @@
 # AssureRail SEC-01 dependency posture
 
 **Date:** 3 September 2026
-**Scope:** production dependencies of `@code/assurerail-api` and `@code/assurerail`; development-only
-tooling and other monorepo products are excluded
-**Gate:** `npm run security:assurerail:deps`
+**Scope:** production dependencies of standalone workspaces `@assurerail/api` and `@assurerail/web`;
+development-only tooling and external products are excluded
+**Gate:** `npm run security:deps`
 
 ## Result
 
@@ -56,13 +56,12 @@ receives this record and may challenge or supersede the assessment.
 ## Verification commands
 
 ```bash
-npm ci --ignore-scripts --legacy-peer-deps --install-strategy=nested
-npm run security:assurerail:deps
-npm test --workspace @code/assurerail-api -- --runInBand
-npm run build --workspace @code/assurerail-api
-npm run build --workspace @code/assurerail
+npm ci
+npm run security:deps
+npm test --workspace=@assurerail/api
+npm run build --workspace=@assurerail/api
+npm run build --workspace=@assurerail/web
 ```
 
-The `--legacy-peer-deps` install option is currently required by unrelated monorepo peer constraints;
-it is not evidence that vulnerable versions are allowed. The gate audits the resolved production
+The committed lockfile installs reproducibly with `npm ci`. The gate audits the resolved production
 tree, not version ranges alone.

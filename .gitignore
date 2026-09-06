@@ -23,6 +23,8 @@ playwright-report/
 docs/qa/daily/
 deploy/strix/reports/
 sbom.cdx.json
+.security-output/
+.release-evidence/
 
 # Office and temporary files
 ~$*.docx

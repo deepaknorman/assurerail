@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# AssureRail uses local gates and a deployer-run release gate. GitHub Actions are intentionally not
+# part of the trust path. The hook forwards Git's ref update stream so the scanner can inspect the
+# exact outgoing commits.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+exec "$ROOT/scripts/assurerail-prepush-gate.sh"
