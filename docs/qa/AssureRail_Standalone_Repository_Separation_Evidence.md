@@ -11,7 +11,8 @@ cutover remain open
 
 **Selected source commit:** `4d349a4feb93c50e75a4f12f4081eafb2992640f`
 
-**Filtered source-tip equivalent:** `6cfca890b6896d4e89fc4735aade75d48cc6d6c2` before standalone corrections
+**Filtered source-tip equivalent:** `b6ddb3cbfa736960d36392551a8d8f6e91b52136` after extraction and
+public-site-key redaction, before standalone corrections
 
 This record evidences RS-00 and the locally complete portions of RS-01/RS-02 in
 `docs/design/AssureRail_Standalone_Repository_Separation_Plan.md`. It does not authorise deployment,
@@ -128,9 +129,11 @@ external-gates=remain-open deployment=not-performed
   explicit reachability decision expires on 3 October 2026 and is not a VAPT substitute.
 - SimpleWebAuthn's prior low-severity finding and Prisma's high-severity dependency chain were
   remediated, not added to the baseline.
-- Full filtered-history gitleaks scanning is required to pass after redaction of one historical
-  public reCAPTCHA site identifier. Exact taxonomy phrases and synthetic idempotency fixture IDs are
-  narrowly allow-listed as non-secrets in `.gitleaks.toml`.
+- Full filtered-history gitleaks scanning passed across **126 commits** after redaction of one
+  historical public reCAPTCHA site identifier. Exact taxonomy phrases and synthetic idempotency
+  fixture IDs are narrowly allow-listed as non-secrets in `.gitleaks.toml`.
+- A CycloneDX SBOM was generated with **475 components** from the locally verified baseline. The
+  final closing copy and digest must be regenerated from the signed remote commit.
 - A CycloneDX SBOM and the deterministic tracked-file manifest must be generated from the final
   signed commit and retained in the Founder closing archive.
 

@@ -182,7 +182,7 @@ work or a supplemental schedule records it.
 | Source repository | `deepaknorman/assurelocker` |
 | Source branch | `codex/assurerail-pr01-neutral-taxonomy` |
 | Selected source commit | `4d349a4feb93c50e75a4f12f4081eafb2992640f` |
-| Filtered source-tip equivalent | `6cfca890b6896d4e89fc4735aade75d48cc6d6c2` before standalone corrections |
+| Filtered source-tip equivalent | `b6ddb3cbfa736960d36392551a8d8f6e91b52136` after extraction and public-site-key redaction, before standalone corrections |
 | Technical evidence | `docs/qa/AssureRail_Standalone_Repository_Separation_Evidence.md` |
 | Intended private remote | `deepaknorman/assurerail` — creation and access controls open |
 | Assignment status | Founder-held pending direct post-incorporation assignment; not yet transferred |
