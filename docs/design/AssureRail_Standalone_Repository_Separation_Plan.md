@@ -1,6 +1,7 @@
 # AssureRail standalone repository separation and incorporation cutover
 
-**Status:** founder-approved direction; implementation and counsel evidence plan
+**Status:** RS-00 and RS-02 locally complete; RS-01 remote controls, RS-03/04 operations and RS-05
+incorporation delivery remain open
 
 **Prepared:** 6 September 2026
 
@@ -10,6 +11,14 @@
 
 **No-deploy rule:** repository work does not authorise a deployment, operating-mode change or
 capability activation.
+
+**Implementation checkpoint (6 September 2026):** the approved source baseline was extracted with
+history into a standalone, independently buildable repository. The local clean-clone API/web build,
+366-test corpus, boundary checks and fail-closed configuration checks passed. The AssureLocker
+monorepo was not edited or cut over. Remote publication remains open because the proposed private
+GitHub repository does not yet exist and the available GitHub CLI credential is invalid. Full
+details and residual gates are recorded in
+`docs/qa/AssureRail_Standalone_Repository_Separation_Evidence.md`.
 
 ## 1. Outcome and ownership decision
 
@@ -219,15 +228,15 @@ regulatory permission or production readiness.
 
 ## 7. Immediate blockers and decisions
 
-The technical inventory is sufficiently clear to begin RS-00. The following are required before
+RS-00 and the local RS-02 build-independence gate are complete. The following remain required before
 RS-01 is completed:
 
 - GitHub authentication must be repaired: the installed `gh` CLI currently reports an invalid
   credential;
 - confirm the proposed private remote `deepaknorman/assurerail` or provide the intended GitHub
   organisation;
-- reconcile the current uncommitted AssureRail-related files owned by other coders before selecting
-  the extraction baseline; and
+- review and approve the selected source baseline and extracted manifest before remote protection is
+  treated as final; and
 - identify any contributor engagement that named AssureLocker as contracting party, so its code can
   be excluded, independently replaced or covered by a specific counsel-approved cure.
 

@@ -95,6 +95,9 @@ The extracted repository was made independently buildable by:
 - Static architecture/security invariants: passed.
 - PR-18 and AR-21 through AR-30 web boundary checks: passed.
 - Next.js production build: passed; **40 application routes/pages** generated or registered.
+- Fresh-clone verification from the extracted repository: passed without access to the AssureLocker
+  working tree; `npm ci`, the 366-test API corpus, all PR-18/AR-21–AR-30 web boundary checks and the
+  40-route production build completed successfully.
 - Additional CX/PUB/SIM/INBOUND/public-exposure/content/private-access checks: passed before the
   final full rehearsal and remained covered by the unchanged web source.
 - Shell syntax: all extracted shell scripts passed `bash -n`; `shellcheck` was unavailable.
@@ -143,7 +146,9 @@ external-gates=remain-open deployment=not-performed
    organisation; the proposed GitHub repository did not exist when tested.
 2. Repair GitHub CLI authentication, configure MFA/least privilege/branch protection/secret
    scanning and push the signed extraction tag.
-3. Run a clean clone from that remote and repeat install/build/test/manifest verification.
+3. Run a clean clone from the protected remote and repeat install/build/test/manifest verification;
+   the equivalent local fresh-clone gate has passed, but it does not prove remote custody or branch
+   protection.
 4. Establish AssureRail-controlled Azure, CI/CD, artefact, domain, identity, secret and backup
    administration under RS-03.
 5. Complete contributor agreements, third-party/open-source review and the Founder IP Register.
