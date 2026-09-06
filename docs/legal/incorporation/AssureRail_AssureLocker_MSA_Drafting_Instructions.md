@@ -1,12 +1,14 @@
 # AssureRail–AssureLocker operational MSA — controlling drafting instructions
 
-**Status:** founder-selected commercial and ownership model; counsel-gated legal implementation.
+**Status:** possible post-incorporation procurement model; counsel-gated legal implementation. This
+MSA is not part of AssureRail's founding or Founder-to-AssureRail IP transfer.
 
 This instruction supersedes the ownership assumption in the historical
 `docs/legal/AssureLocker_AssureRail_Licence_and_IT_Outsourcing_HoT.md`. That document currently says
 AssureLocker owns the AssureRail platform and licenses it to AssureRail. The selected position is the
-opposite: **AssureRail owns AssureRail-specific IP; AssureLocker is the outsourced operator and
-development/service provider.**
+opposite: **AssureRail owns AssureRail-specific IP.** Only after incorporation and direct delivery
+from the Founder may AssureRail independently appoint AssureLocker as outsourced operator and
+development/service provider.
 
 ## 1. Parties and characterisation
 
@@ -20,13 +22,14 @@ development/service provider.**
 ## 2. IP model
 
 1. AssureRail owns all Assigned Rail IP and Rail-specific foreground developments.
-2. AssureLocker owns only scheduled AssureLocker Background IP.
+2. The AssureRail incorporation baseline contains no AssureLocker-owned code or full AssureLocker
+   shared package.
 3. AssureRail gives AssureLocker a limited, non-exclusive, non-transferable service-provider licence
    for the MSA term.
-4. AssureLocker gives AssureRail the durable background-IP rights needed to run, modify, recover,
-   transition and exit the service.
+4. AssureLocker services and evidence products integrate through provider-neutral APIs and narrow
+   interface contracts; they are not embedded as undisclosed background code.
 5. Every statement of work classifies deliverables before work begins as Rail Foreground,
-   AssureLocker Background, third-party material or a specifically governed shared improvement.
+   third-party material or a separately licensed provider interface.
 6. No residual-knowledge clause permits AssureLocker to reproduce confidential Rail product logic.
 7. No lien or suspension right may trap source, customer data, records, keys or regulatory evidence.
 
@@ -114,7 +117,7 @@ precise authorised workflow and applicable function assignment.
 1. Services and RACI.
 2. Service levels, support and credits.
 3. Charges and transfer-pricing method.
-4. AssureRail foreground and AssureLocker background IP matrix.
+4. AssureRail IP, service-provider licence and provider-interface matrix.
 5. Security-control schedule.
 6. Data-processing and record-ownership schedule.
 7. Approved locations and subprocessors.
@@ -127,7 +130,8 @@ precise authorised workflow and applicable function assignment.
 
 ## 11. Conditions before execution
 
-- AssureRail exists and has received the completed IP assignment.
+- AssureRail exists, has received the completed direct Founder IP assignment and independently
+  controls its repository and operational assets.
 - Each company has independent authority to approve the related-party arrangement.
 - Counsel confirms the regulatory/outsourcing classification against actual functions and customers.
 - Tax advisers confirm pricing and related-party/transfer-pricing treatment.

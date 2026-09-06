@@ -22,7 +22,8 @@ completion, lifecycle, integration, controls and related customer/operating surf
 AssurePool remains an AssureCLA product and AssurePlane remains an AssureCLA product. Their code and
 product-specific evidence logic do not become AssureRail IP merely because AssureRail accepts them
 through an adapter. AssureTransfer remains separately classified until the founder settles its
-ownership and suite placement.
+ownership and suite placement. AssureLocker has no role in AssureRail's incorporation or direct
+Founder-to-AssureRail IP transfer.
 
 ## 2. Initial product-specific software inventory
 
@@ -84,29 +85,31 @@ must have a row. Git authorship is evidence of contribution, not conclusive evid
 |---|---|---|---|---|---|---|
 | Deepak Norman | Self/founder | Founder | [inventory ●] | Founder ownership subject to third-party rights | Post-incorporation deed | Open |
 | Theo Manohar | [●] | [●] | [●] | [●] | [●] | Open |
-| Other coder(s) | [●] | [employee/contractor/agency ●] | [commit ranges ●] | [agreement reference ●] | Present assignment to founder or tripartite acknowledgement | Open |
+| Other coder(s) | Founder | [contractor/agency ●] | [commit ranges ●] | [agreement reference ●] | Present direct assignment to Founder | Open |
 | AI-assisted output | Applicable user/account holder | Tool terms and human contribution vary | [identify material assets ●] | Provider terms/version | Counsel review; retain prompts/provenance where material | Open |
 
-For work created before AssureRail incorporation, the preferred instrument is a present written
-assignment of the contributor's transferable AssureRail-specific rights to the founder. If a
-contributor contracted with AssureLocker, AssureLocker must join the confirmation or later assignment
-where it may own or claim the work.
+For work created before AssureRail incorporation, the required instrument is a present written
+assignment of the contributor's transferable AssureRail-specific rights directly to the Founder.
+No new Rail work should be commissioned through AssureLocker. If historic work may be owned or
+controlled by AssureLocker, it must be isolated, replaced or separately cured before the Founder
+assigns the clean Rail baseline.
 
 ## 6. Background, shared and excluded technology
 
 | Component | Proposed owner | AssureRail right | AssureLocker right | Final status |
 |---|---|---|---|---|
-| AssureLocker identity/evidence background | AssureLocker | Perpetual or term licence through defined adapter where required | Ownership retained | Open |
-| Neutral contracts developed specifically for Rail | AssureRail | Ownership | Limited MSA operating/development licence | Open |
-| Generic security/audit libraries used by several products | Original owner after provenance review | Durable source/use/modify licence sufficient for independence and exit | Durable licence/ownership as allocated | Open |
-| AssurePool product logic | AssureLocker/AssureCLA | Adapter and interface licence only | Ownership retained | Selected |
-| AssurePlane product logic | AssureLocker/AssureCLA | Provider integration only | Ownership retained | Selected |
+| AssureLocker identity/evidence background | AssureLocker | Provider-neutral API integration only after incorporation; no code in founding baseline | Ownership retained | Selected |
+| Neutral contracts developed specifically for Rail | Founder, then AssureRail | Full ownership | No pre-incorporation right | Selected |
+| Generic security/audit libraries used by several products | Founder/third party after provenance review | Include only if independently owned/licensed by Rail | No automatic right | Open |
+| AssurePool product logic | AssureLocker/AssureCLA | Versioned provider API or narrow independent contract only | Ownership retained | Selected |
+| AssurePlane product logic | AssureLocker/AssureCLA | Provider integration only after incorporation | Ownership retained | Selected |
 | AssureTransfer | To be decided | Adapter/interface treatment pending | Pending | Open |
 | AssurePlane bond-trustee assurance | AssureLocker/AssureCLA; build parked | No ownership merely by adjacent use | Ownership as later confirmed | Parked |
 
-No shared item is to be described as exclusively owned by both companies. The final schedules must
-identify the owner, permitted fields of use, source-code rights, modification rights, sublicensing,
-support, duration, termination, continuity and exit treatment.
+No shared item is to be described as exclusively owned by both companies. The incorporation
+baseline must not depend on AssureLocker-owned source code. Any later provider interface or licence
+must identify its owner and the permitted fields of use, rights, duration, termination, continuity
+and exit treatment.
 
 ## 7. Third-party and open-source register
 
@@ -126,7 +129,8 @@ APIs, models, fonts, imagery and datasets. For each item retain:
 ## 8. Cloud, operational and security assets
 
 The software assignment does not automatically transfer cloud subscriptions or operational control.
-Before investor closing, record and transfer or make directly controllable by AssureRail:
+Before incorporation the Founder should control the Rail-specific accounts. Before investor closing,
+record and transfer or make directly controllable by AssureRail:
 
 - Azure subscriptions, resource groups and India-region deployments;
 - Entra tenants/app registrations and customer identity configurations;
@@ -148,7 +152,8 @@ deployed or committed infrastructure.
   assignment of software does not transfer ownership of that data.
 - AssureRail should control its participant, case, operational, audit and regulatory records after
   incorporation, subject to retention and third-party rights.
-- AssureLocker may process only the data required by the MSA and DPA, on documented instructions.
+- A later operator may process only the data required by an AssureRail-approved MSA and DPA, on
+  documented instructions.
 - Pre-incorporation demo, replay and pilot records require a documented migration/novation basis.
 - Secrets never appear in this register; record only vault/account references and authorised
   custodians.
