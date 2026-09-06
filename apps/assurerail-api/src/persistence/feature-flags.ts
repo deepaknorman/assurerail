@@ -39,7 +39,9 @@ export type CompletionAcknowledgementMode =
   (typeof COMPLETION_ACK_VALUES)[number];
 
 export const LEGACY_ROOM_PROXY_FLAG = "ARAIL_LEGACY_ROOM_PROXY_V1" as const;
-export const LEGACY_ROOM_PROXY_VALUES = ["off", "shadow"] as const;
+// Tombstone: the branded online compatibility proxy was retired in SEP-01. Keeping an explicit
+// off-only value makes stale deployment configuration fail closed instead of being silently ignored.
+export const LEGACY_ROOM_PROXY_VALUES = ["off"] as const;
 export type LegacyRoomProxyMode = (typeof LEGACY_ROOM_PROXY_VALUES)[number];
 
 export const EXTERNAL_ACTION_SAGA_FLAG =

@@ -41,11 +41,13 @@ test("[PR05][CONNECTOR] schema profile declarations are bounded, typed and uniqu
   ]), /duplicate/);
 });
 
-test("[PR08][CONNECTOR] room proxy and source completion are declared integration profiles, not intake evidence", () => {
+test("[PR08][SEP01][CONNECTOR] source completion remains an integration profile while the legacy room proxy is retired", () => {
   assert.doesNotThrow(() => parseConnectorSchemaProfiles([
-    { profileRef: "assurerail.legacy-room-proxy.v1", schemaId: "assurerail.legacy-room-proxy.command", schemaVersion: "1.0.0" },
     { profileRef: "assurepool.completion-ack.v1", schemaId: "assurerail.source-completion.instruction", schemaVersion: "1.0.0" },
   ]));
+  assert.throws(() => parseConnectorSchemaProfiles([
+    { profileRef: "assurerail.legacy-room-proxy.v1", schemaId: "assurerail.legacy-room-proxy.command", schemaVersion: "1.0.0" },
+  ]), /unsupported/);
   assert.throws(() => assertIntakeProfile("assurepool.completion-ack.v1", envelope()), /unsupported intake profile/);
 });
 

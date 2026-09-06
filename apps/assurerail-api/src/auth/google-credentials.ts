@@ -11,7 +11,7 @@ let cached: VenueGoogleCreds | null | undefined;
 
 /**
  * Decode the venue's Firebase Admin service-account JSON from FIREBASE_ADMIN_CONFIG (base64) — the same
- * convention AssureLocker uses. The ONE service account authenticates BOTH firebase-admin (ID-token
+ * convention. The Rail-owned service account authenticates BOTH firebase-admin (ID-token
  * verification) AND the reCAPTCHA Enterprise assessment client. Secret — box env only, never in git.
  * Returns null when unset, so auth runs in an explicit "unconfigured" posture (login disabled) rather
  * than crashing the DEMO.

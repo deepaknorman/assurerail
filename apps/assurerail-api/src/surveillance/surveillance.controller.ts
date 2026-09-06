@@ -6,7 +6,7 @@ import { Roles, ALL_ROLES } from "../auth/roles.decorator";
 export class SurveillanceController {
   constructor(private readonly surveillance: SurveillanceService) {}
 
-  /** Pull the Note's pool surveillance from AssureLocker, anchor each cycle to HCS, mirror it. */
+  /** Pull legacy Note surveillance from the configured source provider, anchor each cycle, mirror it. */
   @Roles("ISSUER", "DESK", "TRUSTEE")
   @Post("sync")
   sync(@Param("noteId") noteId: string) {

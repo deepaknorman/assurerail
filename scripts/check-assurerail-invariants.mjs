@@ -59,19 +59,16 @@ else bad("runtime-profile.ts is missing one or more reviewed AssureRail operatin
 const productionPreconditions = [
   "DATABASE_URL",
   "FIREBASE_ADMIN_CONFIG",
-  "TAPE_PROVIDER_API_KEY",
   "IDENTITY_PROVIDER_API_KEY",
-  "ANCHOR_PROVIDER_API_KEY",
-  "SETTLEMENT_PROVIDER_API_KEY",
-  "DIGIKYC_STATUS_SERVICE_SECRET",
+  "IDENTITY_PROVIDER_KEY",
+  "IDENTITY_PROVIDER_STATUS_PATH",
+  "IDENTITY_PROVIDER_TIMEOUT_MS",
   "RECAPTCHA_SITE_KEY",
   "RECAPTCHA_ENFORCE",
-  "TAPE_PROVIDER_API_URL",
   "IDENTITY_PROVIDER_API_URL",
-  "ANCHOR_PROVIDER_API_URL",
-  "SETTLEMENT_PROVIDER_API_URL",
+  "requiredLiveAdapters",
 ];
-if (productionPreconditions.every((needle) => has(runtimeProfile, needle))) pass("controlled-live/production preconditions remain fail-closed");
+if (productionPreconditions.every((needle) => has(runtimeProfile, needle))) pass("controlled-live/production identity and capability-specific adapter preconditions remain fail-closed");
 else bad("runtime-profile.ts is missing one or more controlled-live/production preconditions");
 
 // ── 3. Reviewed controller surface remains exact ──────────────────────────────
@@ -193,6 +190,15 @@ else pass("no AssureLocker Prisma client imports in the venue");
 const alImports = tracked.filter((f) => f.endsWith(".ts")).filter((f) => /from ["']@code\/api/.test(rd(f)));
 if (alImports.length) bad(`venue imports @code/api internals: ${alImports.join(", ")}`);
 else pass("no @code/api imports in the venue (segregation intact)");
+const roomsModule = rd("apps/assurerail-api/src/rooms/rooms.module.ts");
+const integrationsModule = rd("apps/assurerail-api/src/integrations/integrations.module.ts");
+const providerProfiles = rd("apps/assurerail-api/src/evidence/provider-profiles.ts");
+const featureFlags = rd("apps/assurerail-api/src/persistence/feature-flags.ts");
+if (!/LegacyRoomProxy|ConnectorSubjectMapping/.test(`${roomsModule}\n${integrationsModule}`)
+  && !has(providerProfiles, "assurerail.legacy-room-proxy.v1")
+  && has(featureFlags, 'LEGACY_ROOM_PROXY_VALUES = ["off"]')) {
+  pass("the branded online legacy-room compatibility API is retired and its flag is an off-only tombstone");
+} else bad("legacy AssureLocker room compatibility must not remain an executable API surface");
 
 // ── 9. Adapters default to DEMO; the runtime profile blocks them from live modes ─
 console.log("── adapters ──");
@@ -200,6 +206,12 @@ const cfg = rd("apps/assurerail-api/src/config.ts");
 const demoDefaults = ["tapeSource", "htsAdapter", "hcsAnchor", "settlementAdapter"].every((k) => new RegExp(`${k}[^\\n]*\\?\\?[^\\n]*"?demo"?`, "i").test(cfg) || new RegExp(`${k}.*"demo"`, "i").test(cfg));
 if (demoDefaults) pass("all external adapters default to DEMO (the runtime profile separately forbids them in live modes)");
 else bad("config.ts must default tapeSource/htsAdapter/hcsAnchor/settlementAdapter to 'demo'");
+const hcsAdapter = rd("apps/assurerail-api/src/surveillance/hcs.adapter.ts");
+const settlementAdapter = rd("apps/assurerail-api/src/settlement/settlement.adapter.ts");
+if (has(cfg, "anchorProviderSubmitPath") && has(cfg, "settlementProviderTransferPath")
+  && !/plaza/i.test(`${hcsAdapter}\n${settlementAdapter}`)) {
+  pass("anchor and settlement adapters use deployment-selected provider contracts without Plaza coupling");
+} else bad("anchor/settlement adapters retain a brand-bound provider path");
 
 console.log("");
 if (fail) { console.log("\x1b[31m✗ AssureRail invariants FAILED\x1b[0m"); process.exit(1); }

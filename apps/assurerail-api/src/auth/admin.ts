@@ -1,4 +1,4 @@
-// Platform-admin resolution — env allowlist, fail-closed on unverified email (AssureLocker parity:
+// Platform-admin resolution — env allowlist, fail-closed on unverified email:
 // elevated access requires emailVerified === true). Set VENUE_ADMIN_EMAILS="a@x.com,b@y.com" on the box.
 export function adminEmails(): string[] {
   return (process.env.VENUE_ADMIN_EMAILS || "")

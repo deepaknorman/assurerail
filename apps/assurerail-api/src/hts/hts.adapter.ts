@@ -1,6 +1,6 @@
 // The mint rail. DEMO fakes a TokenId/serials deterministically (no testnet, no operator account).
-// LIVE calls plaza's HTS endpoint (the Hedera operator lives in plaza — the venue holds no ledger
-// keys); fail-closed until that endpoint exists AND the deferred live testnet smoke test passes.
+// LIVE will call a separately certified token-service provider; the venue holds no provider ledger
+// keys. It remains fail-closed until a provider-neutral contract and live conformance tests land.
 import { createHash, randomBytes } from "node:crypto";
 import { config } from "../config";
 
@@ -50,19 +50,18 @@ export class DemoHtsAdapter implements HtsAdapter {
 export class LiveHtsAdapter implements HtsAdapter {
   readonly mode = "LIVE" as const;
   async mint(): Promise<MintResult> {
-    // TODO(2c/T3-live): POST to plaza's HTS endpoint (TokenCreate + TokenMint on the operator client).
-    throw new Error("LIVE HTS not enabled — plaza HTS endpoint + testnet smoke test pending (HTS_ADAPTER=live blocked)");
+    throw new Error("LIVE token service is not enabled — provider contract and testnet smoke evidence pending");
   }
   async burn(): Promise<BurnResult> {
-    // TODO(T3-live): POST to plaza's HTS TokenBurn on the operator client.
-    throw new Error("LIVE HTS burn not enabled — plaza HTS endpoint + testnet smoke test pending");
+    throw new Error("LIVE token burn is not enabled — provider contract and testnet smoke evidence pending");
   }
   async burnAmount(): Promise<BurnResult> {
-    // TODO(T3-live): POST to plaza's HTS TokenBurn (partial amount) on the operator client.
-    throw new Error("LIVE HTS partial burn not enabled — plaza HTS endpoint + testnet smoke test pending");
+    throw new Error("LIVE partial token burn is not enabled — provider contract and testnet smoke evidence pending");
   }
 }
 
 export function selectHtsAdapter(): HtsAdapter {
-  return config.htsAdapter === "live" ? new LiveHtsAdapter() : new DemoHtsAdapter();
+  if (config.htsAdapter === "live") return new LiveHtsAdapter();
+  if (config.htsAdapter === "demo") return new DemoHtsAdapter();
+  throw new Error("HTS adapter is off for this deployment");
 }

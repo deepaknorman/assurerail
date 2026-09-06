@@ -2,7 +2,7 @@
 // the transport: recompute tapeHash over the body and compare (integrity); check the supported
 // version; recompute the FROZEN manifest from the loan rows (H6 tamper-evidence — the manifest binds
 // per-loan classification, so post-freeze drift is provable); then mint-readiness (the reserve-then-
-// mint lock, owned by AssureLocker, must be CONFIRMED).
+// source lock, owned by the configured AssurePool-profile provider, must be CONFIRMED).
 import { computePoolManifestV1, hashObject } from "../provider-contracts/v1";
 import { type AssurePoolTape, SUPPORTED_TAPE_VERSION } from "./tape.types";
 

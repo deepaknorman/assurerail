@@ -13,8 +13,8 @@ datasource db {
 }
 
 // ─────────────────────────────── venue identity & access ───────────────────────────────
-// The venue's OWN user records. Identity is bound through a provider adapter (AssureLocker DigiKYC
-// is the first adapter) and stores only a provider subject reference. Binding never grants admission.
+// The venue's OWN user records. Identity is bound through the deployment-selected provider-neutral
+// adapter and stores only a provider subject reference. Binding never grants admission.
 model VenueUser {
   id          String  @id
   firebaseUid String? @unique // set on first Firebase (AssureRail project) login
@@ -24,9 +24,9 @@ model VenueUser {
   role        String  @default("INVESTOR") // function role: ISSUER | DESK | INVESTOR | TRUSTEE | REGULATOR
   isAdmin     Boolean @default(false) // platform admin (true iff platformRole set) — kept for the guard bypass
 
-  // Platform tier — our own staff (mirrors plaza SUPER_ADMIN/ADMIN). Null for non-platform users.
+  // Platform tier — AssureRail staff. Null for non-platform users.
   platformRole String? // SUPERADMIN | ADMIN
-  // Entity tier — a lender/issuer org assigns roles to its own staff (mirrors AssureLocker membership).
+  // Entity tier — a lender/issuer organisation assigns roles to its own staff.
   entityDid    String? // the org this user acts for (their entity/institution DID)
   entityRole   String? // ORGADMIN | MANAGER | OPERATOR
 
@@ -611,7 +611,7 @@ model StepUpEvidence {
 }
 
 // ─────────────────────────────── venue records ───────────────────────────────
-/// A minted AssurePool Note — provenance traces back to the AssureLocker tape via tapeHash/manifestHash.
+/// A minted legacy AssurePool-profile Note — provenance traces to its source tape digest.
 model Note {
   id           String   @id
   poolId       String
@@ -661,7 +661,7 @@ model MintLog {
   @@index([poolId])
 }
 
-/// Per-cycle surveillance mirror pulled from AssureLocker, anchored via plaza HCS (2c).
+/// Per-cycle surveillance mirror supplied by the configured source and optionally anchored (2c).
 model SurveillanceMirror {
   id        String   @id
   noteId    String
@@ -691,7 +691,7 @@ model Dvp {
   @@index([noteId])
 }
 
-/// Regulator break-glass ACCESS event (the venue anchors who-saw-what-when; T2/PII stays at AssureLocker).
+/// Regulator break-glass ACCESS event; upstream T2/PII remains with its appointed evidence custodian.
 model BreakGlass {
   id            String   @id
   noteId        String

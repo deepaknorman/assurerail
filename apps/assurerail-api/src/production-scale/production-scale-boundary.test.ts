@@ -77,5 +77,5 @@ test("[AR30][PERIMETER] no action dispatch or live capability is introduced", ()
     service,
     /externalInstruction\.(create|update)|fetch\(|requireCapability\(/
   );
-  assert.match(registry, /IMPLEMENTED_LIVE_CAPABILITY_IDS = \[\] as const/);
+  assert.match(registry, /IMPLEMENTED_LIVE_CAPABILITIES: readonly ImplementedLiveCapability\[\] = \[\]/);
 });

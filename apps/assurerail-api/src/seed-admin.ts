@@ -1,4 +1,4 @@
-// Out-of-band bootstrap of a platform admin / superadmin (mirrors plaza's seed-admin.mjs — the first
+// Out-of-band bootstrap of a platform admin / superadmin — the first
 // platform staff is NEVER created through an authenticated endpoint). Upserts a VenueUser by email with
 // platformRole + isAdmin + ACTIVE + allow-listed, so on their first Firebase login resolveFromToken
 // adopts the row and they arrive with platform authority already set.

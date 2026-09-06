@@ -42,7 +42,7 @@ interface AuthState {
   error: string;
   loginGoogle: () => Promise<void>;
   loginEmail: (email: string, password: string, register?: boolean) => Promise<void>;
-  onboard: (did?: string) => Promise<void>;
+  onboard: (subject?: string) => Promise<void>;
   selectInstitution: (institutionId: string | null) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -143,9 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const onboard = useCallback(async (did?: string) => {
+  const onboard = useCallback(async (subject?: string) => {
     setError("");
-    const res = await vpost<{ user: VenueUser }>("/venue/auth/onboard", { did });
+    const res = await vpost<{ user: VenueUser }>("/venue/auth/onboard", { subject });
     setVenueUser(res.user);
     setNeedsOnboarding(false);
   }, []);

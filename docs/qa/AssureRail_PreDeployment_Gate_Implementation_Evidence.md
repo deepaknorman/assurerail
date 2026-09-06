@@ -22,11 +22,10 @@ The checked architecture is separate at source and runtime-boundary level:
   workload identities; and
 - provider communication through HTTP/contracts rather than shared source or cross-database keys.
 
-This does not claim complete provider independence. The legacy Note slice retains an optional
-AssurePool tape/surveillance adapter, and the currently configured live human-identity adapter is
-AssureLocker DigiKYC. The selected correction is to retain identity assurance but make the provider
-fully optional and neutral; that functional change is intentionally separate from this control
-tranche.
+This does not claim that all optional provider profiles have disappeared. The legacy Note slice
+retains an optional AssurePool tape/surveillance adapter. SEP-01 subsequently replaced the
+product-specific human-identity path with a deployment-selected, provider-neutral identity
+assurance contract; DigiKYC is not a required or privileged Rail dependency.
 
 ## Controls implemented
 
@@ -36,7 +35,7 @@ tranche.
 | Format/configuration | LF, final newline, trailing whitespace, conflict markers, JSON parsing, shell syntax and TypeScript builds |
 | Secrets/SAST | full-history gitleaks plus blocking repository-local AssureRail Semgrep rules |
 | Dependencies/IaC | exact npm-audit ratchet, Trivy high/critical dependency gate, release IaC gate and CycloneDX SBOM |
-| Application/database | cumulative 366-test API corpus, web boundary suites and all 24 disposable database rehearsals through AR-30 |
+| Application/database | cumulative 377-test API corpus, web boundary suites and all 24 disposable database rehearsals through AR-30 |
 | Browser/mobile | 13 public pages in Chromium, installed Chrome and WebKit at 1440×1000 and 375×812; accessibility, overflow, links, canonical and JSON-LD assertions |
 | Public/private boundary | built-client leak scan; controlled routes remain 404 and inbound remains unavailable while disabled |
 | Environment | private absolute mode-600 file, exact commit, explicit flags/adapters, no demo/live masquerade and compiled runtime-profile validation |
@@ -50,8 +49,8 @@ tranche.
 |---|---|
 | Shell syntax and launchd plist | PASS |
 | Release-control/compose/environment tests | PASS — 12/12 |
-| Repository format/configuration | PASS — 492 files |
-| API compile/test corpus | PASS — 366/366 |
+| Repository format/configuration | PASS — 491 files |
+| API compile/test corpus | PASS — 377/377 |
 | Web source boundary suites and production build | PASS — 40 routes built |
 | Disposable PostgreSQL migration/upgrade/restore rehearsals | PASS — 24 scripts; all 32 migrations exercised from zero through AR-30 |
 | Architecture/invariant suite | PASS — includes package/database segregation and fail-closed modes |

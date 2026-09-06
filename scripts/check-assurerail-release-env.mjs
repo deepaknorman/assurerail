@@ -62,7 +62,7 @@ const flagAllowed = new Map([
   ["ARAIL_PARTICIPANT_ADMISSION_V1", ["off", "shadow", "enforce"]],
   ["ARAIL_ROUTE_ENTITLEMENT_ENFORCE", ["off", "compare", "enforce"]],
   ["ARAIL_COMPLETION_ACK_V1", ["off", "shadow", "on"]],
-  ["ARAIL_LEGACY_ROOM_PROXY_V1", ["off", "shadow"]],
+  ["ARAIL_LEGACY_ROOM_PROXY_V1", ["off"]],
   ["ARAIL_TOKENISED_DA_V1", ["off", "allow_list", "live"]],
   ["ARAIL_TOKENISED_PTC_V1", ["off", "shadow"]],
   ["ARAIL_PRIMARY_COMMERCIAL_V1", ["off", "shadow"]],
@@ -116,7 +116,7 @@ for (const key of publicFlags) {
 if (deploymentClass === "DEMO") {
   requireExact("ARAIL_DEMO_ENDPOINTS_ENABLED", "true");
   for (const key of productFlags) requireExact(key, "off");
-  for (const key of ["TAPE_SOURCE", "HTS_ADAPTER", "HCS_ANCHOR", "SETTLEMENT_ADAPTER", "DIGIKYC_GATE"]) requireExact(key, "demo");
+  for (const key of ["TAPE_SOURCE", "HTS_ADAPTER", "HCS_ANCHOR", "SETTLEMENT_ADAPTER", "IDENTITY_ASSURANCE_ADAPTER"]) requireExact(key, "demo");
   requireExact("ARAIL_DURABLE_RELAY_MODE", "legacy");
   requireExact("ARAIL_ROOM_READ_SOURCE", "legacy");
   requireExact("ARAIL_ROOM_WRITE_SOURCE", "legacy");
@@ -131,7 +131,7 @@ if (deploymentClass === "DEMO") {
     for (const key of ["HTS_ADAPTER", "HCS_ANCHOR", "SETTLEMENT_ADAPTER"]) requireExact(key, "demo");
   }
   if (deploymentClass === "CONTROLLED_LIVE" || deploymentClass === "PRODUCTION") {
-    for (const key of ["TAPE_SOURCE", "HTS_ADAPTER", "HCS_ANCHOR", "SETTLEMENT_ADAPTER", "DIGIKYC_GATE"]) prohibit(key, "demo");
+    for (const key of ["TAPE_SOURCE", "HTS_ADAPTER", "HCS_ANCHOR", "SETTLEMENT_ADAPTER", "IDENTITY_ASSURANCE_ADAPTER"]) prohibit(key, "demo");
   }
 }
 

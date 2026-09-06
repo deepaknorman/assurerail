@@ -25,26 +25,21 @@ const userRow = {
   identityVerifiedAt: null,
 };
 
-test("[PR03][IDENTITY] AssureLocker is one adapter and unsupported providers fail closed", async () => {
+test("[PR03][IDENTITY] deployment-selected provider is returned without caller-side provider choice", async () => {
   let calls = 0;
   const service = new IdentityBindingService({
     verify: async () => {
       calls += 1;
-      return { ok: true, did: "did:test:person", reason: "fixture" };
+      return { ok: true, providerKey: "TEST_IDENTITY_PROVIDER", subject: "subject:test:person", reason: "fixture" };
     },
   } as never);
   assert.deepEqual(await service.verify({ email: userRow.email }), {
     ok: true,
-    providerKey: "ASSURELOCKER_DIGIKYC",
-    subject: "did:test:person",
+    providerKey: "TEST_IDENTITY_PROVIDER",
+    subject: "subject:test:person",
     reason: "fixture",
   });
   assert.equal(calls, 1);
-  assert.deepEqual(await service.verify({ provider: "lender-registry", email: userRow.email }), {
-    ok: false,
-    providerKey: "LENDER-REGISTRY",
-    reason: "identity-provider-not-configured",
-  });
   assert.equal(calls, 1);
 });
 
@@ -59,11 +54,11 @@ test("[PR03][AR-C03] identity binding activates identity but never grants legacy
       },
     },
   } as never);
-  const bound = await service.bindIdentity("uid-1", "ASSURELOCKER_DIGIKYC", "did:test:person");
+  const bound = await service.bindIdentity("uid-1", "TEST_IDENTITY_PROVIDER", "subject:test:person");
   assert.equal(updateData?.allowlisted, false);
   assert.equal(bound.allowlisted, false);
   assert.equal(bound.status, "ACTIVE");
-  assert.equal(bound.identityProvider, "ASSURELOCKER_DIGIKYC");
+  assert.equal(bound.identityProvider, "TEST_IDENTITY_PROVIDER");
   assert.ok(bound.identityVerifiedAt instanceof Date);
 });
 
@@ -76,7 +71,7 @@ test("[PR03][AR-C03] identity rebinding cannot reactivate or rewrite a suspended
     },
   } as never);
   await assert.rejects(
-    () => service.bindIdentity("uid-1", "ASSURELOCKER_DIGIKYC", "did:test:person"),
+    () => service.bindIdentity("uid-1", "TEST_IDENTITY_PROVIDER", "subject:test:person"),
     ForbiddenException,
   );
   assert.equal(updated, false);

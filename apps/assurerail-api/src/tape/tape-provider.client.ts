@@ -12,8 +12,10 @@ const h2Dispatcher = new Agent({ allowH2: true });
 
 export async function fetchTape(poolId: string): Promise<AssurePoolTape> {
   if (config.tapeSource === "demo") return isReceivablesPool(poolId) ? buildReceivablesDemoTape(poolId) : buildDemoTape(poolId);
+  if (config.tapeSource === "off") throw new Error("AssurePool-profile tape adapter is off for this deployment");
   const url = `${config.tapeProviderApiUrl}/v1/co-lending/pools/${encodeURIComponent(poolId)}/tape.json`;
   const res = await fetch(url, {
+    redirect: "error",
     headers: config.tapeProviderApiKey ? { Authorization: `Bearer ${config.tapeProviderApiKey}` } : {},
     // undici extension on Node's global fetch — route via the HTTP/2 dispatcher.
     dispatcher: h2Dispatcher,

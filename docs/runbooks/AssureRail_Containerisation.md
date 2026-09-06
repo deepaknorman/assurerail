@@ -117,11 +117,13 @@ so set `NEXT_PUBLIC_FIREBASE_API_KEY` and `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` in th
 `--build-arg`) to enable auth/captcha. Changing any `NEXT_PUBLIC_*` requires a **rebuild** of the web
 image, not just a restart.
 
-### Adapters (all DEMO by default)
+### Adapters (DEMO in the isolated demonstration)
 
-`TAPE_SOURCE`, `HTS_ADAPTER`, `HCS_ANCHOR`, `SETTLEMENT_ADAPTER`, `DIGIKYC_GATE` — flip to `live` only
-in a compatible explicit mode and once the corresponding integration is provisioned. See
-`apps/assurerail-api/.env.example`. A mode/configuration mismatch fails before Nest starts.
+`TAPE_SOURCE`, `HTS_ADAPTER`, `HCS_ANCHOR`, `SETTLEMENT_ADAPTER`,
+`IDENTITY_ASSURANCE_ADAPTER` accept `off`, `demo` or `live`. Controlled-live/production requires
+identity assurance live. Each activated capability declares its exact other dependencies; configure
+those live and leave unused adapters off. See `apps/assurerail-api/.env.example`. A mode/configuration
+mismatch fails before Nest starts.
 
 ---
 

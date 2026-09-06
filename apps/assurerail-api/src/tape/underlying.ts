@@ -21,9 +21,10 @@ export interface AnonymisedStrat {
  * Anonymised loan-level "underlying" (T1.5) — the disclosure tier between T1 (pool aggregates) and T2
  * (full loan-level + PII). It lets an investor assess pool composition WITHOUT any PII: only bucketed
  * distributions (strat tables), never an identifiable borrower. k-anon-safe by construction (aggregate
- * shares only). In production AssureLocker (which holds T2) emits this from the actual loans, stripped
- * of PII, as part of the tape; here (DEMO) it is synthesised deterministically from the poolId so the
- * venue runs standalone. Full loan-level + PII (T2) stays at AssureLocker — regulator break-glass only.
+ * shares only). In production the case-appointed evidence custodian emits this from the actual loans,
+ * stripped of PII, as part of the source evidence; here (DEMO) it is synthesised deterministically
+ * from the poolId so the venue runs standalone. Full loan-level + PII (T2) stays outside Rail and
+ * follows the custodian's authorised disclosure process.
  */
 export function buildAnonymisedStrat(poolId: string): AnonymisedStrat {
   const h = createHash("sha256").update(poolId).digest();
@@ -50,6 +51,6 @@ export function buildAnonymisedStrat(poolId: string): AnonymisedStrat {
       { name: "Asset classification", buckets: dist(["Standard", "SMA-1", "SMA-2", "NPA"], 40) },
       { name: "Delinquency (DPD)", buckets: dist(["Current", "1–30", "31–90", "90+"], 60) },
     ],
-    note: "Anonymised loan-level distribution (T1.5) — PII-stripped and k-anon-safe; no borrower is identifiable. Full loan-level detail (T2) stays at AssureLocker, available to the regulator via break-glass only.",
+    note: "Anonymised loan-level distribution (T1.5) — PII-stripped and k-anon-safe; no borrower is identifiable. Full loan-level detail (T2) stays with the case-appointed evidence custodian and is disclosed only through its authorised process.",
   };
 }

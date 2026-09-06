@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 export default function Onboard() {
   const { firebaseUser, venueUser, needsOnboarding, loading, error, onboard, logout } = useAuth();
   const router = useRouter();
-  const [did, setDid] = useState("");
+  const [subject, setSubject] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -22,7 +22,7 @@ export default function Onboard() {
     setBusy(true);
     setErr("");
     try {
-      await onboard(did.trim() || undefined);
+      await onboard(subject.trim() || undefined);
       router.replace("/institutions");
     } catch (e) {
       setErr((e as Error).message);
@@ -44,12 +44,12 @@ export default function Onboard() {
       <main className="wrap auth-wrap">
         <div className="auth-card">
           <h1>Verify your identity</h1>
-          <p className="auth-sub">Bind a verified identity before applying for or joining an institution. AssureLocker DigiKYC is the first configured provider; identity binding alone grants no participant or route access.</p>
+          <p className="auth-sub">Bind identity evidence from the provider approved for this deployment before applying for or joining an institution. Identity binding alone grants no participant or route access.</p>
           {(err || error) && <div className="msg err">{err || error}</div>}
 
           <label className="lbl">
-            Provider subject / AssureLocker DID <span className="opt">(optional in sandbox)</span>
-            <input className="field" placeholder="Provider subject reference" value={did} onChange={(e) => setDid(e.target.value)} />
+            Provider subject reference <span className="opt">(optional in sandbox)</span>
+            <input className="field" placeholder="Provider subject reference" value={subject} onChange={(e) => setSubject(e.target.value)} />
           </label>
           <button className="btn btn-primary" disabled={busy} onClick={submit}>{busy ? "Binding…" : "Bind identity"}</button>
 

@@ -4,6 +4,11 @@
 **Not authority:** this runbook does not approve controlled-live use, a customer cohort, legal
 completion, a connector or a production credential.
 
+> **SEP-01 retirement notice (7 September 2026):** the online legacy-room proxy, its subject-mapping
+> API and its connector profile have been removed. Do not execute proxy registration, enablement or
+> old-caller cutover steps in this historical runbook. Use Rail-native rooms or deterministic sealed
+> offline import. The source-completion portions remain applicable only behind their own gates.
+
 ## 1. Preconditions
 
 Do not enable any PR-08 flag until all of the following are evidenced:

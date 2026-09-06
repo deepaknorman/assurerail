@@ -11,7 +11,7 @@ import { DEMO_BUYER_DIDS } from "../common/constants";
 export type SeedTarget = "issued" | "active" | "traded" | "redeemed";
 
 // T5 — the whole venue loop in one call: mint → surveillance (HCS-anchored) → a sample atomic DvP.
-// Consumes the tape from AssureLocker (DEMO by default; TAPE_SOURCE=live for the real chain).
+// Exercises the optional AssurePool-profile adapter (DEMO by default; never a generic Rail dependency).
 @Injectable()
 export class DemoService {
   constructor(

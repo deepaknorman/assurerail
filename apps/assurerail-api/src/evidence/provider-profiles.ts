@@ -11,7 +11,6 @@ export type IntakeProfileId = (typeof INTAKE_PROFILE_IDS)[number];
 
 export const INTEGRATION_PROFILE_IDS = [
   ...INTAKE_PROFILE_IDS,
-  "assurerail.legacy-room-proxy.v1",
   "assurepool.completion-ack.v1",
 ] as const;
 export type IntegrationProfileId = (typeof INTEGRATION_PROFILE_IDS)[number];

@@ -64,5 +64,6 @@ test("[PR12][SAFETY] a signed manifest can only narrow capabilities implemented 
   const runtime = source("src/runtime/runtime-profile.ts");
   const registry = source("src/runtime/live-capability-registry.ts");
   assert.match(runtime, /isLiveCapabilityImplemented\(capability\.id\)/);
-  assert.match(registry, /IMPLEMENTED_LIVE_CAPABILITY_IDS = \[\] as const/);
+  assert.match(registry, /IMPLEMENTED_LIVE_CAPABILITIES: readonly ImplementedLiveCapability\[\] = \[\]/);
+  assert.match(registry, /requiredLiveAdapters/);
 });

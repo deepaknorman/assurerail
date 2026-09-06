@@ -9,7 +9,7 @@ import { assertLegacyExternalEffectPathAllowed } from "../runtime/legacy-externa
 export class SurveillanceService {
   constructor(private readonly repo: MintRepository) {}
 
-  /** Pull the Note's pool surveillance from AssureLocker, anchor each cycle's verdict to HCS, mirror it. */
+  /** Pull legacy Note surveillance from the configured source provider, anchor each verdict, mirror it. */
   async sync(noteId: string) {
     assertLegacyExternalEffectPathAllowed("legacy.note.surveillance-sync");
     const note = await this.repo.getNote(noteId);

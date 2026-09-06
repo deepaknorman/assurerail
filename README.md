@@ -10,6 +10,12 @@ the Founder IP Register, subject to the contributor and third-party rights recor
 incorporation, the approved signed baseline is intended to be assigned directly by Deepak Norman to
 AssureRail. AssureLocker is not a repository owner, transferor or source-code dependency.
 
+Human identity assurance remains mandatory where the authority policy requires it, but the provider
+is deployment-selected and provider-neutral. DigiKYC is neither built into the Rail domain nor a
+condition of using AssureRail; it may be integrated later through the same narrow external contract
+as any approved identity provider. See
+`docs/design/AssureRail_Identity_Assurance_And_Provider_Separation.md`.
+
 Code presence does not mean that a regulated function, controlled-live route or production route is
 authorised or available. Capability flags and external-evidence gates remain fail-closed.
 

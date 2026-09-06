@@ -8,10 +8,11 @@
 > automatically valid for PTC or conventional routes. Do not add PTC by renaming the existing Note
 > flow; follow the as-built disposition and staged migration in that scope before route work.
 
-Current implementation: a permissioned **tokenised-DA demo/application slice**. It is a **separate
-app inside the monorepo** (like `plaza`/`plaza-api`) with its own DB, env, ports (**api :3006**, web
-:3007), access management, screens and APIs. Its existing demo path consumes an AssureLocker frozen
-**AssurePool tape** and mints/administers an object named the **AssurePool Note**. That name and the
+Current implementation began as a permissioned **tokenised-DA demo/application slice** and now lives
+in the standalone AssureRail repository with its own DB, environment, containers, ports (**api
+:3006**, web :3007), access management, screens and APIs. Its legacy demo path can consume an
+optional **AssurePool tape profile** and mints/administers an object named the **AssurePool Note**.
+That name and the
 trustee-related demo code do not constitute PTC support; they are current-code facts to re-baseline,
 not the generic intake or instrument contract.
 
@@ -26,15 +27,16 @@ not the generic intake or instrument contract.
   versioned, authenticated contracts and retain enough signed evidence for Rail continuity.
 - Segregation must be anchored on function, appointments, access, fees, decisions, reconciliation
   and incident accountability; a company or division label cannot provide it by itself.
-- The current slice holds no ledger keys (mint goes via plaza) and is designed not to hold borrower
+- The current slice holds no ledger keys; a future token-service integration must use a separately
+  certified provider contract. It is designed not to hold borrower
   PII (T2). Those controls must survive generalisation.
 
 ## Historical tokenised-DA build sequence
 - **2a (done)** — scaffold + tape client with **independent integrity verification** (recompute
   `tapeHash` through the versioned provider-boundary profile; trust the math not the transport) + mint-readiness gate (lock must be
   CONFIRMED) + ring-fenced data model + own access management.
-- **2b** — HTS adapter (DEMO / LIVE-via-plaza) + mint gate (lock CONFIRMED + k-anon) → Note + MintLog.
-- **2c** — surveillance mirror + HCS anchoring via plaza. **T4** — DvP + settlement (e₹). **T5** — e2e.
+- **2b** — HTS adapter (DEMO; LIVE remains blocked) + mint gate (lock CONFIRMED + k-anon) → Note + MintLog.
+- **2c** — surveillance mirror + optional evidence anchoring. **T4** — DvP + settlement-provider adapter. **T5** — e2e.
 
 ## Run (DEMO — standalone, no AssureLocker needed)
 ```bash
@@ -290,8 +292,9 @@ curl -sX POST http://localhost:3006/venue/demo/run/POOL-DEMO-1 -H 'content-type:
 `TAPE_SOURCE=live` plus `TAPE_PROVIDER_API_URL` and `TAPE_PROVIDER_API_KEY` switches to a
 certified provider's `tape.json` endpoint (HTTP/2). AssurePool can be configured as one provider;
 the API and credential contract is not bound to AssureLocker.
-`HTS_ADAPTER` / `HCS_ANCHOR` / `SETTLEMENT_ADAPTER=live` are gated until the plaza endpoints +
-deferred live testnet smoke test land.
+`HTS_ADAPTER` / `HCS_ANCHOR` / `SETTLEMENT_ADAPTER=live` are gated until their provider-neutral
+contracts, credentials, conformance evidence and deferred external smoke tests land. Unused
+adapters remain `off` in controlled-live and production deployments.
 
 ## Next generic-infrastructure sequence
 

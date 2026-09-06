@@ -4,7 +4,6 @@ import test from "node:test";
 import { RequestMethod } from "@nestjs/common";
 import { METHOD_METADATA, PATH_METADATA } from "@nestjs/common/constants";
 import { RoomAuthorityController, RoomInvitationsController, RoomsController } from "./rooms.controllers";
-import { LegacyRoomProxyController } from "./legacy-room-proxy.controller";
 import { SourceCompletionController, SourceCompletionInternalController } from "../completion/source-completion.controllers";
 
 function endpoints(controller: Function) {
@@ -48,8 +47,7 @@ test("[PR08][ENDPOINTS] write authority and token acceptance are separate govern
   ]);
 });
 
-test("[PR08][ENDPOINTS] compatibility and completion surfaces are narrow and explicit", () => {
-  assert.deepEqual(endpoints(LegacyRoomProxyController), [{ method: "POST", path: "/internal/v1/legacy-room-proxy" }]);
+test("[PR08][SEP01][ENDPOINTS] completion surfaces remain narrow after the online legacy proxy is retired", () => {
   assert.deepEqual(endpoints(SourceCompletionController).map((entry) => `${entry.method} ${entry.path}`).sort(), [
     "GET /v1/rail/cases/:caseId/source-completions",
     "POST /v1/rail/cases/:caseId/source-completions",

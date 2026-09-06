@@ -2,7 +2,7 @@ import { SetMetadata } from "@nestjs/common";
 import { VENUE_ROLES, type VenueRole, type EntityRole } from "../access/roles";
 
 // @Roles(...) — the RolesGuard requires the caller to hold one of these venue roles (platform admin
-// bypasses) AND to be onboarded (ACTIVE + allow-listed via the DigiKYC gate). A route with no @Roles is
+// bypasses) AND to be onboarded (ACTIVE + allow-listed after identity binding). A route with no @Roles is
 // authentication-only.
 export const ROLES_KEY = "arail:roles";
 export const Roles = (...roles: VenueRole[]) => SetMetadata(ROLES_KEY, roles);

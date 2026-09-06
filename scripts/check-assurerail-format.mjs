@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
@@ -15,6 +15,9 @@ const failures = [];
 let checked = 0;
 
 for (const relative of files) {
+  // `git ls-files --cached` includes an index entry until a worktree deletion is staged. A normal
+  // pre-commit deletion is not a format error and must not make the hook unusable.
+  if (!existsSync(resolve(root, relative))) continue;
   const extension = extname(relative);
   if (!checkedExtensions.has(extension) && relative !== ".editorconfig") continue;
   let fileText;

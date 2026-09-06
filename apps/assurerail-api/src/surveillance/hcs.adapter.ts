@@ -1,6 +1,6 @@
-// Anchors a surveillance verdict to HCS via plaza (the Hedera operator lives in plaza — the venue
-// holds no ledger keys). DEMO fakes a deterministic topic/sequence from the payload hash; LIVE calls
-// plaza's HCS submit endpoint (fail-closed until wired + smoke-tested).
+// Optional provider-neutral evidence-anchor adapter. The venue holds no provider ledger keys.
+// DEMO fakes a deterministic topic/sequence from the payload hash; LIVE calls the deployment-selected
+// endpoint and remains capability-gated until conformance and external smoke evidence are accepted.
 import { createHash } from "node:crypto";
 import { Agent } from "undici";
 import { config } from "../config";
@@ -33,20 +33,22 @@ const h2Dispatcher = new Agent({ allowH2: true });
 export class LiveHcsAdapter implements HcsAdapter {
   readonly mode = "LIVE" as const;
   async anchor(payload: unknown): Promise<AnchorResult> {
-    // TODO(2c-live): POST to plaza's HCS submit endpoint; return the real topicId + sequenceNumber.
-    const url = `${config.anchorProviderApiUrl}/internal/hcs/submit`;
+    const url = new URL(config.anchorProviderSubmitPath, `${config.anchorProviderApiUrl}/`);
     const res = await fetch(url, {
       method: "POST",
+      redirect: "error",
       headers: { "Content-Type": "application/json", ...(config.anchorProviderApiKey ? { Authorization: `Bearer ${config.anchorProviderApiKey}` } : {}) },
       body: JSON.stringify({ message: hashPayload(payload) }),
       dispatcher: h2Dispatcher,
     } as RequestInit & { dispatcher: Agent });
-    if (!res.ok) throw new Error(`plaza HCS anchor failed (${res.status})`);
+    if (!res.ok) throw new Error(`anchor provider failed (${res.status})`);
     const j = (await res.json()) as { topicId?: string; sequenceNumber?: string };
     return { topicId: j.topicId ?? "", sequenceNumber: j.sequenceNumber ?? "", adapter: "LIVE" };
   }
 }
 
 export function selectHcsAdapter(): HcsAdapter {
-  return config.hcsAnchor === "live" ? new LiveHcsAdapter() : new DemoHcsAdapter();
+  if (config.hcsAnchor === "live") return new LiveHcsAdapter();
+  if (config.hcsAnchor === "demo") return new DemoHcsAdapter();
+  throw new Error("HCS anchor adapter is off for this deployment");
 }

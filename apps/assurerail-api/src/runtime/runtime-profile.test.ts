@@ -25,16 +25,20 @@ const LIVE_ENV = {
   HTS_ADAPTER: "live",
   HCS_ANCHOR: "live",
   SETTLEMENT_ADAPTER: "live",
-  DIGIKYC_GATE: "live",
+  IDENTITY_ASSURANCE_ADAPTER: "live",
   TAPE_PROVIDER_API_URL: "https://tape-provider.invalid",
   TAPE_PROVIDER_API_KEY: "test-only-placeholder",
   IDENTITY_PROVIDER_API_URL: "https://identity-provider.invalid",
   IDENTITY_PROVIDER_API_KEY: "test-only-placeholder",
+  IDENTITY_PROVIDER_KEY: "TEST_IDENTITY_PROVIDER",
+  IDENTITY_PROVIDER_STATUS_PATH: "/v1/identity-assurance/status",
+  IDENTITY_PROVIDER_TIMEOUT_MS: "5000",
   ANCHOR_PROVIDER_API_URL: "https://anchor-provider.invalid",
   ANCHOR_PROVIDER_API_KEY: "test-only-placeholder",
+  ANCHOR_PROVIDER_SUBMIT_PATH: "/v1/anchors",
   SETTLEMENT_PROVIDER_API_URL: "https://settlement-provider.invalid",
   SETTLEMENT_PROVIDER_API_KEY: "test-only-placeholder",
-  DIGIKYC_STATUS_SERVICE_SECRET: "test-only-placeholder",
+  SETTLEMENT_PROVIDER_TRANSFER_PATH: "/v1/settlements",
   RECAPTCHA_SITE_KEY: "test-only-placeholder",
   RECAPTCHA_ENFORCE: "true",
   ARAIL_DURABLE_RELAY_MODE: "durable",
@@ -59,7 +63,7 @@ test("[CONFIG][DEMO] development defaults are explicit demo evidence", () => {
     hts: "demo",
     hcs: "demo",
     settlement: "demo",
-    digiKyc: "demo",
+    identityAssurance: "demo",
   });
   assert.deepEqual(result.features, {
     neutralIngress: "off",
@@ -105,7 +109,7 @@ test("[CONFIG][DEMO] an optimised Node process may declare itself DEMO without b
     HTS_ADAPTER: "demo",
     HCS_ANCHOR: "demo",
     SETTLEMENT_ADAPTER: "demo",
-    DIGIKYC_GATE: "demo",
+    IDENTITY_ASSURANCE_ADAPTER: "demo",
   };
   const result = assertRuntimeEnvironment(env);
   assert.equal(result.operatingMode, "DEMO");
@@ -122,7 +126,8 @@ test("[CONFIG][PRODUCTION] an undeclared production container fails closed", () 
     inspected.errors.join("\n"),
     /FIREBASE_ADMIN_CONFIG is required/
   );
-  assert.match(inspected.errors.join("\n"), /requires live adapters/);
+  assert.match(inspected.errors.join("\n"), /forbids demo adapters/);
+  assert.match(inspected.errors.join("\n"), /requires the provider-neutral identity assurance adapter live/);
   assert.match(inspected.errors.join("\n"), /ARAIL_DURABLE_RELAY_MODE=durable/);
   assert.equal(shouldMountDemoEndpoints({ NODE_ENV: "production" }), false);
   assert.throws(
@@ -179,7 +184,7 @@ test("[CONFIG][PRODUCTION] database and auth do not make demo adapters or demo r
   const inspected = inspectRuntimeEnvironment(env);
   const errors = inspected.errors.join("\n");
   assert.match(errors, /ARAIL_DEMO_ENDPOINTS_ENABLED=true is forbidden/);
-  assert.match(errors, /requires live adapters/);
+  assert.match(errors, /forbids demo adapters/);
   assert.equal(shouldMountDemoEndpoints(env), false);
 });
 
@@ -201,6 +206,22 @@ test("[CONFIG][SHADOW] every non-demo mode requires persistent authenticated ope
     shouldMountDemoEndpoints({ ASSURERAIL_OPERATING_MODE: "SHADOW" }),
     false
   );
+});
+
+test("[CONFIG][SEPARATION] live runtime does not require unused source, ledger or settlement providers", () => {
+  const inspected = inspectRuntimeEnvironment({
+    ...LIVE_ENV,
+    TAPE_SOURCE: "off",
+    HTS_ADAPTER: "off",
+    HCS_ANCHOR: "off",
+    SETTLEMENT_ADAPTER: "off",
+  });
+  const errors = inspected.errors.join("\n");
+  assert.doesNotMatch(errors, /TAPE_PROVIDER_API_(?:KEY|URL).*required/);
+  assert.doesNotMatch(errors, /ANCHOR_PROVIDER_API_(?:KEY|URL).*required/);
+  assert.doesNotMatch(errors, /SETTLEMENT_PROVIDER_API_(?:KEY|URL).*required/);
+  assert.doesNotMatch(errors, /forbids demo adapters/);
+  assert.match(errors, /ARAIL_ACTIVATION_MANIFEST_B64 is required/);
 });
 
 test("[CONFIG][PR06] neutral transaction cases cannot be mislabeled demo, live or production", () => {
@@ -1138,7 +1159,7 @@ test("[CONFIG] invalid modes, adapters and booleans are rejected", () => {
     errors,
     /ARAIL_DEMO_ENDPOINTS_ENABLED must be "true" or "false"/
   );
-  assert.match(errors, /TAPE_SOURCE must be "demo" or "live"/);
+  assert.match(errors, /TAPE_SOURCE must be "off", "demo" or "live"/);
 });
 
 test("[CONFIG][SHADOW] permissive CORS is rejected outside demo mode", () => {

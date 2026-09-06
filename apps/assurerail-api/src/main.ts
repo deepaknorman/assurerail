@@ -29,12 +29,12 @@ async function bootstrap() {
   // for served documents.
   app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 
-  // Reject unknown/extra fields and coerce DTOs (AssureLocker parity).
+  // Reject unknown/extra fields and coerce DTOs at the Rail boundary.
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 
   // CORS — allowlist the venue web origin(s) via ASSURERAIL_WEB_ORIGINS (comma-separated). No wildcard
   // by default; a reflect-any mode exists only behind an explicit opt-in (never for production).
-  const origins = (process.env.ASSURERAIL_WEB_ORIGINS ?? (runtime.operatingMode === "DEMO" ? "http://localhost:3007,http://localhost:3001" : ""))
+  const origins = (process.env.ASSURERAIL_WEB_ORIGINS ?? (runtime.operatingMode === "DEMO" ? "http://localhost:3007" : ""))
     .split(",")
     .map((o) => o.trim())
     .filter(Boolean);

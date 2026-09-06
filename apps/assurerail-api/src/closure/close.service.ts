@@ -41,7 +41,7 @@ export class CloseService {
     if (!VALID_REASONS.includes(reason)) throw new BadRequestException(`reason must be one of: ${VALID_REASONS.join(", ")}`);
 
     // Burn the tokens (supply retired) — the mirror of mint. The venue holds no ledger keys; DEMO fakes
-    // the burn, LIVE calls plaza's HTS TokenBurn (fail-closed until wired).
+    // the burn; LIVE uses the separately certified token-service adapter (fail-closed until wired).
     const burn = await selectHtsAdapter().burn(note.tokenId, note.serials);
 
     // Anchor the closure event before the state write so the tamper-evident record exists.

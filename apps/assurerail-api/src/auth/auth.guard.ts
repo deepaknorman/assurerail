@@ -7,7 +7,7 @@ import { isAdminEmail } from "./admin";
 
 // Global authentication guard. Secure-by-default: every route requires a valid AssureRail Firebase ID
 // token unless marked @Public(). On a public route it opportunistically attaches req.user if a valid
-// token is present but never rejects (matches AssureLocker).
+// token is present but never rejects; persistent modes use the strict global guard.
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(

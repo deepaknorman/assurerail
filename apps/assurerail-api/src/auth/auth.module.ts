@@ -3,7 +3,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { StoreModule } from "../store/store.module";
 import { FirebaseAdminService } from "./firebase-admin.service";
 import { RecaptchaService } from "./recaptcha.service";
-import { DigiKycGateService } from "./digikyc-gate.service";
+import { IdentityAssuranceProviderService } from "./identity-assurance-provider.service";
 import { VenueUserService } from "./venue-user.service";
 import { AuthGuard } from "./auth.guard";
 import { RolesGuard } from "./roles.guard";
@@ -19,7 +19,7 @@ import { IdentityBindingService } from "./identity-binding.service";
   providers: [
     FirebaseAdminService,
     RecaptchaService,
-    DigiKycGateService,
+    IdentityAssuranceProviderService,
     IdentityBindingService,
     VenueUserService,
     { provide: APP_GUARD, useClass: AuthGuard },

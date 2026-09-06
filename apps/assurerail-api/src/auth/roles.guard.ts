@@ -61,7 +61,7 @@ export class RolesGuard implements CanActivate {
     if (user.isAdmin && !internalEnforced) return true; // legacy-only bypass
 
     if (user.status !== "ACTIVE" || !user.allowlisted) {
-      throw new ForbiddenException("account not onboarded — complete DigiKYC onboarding first");
+      throw new ForbiddenException("account is not admitted for legacy venue access");
     }
     if (!user.role || !roles.includes(user.role)) {
       throw new ForbiddenException(`requires one of the roles: ${roles.join(", ")}`);

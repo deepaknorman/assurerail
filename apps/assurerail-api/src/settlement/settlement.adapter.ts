@@ -1,7 +1,7 @@
 // The settlement leg of atomic DvP. The token is a PARAMETER (e₹ domestic; FCY for GIFT later) and
 // the adapter isolates it. The venue OPERATES the swap but holds neither leg → no custody/payment
-// licence (§11.4). DEMO simulates the settlement-token transfer; LIVE calls plaza's settlement/e₹
-// rail (fail-closed until wired).
+// licence (§11.4). DEMO simulates the transfer; LIVE calls a deployment-selected settlement
+// provider through a distinct endpoint and credential (fail-closed until certified and activated).
 import { createHash, randomBytes } from "node:crypto";
 import { Agent } from "undici";
 import { config } from "../config";
@@ -35,20 +35,22 @@ const h2Dispatcher = new Agent({ allowH2: true });
 export class LiveSettlementAdapter implements SettlementAdapter {
   readonly mode = "LIVE" as const;
   async settle(fromDid: string, toDid: string, amountMinor: string, token: string): Promise<SettlementResult> {
-    // TODO(T4-live): call plaza's settlement adapter (ISettlementAdapter / e₹) for the atomic leg.
-    const url = `${config.settlementProviderApiUrl}/internal/settlement/transfer`;
+    const url = new URL(config.settlementProviderTransferPath, `${config.settlementProviderApiUrl}/`);
     const res = await fetch(url, {
       method: "POST",
+      redirect: "error",
       headers: { "Content-Type": "application/json", ...(config.settlementProviderApiKey ? { Authorization: `Bearer ${config.settlementProviderApiKey}` } : {}) },
       body: JSON.stringify({ fromDid, toDid, amountMinor, token }),
       dispatcher: h2Dispatcher,
     } as RequestInit & { dispatcher: Agent });
-    if (!res.ok) throw new Error(`plaza settlement failed (${res.status})`);
+    if (!res.ok) throw new Error(`settlement provider failed (${res.status})`);
     const j = (await res.json()) as { settlementRef?: string };
     return { settlementRef: j.settlementRef ?? "", token, amountMinor, adapter: "LIVE" };
   }
 }
 
 export function selectSettlementAdapter(): SettlementAdapter {
-  return config.settlementAdapter === "live" ? new LiveSettlementAdapter() : new DemoSettlementAdapter();
+  if (config.settlementAdapter === "live") return new LiveSettlementAdapter();
+  if (config.settlementAdapter === "demo") return new DemoSettlementAdapter();
+  throw new Error("settlement adapter is off for this deployment");
 }

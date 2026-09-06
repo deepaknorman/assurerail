@@ -4,7 +4,7 @@ import { getAuth, type DecodedIdToken } from "firebase-admin/auth";
 import { loadGoogleCreds } from "./google-credentials";
 
 // Verifies AssureRail Firebase ID tokens with firebase-admin (its OWN Firebase project `assurerail`,
-// named app instance to stay isolated). Matches AssureLocker's FIREBASE_ADMIN_CONFIG (base64) convention.
+// named app instance to stay isolated). Accepts base64 service-account JSON from Rail's own secret store.
 @Injectable()
 export class FirebaseAdminService {
   private readonly log = new Logger("FirebaseAdmin");

@@ -1,6 +1,8 @@
 # AssureRail room cutover and AssurePool source-completion contract v1
 
-**Status:** implemented behind disabled/shadow gates; not deployed, not a live-route approval
+**Status:** historical PR-08 design; its online legacy-room proxy was retired by SEP-01 on 7
+September 2026. Sealed offline import and provider-neutral source completion remain. This document
+is not a live-route approval; any proxy-enable instruction below is superseded and must not be used.
 **Implementation tranche:** PR-08
 **Date:** 31 August 2026
 **Depends on:** PR-01 neutral contracts, PR-02 durable persistence, PR-03 authority, PR-05 evidence, PR-06 cases and PR-07 shadow room migration
@@ -149,7 +151,7 @@ enters `ACKNOWLEDGED/PENDING` until a different human independently reconciles i
 |---|---:|---|
 | `ARAIL_ROOM_READ_SOURCE` | `legacy` | `compare` retains shadow comparison; `rail` permits active Rail reads only with the full neutral foundation |
 | `ARAIL_ROOM_WRITE_SOURCE` | `legacy` | `rail` exposes write capability but does not allocate a case |
-| `ARAIL_LEGACY_ROOM_PROXY_V1` | `off` | `shadow` enables the signed compatibility endpoint |
+| `ARAIL_LEGACY_ROOM_PROXY_V1` | `off` | Off-only SEP-01 tombstone; the signed compatibility endpoint is retired |
 | `ARAIL_COMPLETION_ACK_V1` | `off` | `shadow` records intent only; `on` is external mutation and is prohibited in replay/shadow |
 | `ASSURERAIL_LEGACY_ROOM_PROXY_ENABLED` | false/unset | Enables the AssureLocker server compatibility client |
 | `ASSUREPOOL_RAIL_COMPLETION_ENABLED` | false/unset | Enables the signed AssurePool provider endpoint; it does not make the live adapter available |

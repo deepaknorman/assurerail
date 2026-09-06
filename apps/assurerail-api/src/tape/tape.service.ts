@@ -6,7 +6,7 @@ import type { AssurePoolTape } from "./tape.types";
 
 @Injectable()
 export class TapeService {
-  /** Fetch a tape from AssureLocker (or DEMO) and verify it end to end. */
+  /** Fetch an optional AssurePool-profile tape from its configured provider (or DEMO) and verify it. */
   async load(poolId: string): Promise<{ tape: AssurePoolTape; verification: TapeVerification }> {
     const tape = await fetchTape(poolId);
     const verification = verifyTape(tape);

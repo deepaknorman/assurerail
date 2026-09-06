@@ -6,11 +6,11 @@ import { vget, vpost, vpatch, vdelete, inr, shortDid } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
 import { VenueHeader } from "@/components/VenueHeader";
 
-type User = { id: string; email: string; displayName: string | null; did: string | null; role: string; isAdmin: boolean; platformRole: string | null; entityRole: string | null; entityDid: string | null; allowlisted: boolean; status: string };
+type User = { id: string; email: string; displayName: string | null; did: string | null; identityProvider: string | null; identitySubject: string | null; role: string; isAdmin: boolean; platformRole: string | null; entityRole: string | null; entityDid: string | null; allowlisted: boolean; status: string };
 type Status = {
   store: string;
   adapters: { tape: string; hts: string; hcs: string; settlement: string };
-  digikycGate: string;
+  identityAssurance: { mode: string; providerKey: string };
   recaptchaEnforce: boolean;
   roles: string[];
   entityRoles: string[];
@@ -221,7 +221,7 @@ export default function Admin() {
             <h3>System</h3>
             <div className="kv"><span className="k">store</span><span className="v">{status.store}</span></div>
             <div className="kv"><span className="k">adapters</span><span className="v mono">tape:{status.adapters.tape} · hts:{status.adapters.hts} · hcs:{status.adapters.hcs} · settle:{status.adapters.settlement}</span></div>
-            <div className="kv"><span className="k">DigiKYC gate</span><span className="v">{status.digikycGate}</span></div>
+            <div className="kv"><span className="k">Identity assurance</span><span className="v">{status.identityAssurance.mode} · {status.identityAssurance.providerKey}</span></div>
             <div className="kv"><span className="k">reCAPTCHA enforce</span><span className="v">{String(status.recaptchaEnforce)}</span></div>
             <div className="kv"><span className="k">notes</span><span className="v">{status.counts.notes} · {status.counts.active} active · {status.counts.redeemed} redeemed</span></div>
           </div>
@@ -333,7 +333,7 @@ export default function Admin() {
             <label className="lbl">role<select className="field reason-select" value={inv.role} onChange={(e) => setInv({ ...inv, role: e.target.value })}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select></label>
             <button className="btn btn-primary" disabled={busy !== "" || !inv.email} onClick={() => void invite()}>{busy === "invite" ? "…" : "Invite"}</button>
           </div>
-          <p className="tier-note">Pre-registers the email with a role (allow-listed). On their first login — still gated on an existing AssureLocker DigiKYC identity — they arrive already assigned.</p>
+          <p className="tier-note">Legacy compatibility only: pre-registers an email and function role. Identity binding, institutional admission, membership and mandate remain separate gates.</p>
         </div>
 
         <div className="panel">
@@ -347,7 +347,7 @@ export default function Admin() {
                     {u.platformRole && <span className="tag tag-plat">{u.platformRole}</span>}
                     {u.entityRole && <span className="tag">{u.entityRole}</span>}
                   </span>
-                  <span className="anchor" title={u.did ?? ""}>{u.did ? shortDid(u.did) : "no DID"}</span>
+                  <span className="anchor" title={u.identitySubject ?? u.did ?? ""}>{u.identitySubject || u.did ? `${u.identityProvider ?? "legacy"} · ${shortDid(u.identitySubject ?? u.did ?? "")}` : "identity not bound"}</span>
                 </div>
                 <div className="ucard-controls">
                   <label className="ctl"><span>Function</span><select className="field mini" value={u.role} disabled={busy === u.id} onChange={(e) => void patchUser(u.id, { role: e.target.value })}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select></label>

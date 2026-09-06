@@ -64,12 +64,13 @@ export class AuthController {
   @Post("onboard")
   async onboard(
     @Req() req: { user: { email: string; firebaseUid: string } },
-    @Body() body: { did?: string; provider?: string },
+    @Body() body: { subject?: string; did?: string },
   ) {
     const result = await this.identityBinding.verify({
-      provider: body?.provider,
       email: req.user.email,
-      claimedSubject: body?.did,
+      // `did` is accepted temporarily as a legacy field name. The subject is provider-neutral and
+      // need not use the DID grammar.
+      claimedSubject: body?.subject ?? body?.did,
     });
     if (!result.ok || !result.subject) throw new ForbiddenException(`identity binding failed: ${result.reason}`);
     const user = await this.users.bindIdentity(req.user.firebaseUid, result.providerKey, result.subject);

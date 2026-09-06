@@ -15,7 +15,7 @@ export class BreakGlassService {
 
   /**
    * Regulator break-glass for T2 (loan-level/PII). The venue holds no T2 — that stays off-chain and
-   * encrypted at AssureLocker. What the venue does is ANCHOR the access event (tamper-evident
+   * encrypted at the case-appointed evidence custodian. What the venue does is ANCHOR the access event (tamper-evident
    * who-saw-what-when), gated by a lawful-purpose attestation. The regulator gets more access than any
    * market participant, on lawful terms, with an audit trail no one can alter (§8.2).
    */
@@ -35,7 +35,7 @@ export class BreakGlassService {
 
     return {
       grant,
-      note: "T2 (loan-level/PII) is served by AssureLocker under its own regulator break-glass; this venue anchors the ACCESS event only.",
+      note: "T2 (loan-level/PII) is served by the case-appointed evidence custodian under its authorised disclosure process; Rail anchors the access event only.",
     };
   }
 

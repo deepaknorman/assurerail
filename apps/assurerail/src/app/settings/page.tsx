@@ -91,9 +91,10 @@ export default function Settings() {
 
         <div className="set-section">
           <h3>Profile</h3>
-          <p>Your venue identity. The DID is your AssureLocker DigiKYC identity — the venue references it, never copies your data.</p>
+          <p>Your Rail identity binding. The venue retains the provider and subject reference, not the provider&rsquo;s underlying identity dossier.</p>
           <div className="set-row"><div className="set-kv"><span className="k">Email</span><span className="v">{venueUser.email}</span></div></div>
-          <div className="set-row"><div className="set-kv"><span className="k">DID</span><span className="v">{venueUser.did || "—"}</span></div></div>
+          <div className="set-row"><div className="set-kv"><span className="k">Identity provider</span><span className="v">{venueUser.identityProvider || "—"}</span></div></div>
+          <div className="set-row"><div className="set-kv"><span className="k">Provider subject</span><span className="v">{venueUser.identitySubject || venueUser.did || "—"}</span></div></div>
           <div className="set-row"><div className="set-kv"><span className="k">Role</span><span className="v">{venueUser.role}{venueUser.platformRole ? ` · ${venueUser.platformRole}` : ""}{venueUser.entityRole ? ` · ${venueUser.entityRole}` : ""}</span></div></div>
           <div className="set-row"><div className="set-kv"><span className="k">Status</span><span className="v">{venueUser.status}{venueUser.allowlisted ? " · allow-listed" : ""}</span></div></div>
         </div>
@@ -110,7 +111,7 @@ export default function Settings() {
 
         <div className="set-section">
           <h3>Security</h3>
-          <p>Add a passkey and multi-factor authentication — the same protections as AssureLocker.</p>
+          <p>Add a passkey and multi-factor authentication for stronger, attributable Rail actions.</p>
 
           <div className="set-row">
             <div><div className="sr-label">Passkeys (WebAuthn)</div><div className="sr-sub">Sign in with Face&nbsp;ID / Touch&nbsp;ID / a security key.</div></div>

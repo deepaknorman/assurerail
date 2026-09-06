@@ -9,6 +9,7 @@ const envExample = readFileSync(path.resolve(appRoot, ".env.example"), "utf8");
 const compose = readFileSync(path.resolve(repoRoot, "docker-compose.assurerail.yml"), "utf8");
 
 const safeDefaults: Readonly<Record<string, string>> = {
+  IDENTITY_ASSURANCE_ADAPTER: "demo",
   ARAIL_NEUTRAL_TAXONOMY_V1: "off",
   ARAIL_NEUTRAL_INGRESS_V1: "off",
   ARAIL_TRANSACTION_CASE_V1: "off",

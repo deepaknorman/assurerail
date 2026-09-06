@@ -1,6 +1,6 @@
-// Pulls a pool's post-close surveillance from AssureLocker — same runtime coupling as the tape
-// (HTTP/2), DEMO returns a synthetic snapshot so the venue runs standalone. The venue mirrors this;
-// AssureLocker remains the authoritative surveillance engine.
+// Optional AssurePool-profile surveillance adapter. DEMO returns a synthetic snapshot. The
+// configured provider owns its facts; Rail retains received evidence and does not make this adapter
+// a generic route dependency.
 import { Agent } from "undici";
 import { config } from "../config";
 
@@ -31,8 +31,10 @@ export async function fetchSurveillance(poolId: string): Promise<PoolSurveillanc
       ],
     };
   }
+  if (config.tapeSource === "off") throw new Error("AssurePool-profile surveillance adapter is off for this deployment");
   const url = `${config.tapeProviderApiUrl}/v1/co-lending/pools/${encodeURIComponent(poolId)}/surveillance`;
   const res = await fetch(url, {
+    redirect: "error",
     headers: config.tapeProviderApiKey ? { Authorization: `Bearer ${config.tapeProviderApiKey}` } : {},
     dispatcher: h2Dispatcher,
   } as RequestInit & { dispatcher: Agent });

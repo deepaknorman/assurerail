@@ -145,9 +145,11 @@ controlled-live/production claim or activation.
 1. Current customer/product flags from PR-13 onward intentionally support only `shadow`; a general
    controlled-live DA/PTC command path has not been implemented. PR-15 registers a narrowly bounded
    token connector path but does not make the whole venue live.
-2. The controlled-live runtime still assumes the legacy AssureLocker DigiKYC/source adapter set.
-   AR-29 must make actual production identity/source/provider selection neutral and certify the
-   selected adapter rather than require a brand by configuration.
+2. **Resolved by SEP-01:** the human identity path now uses a deployment-selected, provider-neutral
+   HTTPS contract, and no DigiKYC/AssureLocker endpoint, header or default provider remains in the
+   executable identity boundary. Provider conformance and certification remain activation evidence,
+   not a code-presence claim. The legacy AssurePool-profile source adapter remains optional and
+   separate from generic DA/PTC intake.
 3. Institution/evidence administration still uses some legacy `@AdminOnly` endpoints. Enforced
    internal RBAC now correctly blocks those endpoints, so equivalent permission-specific internal
    operations APIs and UIs must be built before production participant onboarding.

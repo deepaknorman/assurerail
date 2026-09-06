@@ -32,7 +32,7 @@ import {
   type VenueConductMode,
 } from "../persistence/feature-flags";
 import { inspectActivationManifest } from "./activation-manifest";
-import { isLiveCapabilityImplemented } from "./live-capability-registry";
+import { isLiveCapabilityImplemented, requiredLiveAdapters } from "./live-capability-registry";
 
 export const ASSURERAIL_OPERATING_MODES = [
   "DEMO",
@@ -45,7 +45,7 @@ export const ASSURERAIL_OPERATING_MODES = [
 
 export type AssureRailOperatingMode =
   (typeof ASSURERAIL_OPERATING_MODES)[number];
-export type AdapterMode = "demo" | "live";
+export type AdapterMode = "off" | "demo" | "live";
 
 export interface RuntimeEnvironmentProfile {
   operatingMode: AssureRailOperatingMode;
@@ -63,7 +63,7 @@ export interface RuntimeEnvironmentProfile {
     hts: AdapterMode;
     hcs: AdapterMode;
     settlement: AdapterMode;
-    digiKyc: AdapterMode;
+    identityAssurance: AdapterMode;
   };
   features: {
     neutralIngress: NeutralIngressMode;
@@ -119,7 +119,7 @@ export class RuntimeConfigurationError extends Error {
 type Environment = Readonly<Record<string, string | undefined>>;
 
 const MODE_SET = new Set<string>(ASSURERAIL_OPERATING_MODES);
-const ADAPTER_MODES = new Set<string>(["demo", "live"]);
+const ADAPTER_MODES = new Set<string>(["off", "demo", "live"]);
 
 function normaliseOperatingMode(
   raw: string | undefined,
@@ -167,7 +167,7 @@ function adapterValue(
   const raw = (env[key] ?? defaultValue).trim().toLowerCase();
   if (ADAPTER_MODES.has(raw)) return raw as AdapterMode;
   errors.push(
-    `${key} must be "demo" or "live" (received ${JSON.stringify(env[key])})`
+    `${key} must be "off", "demo" or "live" (received ${JSON.stringify(env[key])})`
   );
   return defaultValue;
 }
@@ -179,6 +179,17 @@ function requirePresent(
   reason: string
 ): void {
   if (!env[key]?.trim()) errors.push(`${key} is required ${reason}`);
+}
+
+function requireAbsoluteProviderPath(
+  env: Environment,
+  key: string,
+  errors: string[]
+): void {
+  const value = env[key]?.trim();
+  if (!value?.startsWith("/") || value.startsWith("//") || value.includes("?") || value.includes("#")) {
+    errors.push(`${key} must be an absolute path without authority, query or fragment in live operation`);
+  }
 }
 
 function validateFirebaseAdminConfig(env: Environment, errors: string[]): void {
@@ -270,15 +281,6 @@ export function inspectRuntimeEnvironment(
   ) {
     errors.push(
       "ARAIL_ROOM_READ_SOURCE=rail requires the PR-08 case allocation gate and ARAIL_ROOM_WRITE_SOURCE=rail"
-    );
-  }
-  if (
-    persistenceFlags.legacyRoomProxy === "shadow" &&
-    (persistenceFlags.roomReadSource !== "rail" ||
-      persistenceFlags.roomWriteSource !== "rail")
-  ) {
-    errors.push(
-      "ARAIL_LEGACY_ROOM_PROXY_V1=shadow requires Rail room read/write capability; each case still needs an approved allocation"
     );
   }
   if (
@@ -740,7 +742,7 @@ export function inspectRuntimeEnvironment(
     hts: adapterValue(env, "HTS_ADAPTER", "demo", errors),
     hcs: adapterValue(env, "HCS_ANCHOR", "demo", errors),
     settlement: adapterValue(env, "SETTLEMENT_ADAPTER", "demo", errors),
-    digiKyc: adapterValue(env, "DIGIKYC_GATE", "demo", errors),
+    identityAssurance: adapterValue(env, "IDENTITY_ASSURANCE_ADAPTER", "demo", errors),
   };
 
   const persistentStoreRequired = operatingMode !== "DEMO";
@@ -826,32 +828,51 @@ export function inspectRuntimeEnvironment(
       );
     }
     const demoAdapters = Object.entries(adapters)
-      .filter(([, value]) => value !== "live")
+      .filter(([, value]) => value === "demo")
       .map(([name]) => name);
     if (demoAdapters.length > 0) {
       errors.push(
-        `${operatingMode} mode requires live adapters; demo/non-live: ${demoAdapters.join(
+        `${operatingMode} mode forbids demo adapters; set unused adapters off and required adapters live: ${demoAdapters.join(
           ", "
         )}`
       );
     }
+    if (adapters.identityAssurance !== "live") {
+      errors.push(`${operatingMode} mode requires the provider-neutral identity assurance adapter live`);
+    }
+    const requiredAdapters = requiredLiveAdapters(
+      activation.manifest?.capabilities.map((capability) => capability.id) ?? []
+    );
+    for (const adapter of requiredAdapters) {
+      if (adapters[adapter] !== "live") {
+        errors.push(`${operatingMode} activation requires ${adapter} adapter live`);
+      }
+    }
     if (demoEndpointsEnabled) {
       errors.push(`${operatingMode} mode cannot expose demo endpoints`);
     }
-    for (const key of [
-      "TAPE_PROVIDER_API_KEY",
-      "IDENTITY_PROVIDER_API_KEY",
-      "ANCHOR_PROVIDER_API_KEY",
-      "SETTLEMENT_PROVIDER_API_KEY",
-    ]) {
-      requirePresent(env, key, errors, `for its live provider adapter in ${operatingMode} mode`);
+    const providerRequirements = [
+      ["tape", "TAPE_PROVIDER_API_KEY", "TAPE_PROVIDER_API_URL"],
+      ["identityAssurance", "IDENTITY_PROVIDER_API_KEY", "IDENTITY_PROVIDER_API_URL"],
+      ["hcs", "ANCHOR_PROVIDER_API_KEY", "ANCHOR_PROVIDER_API_URL"],
+      ["settlement", "SETTLEMENT_PROVIDER_API_KEY", "SETTLEMENT_PROVIDER_API_URL"],
+    ] as const;
+    for (const [adapter, credentialKey, urlKey] of providerRequirements) {
+      if (adapters[adapter] !== "live") continue;
+      requirePresent(env, credentialKey, errors, `for its live provider adapter in ${operatingMode} mode`);
+      const providerUrl = env[urlKey]?.trim();
+      if (!providerUrl?.startsWith("https://")) {
+        errors.push(`${urlKey} must use https:// in ${operatingMode} mode`);
+      }
     }
-    requirePresent(
-      env,
-      "DIGIKYC_STATUS_SERVICE_SECRET",
-      errors,
-      `for live DigiKYC in ${operatingMode} mode`
-    );
+    requirePresent(env, "IDENTITY_PROVIDER_KEY", errors, `for live identity assurance in ${operatingMode} mode`);
+    requireAbsoluteProviderPath(env, "IDENTITY_PROVIDER_STATUS_PATH", errors);
+    if (adapters.hcs === "live") requireAbsoluteProviderPath(env, "ANCHOR_PROVIDER_SUBMIT_PATH", errors);
+    if (adapters.settlement === "live") requireAbsoluteProviderPath(env, "SETTLEMENT_PROVIDER_TRANSFER_PATH", errors);
+    const identityTimeout = Number(env.IDENTITY_PROVIDER_TIMEOUT_MS);
+    if (!Number.isInteger(identityTimeout) || identityTimeout < 500 || identityTimeout > 15_000) {
+      errors.push("IDENTITY_PROVIDER_TIMEOUT_MS must be an integer between 500 and 15000 in live operation");
+    }
     requirePresent(
       env,
       "RECAPTCHA_SITE_KEY",
@@ -862,17 +883,6 @@ export function inspectRuntimeEnvironment(
       errors.push(
         `RECAPTCHA_ENFORCE=true is required in ${operatingMode} mode`
       );
-    }
-    for (const key of [
-      "TAPE_PROVIDER_API_URL",
-      "IDENTITY_PROVIDER_API_URL",
-      "ANCHOR_PROVIDER_API_URL",
-      "SETTLEMENT_PROVIDER_API_URL",
-    ]) {
-      const providerUrl = env[key]?.trim();
-      if (!providerUrl?.startsWith("https://")) {
-        errors.push(`${key} must use https:// in ${operatingMode} mode`);
-      }
     }
   }
 
@@ -904,10 +914,7 @@ export function inspectRuntimeEnvironment(
     }
   }
 
-  if (
-    persistenceFlags.legacyRoomProxy === "shadow" ||
-    persistenceFlags.completionAcknowledgement === "on"
-  ) {
+  if (persistenceFlags.completionAcknowledgement === "on") {
     const vaultUrl = env.VAULT_ADDR?.trim();
     if (!vaultUrl)
       errors.push("VAULT_ADDR is required for signed connector traffic");
