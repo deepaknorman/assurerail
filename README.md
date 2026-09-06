@@ -47,6 +47,10 @@ The standalone daily workflow, including the independent Strix pass, is
 `scripts/assurerail-daily-qa.sh`; see the release-gate runbook for its launchd installation and
 fail/skip/review semantics.
 
+Engineers joining the standalone work should first read
+`docs/runbooks/AssureRail_Standalone_Release_And_SEP01_Coder_Handoff.md` for the release controls,
+provider-separation changes, Plaza boundary, environment migration and currently open gates.
+
 Before any migration, image promotion or restart, the deployer must run `npm run check:predeploy`
 against the exact signed tag and a private effective-environment file. The gate produces a local
 receipt but performs no deployment. See
