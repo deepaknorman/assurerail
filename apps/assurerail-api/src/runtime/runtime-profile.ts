@@ -816,6 +816,40 @@ export function inspectRuntimeEnvironment(
     );
   }
 
+  if (adapters.tape === "live") {
+    requirePresent(env, "TAPE_PROVIDER_API_KEY", errors, `for signed provider-v2 intake in ${operatingMode} mode`);
+    requirePresent(env, "TAPE_PROVIDER_EXPECTED_ID", errors, `for signed provider-v2 intake in ${operatingMode} mode`);
+    requirePresent(env, "TAPE_PROVIDER_PUBLIC_KEYS_JSON", errors, `for signed provider-v2 intake in ${operatingMode} mode`);
+    const providerUrl = env.TAPE_PROVIDER_API_URL?.trim();
+    if (!providerUrl?.startsWith("https://")) {
+      errors.push(`TAPE_PROVIDER_API_URL must use https:// for live signed provider-v2 intake in ${operatingMode} mode`);
+    }
+    const rawKeys = env.TAPE_PROVIDER_PUBLIC_KEYS_JSON?.trim();
+    if (rawKeys) {
+      try {
+        const keys = JSON.parse(rawKeys) as unknown;
+        if (!keys || typeof keys !== "object" || Array.isArray(keys) || Object.keys(keys).length === 0) {
+          throw new Error("empty or non-object key set");
+        }
+        for (const [keyId, pem] of Object.entries(keys as Record<string, unknown>)) {
+          if (!/^[0-9a-f]{32}$/.test(keyId) || typeof pem !== "string" || !pem.includes("BEGIN PUBLIC KEY")) {
+            throw new Error("invalid keyId or public-key PEM");
+          }
+        }
+      } catch {
+        errors.push("TAPE_PROVIDER_PUBLIC_KEYS_JSON must be a non-empty JSON object mapping 32-hex keyIds to public-key PEM strings");
+      }
+    }
+    const timeoutMs = Number(env.TAPE_PROVIDER_TIMEOUT_MS ?? "10000");
+    if (!Number.isInteger(timeoutMs) || timeoutMs < 500 || timeoutMs > 15_000) {
+      errors.push("TAPE_PROVIDER_TIMEOUT_MS must be an integer between 500 and 15000 for live provider-v2 intake");
+    }
+    const maxBytes = Number(env.TAPE_PROVIDER_MAX_RESPONSE_BYTES ?? "52428800");
+    if (!Number.isInteger(maxBytes) || maxBytes < 1_048_576 || maxBytes > 104_857_600) {
+      errors.push("TAPE_PROVIDER_MAX_RESPONSE_BYTES must be an integer between 1048576 and 104857600 for live provider-v2 intake");
+    }
+  }
+
   if (liveExternalActionsRequired) {
     if (persistenceFlags.internalRbac !== "enforce") {
       errors.push(

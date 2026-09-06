@@ -3,7 +3,8 @@ import type {
   FrozenReceivablesManifestV1,
   TransferTransactionV1,
 } from "../../provider-contracts/v1";
-import { sha256Digest, toCanonicalValue, type CanonicalObject } from "./canonical";
+import type { VerifiedAssurePoolProviderEnvelopeV2 } from "../../provider-contracts/assurepool-v2";
+import { assertSha256Digest, sha256Digest, toCanonicalValue, type CanonicalObject } from "./canonical";
 import {
   buildNeutralIntakeEnvelope,
   type InstitutionReferenceV1,
@@ -114,6 +115,113 @@ export function mapAssurePoolTapeToNeutralIntake(
       evidenceRef: null,
     }],
     signature: context.signature,
+    idempotencyKey: context.idempotencyKey,
+    receivedAt: context.receivedAt,
+    transaction: {
+      transactionRoute: "DA",
+      representation: context.representation,
+      jurisdiction: context.jurisdiction,
+      marketContext: context.marketContext,
+      placementOrListing: context.placementOrListing,
+      lifecycleLeg: context.lifecycleLeg,
+      assetClass: context.assetClass,
+      operatingMode: context.operatingMode,
+      extensionProfileRef: context.extensionProfileRef,
+      routePack: context.routePack,
+      legalRecord: context.legalRecord,
+    },
+    payload,
+  });
+  assertValidNeutralEnvelopeV1(envelope);
+  return envelope;
+}
+
+/**
+ * Map an already-verified AssurePool v2 provider envelope into Rail's neutral intake contract.
+ * The complete signed source envelope remains in the extension so its signature/digest chain can
+ * be reproduced independently; the normalized projection never becomes case or completion
+ * authority. Callers must use `parseAndVerifyAssurePoolProviderEnvelopeV2` before this function.
+ */
+export function mapVerifiedAssurePoolV2ToNeutralIntake(
+  providerEnvelope: VerifiedAssurePoolProviderEnvelopeV2,
+  context: AssurePoolMappingContextV1,
+): NeutralIntakeEnvelopeV1 {
+  if (!context.provider.identifiers.some((identifier) =>
+    identifier.scheme === "PROVIDER_INTERNAL" && identifier.value === providerEnvelope.providerId
+  )) {
+    throw new Error("verified AssurePool provider identity does not match the neutral mapping context");
+  }
+  const tape = providerEnvelope.payload.tape;
+  const original = sourceRecord(providerEnvelope);
+  const payload = sourceRecord({
+    normalized: {
+      assetCount: tape.aggregates.loanCount,
+      eligibleOrQualifiedAssetCount: tape.aggregates.includedCount,
+      grossAmount: exactMoney({
+        currency: context.currency,
+        units: tape.aggregates.totalMinor,
+        scale: context.currencyScale,
+      }),
+      includedAmount: exactMoney({
+        currency: context.currency,
+        units: tape.aggregates.includedMinor,
+        scale: context.currencyScale,
+      }),
+      pslVerifiedAmount: exactMoney({
+        currency: context.currency,
+        units: tape.aggregates.pslVerifiedMinor,
+        scale: context.currencyScale,
+      }),
+      sourceManifestDigest: tape.manifestHash,
+      sourceRecordDigest: sha256Digest(original),
+      performanceResultDigest: providerEnvelope.payload.performance.resultDigest,
+      performanceAsOfCycle: providerEnvelope.payload.performance.sourceAsOfCycle,
+    },
+    extensions: {
+      profileId: providerEnvelope.payload.profileId,
+      profileVersion: providerEnvelope.payload.packageVersion,
+      sourceRecord: original,
+    },
+  });
+  const envelope = buildNeutralIntakeEnvelope({
+    envelopeId: context.envelopeId,
+    transactionCaseId: context.transactionCaseId,
+    provider: context.provider,
+    source: {
+      providerInstitutionRef: context.provider.institutionRef,
+      sourceSystemRef: context.sourceSystemRef,
+      sourceObjectType: "FROZEN_DA_EVIDENCE_PACKAGE",
+      sourceObjectRef: tape.poolId,
+      sourceSchemaId: providerEnvelope.payload.profileId,
+      sourceSchemaVersion: providerEnvelope.payload.packageVersion,
+      sourcePayloadDigest: assertSha256Digest(providerEnvelope.payloadDigest, "provider payloadDigest"),
+      authorityClass: "EVIDENTIARY",
+    },
+    asOfAt: tape.cutoffDate,
+    expiresAt: null,
+    qualifications: [
+      ...tape.exclusions.map((exclusion, index) => ({
+        code: `SOURCE_SCOPE_EXCLUSION_${index + 1}`,
+        severity: "LIMITATION" as const,
+        text: exclusion,
+        evidenceRef: null,
+      })),
+      {
+        code: "SOURCE_PERFORMANCE_VALUE_BASIS",
+        severity: "LIMITATION",
+        text: String(providerEnvelope.payload.performance.result.note),
+        evidenceRef: null,
+      },
+    ],
+    signature: {
+      status: "PRESENT",
+      scope: "SOURCE_PAYLOAD",
+      signedDigest: assertSha256Digest(providerEnvelope.payloadDigest, "provider signed digest"),
+      algorithm: providerEnvelope.algorithm,
+      keyRef: providerEnvelope.keyId,
+      signature: providerEnvelope.signature,
+      signedAt: providerEnvelope.payload.generatedAt,
+    },
     idempotencyKey: context.idempotencyKey,
     receivedAt: context.receivedAt,
     transaction: {

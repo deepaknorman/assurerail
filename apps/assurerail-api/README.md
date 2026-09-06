@@ -289,9 +289,12 @@ POST /venue/demo/run/:poolId                    # ONE-CALL end-to-end: mint→su
 curl -sX POST http://localhost:3006/venue/demo/run/POOL-DEMO-1 -H 'content-type: application/json' -d '{}'
 # → mint → k-anon → 2 HCS-anchored surveillance cycles → Note ACTIVE → atomic DvP (30% sold, e₹) → holdings
 ```
-`TAPE_SOURCE=live` plus `TAPE_PROVIDER_API_URL` and `TAPE_PROVIDER_API_KEY` switches to a
-certified provider's `tape.json` endpoint (HTTP/2). AssurePool can be configured as one provider;
-the API and credential contract is not bound to AssureLocker.
+`TAPE_SOURCE=live` plus `TAPE_PROVIDER_API_URL`, `TAPE_PROVIDER_API_KEY`,
+`TAPE_PROVIDER_EXPECTED_ID` and `TAPE_PROVIDER_PUBLIC_KEYS_JSON` switches to the independently
+signed, manifest-complete `assurepool.frozen-da-evidence/2.0` provider contract (HTTP/2 where
+negotiated). AssurePool can be configured as one provider; Rail validates the schema, provider,
+Ed25519 key/signature, nested digests, complete v2 manifest and aggregates before creating a
+legacy-Note compatibility projection. The API and credential contract is not bound to AssureLocker.
 `HTS_ADAPTER` / `HCS_ANCHOR` / `SETTLEMENT_ADAPTER=live` are gated until their provider-neutral
 contracts, credentials, conformance evidence and deferred external smoke tests land. Unused
 adapters remain `off` in controlled-live and production deployments.

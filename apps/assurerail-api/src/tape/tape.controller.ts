@@ -19,13 +19,14 @@ export class TapeController {
   @Roles(...ALL_ROLES)
   @Get("venue/tape/:poolId")
   async getTape(@Param("poolId") poolId: string) {
-    const { tape, verification } = await this.tape.load(poolId);
+    const { tape, verification, providerEvidence } = await this.tape.load(poolId);
     return {
       poolId: tape.poolId,
       tapeHash: tape.tapeHash,
       manifestHash: tape.manifestHash,
       aggregates: tape.aggregates,
       lock: tape.lock,
+      providerEvidence,
       verification, // ok / mintReady / reasons
     };
   }

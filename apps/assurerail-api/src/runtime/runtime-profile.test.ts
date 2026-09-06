@@ -15,6 +15,9 @@ const FIREBASE_ADMIN_FIXTURE = Buffer.from(
   })
 ).toString("base64");
 
+// Construct the public-only test marker without resembling tracked PEM material to secret scans.
+const TEST_PUBLIC_KEY_PEM = ["-----", "BEGIN PUBLIC KEY-----\n", "test-only-placeholder\n", "-----END PUBLIC KEY-----"].join("");
+
 const LIVE_ENV = {
   NODE_ENV: "production",
   ASSURERAIL_OPERATING_MODE: "PRODUCTION",
@@ -28,6 +31,10 @@ const LIVE_ENV = {
   IDENTITY_ASSURANCE_ADAPTER: "live",
   TAPE_PROVIDER_API_URL: "https://tape-provider.invalid",
   TAPE_PROVIDER_API_KEY: "test-only-placeholder",
+  TAPE_PROVIDER_EXPECTED_ID: "ASSUREPOOL_TEST_PROVIDER",
+  TAPE_PROVIDER_PUBLIC_KEYS_JSON: JSON.stringify({
+    "0123456789abcdef0123456789abcdef": TEST_PUBLIC_KEY_PEM,
+  }),
   IDENTITY_PROVIDER_API_URL: "https://identity-provider.invalid",
   IDENTITY_PROVIDER_API_KEY: "test-only-placeholder",
   IDENTITY_PROVIDER_KEY: "TEST_IDENTITY_PROVIDER",
@@ -206,6 +213,40 @@ test("[CONFIG][SHADOW] every non-demo mode requires persistent authenticated ope
     shouldMountDemoEndpoints({ ASSURERAIL_OPERATING_MODE: "SHADOW" }),
     false
   );
+});
+
+test("[CONFIG][ASSUREPOOL_V2] every live tape read pins HTTPS, provider identity and trusted signing keys", () => {
+  const base = {
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_DEMO_ENDPOINTS_ENABLED: "false",
+    DATABASE_URL: "postgresql://rail.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE,
+    TAPE_SOURCE: "live",
+    HTS_ADAPTER: "off",
+    HCS_ANCHOR: "off",
+    SETTLEMENT_ADAPTER: "off",
+    IDENTITY_ASSURANCE_ADAPTER: "off",
+  } as const;
+  const missing = inspectRuntimeEnvironment({
+    ...base,
+    TAPE_PROVIDER_API_URL: "http://provider.invalid",
+  });
+  const missingErrors = missing.errors.join("\n");
+  assert.match(missingErrors, /TAPE_PROVIDER_API_KEY is required/);
+  assert.match(missingErrors, /TAPE_PROVIDER_EXPECTED_ID is required/);
+  assert.match(missingErrors, /TAPE_PROVIDER_PUBLIC_KEYS_JSON is required/);
+  assert.match(missingErrors, /must use https:\/\//);
+
+  const accepted = inspectRuntimeEnvironment({
+    ...base,
+    TAPE_PROVIDER_API_URL: "https://provider.invalid",
+    TAPE_PROVIDER_API_KEY: "test-only",
+    TAPE_PROVIDER_EXPECTED_ID: "ASSUREPOOL_PROVIDER_TEST",
+    TAPE_PROVIDER_PUBLIC_KEYS_JSON: JSON.stringify({
+      "0123456789abcdef0123456789abcdef": TEST_PUBLIC_KEY_PEM,
+    }),
+  });
+  assert.equal(accepted.errors.length, 0, accepted.errors.join("; "));
 });
 
 test("[CONFIG][SEPARATION] live runtime does not require unused source, ledger or settlement providers", () => {

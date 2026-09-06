@@ -16,8 +16,15 @@ function canonicalValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalValue);
   if (value && typeof value === "object") {
     const source = value as Record<string, unknown>;
-    const output: Record<string, unknown> = {};
-    for (const key of Object.keys(source).sort()) output[key] = canonicalValue(source[key]);
+    const output: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+    for (const key of Object.keys(source).sort()) {
+      Object.defineProperty(output, key, {
+        value: canonicalValue(source[key]),
+        enumerable: true,
+        configurable: false,
+        writable: false,
+      });
+    }
     return output;
   }
   return value;
