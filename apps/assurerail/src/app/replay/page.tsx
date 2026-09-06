@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default function ReplayPage() {
   const inboundEnabled = process.env.ASSURERAIL_INBOUND_ENABLED === "yes";
+  const contactEmail = process.env.ASSURERAIL_CONTACT_EMAIL?.trim();
   return (
     <PublicPage eyebrow="Lowest-risk first proof" title="Start with a transaction you have already completed." lead="Under an agreed NDA and data scope, reconstruct the evidence, authority, hand-offs and completion record without changing money, title, issuance or the authoritative process." actions={<StatusStamp>Observe-only · no files through this form</StatusStamp>}>
       <JsonLd value={{ "@context": "https://schema.org", "@type": "Service", name: "AssureRail completed-deal replay", serviceType: "Institutional transaction evidence replay", areaServed: { "@type": "Country", name: "India" }, provider: { "@type": "Organization", name: "AssureRail" }, url: "https://assurerail.com/replay" }} />
@@ -21,9 +22,9 @@ export default function ReplayPage() {
           <p className={styles.intro}>This form records business contact and fixed qualification choices only. Do not send borrower information, account numbers, pool tapes, transaction documents or credentials. If the replay is suitable, a separately approved NDA, data scope and secure transfer channel come next.</p>
           {inboundEnabled ? <ReplayInquiryForm /> : (
             <div className={styles.boundary}>
-              Online replay intake is not enabled yet. To register interest, email
-              {" "}<a href="mailto:contact@assurelocker.com?subject=AssureRail%20completed-deal%20replay">contact@assurelocker.com</a>{" "}
-              with your organisation, role and preferred route only. Do not attach transaction data or documents.
+              Online replay intake is not enabled yet. {contactEmail ? <>To register interest, email{" "}
+              <a href={`mailto:${contactEmail}?subject=AssureRail%20completed-deal%20replay`}>{contactEmail}</a>{" "}
+              with your organisation, role and preferred route only.</> : <>Use the contact channel in your private evaluation pack to register interest.</>} Do not attach transaction data or documents.
             </div>
           )}
         </div>

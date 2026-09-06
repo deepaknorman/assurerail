@@ -49,7 +49,7 @@ export default function GuidedJourneyPage() {
       { label: "Active membership", ready: Boolean(member), href: "/workspace/institution" },
       { label: `${route} ${mode.toLowerCase()} entitlement`, ready: Boolean(entitlement), href: "/workspace/institution" },
       { label: "Connector acceptance", ready: workspace?.connectorReadiness.status === "READY", href: "/workspace/integrations" },
-      { label: "Completed transaction evidence owner", ready: false, href: "mailto:contact@assurelocker.com?subject=AssureRail%20replay%20data%20owner" },
+      { label: "Completed transaction evidence owner", ready: false, href: process.env.NEXT_PUBLIC_ASSURERAIL_CONTACT_EMAIL ? `mailto:${process.env.NEXT_PUBLIC_ASSURERAIL_CONTACT_EMAIL}?subject=AssureRail%20replay%20data%20owner` : "/replay" },
       { label: "Counsel / external-authority gate", ready: false, href: "/workspace/operations" },
     ],
     [entitlement, member, mode, route, workspace],

@@ -56,7 +56,7 @@ export class ReportsService {
     // Quote-wrapping alone does NOT stop spreadsheet formula injection (CWE-1236): Excel/Sheets still
     // evaluate a quoted cell that begins with `= + - @` (or a leading tab/CR). The cells below carry
     // counterparty-controlled strings — holderDid, buyer, token, anchorRef — so neutralise the leading
-    // trigger first, then quote. Mirrors apps/api/src/common/csv.util.ts, including the numeric
+    // trigger first, then quote. Preserves the established CSV safety contract, including the numeric
     // exemption so signed amounts stay numeric instead of being coerced to text.
     const esc = (v: unknown) => {
       let s = v == null ? "" : String(v);

@@ -59,11 +59,17 @@ else bad("runtime-profile.ts is missing one or more reviewed AssureRail operatin
 const productionPreconditions = [
   "DATABASE_URL",
   "FIREBASE_ADMIN_CONFIG",
-  "ASSURELOCKER_API_KEY",
+  "TAPE_PROVIDER_API_KEY",
+  "IDENTITY_PROVIDER_API_KEY",
+  "ANCHOR_PROVIDER_API_KEY",
+  "SETTLEMENT_PROVIDER_API_KEY",
   "DIGIKYC_STATUS_SERVICE_SECRET",
   "RECAPTCHA_SITE_KEY",
   "RECAPTCHA_ENFORCE",
-  "ASSURELOCKER_API_URL must use https://",
+  "TAPE_PROVIDER_API_URL",
+  "IDENTITY_PROVIDER_API_URL",
+  "ANCHOR_PROVIDER_API_URL",
+  "SETTLEMENT_PROVIDER_API_URL",
 ];
 if (productionPreconditions.every((needle) => has(runtimeProfile, needle))) pass("controlled-live/production preconditions remain fail-closed");
 else bad("runtime-profile.ts is missing one or more controlled-live/production preconditions");

@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
 # AssureRail Daily Shadow QA (scheduled daily — see the "com.assurerail.daily-qa" launchd job)
-# The venue analogue of scripts/daily-shadow-qa.sh, in its OWN shadow worktree (Code-shadow-arail) so
-# it never races the AssureLocker daily. Steps:
+# Runs in its own configurable shadow worktree so it never races an active developer checkout. Steps:
 #   1. Pull latest main (ff-only)
 #   2. Rebuild the venue SHADOW worktree at origin/main (isolated from local dev)
 #   3. Deps ONLINE (npm install offline-first + the venue's OWN prisma client) — only phase with egress
 #   4. NO-EGRESS build of apps/assurerail-api under macOS sandbox-exec (build-time egress = a bug)
 #   5. Venue unit tests (k-anon, tape integrity) on the compiled dist
 #   6. AssureRail invariants (secrets/CORS/ledger-atomicity/segregation) on the shadow source
-#   7. scripts/security-scan-local.sh (gitleaks / trivy / semgrep)
+#   7. repository-local gitleaks scan when installed
 #   8. scripts/assurerail-strix-daily.sh (timeboxed autonomous scan of the venue source)
 #   9. Dated report → docs/qa/daily/arail/DAILY_ARAIL_<date>.md (+ exit 1 if any gate failed)
 # Fail-soft: every step records PASS/FAIL/SKIP; the run always produces a report.
@@ -17,8 +16,8 @@
 set -u
 export CHECKPOINT_DISABLE=1 NEXT_TELEMETRY_DISABLED=1 TURBO_TELEMETRY_DISABLED=1 CI=1
 
-REPO="/Users/DNorman/Development/Code"
-SHADOW="/Users/DNorman/Development/Code-shadow-arail"
+REPO="${ARAIL_REPO_ROOT:-$(git rev-parse --show-toplevel)}"
+SHADOW="${ARAIL_SHADOW_ROOT:-${REPO}-shadow}"
 DATE=$(date +%F)
 REPORT_DIR="$REPO/docs/qa/daily/arail"
 REPORT="$REPORT_DIR/DAILY_ARAIL_${DATE}.md"
@@ -63,27 +62,22 @@ if [ ! -d "$SHADOW/node_modules/@nestjs" ]; then
   echo "seeding shadow node_modules from main…"; rsync -a "$REPO/node_modules/" "$SHADOW/node_modules/" 2>/dev/null
 fi
 step "Shadow deps (npm install, offline-first)" bash -c "cd '$SHADOW' && npm install --prefer-offline --no-audit --no-fund"
-step "Venue prisma client" bash -c "cd '$SHADOW' && npx prisma generate --schema apps/assurerail-api/prisma/schema.prisma"
+step "Venue prisma client" bash -c "cd '$SHADOW/apps/assurerail-api' && npm exec -- prisma generate --schema prisma/schema.prisma"
 
 # ── 4. NO-EGRESS builds ──────────────────────────────────────────────────────
-# @code/shared must be COMPILED first: the venue imports it (tape types) and resolves it via the
-# node_modules workspace symlink → packages/shared/dist. A fresh shadow worktree has no dist (build
-# artifact, git-cleaned), so without this the venue tsc dies with TS2307 "Cannot find module
-# '@code/shared'". Egress-free — deps are already installed in phase 3. Mirrors scripts/daily-shadow-qa.sh.
-step "NO-EGRESS build — @code/shared" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$SHADOW/packages/shared' && npm run build"
 step "NO-EGRESS build — venue api (tsc)" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$SHADOW/apps/assurerail-api' && npx tsc"
 
 # ── 5. venue unit tests (compiled dist) ──────────────────────────────────────
 step "Venue unit tests (k-anon, tape integrity)" bash -c "cd '$SHADOW/apps/assurerail-api' && node --test 'dist/**/*.test.js'"
 
 # ── 6. venue invariants (secrets / CORS / ledger atomicity / segregation) ────
-step "AssureRail invariants" bash -c "cd '$SHADOW' && node '$REPO/scripts/check-assurerail-invariants.mjs'"
+step "AssureRail invariants" bash -c "cd '$SHADOW' && node scripts/check-assurerail-invariants.mjs"
 
 # ── 7. security scan ─────────────────────────────────────────────────────────
-if [ -x "$REPO/scripts/security-scan-local.sh" ]; then
-  step "Local security scan (gitleaks/trivy/semgrep)" bash -c "cd '$SHADOW' && '$REPO/scripts/security-scan-local.sh'"
+if command -v gitleaks >/dev/null 2>&1; then
+  step "Local secret scan (gitleaks)" bash -c "cd '$SHADOW' && gitleaks git --no-banner --redact"
 else
-  skip "Local security scan" "scripts/security-scan-local.sh not found/executable"
+  skip "Local secret scan" "gitleaks is not installed"
 fi
 
 # ── 8. Strix autonomous security agent (venue-scoped) ────────────────────────
@@ -104,12 +98,6 @@ fi
 
 echo "REPORT: $REPORT"
 
-# Failure + SKIP notification, and a machine-readable .status.json beside the report. A FAIL used
-# to be discoverable only by opening the markdown, and a rail that stopped running announced
-# itself purely by silence. Best-effort: never fails the run.
-node "$REPO/scripts/qa/notify-daily-status.mjs" report --rail=AssureRail --report="$REPORT" \
-  --pass=${#PASS[@]} --fail=${#FAIL[@]} --skip=${#SKIP[@]} 2>/dev/null || true
-# Heartbeat: shout if the newest report is stale (i.e. the schedule stopped firing at all).
-node "$REPO/scripts/qa/notify-daily-status.mjs" heartbeat --rail=AssureRail \
-  --dir=docs/qa/daily/arail --prefix=DAILY_ARAIL_ --max-age-days=2 2>/dev/null || true
+# Alert delivery belongs to the standalone CI/monitoring environment and is configured there. This
+# script always leaves a local dated report even when that external channel is unavailable.
 [ ${#FAIL[@]} -eq 0 ]

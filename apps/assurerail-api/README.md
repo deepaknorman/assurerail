@@ -1,4 +1,4 @@
-# @code/assurerail-api — existing AssureRail tokenised-DA slice
+# @assurerail/api — AssureRail API
 
 > **PRODUCT SCOPE AMENDED — 30 August 2026.** The canonical target is
 > `docs/design/AssureRail_Generic_Transfer_Infrastructure_Scope.md`: provider-neutral DA/PTC
@@ -31,16 +31,16 @@ not the generic intake or instrument contract.
 
 ## Historical tokenised-DA build sequence
 - **2a (done)** — scaffold + tape client with **independent integrity verification** (recompute
-  `tapeHash` via `@code/shared`; trust the math not the transport) + mint-readiness gate (lock must be
+  `tapeHash` through the versioned provider-boundary profile; trust the math not the transport) + mint-readiness gate (lock must be
   CONFIRMED) + ring-fenced data model + own access management.
 - **2b** — HTS adapter (DEMO / LIVE-via-plaza) + mint gate (lock CONFIRMED + k-anon) → Note + MintLog.
 - **2c** — surveillance mirror + HCS anchoring via plaza. **T4** — DvP + settlement (e₹). **T5** — e2e.
 
 ## Run (DEMO — standalone, no AssureLocker needed)
 ```bash
-npm run build --workspace=@code/assurerail-api
-npm test  --workspace=@code/assurerail-api      # tape integrity + mint-readiness
-npm start --workspace=@code/assurerail-api      # http://localhost:3006
+npm run build --workspace=@assurerail/api
+npm test  --workspace=@assurerail/api      # tape integrity + mint-readiness
+npm start --workspace=@assurerail/api      # http://localhost:3006
 ```
 
 Runtime evidence is explicit: `ASSURERAIL_OPERATING_MODE` is one of `DEMO`, `REPLAY`, `SHADOW`,
@@ -80,7 +80,7 @@ plaintext secret, so it must be re-provisioned and verified. See
 Run the disposable database evidence rehearsal (never a configured database):
 
 ```bash
-npm run db:rehearse:pr02 --workspace=@code/assurerail-api
+npm run db:rehearse:pr02 --workspace=@assurerail/api
 ```
 
 ### Tokenised-DA representation adapter (PR-11)
@@ -95,7 +95,7 @@ paths. See `docs/design/AssureRail_Tokenised_DA_Representation_PR11.md`.
 Run its disposable database evidence rehearsal:
 
 ```bash
-npm run db:rehearse:pr11 --workspace=@code/assurerail-api
+npm run db:rehearse:pr11 --workspace=@assurerail/api
 ```
 
 ### Controlled-pilot and production gate (PR-12)
@@ -123,7 +123,7 @@ See `docs/design/AssureRail_Controlled_Pilot_And_Production_Gate_PR12.md` and
 rehearsal with:
 
 ```bash
-npm run db:rehearse:pr12 --workspace=@code/assurerail-api
+npm run db:rehearse:pr12 --workspace=@assurerail/api
 ```
 
 ### Permissioned primary commercial venue (PR-13)
@@ -146,7 +146,7 @@ See `docs/design/AssureRail_Permissioned_Primary_Commercial_Venue_PR13.md` and
 `docs/runbooks/AssureRail_PR13_Deployer_Handoff.md`. Run its disposable database rehearsal with:
 
 ```bash
-npm run db:rehearse:pr13 --workspace=@code/assurerail-api
+npm run db:rehearse:pr13 --workspace=@assurerail/api
 ```
 
 ### Conventional secondary DA/PTC replay (PR-14)
@@ -168,7 +168,7 @@ See `docs/design/AssureRail_Conventional_Secondary_DA_PTC_PR14.md` and
 `docs/runbooks/AssureRail_PR14_Deployer_Handoff.md`. Run its disposable database rehearsal with:
 
 ```bash
-npm run db:rehearse:pr14 --workspace=@code/assurerail-api
+npm run db:rehearse:pr14 --workspace=@assurerail/api
 ```
 
 ### Tokenised-DA connector and custody boundary (PR-15)
@@ -198,7 +198,7 @@ See `docs/design/AssureRail_Tokenised_DA_Live_Connector_And_Custody_PR15.md` and
 `docs/runbooks/AssureRail_PR15_Deployer_Handoff.md`. Run the disposable structural rehearsal with:
 
 ```bash
-npm run db:rehearse:pr15 --workspace=@code/assurerail-api
+npm run db:rehearse:pr15 --workspace=@assurerail/api
 ```
 
 ### Separate tokenised PTC shadow route (PR-16)
@@ -215,7 +215,7 @@ neutral saga foundation. It defaults `off`. See
 `docs/runbooks/AssureRail_PR16_Deployer_Handoff.md`. Rehearse with:
 
 ```bash
-npm run db:rehearse:pr16 --workspace=@code/assurerail-api
+npm run db:rehearse:pr16 --workspace=@assurerail/api
 ```
 
 ### Venue conduct, complaints and scale controls (PR-17)
@@ -233,7 +233,7 @@ live value or live capability ID. See
 `docs/runbooks/AssureRail_PR17_Deployer_Handoff.md`. Rehearse with:
 
 ```bash
-npm run db:rehearse:pr17 --workspace=@code/assurerail-api
+npm run db:rehearse:pr17 --workspace=@assurerail/api
 ```
 
 ### Institution integration and developer centre (PR-19)
@@ -249,7 +249,7 @@ capability ID. See `docs/design/AssureRail_Integration_Developer_Experience_PR19
 with:
 
 ```bash
-npm run db:rehearse:pr19 --workspace=@code/assurerail-api
+npm run db:rehearse:pr19 --workspace=@assurerail/api
 ```
 
 ### Customer operations and commercial administration (PR-20)
@@ -266,7 +266,7 @@ internal RBAC, and is valid only in `REPLAY`/`SHADOW`. It defaults off and has n
 See `docs/design/AssureRail_Customer_Operations_And_Commercial_Admin_PR20.md` and rehearse with:
 
 ```bash
-npm run db:rehearse:pr20 --workspace=@code/assurerail-api
+npm run db:rehearse:pr20 --workspace=@assurerail/api
 ```
 
 ### Endpoints
@@ -287,7 +287,9 @@ POST /venue/demo/run/:poolId                    # ONE-CALL end-to-end: mint→su
 curl -sX POST http://localhost:3006/venue/demo/run/POOL-DEMO-1 -H 'content-type: application/json' -d '{}'
 # → mint → k-anon → 2 HCS-anchored surveillance cycles → Note ACTIVE → atomic DvP (30% sold, e₹) → holdings
 ```
-`TAPE_SOURCE=live` + `ASSURELOCKER_API_URL/_KEY` switches to the real `tape.json` (HTTP/2).
+`TAPE_SOURCE=live` plus `TAPE_PROVIDER_API_URL` and `TAPE_PROVIDER_API_KEY` switches to a
+certified provider's `tape.json` endpoint (HTTP/2). AssurePool can be configured as one provider;
+the API and credential contract is not bound to AssureLocker.
 `HTS_ADAPTER` / `HCS_ANCHOR` / `SETTLEMENT_ADAPTER=live` are gated until the plaza endpoints +
 deferred live testnet smoke test land.
 
@@ -297,7 +299,7 @@ deferred live testnet smoke test land.
    and connector-certification controls; add Rail-local participant, mandate, appointment and
    route-entitlement records.
 2. **Stage 1B:** add a neutral transaction case/room and migrate the tested room currently under
-   `apps/api/src/co-lending`, preserving an AssurePool adapter and legacy compatibility.
+   from the legacy co-lending service, preserving an AssurePool adapter and legacy compatibility.
 3. **Stage 1C:** add neutral evidence/state/document/reconciliation/deadline services and replay one
    completed conventional DA and one completed conventional PTC.
 4. Keep this Note/mint/DvP path behind the tokenised-representation adapter boundary throughout.

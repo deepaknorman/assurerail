@@ -34,10 +34,10 @@ export class LiveHcsAdapter implements HcsAdapter {
   readonly mode = "LIVE" as const;
   async anchor(payload: unknown): Promise<AnchorResult> {
     // TODO(2c-live): POST to plaza's HCS submit endpoint; return the real topicId + sequenceNumber.
-    const url = `${config.assureLockerApiUrl}/internal/hcs/submit`;
+    const url = `${config.anchorProviderApiUrl}/internal/hcs/submit`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(config.assureLockerApiKey ? { Authorization: `Bearer ${config.assureLockerApiKey}` } : {}) },
+      headers: { "Content-Type": "application/json", ...(config.anchorProviderApiKey ? { Authorization: `Bearer ${config.anchorProviderApiKey}` } : {}) },
       body: JSON.stringify({ message: hashPayload(payload) }),
       dispatcher: h2Dispatcher,
     } as RequestInit & { dispatcher: Agent });

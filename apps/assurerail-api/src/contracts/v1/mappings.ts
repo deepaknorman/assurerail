@@ -1,4 +1,8 @@
-import type { CoLending } from "@code/shared";
+import type {
+  AssurePoolTapeV1,
+  FrozenReceivablesManifestV1,
+  TransferTransactionV1,
+} from "../../provider-contracts/v1";
 import { sha256Digest, toCanonicalValue, type CanonicalObject } from "./canonical";
 import {
   buildNeutralIntakeEnvelope,
@@ -64,7 +68,7 @@ function totalMinor(values: readonly (string | undefined)[]): string {
 
 /** AssurePool stays a DA-only optional source profile; the neutral envelope does not require it. */
 export function mapAssurePoolTapeToNeutralIntake(
-  tape: CoLending.AssurePoolTape,
+  tape: AssurePoolTapeV1,
   context: AssurePoolMappingContextV1,
 ): NeutralIntakeEnvelopeV1 {
   const original = sourceRecord(tape);
@@ -133,8 +137,8 @@ export function mapAssurePoolTapeToNeutralIntake(
 
 /** AssureTransfer contributes receivables evidence; it does not become Rail's case authority. */
 export function mapAssureTransferToNeutralIntake(
-  transaction: CoLending.TransferTransaction,
-  manifest: CoLending.FrozenReceivablesManifest,
+  transaction: TransferTransactionV1,
+  manifest: FrozenReceivablesManifestV1,
   context: NeutralMappingContextV1,
 ): NeutralIntakeEnvelopeV1 {
   if (transaction.transferId !== manifest.transferId || transaction.tenantId !== manifest.tenantId) {

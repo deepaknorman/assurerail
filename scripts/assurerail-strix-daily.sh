@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # AssureRail Strix daily — timeboxed, budget-capped autonomous security scan of the venue's source
 # (apps/assurerail-api/src). Threat focus: ledger integrity in the DvP settlement path, the k-anon mint
-# gate, tape-integrity verification, CORS/authz exposure, secrets handling, and SSRF in the outbound
-# AssureLocker tape client. Fail-soft: missing CLI/key/Docker ⇒ explicit SKIP + exit 3 (a NON-RUN, never
-# a pass — the runner renders it ⚠ SKIP; exit 0 here would hide a scan that never ran). Secrets are read
-# at runtime, never persisted. Mirrors scripts/strix-daily.sh (AssureLocker) but venue-scoped.
+# gate, tape-integrity verification, CORS/authz exposure, secrets handling, and SSRF in outbound
+# provider clients. Fail-soft: missing CLI/key/Docker ⇒ explicit SKIP + exit 3 (a NON-RUN, never
+# a pass — the runner renders it ⚠ SKIP; exit 0 here would hide a scan that never ran). Secrets are
+# supplied directly to this process at runtime and never read from another product's environment.
 set -u
-TARGET="${1:-/Users/DNorman/Development/Code-shadow-arail}"
-REPO="/Users/DNorman/Development/Code"
-STRIX_BIN="$HOME/.venvs/strix/bin/strix"
+REPO="${ARAIL_REPO_ROOT:-$(git rev-parse --show-toplevel)}"
+TARGET="${1:-$REPO}"
+STRIX_BIN="${ARAIL_STRIX_BIN:-$HOME/.venvs/strix/bin/strix}"
 RUNS_DIR="$REPO/docs/qa/daily/arail/strix-runs"
 mkdir -p "$RUNS_DIR"
 
@@ -18,9 +18,9 @@ fi
 if ! docker info >/dev/null 2>&1; then
   echo "SKIP: Docker not running (strix sandboxes each target in a container)"; exit 3
 fi
-KEY=$(grep -E '^OPENAI_API_KEY=' "$REPO/apps/api/.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+KEY="${LLM_API_KEY:-${OPENAI_API_KEY:-}}"
 if [ -z "$KEY" ]; then
-  echo "SKIP: OPENAI_API_KEY not found in apps/api/.env"; exit 3
+  echo "SKIP: supply LLM_API_KEY or OPENAI_API_KEY to the AssureRail scan process"; exit 3
 fi
 
 export LLM_API_KEY="$KEY"
@@ -37,7 +37,7 @@ fi
 echo "arail strix scan → ${SCAN_TARGET} · mode=${STRIX_SCAN_MODE:-quick} · model=$STRIX_LLM · budget=\$${STRIX_BUDGET_USD:-4}"
 cd "$RUNS_DIR" || exit 0
 TIMEOUT_BIN="$(command -v gtimeout || command -v timeout || true)"
-INSTR="Whitebox source audit of a NestJS securitisation/tokenisation venue (AssureRail). Prioritise, in order: (1) ledger integrity in the DvP settlement path — dvp/dvp.service.ts and store/prisma-mint.repository.ts (settleDvp/commitMint/incHolding): atomicity, oversell, lost updates, negative balances, unit conservation; (2) the k-anon mint gate mint/kanon.ts (bypass, integer/threshold errors); (3) tape-integrity verification tape/verify.ts (hash/lock bypass); (4) CORS/authz exposure in main.ts; (5) secrets handling; (6) SSRF / unvalidated URL in the outbound AssureLocker tape client tape/assurelocker.client.ts. Report ONLY concrete, reproducible findings with file:line and a fix."
+INSTR="Whitebox source audit of a NestJS securitisation/tokenisation venue (AssureRail). Prioritise, in order: (1) ledger integrity in the DvP settlement path — dvp/dvp.service.ts and store/prisma-mint.repository.ts (settleDvp/commitMint/incHolding): atomicity, oversell, lost updates, negative balances, unit conservation; (2) the k-anon mint gate mint/kanon.ts (bypass, integer/threshold errors); (3) tape-integrity verification tape/verify.ts (hash/lock bypass); (4) CORS/authz exposure in main.ts; (5) secrets handling; (6) SSRF / unvalidated URL handling in outbound provider adapters, including tape/tape-provider.client.ts. Report ONLY concrete, reproducible findings with file:line and a fix."
 STRIX_ARGS=(
   --target "$SCAN_TARGET"
   --non-interactive

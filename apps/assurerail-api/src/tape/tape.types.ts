@@ -1,10 +1,15 @@
-// The tape shape is the shared contract (@code/shared) — the venue does not redefine it, it aliases
-// the names it uses. (In the monorepo this is a shared type; at the licence split it stays a type
-// dependency on AssureLocker's product — the coupling is still the runtime tape.json API, not this.)
-import { CoLending } from "@code/shared";
+// Provider-boundary aliases. AssurePool remains an external product and supplies this profile over
+// a versioned adapter; no AssureLocker source package is required by Rail.
+import type {
+  AssurePoolTapeV1,
+  PoolVerdict,
+  TapeLoanV1,
+  TapeLockV1,
+} from "../provider-contracts/v1";
+import { SUPPORTED_ASSUREPOOL_TAPE_VERSION } from "../provider-contracts/v1";
 
-export type AssurePoolTape = CoLending.AssurePoolTape;
-export type TapeLoan = CoLending.TapeLoan;
-export type TapeLock = CoLending.TapeInputLock;
-export type PoolVerdict = CoLending.PoolLoanVerdict["verdict"];
-export const SUPPORTED_TAPE_VERSION = CoLending.ASSUREPOOL_TAPE_VERSION;
+export type AssurePoolTape = AssurePoolTapeV1;
+export type TapeLoan = TapeLoanV1;
+export type TapeLock = TapeLockV1;
+export type { PoolVerdict };
+export const SUPPORTED_TAPE_VERSION = SUPPORTED_ASSUREPOOL_TAPE_VERSION;

@@ -838,12 +838,14 @@ export function inspectRuntimeEnvironment(
     if (demoEndpointsEnabled) {
       errors.push(`${operatingMode} mode cannot expose demo endpoints`);
     }
-    requirePresent(
-      env,
-      "ASSURELOCKER_API_KEY",
-      errors,
-      `for the current live source/connector adapters in ${operatingMode} mode`
-    );
+    for (const key of [
+      "TAPE_PROVIDER_API_KEY",
+      "IDENTITY_PROVIDER_API_KEY",
+      "ANCHOR_PROVIDER_API_KEY",
+      "SETTLEMENT_PROVIDER_API_KEY",
+    ]) {
+      requirePresent(env, key, errors, `for its live provider adapter in ${operatingMode} mode`);
+    }
     requirePresent(
       env,
       "DIGIKYC_STATUS_SERVICE_SECRET",
@@ -861,11 +863,16 @@ export function inspectRuntimeEnvironment(
         `RECAPTCHA_ENFORCE=true is required in ${operatingMode} mode`
       );
     }
-    const sourceUrl = env.ASSURELOCKER_API_URL?.trim();
-    if (!sourceUrl?.startsWith("https://")) {
-      errors.push(
-        `ASSURELOCKER_API_URL must use https:// in ${operatingMode} mode`
-      );
+    for (const key of [
+      "TAPE_PROVIDER_API_URL",
+      "IDENTITY_PROVIDER_API_URL",
+      "ANCHOR_PROVIDER_API_URL",
+      "SETTLEMENT_PROVIDER_API_URL",
+    ]) {
+      const providerUrl = env[key]?.trim();
+      if (!providerUrl?.startsWith("https://")) {
+        errors.push(`${key} must use https:// in ${operatingMode} mode`);
+      }
     }
   }
 

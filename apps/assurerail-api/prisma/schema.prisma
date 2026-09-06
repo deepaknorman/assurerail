@@ -1,10 +1,10 @@
 // AssureRail's OWN database — ring-fenced from AssureLocker (segregation primitive). Holds only the
 // venue's records: no borrower PII / T2 ever lands here (only tape T0 commitments + T1 aggregates),
-// plus the venue's own users/sessions/roles. Its client is generated to a NAMED output so it can
-// never collide with AssureLocker's control/data clients.
+// plus the venue's own users/sessions/roles. Its client is generated inside this workspace so a
+// clean Rail clone has no dependency on another repository's node_modules tree.
 generator client {
   provider = "prisma-client-js"
-  output   = "../../../node_modules/@prisma/assurerail-client"
+  output   = "../node_modules/@prisma/assurerail-client"
 }
 
 datasource db {

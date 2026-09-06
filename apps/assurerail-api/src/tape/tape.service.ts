@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { audit } from "../common/audit";
-import { fetchTape } from "./assurelocker.client";
+import { fetchTape } from "./tape-provider.client";
 import { verifyTape, type TapeVerification } from "./verify";
 import type { AssurePoolTape } from "./tape.types";
 

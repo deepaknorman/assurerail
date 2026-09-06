@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # AssureRail per-build gate — the venue's "check a bunch of things on every build (incl. security)".
-# HARD-fails on build/test/invariant/schema regressions; SOFT (non-blocking) on OPTIONAL tools
-# (sandbox-exec, gitleaks) so it runs anywhere. Reuses AssureLocker's local security scanner.
+# HARD-fails on build/test/invariant/schema regressions; SOFT (non-blocking) on optional local tools
+# (sandbox-exec, gitleaks) so it runs anywhere without another repository.
 #
 #   usage:  ./scripts/assurerail-build-check.sh
 #   env:    ARAIL_CHECK_SKIP_WEB=1   skip the (slower) apps/assurerail next build
@@ -21,7 +21,7 @@ step "shell syntax (bash -n)" bash -c 'rc=0; for f in "'"$ROOT"'"/scripts/assure
 
 # 2. prisma schema is valid (dummy DATABASE_URL — validation checks structure, not a live DB, and the
 #    gate runs from repo root without the venue's .env)
-step "prisma validate (venue schema)" bash -c 'DATABASE_URL="postgresql://validate:validate@localhost:5432/validate" npx prisma validate --schema "'"$ROOT"'/apps/assurerail-api/prisma/schema.prisma"'
+step "prisma validate (venue schema)" bash -c 'cd "'"$ROOT"'/apps/assurerail-api" && DATABASE_URL="postgresql://validate:validate@localhost:5432/validate" npm exec -- prisma validate --schema prisma/schema.prisma'
 
 # 3. static invariants — security / segregation / ledger atomicity
 step "AssureRail invariants" node scripts/check-assurerail-invariants.mjs
@@ -36,23 +36,18 @@ fi
 # 5. venue unit tests
 step "venue unit tests" bash -c "cd '$ROOT/apps/assurerail-api' && npm test"
 
-# 6. AssureTransfer room golden tests — preserve the existing frozen-pool, reliance, disclosure,
-#    hash-chain, redaction, dossier and revocation behaviour while capability is mapped into Rail.
-#    This is deliberately a focused suite, not the full AssureLocker API test corpus.
-step "AssureTransfer room golden characterisation" bash -c "cd '$ROOT/apps/api' && npx jest --runInBand --runTestsByPath test/transfer-room.test.ts"
-
-# 7. standalone web build (online — next/font egress is a known standing item)
+# 6. standalone web build
 if [ "${ARAIL_CHECK_SKIP_WEB:-0}" = "1" ]; then
   ylw "── build — venue web (apps/assurerail) ──"; ylw "  ⚠ skipped (ARAIL_CHECK_SKIP_WEB=1)"
 else
   step "build — venue web (apps/assurerail)" bash -c "cd '$ROOT/apps/assurerail' && (npx next build --no-lint 2>/dev/null || npx next build)"
 fi
 
-# 8. fast secret scan on outgoing commits (reuse AssureLocker's local scanner; optional tool)
-if [ -x "$ROOT/scripts/security-scan-local.sh" ]; then
-  soft "secret scan (gitleaks --quick)" "$ROOT/scripts/security-scan-local.sh" --quick
+# 7. repository-local secret scan when gitleaks is installed.
+if command -v gitleaks >/dev/null 2>&1; then
+  soft "secret scan (gitleaks)" gitleaks git --no-banner --redact
 else
-  ylw "── secret scan ──"; ylw "  ⚠ scripts/security-scan-local.sh not found — skipped"
+  ylw "── secret scan ──"; ylw "  ⚠ gitleaks not installed — skipped"
 fi
 
 echo

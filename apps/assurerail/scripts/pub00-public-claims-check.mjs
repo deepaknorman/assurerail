@@ -22,31 +22,19 @@ function rejectText(value, rejected, label) {
 }
 
 const railLanding = await source("apps/assurerail/src/app/page.tsx");
-const downloads = await source("apps/web/src/app/downloads/page.tsx");
-const investors = await source("apps/web/src/app/investors/page.tsx");
-const railBriefing = await source(
-  "apps/web/src/app/downloads/briefings/AssureRail/page.tsx",
-);
-const poolTokenisation = await source(
-  "apps/web/src/app/downloads/briefings/Pool-Tokenisation/page.tsx",
-);
-const historicRbi = await source(
-  "apps/web/src/app/downloads/briefings/RBI-July2026/page.tsx",
-);
+const availability = await source("apps/assurerail/src/app/status/page.tsx");
+const publicCapability = await source("apps/assurerail/src/lib/public-capability.ts");
 
 requireText(railLanding, "Private evaluation now", "AssureRail landing");
 requireText(railLanding, "Live transaction services are not currently offered", "AssureRail landing");
-requireText(downloads, "governed transaction infrastructure", "Downloads index");
-requireText(investors, "AssurePool DA preparation", "Investor page");
-requireText(investors, "company, IP, funding and licence", "Investor page");
-requireText(railBriefing, "earlier token-first AssureRail briefing has been withdrawn", "AssureRail briefing");
-requireText(poolTokenisation, "AssurePool remains a Direct Assignment-only", "Pool tokenisation briefing");
-requireText(historicRbi, "Historic briefing — not current product", "Historic RBI briefing");
+requireText(availability, "what an external visitor can request today", "Availability page");
+requireText(publicCapability, "PRIVATE_EVALUATION", "Public capability registry");
+requireText(publicCapability, "does not currently offer public matching, execution, custody, funds handling or settlement services", "Public capability registry");
 
 for (const [label, value] of [
-  ["Downloads index", downloads],
-  ["Investor page", investors],
-  ["AssureRail briefing", railBriefing],
+  ["AssureRail landing", railLanding],
+  ["Availability page", availability],
+  ["Public capability registry", publicCapability],
 ]) {
   rejectText(value, "AssureRail — the subsidiary", label);
   rejectText(value, "separately-incorporated subsidiary", label);
@@ -54,5 +42,5 @@ for (const [label, value] of [
 }
 
 console.log(
-  "PUB-00 public claims: current AssureRail, AssurePool and corporate-structure boundaries verified; legacy token-first briefings are withdrawn or visibly historic.",
+  "PUB-00 public claims: AssureRail availability and corporate-structure boundaries verified in the standalone public surface.",
 );

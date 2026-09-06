@@ -1,9 +1,15 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { generateRegistrationOptions, verifyRegistrationResponse } from "@simplewebauthn/server";
-import type { RegistrationResponseJSON, AuthenticatorTransportFuture } from "@simplewebauthn/typescript-types";
+import {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+} from "@simplewebauthn/server";
+import type {
+  AuthenticatorTransport,
+  RegistrationResponseJSON,
+} from "@simplewebauthn/server";
 import { PrismaService } from "../store/prisma.service";
 
-// WebAuthn passkey enrolment + management (@simplewebauthn/server v8). Register a hardware/biometric
+// WebAuthn passkey enrolment + management. Register a hardware/biometric
 // credential while signed in, list them, remove them. RP config from env (defaults suit local dev;
 // the box sets WEBAUTHN_RP_ID=assurerail.com + WEBAUTHN_ORIGIN=https://assurerail.com). Passkey LOGIN
 // (custom-token sign-in) is a deliberate follow-up — this delivers the "set up a passkey" flow.
@@ -30,11 +36,11 @@ export class WebAuthnService {
     const options = await generateRegistrationOptions({
       rpName: RP_NAME,
       rpID: RP_ID,
-      userID: uid,
+      userID: new TextEncoder().encode(uid),
       userName,
       userDisplayName: displayName,
       attestationType: "none",
-      excludeCredentials: existing.map((c) => ({ id: Buffer.from(c.credentialId, "base64url"), type: "public-key" as const, transports: c.transports as AuthenticatorTransportFuture[] })),
+      excludeCredentials: existing.map((c) => ({ id: c.credentialId, transports: c.transports as AuthenticatorTransport[] })),
       authenticatorSelection: { residentKey: "preferred", userVerification: "preferred" },
     });
     await this.db.webAuthnChallenge.create({ data: { firebaseUid: uid, challenge: options.challenge, type: "registration", expiresAt: new Date(Date.now() + CHALLENGE_TTL_MS) } });
@@ -53,14 +59,14 @@ export class WebAuthnService {
     }
     await this.db.webAuthnChallenge.deleteMany({ where: { challenge: ch.challenge } }).catch(() => undefined);
     if (!verification.verified || !verification.registrationInfo) throw new BadRequestException("passkey could not be verified");
-    const { credentialID, credentialPublicKey, counter, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
+    const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
     const transports = (response.response.transports as string[]) ?? [];
     await this.db.webAuthnCredential.create({
       data: {
         firebaseUid: uid,
-        credentialId: Buffer.from(credentialID).toString("base64url"),
-        publicKey: Buffer.from(credentialPublicKey),
-        counter: BigInt(counter),
+        credentialId: credential.id,
+        publicKey: Buffer.from(credential.publicKey),
+        counter: BigInt(credential.counter),
         deviceType: credentialDeviceType,
         backedUp: credentialBackedUp,
         transports,

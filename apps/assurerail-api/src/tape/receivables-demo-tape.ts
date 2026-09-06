@@ -2,7 +2,7 @@
 // RECEIVABLE — buyer (anchor) DID+name, GST IRN, acceptance state + timestamp, invoice amount, and an
 // invoice due date as a BULLET maturity (no EMI/tenor/amortisation — the whole point of §2's structural
 // diff vs a loan pool). The records still roll up into the SAME mint-compatible aggregate the loan pool
-// uses (via the shared CoLending builder), so k-anon / mint / surveillance / DvP reuse unchanged, and
+// uses (via Rail's provider-boundary fixture builder), so k-anon / mint / surveillance / DvP reuse unchanged, and
 // independent verification passes. Deterministic per poolId so the demo console looks real and repeats.
 //
 // This is the DEMO shape, not the production `TapeReceivable` shared type + eligibility engine (the
@@ -10,7 +10,11 @@
 // concentration / acceptance seasoning) — that stays deferred. Here the acceptance state is asserted by
 // the seed, not adjudicated.
 import { createHash } from "node:crypto";
-import { CoLending } from "@code/shared";
+import {
+  buildAssurePoolTapeFixtureV1,
+  computePoolManifestV1,
+  type TapeInputLoanV1,
+} from "../provider-contracts/v1";
 import type { AssurePoolTape } from "./tape.types";
 
 export type ReceivableAcceptanceState = "EXPLICITLY_ACCEPTED" | "CONTRACTUALLY_DEEMED_ACCEPTED";
@@ -120,7 +124,7 @@ export function buildReceivablesRecords(poolId: string): DemoReceivable[] {
  */
 export function buildReceivablesDemoTape(poolId: string): AssurePoolTape {
   const receivables = buildReceivablesRecords(poolId);
-  const entries: CoLending.TapeInputLoan[] = receivables.map((r) => ({
+  const entries: TapeInputLoanV1[] = receivables.map((r) => ({
     loanRef: r.receivableRef,
     verdict: "ELIGIBLE",
     overridden: false,
@@ -131,8 +135,8 @@ export function buildReceivablesDemoTape(poolId: string): AssurePoolTape {
     // This is what the k-anon concentration cap must aggregate on.
     obligorRef: r.buyerDid,
   }));
-  const manifestHash = CoLending.computePoolManifest(entries);
-  return CoLending.buildAssurePoolTape(
+  const manifestHash = computePoolManifestV1(entries);
+  return buildAssurePoolTapeFixtureV1(
     { poolId, claId: "DEMO-RECV-CLA", cutoffDate: CUTOFF, manifestHash, frozenAt: "2026-07-01T00:00:00Z" },
     entries,
     { state: "CONFIRMED", reference: `cbslock_${poolId}`, loanCount: entries.length },

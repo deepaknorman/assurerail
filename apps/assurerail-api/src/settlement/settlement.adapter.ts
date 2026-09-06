@@ -36,10 +36,10 @@ export class LiveSettlementAdapter implements SettlementAdapter {
   readonly mode = "LIVE" as const;
   async settle(fromDid: string, toDid: string, amountMinor: string, token: string): Promise<SettlementResult> {
     // TODO(T4-live): call plaza's settlement adapter (ISettlementAdapter / e₹) for the atomic leg.
-    const url = `${config.assureLockerApiUrl}/internal/settlement/transfer`;
+    const url = `${config.settlementProviderApiUrl}/internal/settlement/transfer`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(config.assureLockerApiKey ? { Authorization: `Bearer ${config.assureLockerApiKey}` } : {}) },
+      headers: { "Content-Type": "application/json", ...(config.settlementProviderApiKey ? { Authorization: `Bearer ${config.settlementProviderApiKey}` } : {}) },
       body: JSON.stringify({ fromDid, toDid, amountMinor, token }),
       dispatcher: h2Dispatcher,
     } as RequestInit & { dispatcher: Agent });

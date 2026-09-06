@@ -1,0 +1,30 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.next/
+.turbo/
+.DS_Store
+.idea/
+*.swp
+*.swo
+*.log
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+private/
+apps/assurerail-api/.env.docker
+docs/private/
+
+# Test, security and generated evidence
+test-results/
+playwright-report/
+docs/qa/daily/
+deploy/strix/reports/
+sbom.cdx.json
+
+# Office and temporary files
+~$*.docx
+~$*.pptx
+~$*.xlsx

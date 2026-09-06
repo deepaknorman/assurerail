@@ -26,8 +26,14 @@ const LIVE_ENV = {
   HCS_ANCHOR: "live",
   SETTLEMENT_ADAPTER: "live",
   DIGIKYC_GATE: "live",
-  ASSURELOCKER_API_URL: "https://provider.invalid",
-  ASSURELOCKER_API_KEY: "test-only-placeholder",
+  TAPE_PROVIDER_API_URL: "https://tape-provider.invalid",
+  TAPE_PROVIDER_API_KEY: "test-only-placeholder",
+  IDENTITY_PROVIDER_API_URL: "https://identity-provider.invalid",
+  IDENTITY_PROVIDER_API_KEY: "test-only-placeholder",
+  ANCHOR_PROVIDER_API_URL: "https://anchor-provider.invalid",
+  ANCHOR_PROVIDER_API_KEY: "test-only-placeholder",
+  SETTLEMENT_PROVIDER_API_URL: "https://settlement-provider.invalid",
+  SETTLEMENT_PROVIDER_API_KEY: "test-only-placeholder",
   DIGIKYC_STATUS_SERVICE_SECRET: "test-only-placeholder",
   RECAPTCHA_SITE_KEY: "test-only-placeholder",
   RECAPTCHA_ENFORCE: "true",
@@ -1182,9 +1188,9 @@ test("[CONFIG][CONTROLLED_LIVE] live mode requires bot enforcement and HTTPS pro
     ...LIVE_ENV,
     ASSURERAIL_OPERATING_MODE: "CONTROLLED_LIVE",
     RECAPTCHA_ENFORCE: "false",
-    ASSURELOCKER_API_URL: "http://provider.invalid",
+    TAPE_PROVIDER_API_URL: "http://provider.invalid",
   });
   const errors = inspected.errors.join("\n");
   assert.match(errors, /RECAPTCHA_ENFORCE=true is required/);
-  assert.match(errors, /ASSURELOCKER_API_URL must use https:\/\//);
+  assert.match(errors, /TAPE_PROVIDER_API_URL must use https:\/\//);
 });

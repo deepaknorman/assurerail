@@ -12,7 +12,7 @@ import {
 } from "firebase/auth";
 
 // AssureRail's OWN Firebase project (`assurerail`). Config comes from NEXT_PUBLIC_FIREBASE_* (set in
-// apps/assurerail/.env.local, gitignored) — same pattern as AssureLocker's apps/web, so the public-but-
+// apps/assurerail/.env.local (gitignored), so the public-but-
 // gitleaks-flagged apiKey is never committed to a tracked file. Security is enforced by Firebase rules
 // + reCAPTCHA + server-side token verification, not by hiding this config.
 const firebaseConfig = {

@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Req, UnauthorizedException } from "@nestjs/common";
 import type { Request } from "express";
-import type { RegistrationResponseJSON } from "@simplewebauthn/typescript-types";
+import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { MfaService } from "./mfa.service";
 import { WebAuthnService } from "./webauthn.service";
 

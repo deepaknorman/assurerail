@@ -1,0 +1,10 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Known non-secret Rail taxonomy and deterministic rehearsal identifiers"
+regexTarget = "secret"
+regexes = [
+  '''^primary/secondary$''',
+  '''^pr11-reconcile-(matched|break)$''',
+]

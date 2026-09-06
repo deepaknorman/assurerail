@@ -31,9 +31,9 @@ export async function fetchSurveillance(poolId: string): Promise<PoolSurveillanc
       ],
     };
   }
-  const url = `${config.assureLockerApiUrl}/v1/co-lending/pools/${encodeURIComponent(poolId)}/surveillance`;
+  const url = `${config.tapeProviderApiUrl}/v1/co-lending/pools/${encodeURIComponent(poolId)}/surveillance`;
   const res = await fetch(url, {
-    headers: config.assureLockerApiKey ? { Authorization: `Bearer ${config.assureLockerApiKey}` } : {},
+    headers: config.tapeProviderApiKey ? { Authorization: `Bearer ${config.tapeProviderApiKey}` } : {},
     dispatcher: h2Dispatcher,
   } as RequestInit & { dispatcher: Agent });
   if (!res.ok) throw new Error(`surveillance fetch failed (${res.status}) from ${url}`);

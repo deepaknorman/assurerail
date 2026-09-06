@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CoLending } from "@code/shared";
+import {
+  buildAssurePoolTapeFixtureV1,
+  buildReceivablesManifestFixtureV1,
+  computePoolManifestV1,
+  type FrozenReceivablesManifestV1,
+  type TapeInputLoanV1,
+  type TapeReceivableV1,
+  type TransferTransactionV1,
+} from "../../provider-contracts/v1";
 import { canonicalSerialize, sha256Digest, toCanonicalValue, type CanonicalObject } from "./canonical";
 import { absentSignature } from "./envelopes";
 import { inspectNeutralTaxonomyFlag } from "./feature-flag";
@@ -39,15 +47,15 @@ function extensionSourceRecord(payload: CanonicalObject): CanonicalObject {
 }
 
 test("[PR01][MAPPING][ASSUREPOOL] the DA tape maps without wire loss and stays inside its source profile", () => {
-  const loans: CoLending.TapeInputLoan[] = [
+  const loans: TapeInputLoanV1[] = [
     { loanRef: "loan_01", verdict: "ELIGIBLE", overridden: false, disbursedMinor: "125000", originationDate: "2025-01-01", classificationBucket: "STANDARD" },
     { loanRef: "loan_02", verdict: "WARNING", overridden: false, disbursedMinor: "75000", originationDate: "2025-02-01", classificationBucket: "SMA-1" },
   ];
-  const tape = CoLending.buildAssurePoolTape({
+  const tape = buildAssurePoolTapeFixtureV1({
     poolId: "pool_01",
     claId: "arrangement_01",
     cutoffDate: "2026-08-29",
-    manifestHash: CoLending.computePoolManifest(loans),
+    manifestHash: computePoolManifestV1(loans),
     frozenAt: "2026-08-30T00:00:00Z",
   }, loans);
   const envelope = mapAssurePoolTapeToNeutralIntake(tape, CONTEXT);
@@ -59,7 +67,7 @@ test("[PR01][MAPPING][ASSUREPOOL] the DA tape maps without wire loss and stays i
 });
 
 test("[PR01][MAPPING][ASSURETRANSFER] receivables facts and manifest map without becoming case authority", () => {
-  const exposures: CoLending.TapeReceivable[] = [{
+  const exposures: TapeReceivableV1[] = [{
     tenantId: "tenant_01",
     exposureRef: "invoice_01",
     exposureType: "FACTORING_RECEIVABLE_ASSIGNMENT",
@@ -73,7 +81,7 @@ test("[PR01][MAPPING][ASSURETRANSFER] receivables facts and manifest map without
     dueDate: "2026-09-30",
     priorTransfers: [],
   }];
-  const transaction: CoLending.TransferTransaction = {
+  const transaction: TransferTransactionV1 = {
     tenantId: "tenant_01",
     transferId: "transfer_01",
     transactionDate: "2026-08-30",
@@ -81,7 +89,7 @@ test("[PR01][MAPPING][ASSURETRANSFER] receivables facts and manifest map without
     transferee: { partyId: "institution_transferee", role: "TRANSFEREE", governingRuleSetId: "ROUTE_REVIEW_REQUIRED" },
     exposures,
   };
-  const manifest = CoLending.buildReceivablesManifest(transaction.tenantId, transaction.transferId, exposures);
+  const manifest = buildReceivablesManifestFixtureV1(transaction.tenantId, transaction.transferId, exposures);
   const envelope = mapAssureTransferToNeutralIntake(transaction, manifest, {
     ...CONTEXT,
     envelopeId: "env_mapping_02",
@@ -102,7 +110,7 @@ test("[PR01][MAPPING] mismatched AssureTransfer identities fail before a neutral
     transferee: { partyId: "b", role: "TRANSFEREE" as const, governingRuleSetId: "ROUTE_REVIEW_REQUIRED" as const },
     exposures: [],
   };
-  const manifest: CoLending.FrozenReceivablesManifest = {
+  const manifest: FrozenReceivablesManifestV1 = {
     version: 1,
     tenantId: "tenant_01",
     transferId: "another_transfer",

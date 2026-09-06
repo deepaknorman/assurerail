@@ -54,7 +54,7 @@ export default function Console() {
   const [closeReason, setCloseReason] = useState("clean_up_call");
   const [amortMinor, setAmortMinor] = useState("");
   const [showBg, setShowBg] = useState(false);
-  const [bgForm, setBgForm] = useState({ regulatorDid: "did:web:ind.id.assurelocker.com:regulator:sebi-001", lawfulPurpose: "supervisory review of pool composition" });
+  const [bgForm, setBgForm] = useState({ regulatorDid: "did:web:demo.assurerail.invalid:regulator:observer", lawfulPurpose: "supervisory review of pool composition" });
 
   const load = useCallback(async () => {
     try {

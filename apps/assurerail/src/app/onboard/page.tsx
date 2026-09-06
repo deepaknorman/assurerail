@@ -49,7 +49,7 @@ export default function Onboard() {
 
           <label className="lbl">
             Provider subject / AssureLocker DID <span className="opt">(optional in sandbox)</span>
-            <input className="field" placeholder="did:web:ind.id.assurelocker.com:user:…" value={did} onChange={(e) => setDid(e.target.value)} />
+            <input className="field" placeholder="Provider subject reference" value={did} onChange={(e) => setDid(e.target.value)} />
           </label>
           <button className="btn btn-primary" disabled={busy} onClick={submit}>{busy ? "Binding…" : "Bind identity"}</button>
 

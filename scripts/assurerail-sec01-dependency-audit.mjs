@@ -14,9 +14,9 @@ const baseline = JSON.parse(readFileSync(baselinePath, "utf8"));
 const args = [
   "audit",
   "--workspace",
-  "@code/assurerail-api",
+  "@assurerail/api",
   "--workspace",
-  "@code/assurerail",
+  "@assurerail/web",
   "--omit=dev",
   "--audit-level=high",
   "--json",

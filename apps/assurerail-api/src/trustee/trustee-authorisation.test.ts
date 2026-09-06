@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { signTrusteeAuthorisation, verifyTrusteeAuthorisation } from "./trustee-authorisation";
 
 const base = {
-  trusteeDid: "did:web:ind.id.assurelocker.com:entity:demo-trustee-spe",
+  trusteeDid: "did:web:demo.assurerail.invalid:entity:trustee",
   poolId: "HDFCBANK-RECV-TATASTEEL-2026Q3",
   tapeHash: "a".repeat(64),
   mintableMinor: "30000000000",

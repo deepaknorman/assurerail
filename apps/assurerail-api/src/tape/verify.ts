@@ -3,7 +3,7 @@
 // version; recompute the FROZEN manifest from the loan rows (H6 tamper-evidence — the manifest binds
 // per-loan classification, so post-freeze drift is provable); then mint-readiness (the reserve-then-
 // mint lock, owned by AssureLocker, must be CONFIRMED).
-import { CoLending } from "@code/shared";
+import { computePoolManifestV1, hashObject } from "../provider-contracts/v1";
 import { type AssurePoolTape, SUPPORTED_TAPE_VERSION } from "./tape.types";
 
 export interface TapeVerification {
@@ -15,7 +15,7 @@ export interface TapeVerification {
 export function verifyTape(tape: AssurePoolTape): TapeVerification {
   const reasons: string[] = [];
   const { tapeHash, ...body } = tape;
-  const recomputed = `sha256:${CoLending.hashObject(body)}`;
+  const recomputed = `sha256:${hashObject(body)}`;
   if (recomputed !== tapeHash) reasons.push(`tapeHash mismatch — integrity check failed (recomputed ${recomputed})`);
   if (tape.tapeVersion !== SUPPORTED_TAPE_VERSION) reasons.push(`unsupported tapeVersion ${tape.tapeVersion} (need ${SUPPORTED_TAPE_VERSION})`);
 
@@ -23,7 +23,7 @@ export function verifyTape(tape: AssurePoolTape): TapeVerification {
   // body is rebuilt from live loan rows). The manifest is sealed/anchored at freeze; recompute it
   // from the tape's OWN per-loan rows and compare. A post-freeze reclassification (or any per-loan
   // structural rewrite) yields a manifest that differs from the frozen one → FAIL.
-  const recomputedManifest = CoLending.computePoolManifest(tape.loans);
+  const recomputedManifest = computePoolManifestV1(tape.loans);
   if (recomputedManifest !== tape.manifestHash) {
     reasons.push("manifestHash mismatch — pool content drifted from the frozen manifest");
   }

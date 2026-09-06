@@ -89,7 +89,7 @@ export class AdminController {
     return {
       store: process.env.DATABASE_URL ? "postgres" : "in-memory",
       adapters: { tape: config.tapeSource, hts: config.htsAdapter, hcs: config.hcsAnchor, settlement: config.settlementAdapter },
-      digikycGate: (process.env.DIGIKYC_GATE ?? (config.assureLockerApiKey ? "live" : "demo")).toLowerCase(),
+      digikycGate: (process.env.DIGIKYC_GATE ?? (config.identityProviderApiKey ? "live" : "demo")).toLowerCase(),
       recaptchaEnforce: process.env.RECAPTCHA_ENFORCE === "true",
       roles: ROLES,
       entityRoles: EROLES,

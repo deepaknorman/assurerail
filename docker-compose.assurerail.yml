@@ -3,9 +3,9 @@
 #   docker compose -f docker-compose.assurerail.yml up --build
 #
 # Ports on the host:  api → 3006, web → 3007, db → 5442 (5432 inside; 5442 avoids clashing with the
-# AssureLocker dev Postgres on 5432). Secrets are supplied at runtime, never baked into images:
+# another local Postgres on 5432). Secrets are supplied at runtime, never baked into images:
 #   - copy real values into a root .env (docker compose auto-loads it for ${VAR} interpolation), or
-#   - drop apps/assurerail-api/.env.docker for API server secrets (FIREBASE_ADMIN_CONFIG, ASSURELOCKER_API_KEY…).
+#   - drop apps/assurerail-api/.env.docker for API server secrets and provider credentials.
 # All adapters default to DEMO, so the stack runs end-to-end with zero external credentials.
 
 name: assurerail
@@ -87,7 +87,16 @@ services:
       DIGIKYC_GATE: ${DIGIKYC_GATE:-demo}
       SETTLEMENT_TOKEN: ${SETTLEMENT_TOKEN:-eRupee}
       SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
-      # DigiKYC gate stays demo unless ASSURELOCKER_API_KEY + DIGIKYC_STATUS_SERVICE_SECRET are provided.
+      TAPE_PROVIDER_API_URL: ${TAPE_PROVIDER_API_URL:-http://host.docker.internal:3000}
+      TAPE_PROVIDER_API_KEY: ${TAPE_PROVIDER_API_KEY:-}
+      IDENTITY_PROVIDER_API_URL: ${IDENTITY_PROVIDER_API_URL:-http://host.docker.internal:3000}
+      IDENTITY_PROVIDER_API_KEY: ${IDENTITY_PROVIDER_API_KEY:-}
+      ANCHOR_PROVIDER_API_URL: ${ANCHOR_PROVIDER_API_URL:-http://host.docker.internal:3003}
+      ANCHOR_PROVIDER_API_KEY: ${ANCHOR_PROVIDER_API_KEY:-}
+      SETTLEMENT_PROVIDER_API_URL: ${SETTLEMENT_PROVIDER_API_URL:-http://host.docker.internal:3003}
+      SETTLEMENT_PROVIDER_API_KEY: ${SETTLEMENT_PROVIDER_API_KEY:-}
+      DIGIKYC_STATUS_SERVICE_SECRET: ${DIGIKYC_STATUS_SERVICE_SECRET:-}
+      # The identity gate stays demo unless its independent provider credentials are configured.
     # Optional server secrets (never committed). Object form → the file is optional.
     env_file:
       - path: ./apps/assurerail-api/.env.docker
@@ -124,6 +133,7 @@ services:
         NEXT_PUBLIC_ASSURERAIL_TOKENISED_PRODUCT_V1: ${NEXT_PUBLIC_ASSURERAIL_TOKENISED_PRODUCT_V1:-off}
         NEXT_PUBLIC_ASSURERAIL_ENTERPRISE_INTEGRATION_V1: ${NEXT_PUBLIC_ASSURERAIL_ENTERPRISE_INTEGRATION_V1:-off}
         NEXT_PUBLIC_ASSURERAIL_PRODUCTION_SCALE_V1: ${NEXT_PUBLIC_ASSURERAIL_PRODUCTION_SCALE_V1:-off}
+        NEXT_PUBLIC_ASSURERAIL_CONTACT_EMAIL: ${NEXT_PUBLIC_ASSURERAIL_CONTACT_EMAIL:-}
         NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
         NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}
     restart: unless-stopped
@@ -134,6 +144,7 @@ services:
       PORT: "3007"
       HOSTNAME: 0.0.0.0
       ASSURERAIL_INBOUND_ENABLED: ${ASSURERAIL_INBOUND_ENABLED:-no}
+      ASSURERAIL_CONTACT_EMAIL: ${ASSURERAIL_CONTACT_EMAIL:-}
       ASSURERAIL_PUBLIC_ORIGINS: ${ASSURERAIL_PUBLIC_ORIGINS:-http://localhost:3007}
       ASSURERAIL_INBOUND_WEBHOOK_URL: ${ASSURERAIL_INBOUND_WEBHOOK_URL:-}
       ASSURERAIL_INBOUND_ALLOWED_HOSTS: ${ASSURERAIL_INBOUND_ALLOWED_HOSTS:-}
