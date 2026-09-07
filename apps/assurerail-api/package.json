@@ -35,6 +35,7 @@
     "db:rehearse:ar29": "bash ../../scripts/assurerail-ar29-db-rehearsal.sh",
     "db:rehearse:ar30": "bash ../../scripts/assurerail-ar30-db-rehearsal.sh",
     "db:rehearse:op01": "bash ../../scripts/assurerail-op01-db-rehearsal.sh",
+    "db:rehearse:sim100": "bash ../../scripts/assurerail-sim100-db-rehearsal.sh",
     "seed:admin": "node dist/seed-admin.js",
     "test": "prisma generate && tsc && node --test \"dist/**/*.test.js\""
   },

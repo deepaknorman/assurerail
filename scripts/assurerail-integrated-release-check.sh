@@ -58,6 +58,7 @@ if [[ "$MODE" == "--full" ]]; then
     scripts/assurerail-ar27-db-rehearsal.sh
     scripts/assurerail-ar29-db-rehearsal.sh
     scripts/assurerail-ar30-db-rehearsal.sh
+    scripts/assurerail-sim100-db-rehearsal.sh
   )
   for rehearsal in "${rehearsals[@]}"; do run "database rehearsal $rehearsal" bash "$rehearsal"; done
 fi

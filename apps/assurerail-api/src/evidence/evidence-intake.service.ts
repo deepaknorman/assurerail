@@ -310,27 +310,71 @@ export class EvidenceIntakeService {
     const retentionUntilAt = date(body.retentionUntilAt, "retentionUntilAt");
     if (retentionUntilAt <= new Date()) throw new BadRequestException("retentionUntilAt must be in the future");
     const persisted = await this.persistence.persistIntake(connector.providerReferenceId!, "API", body.envelope);
+    let materialized = persisted.replay
+      ? await this.db.evidenceVersion.findUnique({
+        where: { intakeSubmissionId: persisted.submissionId },
+        select: { id: true, evidenceObjectId: true, version: true, intakeSubmission: { select: { sourceReferenceId: true } } },
+      })
+      : null;
+    const existingSourceReferenceId = materialized?.intakeSubmission?.sourceReferenceId;
+    if (materialized && existingSourceReferenceId) {
+      return {
+        ...persisted,
+        replay: true,
+        evidenceObjectId: materialized.evidenceObjectId,
+        evidenceVersionId: materialized.id,
+        version: materialized.version,
+        sourceReferenceId: existingSourceReferenceId,
+      };
+    }
     const envelope = body.envelope;
     const source = await this.createOrVerifySourceReference(connector.providerReferenceId!, institutionId, envelope);
-    const evidence = await this.persistJsonEvidence({
-      actorUserId,
-      institutionId,
-      evidenceObjectId: optional(body.evidenceObjectId, "evidenceObjectId", 160),
-      transactionCaseId: envelope.transactionCaseId,
-      evidenceType: required(body.evidenceType, "evidenceType", 120),
-      classification: oneOf(body.classification, "classification", CLASSIFICATIONS),
-      purpose: required(body.purpose, "purpose", 200),
-      retentionUntilAt,
-      result: "REVIEW_REQUIRED",
-      qualifications: body.qualifications,
-      envelope,
-      intakeSubmissionId: persisted.submissionId,
-      providerReferenceId: connector.providerReferenceId!,
-      sourceReferenceId: source.id,
-    });
+    if (existingSourceReferenceId && existingSourceReferenceId !== source.id) {
+      throw new ConflictException("intake submission is already bound to a different source reference");
+    }
     await this.db.intakeSubmission.update({ where: { id: persisted.submissionId }, data: { sourceReferenceId: source.id, institutionId } });
+    if (materialized) {
+      return {
+        ...persisted,
+        replay: true,
+        evidenceObjectId: materialized.evidenceObjectId,
+        evidenceVersionId: materialized.id,
+        version: materialized.version,
+        sourceReferenceId: source.id,
+      };
+    }
+    let evidence;
+    try {
+      evidence = await this.persistJsonEvidence({
+        actorUserId,
+        institutionId,
+        evidenceObjectId: optional(body.evidenceObjectId, "evidenceObjectId", 160),
+        transactionCaseId: envelope.transactionCaseId,
+        evidenceType: required(body.evidenceType, "evidenceType", 120),
+        classification: oneOf(body.classification, "classification", CLASSIFICATIONS),
+        purpose: required(body.purpose, "purpose", 200),
+        retentionUntilAt,
+        result: "REVIEW_REQUIRED",
+        qualifications: body.qualifications,
+        envelope,
+        intakeSubmissionId: persisted.submissionId,
+        providerReferenceId: connector.providerReferenceId!,
+        sourceReferenceId: source.id,
+      });
+    } catch (error) {
+      if (!unique(error)) throw error;
+      // Concurrent identical requests may both observe the durable intake before either has
+      // materialised it. The unique intakeSubmissionId constraint selects the winner. Return that
+      // winner instead of leaking a storage-level conflict or creating an orphan evidence object.
+      materialized = await this.db.evidenceVersion.findUnique({
+        where: { intakeSubmissionId: persisted.submissionId },
+        select: { id: true, evidenceObjectId: true, version: true, intakeSubmission: { select: { sourceReferenceId: true } } },
+      });
+      if (!materialized || materialized.intakeSubmission?.sourceReferenceId !== source.id) throw error;
+      evidence = { replay: true, evidenceObjectId: materialized.evidenceObjectId, evidenceVersionId: materialized.id, version: materialized.version };
+    }
     audit("rail.evidence.json_ingested", { actorUserId, institutionId, evidenceObjectId: evidence.evidenceObjectId, submissionId: persisted.submissionId });
-    return { ...persisted, ...evidence, sourceReferenceId: source.id };
+    return { ...persisted, ...evidence, replay: persisted.replay || evidence.replay, sourceReferenceId: source.id };
   }
 
   async ingestDocument(actorUserId: string, institutionId: string, input: Readable, metadata: DocumentMetadata) {
