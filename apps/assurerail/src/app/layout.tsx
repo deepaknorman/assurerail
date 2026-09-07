@@ -38,6 +38,23 @@ export const metadata: Metadata = {
     title: "One governed rail for loan transfers and securitisation",
     description:
       "Direct assignment and PTC transaction infrastructure—conventional first, with tokenised representations only where separately approved.",
+    // WhatsApp/LinkedIn/Slack render a preview image ONLY from an explicit og:image (no favicon
+    // fallback). 1200×630, kept small (WhatsApp skips large images); absolute via metadataBase.
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AssureRail — one governed rail for loan transfers and securitisation",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "One governed rail for loan transfers and securitisation",
+    description:
+      "Direct assignment and PTC transaction infrastructure—conventional first, with tokenised representations only where separately approved.",
+    images: ["/og-image.png"],
   },
   robots: { index: true, follow: true },
 };
