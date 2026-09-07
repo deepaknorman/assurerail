@@ -3,8 +3,8 @@ import { sandboxEnabled } from "@/lib/customer-workspace";
 import { SandboxExperience } from "./SandboxExperience";
 
 export const metadata = {
-  title: "Synthetic DA/PTC sandbox",
-  description: "A non-operative synthetic AssureRail walkthrough. It cannot satisfy customer, route or production evidence gates.",
+  title: "Private full-system demonstration",
+  description: "A non-operative synthetic AssureRail walkthrough across institutional, DA, PTC, lifecycle, integration and operations controls.",
   robots: { index: false, follow: false },
 };
 

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   auth,
+  firebaseConfigured,
   onAuthStateChanged,
   signOut,
   GoogleAuthProvider,
@@ -66,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Exchange the Firebase ID token for the venue session (reCAPTCHA Enterprise-defended).
   const establish = useCallback(async (requestedInstitutionId?: string | null) => {
+    if (!firebaseConfigured) {
+      setVenueUser(null);
+      setNeedsOnboarding(false);
+      setActiveInstitutionId(null);
+      return;
+    }
     const u = auth.currentUser;
     if (!u) {
       setVenueUser(null);
@@ -103,6 +110,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!firebaseConfigured) {
+      setFirebaseUser(null);
+      setVenueUser(null);
+      setNeedsOnboarding(false);
+      setActiveInstitutionId(null);
+      setLoading(false);
+      return;
+    }
     const unsub = onAuthStateChanged(auth, async (u) => {
       setFirebaseUser(u);
       setError("");
@@ -125,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginGoogle = useCallback(async () => {
     setError("");
     try {
+      if (!firebaseConfigured) throw new Error("AssureRail authentication is not configured in this environment");
       await signInWithPopup(auth, new GoogleAuthProvider());
     } catch (e) {
       setError((e as Error).message);
@@ -135,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginEmail = useCallback(async (email: string, password: string, register?: boolean) => {
     setError("");
     try {
+      if (!firebaseConfigured) throw new Error("AssureRail authentication is not configured in this environment");
       if (register) await createUserWithEmailAndPassword(auth, email, password);
       else await signInWithEmailAndPassword(auth, email, password);
     } catch (e) {
@@ -156,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [establish]);
 
   const logout = useCallback(async () => {
-    await signOut(auth);
+    if (firebaseConfigured) await signOut(auth);
     setVenueUser(null);
     setNeedsOnboarding(false);
     setActiveInstitutionId(null);

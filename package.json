@@ -15,7 +15,10 @@
     "security:azure": "node scripts/check-assurerail-azure-baseline.mjs",
     "security:e2e:list": "playwright test --config=playwright.assurerail.config.ts --list",
     "security:e2e": "node scripts/assurerail-sec01-e2e-preflight.mjs && playwright test --config=playwright.assurerail.config.ts",
-    "security:dast": "bash scripts/assurerail-sec01-dast.sh"
+    "security:dast": "bash scripts/assurerail-sec01-dast.sh",
+    "demo:check": "npm run check:demo-access --workspace=@assurerail/web && npm run check:ar-demo01 --workspace=@assurerail/web",
+    "demo:preflight": "bash scripts/assurerail-demo-preflight.sh --source",
+    "demo:browser": "npm run check:ar-demo01-browser --workspace=@assurerail/web"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1"

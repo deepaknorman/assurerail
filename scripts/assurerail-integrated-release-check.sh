@@ -28,6 +28,8 @@ run "API compile and complete test corpus" npm test --workspace=@assurerail/api
 for check in pr18 ar21 ar22 ar23 ar24 ar25 ar26 ar27 ar28 ar29 ar30; do
   run "web boundary check $check" npm run "check:$check" --workspace=@assurerail/web
 done
+run "private demo access boundary" npm run check:demo-access --workspace=@assurerail/web
+run "full-system demo boundary" npm run check:ar-demo01 --workspace=@assurerail/web
 run "web production build" npm run build --workspace=@assurerail/web
 
 if [[ "$MODE" == "--full" ]]; then
