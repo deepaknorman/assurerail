@@ -39,8 +39,17 @@ export const metadata: Metadata = {
     description:
       "Direct assignment and PTC transaction infrastructure—conventional first, with tokenised representations only where separately approved.",
     // WhatsApp/LinkedIn/Slack render a preview image ONLY from an explicit og:image (no favicon
-    // fallback). 1200×630, kept small (WhatsApp skips large images); absolute via metadataBase.
+    // fallback). FIRST image is a deliberately small square tile (<300px): WhatsApp's layout rule
+    // renders sub-300px images as the compact logo-icon card rather than the big banner (founder's
+    // preference, 8 Sep 2026). The 1200×630 banner rides second for platforms that pick the
+    // largest suitable image.
     images: [
+      {
+        url: "/og-tile.png",
+        width: 292,
+        height: 292,
+        alt: "AssureRail",
+      },
       {
         url: "/og-image.png",
         width: 1200,
