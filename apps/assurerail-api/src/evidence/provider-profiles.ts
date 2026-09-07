@@ -6,6 +6,7 @@ export const INTAKE_PROFILE_IDS = [
   "assurepool.frozen-da-tape",
   "common-lender-registry.v1",
   "assuretransfer.receivables-da",
+  "assurelens.monitoring-evidence.v1",
 ] as const;
 export type IntakeProfileId = (typeof INTAKE_PROFILE_IDS)[number];
 
@@ -101,5 +102,18 @@ export function assertIntakeProfile(profileRef: string, envelope: NeutralIntakeE
       throw new BadRequestException("common lender registry recordCount must be a non-negative integer");
     }
     nonEmpty(normalized.recordsDigest, "payload.normalized.recordsDigest");
+  }
+  if (profileRef === "assurelens.monitoring-evidence.v1") {
+    if (envelope.source.sourceObjectType !== "MONITORING_EVIDENCE") {
+      throw new BadRequestException("AssureLens monitoring profile requires a monitoring evidence source object");
+    }
+    const normalized = object(envelope.payload.normalized, "payload.normalized");
+    nonEmpty(normalized.packageId, "payload.normalized.packageId");
+    nonEmpty(normalized.payloadDigest, "payload.normalized.payloadDigest");
+    const boundary = object(normalized.boundary, "payload.normalized.boundary");
+    if (boundary.completeIndebtednessClaim !== false || boundary.creditDecision !== false
+      || boundary.automaticTransactionRestriction !== false || boundary.lenderDecisionRequired !== true) {
+      throw new BadRequestException("AssureLens monitoring boundary must preserve lender decision authority");
+    }
   }
 }

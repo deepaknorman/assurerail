@@ -137,6 +137,14 @@ export const PRODUCTION_SCALE_FLAG = "ARAIL_PRODUCTION_SCALE_V1" as const;
 export const PRODUCTION_SCALE_VALUES = ["off", "shadow"] as const;
 export type ProductionScaleMode = (typeof PRODUCTION_SCALE_VALUES)[number];
 
+// AR-LENS-01 accepts signed monitoring evidence through the neutral intake service. It has no
+// live/on value: provider output is always review-required evidence and never an automatic gate.
+export const LENS_MONITORING_CONNECTOR_FLAG =
+  "ARAIL_LENS_MONITORING_CONNECTOR_V1" as const;
+export const LENS_MONITORING_CONNECTOR_VALUES = ["off", "shadow"] as const;
+export type LensMonitoringConnectorMode =
+  (typeof LENS_MONITORING_CONNECTOR_VALUES)[number];
+
 // OP-01 internal-control-plane rollout. Shadow evaluates and records the new policy without
 // replacing the legacy bootstrap role gate; enforcement is a separately approved cutover.
 export const INTERNAL_RBAC_FLAG = "ARAIL_INTERNAL_RBAC_V1" as const;
@@ -193,6 +201,7 @@ export function inspectPersistenceFlags(env: Environment): {
   tokenisedProduct: TokenisedProductMode;
   enterpriseIntegration: EnterpriseIntegrationMode;
   productionScale: ProductionScaleMode;
+  lensMonitoringConnector: LensMonitoringConnectorMode;
   internalRbac: InternalRbacMode;
   errors: readonly string[];
 } {
@@ -350,6 +359,12 @@ export function inspectPersistenceFlags(env: Environment): {
     PRODUCTION_SCALE_VALUES,
     "off"
   );
+  const lensMonitoringConnector = readFlag(
+    env,
+    LENS_MONITORING_CONNECTOR_FLAG,
+    LENS_MONITORING_CONNECTOR_VALUES,
+    "off"
+  );
   const internalRbac = readFlag(
     env,
     INTERNAL_RBAC_FLAG,
@@ -386,6 +401,7 @@ export function inspectPersistenceFlags(env: Environment): {
     tokenisedProduct: tokenisedProduct.value,
     enterpriseIntegration: enterpriseIntegration.value,
     productionScale: productionScale.value,
+    lensMonitoringConnector: lensMonitoringConnector.value,
     internalRbac: internalRbac.value,
     errors: [
       ingress.error,
@@ -417,6 +433,7 @@ export function inspectPersistenceFlags(env: Environment): {
       tokenisedProduct.error,
       enterpriseIntegration.error,
       productionScale.error,
+      lensMonitoringConnector.error,
       internalRbac.error,
     ].filter((error): error is string => Boolean(error)),
   };

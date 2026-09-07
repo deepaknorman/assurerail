@@ -33,6 +33,7 @@ test("[PR02][FLAGS] persistence paths default to inert/legacy-compatible values"
     tokenisedProduct: "off",
     enterpriseIntegration: "off",
     productionScale: "off",
+    lensMonitoringConnector: "off",
     internalRbac: "off",
     errors: [],
   });
@@ -70,6 +71,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
       ARAIL_TOKENISED_PRODUCT_V1: "SHADOW",
       ARAIL_ENTERPRISE_INTEGRATION_V1: "SHADOW",
       ARAIL_PRODUCTION_SCALE_V1: "SHADOW",
+      ARAIL_LENS_MONITORING_CONNECTOR_V1: "SHADOW",
       ARAIL_INTERNAL_RBAC_V1: "SHADOW",
     }),
     {
@@ -102,6 +104,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
       tokenisedProduct: "shadow",
       enterpriseIntegration: "shadow",
       productionScale: "shadow",
+      lensMonitoringConnector: "shadow",
       internalRbac: "shadow",
       errors: [],
     }
@@ -136,6 +139,7 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
     ARAIL_TOKENISED_PRODUCT_V1: "enabled",
     ARAIL_ENTERPRISE_INTEGRATION_V1: "enabled",
     ARAIL_PRODUCTION_SCALE_V1: "enabled",
+    ARAIL_LENS_MONITORING_CONNECTOR_V1: "enabled",
     ARAIL_INTERNAL_RBAC_V1: "enabled",
   });
   assert.equal(rejected.neutralIngress, "off");
@@ -166,7 +170,8 @@ test("[PR02][FLAGS] only the explicit shadow and durable modes are accepted", ()
   assert.equal(rejected.tokenisedProduct, "off");
   assert.equal(rejected.enterpriseIntegration, "off");
   assert.equal(rejected.productionScale, "off");
+  assert.equal(rejected.lensMonitoringConnector, "off");
   assert.equal(rejected.institutionalProduct, "off");
   assert.equal(rejected.internalRbac, "off");
-  assert.equal(rejected.errors.length, 29);
+  assert.equal(rejected.errors.length, 30);
 });

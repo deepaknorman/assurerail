@@ -62,3 +62,24 @@ test("[PR05][PROFILE] source-specific evidence cannot enter under another certif
   const wrongRoute = { ...envelope(), transaction: { ...envelope().transaction, transactionRoute: "PTC" as const } };
   assert.throws(() => assertIntakeProfile("assurepool.frozen-da-tape", wrongRoute), /restricted to frozen DA tapes/);
 });
+
+test("[AR-LENS-01][PROFILE] monitoring evidence preserves lender decision authority", () => {
+  const base = envelope("assurelens.monitoring-evidence.v1");
+  const monitoring = {
+    ...base,
+    source: { ...base.source, sourceObjectType: "MONITORING_EVIDENCE" },
+    payload: {
+      normalized: {
+        packageId: "lens-pkg-1", payloadDigest: sha256Digest({ package: 1 }),
+        boundary: { completeIndebtednessClaim: false, creditDecision: false, automaticTransactionRestriction: false, lenderDecisionRequired: true },
+      },
+      extensions: { profileId: "assurelens.monitoring-evidence.v1" },
+    },
+  };
+  assert.doesNotThrow(() => assertIntakeProfile("assurelens.monitoring-evidence.v1", monitoring as never));
+  const tampered = {
+    ...monitoring,
+    payload: { ...monitoring.payload, normalized: { ...monitoring.payload.normalized, boundary: { completeIndebtednessClaim: false, creditDecision: true, automaticTransactionRestriction: false, lenderDecisionRequired: true } } },
+  };
+  assert.throws(() => assertIntakeProfile("assurelens.monitoring-evidence.v1", tampered as never), /preserve lender decision authority/);
+});
