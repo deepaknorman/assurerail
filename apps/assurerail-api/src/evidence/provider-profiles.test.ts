@@ -83,3 +83,30 @@ test("[AR-LENS-01][PROFILE] monitoring evidence preserves lender decision author
   };
   assert.throws(() => assertIntakeProfile("assurelens.monitoring-evidence.v1", tampered as never), /preserve lender decision authority/);
 });
+
+test("[PTC-PREP][PROFILE] AssurePool preparation evidence is restricted to conventional PTC", () => {
+  const base = envelope("assurepool.ptc-prep-evidence.v1");
+  const ptc = {
+    ...base,
+    source: { ...base.source, sourceObjectType: "PTC_PREPARATION_EVIDENCE" },
+    transaction: { ...base.transaction, transactionRoute: "PTC", representation: "CONVENTIONAL" },
+    payload: {
+      normalized: {
+        preparationRoute: "PTC_PREP",
+        sourceManifestDigest: sha256Digest({ loans: [] }),
+        packageDigest: sha256Digest({ package: 1 }),
+        providerResult: "REVIEW_REQUIRED",
+      },
+      extensions: { profileId: "assurepool.ptc-prep-evidence.v1" },
+    },
+  };
+  assert.doesNotThrow(() => assertIntakeProfile("assurepool.ptc-prep-evidence.v1", ptc as never));
+  assert.throws(() => assertIntakeProfile("assurepool.ptc-prep-evidence.v1", {
+    ...ptc,
+    transaction: { ...ptc.transaction, representation: "TOKENISED" },
+  } as never), /requires a conventional PTC case/);
+  assert.throws(() => assertIntakeProfile("assurepool.ptc-prep-evidence.v1", {
+    ...ptc,
+    payload: { ...ptc.payload, normalized: { ...ptc.payload.normalized, preparationRoute: "DA" } },
+  } as never), /requires preparationRoute PTC_PREP/);
+});

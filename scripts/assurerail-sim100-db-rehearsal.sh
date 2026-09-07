@@ -34,7 +34,7 @@ echo "[SIM-100-DB] compile and migrate isolated database"
 createdb -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" "$FRESH_DB"
 (cd "$RAIL_DIR"; DATABASE_URL="$(db_url "$FRESH_DB")" npx prisma migrate deploy --schema=prisma/schema.prisma >/dev/null)
 
-echo "[SIM-100-DB] execute 200 persisted multi-party scenarios"
+echo "[SIM-100-DB] execute 200 base scenarios plus 8 PTC-preparation conformance scenarios"
 (cd "$RAIL_DIR"; \
   DATABASE_URL="$(db_url "$FRESH_DB")" \
   ARAIL_DISPOSABLE_SIMULATION_DATABASE="SIM100_ONLY" \
@@ -63,4 +63,4 @@ pg_restore -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$RESTORE_DB" --exit-on-e
   node dist/simulation/multi-party-simulation-db-rehearsal.js)
 (cd "$RAIL_DIR"; DATABASE_URL="$(db_url "$RESTORE_DB")" npx prisma migrate status --schema=prisma/schema.prisma >/dev/null)
 
-echo "[SIM-100-DB] PASS scenarios=200 parties=800 persisted-intakes=19 recovered-intake=verified mid-saga-restart=verified restore=verified external-evidence=not-tested"
+echo "[SIM-100-DB] PASS scenarios=208 parties=800 persisted-intakes=20 ptc-prep=8/8 recovered-intake=verified mid-saga-restart=verified restore=verified external-evidence=not-tested"

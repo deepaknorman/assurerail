@@ -76,6 +76,8 @@ services:
       ARAIL_TOKENISED_PRODUCT_V1: ${ARAIL_TOKENISED_PRODUCT_V1:-off}
       ARAIL_ENTERPRISE_INTEGRATION_V1: ${ARAIL_ENTERPRISE_INTEGRATION_V1:-off}
       ARAIL_PRODUCTION_SCALE_V1: ${ARAIL_PRODUCTION_SCALE_V1:-off}
+      ARAIL_LENS_MONITORING_CONNECTOR_V1: ${ARAIL_LENS_MONITORING_CONNECTOR_V1:-off}
+      ARAIL_ASSUREPOOL_PTC_PREPARATION_CONNECTOR_V1: ${ARAIL_ASSUREPOOL_PTC_PREPARATION_CONNECTOR_V1:-off}
       ARAIL_INTERNAL_RBAC_V1: ${ARAIL_INTERNAL_RBAC_V1:-off}
       PORT: "3006"
       DATABASE_URL: "postgresql://assurerail:${ASSURERAIL_DB_PASSWORD:-assurerail_dev}@assurerail-db:5432/assurerail_venue?connection_limit=10&pool_timeout=10"
@@ -96,6 +98,8 @@ services:
       SETTLEMENT_PROVIDER_API_URL: ${SETTLEMENT_PROVIDER_API_URL:-http://host.docker.internal:3003}
       SETTLEMENT_PROVIDER_API_KEY: ${SETTLEMENT_PROVIDER_API_KEY:-}
       DIGIKYC_STATUS_SERVICE_SECRET: ${DIGIKYC_STATUS_SERVICE_SECRET:-}
+      ARAIL_ASSURELENS_TRUSTED_KEYS_JSON: ${ARAIL_ASSURELENS_TRUSTED_KEYS_JSON:-}
+      ARAIL_ASSUREPOOL_TRUSTED_KEYS_JSON: ${ARAIL_ASSUREPOOL_TRUSTED_KEYS_JSON:-}
       # The identity gate stays demo unless its independent provider credentials are configured.
     # Optional server secrets (never committed). Object form → the file is optional.
     env_file:

@@ -43,6 +43,12 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).lensMonitoringConnector === "shadow"
     ? [require("./monitoring/assurelens-monitoring.module").AssureLensMonitoringModule]
     : []),
+  ...(inspectPersistenceFlags(process.env).participantAdmission === "shadow"
+    && inspectPersistenceFlags(process.env).neutralIngress === "shadow"
+    && inspectPersistenceFlags(process.env).transactionCase === "shadow"
+    && inspectPersistenceFlags(process.env).assurePoolPtcPreparationConnector === "shadow"
+    ? [require("./ptc-preparation/assurepool-ptc-preparation.module").AssurePoolPtcPreparationModule]
+    : []),
   ...(inspectPersistenceFlags(process.env).participantAdmission !== "off"
     && inspectPersistenceFlags(process.env).neutralIngress !== "off"
     && inspectPersistenceFlags(process.env).transactionCase !== "off"

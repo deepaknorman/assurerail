@@ -251,6 +251,16 @@ export function inspectRuntimeEnvironment(
     );
   }
   if (
+    persistenceFlags.assurePoolPtcPreparationConnector === "shadow" &&
+    (persistenceFlags.participantAdmission !== "shadow" ||
+      persistenceFlags.neutralIngress !== "shadow" ||
+      persistenceFlags.transactionCase !== "shadow")
+  ) {
+    errors.push(
+      "ARAIL_ASSUREPOOL_PTC_PREPARATION_CONNECTOR_V1=shadow requires participant admission, neutral ingress and transaction cases in shadow"
+    );
+  }
+  if (
     persistenceFlags.roomReadSource !== "legacy" &&
     persistenceFlags.transactionCase === "off"
   ) {
@@ -580,6 +590,14 @@ export function inspectRuntimeEnvironment(
   ) {
     errors.push(
       `ARAIL_PTC_REPLAY_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`
+    );
+  }
+  if (
+    persistenceFlags.assurePoolPtcPreparationConnector !== "off" &&
+    !["REPLAY", "SHADOW"].includes(operatingMode)
+  ) {
+    errors.push(
+      `ARAIL_ASSUREPOOL_PTC_PREPARATION_CONNECTOR_V1 is available only in REPLAY or SHADOW runtime, not ${operatingMode}`
     );
   }
   if (

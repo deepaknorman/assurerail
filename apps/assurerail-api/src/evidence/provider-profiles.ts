@@ -7,6 +7,7 @@ export const INTAKE_PROFILE_IDS = [
   "common-lender-registry.v1",
   "assuretransfer.receivables-da",
   "assurelens.monitoring-evidence.v1",
+  "assurepool.ptc-prep-evidence.v1",
 ] as const;
 export type IntakeProfileId = (typeof INTAKE_PROFILE_IDS)[number];
 
@@ -114,6 +115,23 @@ export function assertIntakeProfile(profileRef: string, envelope: NeutralIntakeE
     if (boundary.completeIndebtednessClaim !== false || boundary.creditDecision !== false
       || boundary.automaticTransactionRestriction !== false || boundary.lenderDecisionRequired !== true) {
       throw new BadRequestException("AssureLens monitoring boundary must preserve lender decision authority");
+    }
+  }
+  if (profileRef === "assurepool.ptc-prep-evidence.v1") {
+    if (envelope.transaction.transactionRoute !== "PTC" || envelope.transaction.representation !== "CONVENTIONAL") {
+      throw new BadRequestException("AssurePool PTC preparation profile requires a conventional PTC case");
+    }
+    if (envelope.source.sourceObjectType !== "PTC_PREPARATION_EVIDENCE") {
+      throw new BadRequestException("AssurePool PTC preparation profile requires a PTC preparation evidence source object");
+    }
+    const normalized = object(envelope.payload.normalized, "payload.normalized");
+    if (normalized.preparationRoute !== "PTC_PREP") {
+      throw new BadRequestException("AssurePool PTC preparation profile requires preparationRoute PTC_PREP");
+    }
+    nonEmpty(normalized.sourceManifestDigest, "payload.normalized.sourceManifestDigest");
+    nonEmpty(normalized.packageDigest, "payload.normalized.packageDigest");
+    if (normalized.providerResult !== "READY" && normalized.providerResult !== "REVIEW_REQUIRED" && normalized.providerResult !== "FAIL") {
+      throw new BadRequestException("AssurePool PTC preparation provider result is unsupported");
     }
   }
 }

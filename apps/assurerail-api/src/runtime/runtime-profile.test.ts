@@ -224,6 +224,27 @@ test("[CONFIG][PR06] neutral transaction cases cannot be mislabeled demo, live o
   }
 });
 
+test("[CONFIG][PTC-PREP] provider intake mounts only on the complete shadow foundation", () => {
+  const missingFoundation = inspectRuntimeEnvironment({
+    NODE_ENV: "development",
+    ARAIL_ASSUREPOOL_PTC_PREPARATION_CONNECTOR_V1: "shadow",
+  });
+  assert.match(missingFoundation.errors.join("\n"), /requires participant admission, neutral ingress and transaction cases in shadow/);
+
+  const accepted = inspectRuntimeEnvironment({
+    NODE_ENV: "development",
+    ASSURERAIL_OPERATING_MODE: "SHADOW",
+    ARAIL_DEMO_ENDPOINTS_ENABLED: "false",
+    DATABASE_URL: "postgresql://rail.invalid/rail",
+    FIREBASE_ADMIN_CONFIG: FIREBASE_ADMIN_FIXTURE,
+    ARAIL_PARTICIPANT_ADMISSION_V1: "shadow",
+    ARAIL_NEUTRAL_INGRESS_V1: "shadow",
+    ARAIL_TRANSACTION_CASE_V1: "shadow",
+    ARAIL_ASSUREPOOL_PTC_PREPARATION_CONNECTOR_V1: "shadow",
+  });
+  assert.equal(accepted.errors.length, 0);
+});
+
 test("[CONFIG][PR07] room compare reads require the complete shadow foundation", () => {
   const missingCase = inspectRuntimeEnvironment({
     ASSURERAIL_OPERATING_MODE: "SHADOW",

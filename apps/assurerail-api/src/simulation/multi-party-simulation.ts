@@ -14,6 +14,18 @@ export const SIMULATION_FAULTS = [
   "NON_PARTICIPANT_ACCESS",
   "UNCERTIFIED_CONNECTOR",
 ] as const;
+export const PTC_PREPARATION_SIMULATION_FAMILY_VERSION =
+  "assurerail.multi-party-simulation.ptc-preparation.v1" as const;
+export const PTC_PREPARATION_SIMULATION_VARIANTS = [
+  "VALID_REVIEW_REQUIRED",
+  "TAMPERED_SSA_UNDER_OLD_SIGNATURE",
+  "READY_WITH_COUNSEL_PENDING",
+  "FAIL_FINDING_WITH_NON_FAIL_OVERALL",
+  "MRR_BAND_BPS_MISMATCH",
+  "DA_PACKAGE_ON_PTC_CASE",
+  "UNTRUSTED_PROVIDER_KEY",
+  "INVALID_PROVIDER_SIGNATURE",
+] as const;
 
 export type SimulationRoute = "DA" | "PTC";
 export type SimulationRepresentation = "CONVENTIONAL" | "TOKENISED";
@@ -37,6 +49,19 @@ export interface MultiPartySimulationScenario {
   readonly partyRoles: readonly string[];
   readonly fault: SimulationFault;
   readonly expectedGate: SimulationGate;
+  readonly expectedDecision: "BLOCKED" | "REVIEW_REQUIRED";
+}
+
+export interface PtcPreparationSimulationScenario {
+  readonly corpusVersion: typeof PTC_PREPARATION_SIMULATION_FAMILY_VERSION;
+  readonly sequence: number;
+  readonly scenarioId: string;
+  readonly transactionRoute: "PTC";
+  readonly representation: "CONVENTIONAL";
+  readonly partyCount: 3;
+  readonly partyRoles: readonly ["ISSUER", "TRUSTEE", "RTA"];
+  readonly variant: (typeof PTC_PREPARATION_SIMULATION_VARIANTS)[number];
+  readonly expectedGate: "PROVIDER_EVIDENCE" | "RAIL_REVIEW";
   readonly expectedDecision: "BLOCKED" | "REVIEW_REQUIRED";
 }
 
@@ -84,6 +109,23 @@ export function buildMultiPartySimulationCorpus(): readonly MultiPartySimulation
   return Object.freeze(result.map((scenario) => Object.freeze(scenario)));
 }
 
+/** Route-specific conformance family registered alongside the 200-case base matrix. It exercises
+ * the signed provider seam itself rather than multiplying unrelated DA/token combinations. */
+export function buildPtcPreparationSimulationFamily(): readonly PtcPreparationSimulationScenario[] {
+  return Object.freeze(PTC_PREPARATION_SIMULATION_VARIANTS.map((variant, index) => Object.freeze({
+    corpusVersion: PTC_PREPARATION_SIMULATION_FAMILY_VERSION,
+    sequence: index + 1,
+    scenarioId: `sim-v1-ptc-conventional-p3-ptc-prep-${variant.toLowerCase().replaceAll("_", "-")}`,
+    transactionRoute: "PTC" as const,
+    representation: "CONVENTIONAL" as const,
+    partyCount: 3 as const,
+    partyRoles: ["ISSUER", "TRUSTEE", "RTA"] as const,
+    variant,
+    expectedGate: variant === "VALID_REVIEW_REQUIRED" ? "RAIL_REVIEW" as const : "PROVIDER_EVIDENCE" as const,
+    expectedDecision: variant === "VALID_REVIEW_REQUIRED" ? "REVIEW_REQUIRED" as const : "BLOCKED" as const,
+  })));
+}
+
 export function validateParticipantTopology(scenario: MultiPartySimulationScenario): { allowed: boolean; code: string } {
   const roles = new Set(scenario.partyRoles);
   if (scenario.transactionRoute === "DA" && (!roles.has("TRANSFEROR") || !roles.has("TRANSFEREE"))) {
@@ -97,4 +139,17 @@ export function validateParticipantTopology(scenario: MultiPartySimulationScenar
 
 export function simulationCorpusDigest(corpus = buildMultiPartySimulationCorpus()): string {
   return sha256Digest(corpus);
+}
+
+export function ptcPreparationSimulationFamilyDigest(
+  corpus = buildPtcPreparationSimulationFamily(),
+): string {
+  return sha256Digest(corpus);
+}
+
+export function completeSimulationGateDigest(): string {
+  return sha256Digest({
+    base: buildMultiPartySimulationCorpus(),
+    ptcPreparation: buildPtcPreparationSimulationFamily(),
+  });
 }

@@ -15,7 +15,7 @@ The complete AssureRail cumulative gate passed with `SIM-100` registered as its 
 rehearsal:
 
 ```text
-[SIM-100-DB] PASS scenarios=200 parties=800 persisted-intakes=19
+[SIM-100-DB] PASS scenarios=208 parties=800 persisted-intakes=20 ptc-prep=8/8
 recovered-intake=verified mid-saga-restart=verified restore=verified external-evidence=not-tested
 [ARAIL-INTEGRATED] PASS mode=--full external-evidence=not-tested
 external-gates=remain-open deployment=not-performed
@@ -27,6 +27,10 @@ The deterministic scenario contract was:
 corpus version: assurerail.multi-party-simulation.v1
 corpus digest:  sha256:e92c0bbdb9298d23c4714d9f880e1afc0e0ca491747946fa0865f3c89f9d200e
 assertions:      200 passed, 0 failed
+PTC-prep family: assurerail.multi-party-simulation.ptc-preparation.v1
+family digest:   sha256:3d41522e8acc160cd0d9334e244c3a70252ccaa54dc5f9bf92448c6cc18c1e38
+complete digest: sha256:6c1449791456fae491580ff766a69fdf02f05b02f14a8836de80dc86a70ae684
+total assertions: 208 passed, 0 failed
 ```
 
 ## What was executed
@@ -35,7 +39,7 @@ The cumulative run completed:
 
 - shell syntax checks for every `scripts/assurerail-*.sh` file;
 - scoped diff hygiene and the static architecture/safety invariant suite;
-- the complete API compilation and test corpus: 373 tests passed, 0 failed;
+- the complete API compilation and test corpus: 382 tests passed, 0 failed;
 - all 13 web boundary checks, including private-demo and full-system-demo access boundaries;
 - the AssureRail web production build; and
 - 25 fresh-database rehearsals: PR-02 through PR-17 as applicable, PR-19, PR-20, AR-22,
@@ -50,6 +54,7 @@ SIM-100 itself persisted and reverified:
 | case-party rows | 800 |
 | monitoring intake submissions | 19 |
 | monitoring evidence versions | 19 |
+| PTC-preparation intake/evidence versions | 1 |
 | consumed, one-use step-up records | 140 |
 | reproducible case replay receipts | 1 |
 | pending external instructions | 1 |
@@ -64,11 +69,14 @@ The stopping-point distribution also matched the frozen corpus contract:
 | connector certification | 18 |
 | institution authority | 20 |
 | participant topology | 14 |
-| provider evidence | 90 |
-| Rail review required | 18 |
+| provider evidence | 97 |
+| Rail review required | 19 |
 | session/step-up context | 20 |
 
-The nineteenth intake was deliberately left durable but unmaterialised, then submitted through two
+The twentieth persisted intake was the valid signed PTC-preparation fixture and remained
+`REVIEW_REQUIRED`. Its seven adverse siblings exercised source-block tamper, counsel-choke,
+finding-summary, MRR-band, route, trust-list and signature failures. The recovery probe's separate
+AssureLens intake was deliberately left durable but unmaterialised, then submitted through two
 concurrent identical retries. Both returned replay semantics and the same evidence coordinates; the
 database retained exactly one version for that intake.
 
@@ -102,7 +110,7 @@ It does **not** establish:
 - external connector acceptance, customer security review, independent VAPT or Azure readiness;
 - historic transaction parity, a shadow transaction result, controlled-live acceptance or
   production readiness; or
-- that the 200 scenarios are completed financial transactions.
+- that the 208 scenarios are completed financial transactions.
 
 Accordingly, `syntheticOnly` remained `true`, `externalEvidenceGatesClosed` remained `false`, no
 runtime feature flag or operating mode was changed, and no deployment was performed.

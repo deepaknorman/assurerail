@@ -145,6 +145,14 @@ export const LENS_MONITORING_CONNECTOR_VALUES = ["off", "shadow"] as const;
 export type LensMonitoringConnectorMode =
   (typeof LENS_MONITORING_CONNECTOR_VALUES)[number];
 
+// Optional AssurePool PTC-preparation evidence enters the neutral provider path. Shadow is the
+// maximum posture: a source result never becomes a Rail decision or live permission.
+export const ASSUREPOOL_PTC_PREPARATION_CONNECTOR_FLAG =
+  "ARAIL_ASSUREPOOL_PTC_PREPARATION_CONNECTOR_V1" as const;
+export const ASSUREPOOL_PTC_PREPARATION_CONNECTOR_VALUES = ["off", "shadow"] as const;
+export type AssurePoolPtcPreparationConnectorMode =
+  (typeof ASSUREPOOL_PTC_PREPARATION_CONNECTOR_VALUES)[number];
+
 // OP-01 internal-control-plane rollout. Shadow evaluates and records the new policy without
 // replacing the legacy bootstrap role gate; enforcement is a separately approved cutover.
 export const INTERNAL_RBAC_FLAG = "ARAIL_INTERNAL_RBAC_V1" as const;
@@ -202,6 +210,7 @@ export function inspectPersistenceFlags(env: Environment): {
   enterpriseIntegration: EnterpriseIntegrationMode;
   productionScale: ProductionScaleMode;
   lensMonitoringConnector: LensMonitoringConnectorMode;
+  assurePoolPtcPreparationConnector: AssurePoolPtcPreparationConnectorMode;
   internalRbac: InternalRbacMode;
   errors: readonly string[];
 } {
@@ -365,6 +374,12 @@ export function inspectPersistenceFlags(env: Environment): {
     LENS_MONITORING_CONNECTOR_VALUES,
     "off"
   );
+  const assurePoolPtcPreparationConnector = readFlag(
+    env,
+    ASSUREPOOL_PTC_PREPARATION_CONNECTOR_FLAG,
+    ASSUREPOOL_PTC_PREPARATION_CONNECTOR_VALUES,
+    "off"
+  );
   const internalRbac = readFlag(
     env,
     INTERNAL_RBAC_FLAG,
@@ -402,6 +417,7 @@ export function inspectPersistenceFlags(env: Environment): {
     enterpriseIntegration: enterpriseIntegration.value,
     productionScale: productionScale.value,
     lensMonitoringConnector: lensMonitoringConnector.value,
+    assurePoolPtcPreparationConnector: assurePoolPtcPreparationConnector.value,
     internalRbac: internalRbac.value,
     errors: [
       ingress.error,
@@ -434,6 +450,7 @@ export function inspectPersistenceFlags(env: Environment): {
       enterpriseIntegration.error,
       productionScale.error,
       lensMonitoringConnector.error,
+      assurePoolPtcPreparationConnector.error,
       internalRbac.error,
     ].filter((error): error is string => Boolean(error)),
   };
