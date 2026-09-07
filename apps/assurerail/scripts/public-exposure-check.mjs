@@ -15,6 +15,7 @@ const paths = [
   "src/components/PublicSite.tsx",
   "src/lib/public-capability.ts",
   "src/lib/public-content.ts",
+  "src/lib/public-structured-data.ts",
 ];
 const publicSource = paths.map((path) => `\nFILE:${path}\n${readFileSync(resolve(root, path), "utf8")}`).join("\n");
 const forbidden = [

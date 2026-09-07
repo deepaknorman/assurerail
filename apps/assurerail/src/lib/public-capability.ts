@@ -11,8 +11,8 @@ export type PublicCapability = {
   summary: string;
 };
 
-export const PUBLIC_CAPABILITY_REVIEWED_AT = "2026-09-03";
-export const PUBLIC_CAPABILITY_NEXT_REVIEW_AT = "2026-10-03";
+export const PUBLIC_CAPABILITY_REVIEWED_AT = "2026-09-07";
+export const PUBLIC_CAPABILITY_NEXT_REVIEW_AT = "2026-10-07";
 
 /**
  * Publication-safe view of the AssureRail capability register.

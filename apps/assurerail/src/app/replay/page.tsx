@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JsonLd, PublicPage, StatusStamp, publicStyles as styles } from "@/components/PublicSite";
 import { ReplayInquiryForm } from "./ReplayInquiryForm";
+import { ASSURERAIL_ORGANIZATION_ID, ASSURERAIL_WEBSITE_ID } from "@/lib/public-structured-data";
 
 export const metadata: Metadata = {
   title: "Completed-deal replay",
@@ -15,7 +16,7 @@ export default function ReplayPage() {
   const contactEmail = process.env.ASSURERAIL_CONTACT_EMAIL?.trim();
   return (
     <PublicPage eyebrow="Lowest-risk first proof" title="Start with a transaction you have already completed." lead="Under an agreed NDA and data scope, reconstruct the evidence, authority, hand-offs and completion record without changing money, title, issuance or the authoritative process." actions={<StatusStamp>Observe-only · no files through this form</StatusStamp>}>
-      <JsonLd value={{ "@context": "https://schema.org", "@type": "Service", name: "AssureRail completed-deal replay", serviceType: "Institutional transaction evidence replay", areaServed: { "@type": "Country", name: "India" }, provider: { "@type": "Organization", name: "AssureRail" }, url: "https://assurerail.com/replay" }} />
+      <JsonLd value={{ "@context": "https://schema.org", "@type": "Service", "@id": "https://assurerail.com/replay/#service", name: "AssureRail completed-deal replay", serviceType: "Institutional transaction evidence replay", areaServed: { "@type": "Country", name: "India" }, provider: { "@id": ASSURERAIL_ORGANIZATION_ID }, isPartOf: { "@id": ASSURERAIL_WEBSITE_ID }, url: "https://assurerail.com/replay" }} />
       <section className={styles.section}>
         <div className={styles.container}>
           <h2>First qualify the transaction—not the data upload.</h2>

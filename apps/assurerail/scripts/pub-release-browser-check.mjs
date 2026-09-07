@@ -20,6 +20,8 @@ const paths = [
   "/resources/completed-deal-replay-before-platform-replacement",
   "/resources/direct-assignment-and-ptc-need-different-control-maps",
   "/resources/authoritative-records-reconciliation-and-digital-representations",
+  "/resources/signed-evidence-packages-still-require-institutional-review",
+  "/resources/from-completed-deal-replay-to-a-controlled-shadow",
 ];
 const viewports = [
   { label: "desktop", width: 1440, height: 1000 },
@@ -120,7 +122,11 @@ for (const engine of engines) {
         for (const [index, json] of audit.jsonLd.entries()) {
           try {
             const parsed = JSON.parse(json);
-            if (parsed["@context"] !== "https://schema.org" || !parsed["@type"]) throw new Error("missing schema.org context/type");
+            if (parsed["@context"] !== "https://schema.org") throw new Error("missing schema.org context");
+            const entries = parsed["@graph"] ?? [parsed];
+            if (!Array.isArray(entries) || !entries.length || entries.some((entry) => !entry || typeof entry !== "object" || !entry["@type"])) {
+              throw new Error("missing typed schema.org node");
+            }
           } catch (error) {
             fail(engine.label, viewport.label, path, `invalid JSON-LD #${index + 1}: ${error.message}`);
           }

@@ -110,6 +110,7 @@ export type ResourceArticle = {
   slug: string;
   title: string;
   description: string;
+  publishedAt: string;
   reviewedAt: string;
   readingMinutes: number;
   sections: readonly { heading: string; paragraphs: readonly string[]; bullets?: readonly string[] }[];
@@ -121,7 +122,8 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
     title: "Why begin with a completed-deal replay before changing systems?",
     description:
       "A practical explanation of the lowest-risk first proof for institutional DA and PTC infrastructure.",
-    reviewedAt: "2026-09-03",
+    publishedAt: "2026-09-03",
+    reviewedAt: "2026-09-07",
     readingMinutes: 5,
     sections: [
       {
@@ -155,7 +157,8 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
     title: "Direct assignment and PTC need different control maps",
     description:
       "The common transaction spine is useful, but route-specific authority and evidence cannot be collapsed into one renamed workflow.",
-    reviewedAt: "2026-09-03",
+    publishedAt: "2026-09-03",
+    reviewedAt: "2026-09-07",
     readingMinutes: 6,
     sections: [
       {
@@ -189,7 +192,8 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
     title: "Authoritative records, reconciliation and digital representations",
     description:
       "Why an internal status—or a token—must not silently become a second ownership truth.",
-    reviewedAt: "2026-09-03",
+    publishedAt: "2026-09-03",
+    reviewedAt: "2026-09-07",
     readingMinutes: 6,
     sections: [
       {
@@ -212,6 +216,77 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
         heading: "Tokenisation adds a representation; it does not remove the problem",
         paragraphs: [
           "Until an approved route expressly provides otherwise, a token should be treated as a mirror. Supply, holders, economic interests and the legal record need one-to-one reconciliation, with movement blocked when they disagree.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "signed-evidence-packages-still-require-institutional-review",
+    title: "A signed evidence package still requires institutional review",
+    description:
+      "Digital signatures prove origin and integrity; they do not turn a provider result into a transaction decision.",
+    publishedAt: "2026-09-07",
+    reviewedAt: "2026-09-07",
+    readingMinutes: 5,
+    sections: [
+      {
+        heading: "What the signature can establish",
+        paragraphs: [
+          "A correctly verified digital signature can bind an identified provider, a precise payload and a signing key. Content hashes can also reveal whether a package, manifest or result changed after publication.",
+          "Those controls are valuable because a reviewer can reproduce the integrity check without relying on an email attachment name or a platform status label.",
+        ],
+      },
+      {
+        heading: "What the signature cannot establish",
+        paragraphs: [
+          "A signature does not prove that the underlying source data was complete, that the provider was appointed for the relevant purpose, or that the result satisfies the receiving institution's policy. It does not make the provider the trustee, recordkeeper, counsel or decision-maker.",
+        ],
+        bullets: [
+          "Provider identity and appointment remain separate questions",
+          "Scope, as-of date, expiry and qualifications remain visible",
+          "Internal consistency is checked again by the receiving system",
+          "The accountable institution records its own review and decision",
+        ],
+      },
+      {
+        heading: "The practical control",
+        paragraphs: [
+          "AssureRail treats accepted provider material as evidence requiring review. An adverse, stale, incomplete or internally inconsistent result remains visible and cannot silently become a green transaction state.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "from-completed-deal-replay-to-a-controlled-shadow",
+    title: "From completed-deal replay to a controlled shadow",
+    description:
+      "How institutions can test transaction infrastructure in stages without surrendering their incumbent process or authority.",
+    publishedAt: "2026-09-07",
+    reviewedAt: "2026-09-07",
+    readingMinutes: 6,
+    sections: [
+      {
+        heading: "Replay answers whether the record is reproducible",
+        paragraphs: [
+          "A completed-deal replay starts with a known historical outcome. The parties agree a minimised evidence scope, reconstruct the expected sequence and identify which facts can be verified, which depend on an accountable external record and which remain unavailable.",
+        ],
+      },
+      {
+        heading: "Shadow answers whether the process adds value in time",
+        paragraphs: [
+          "If replay is useful, a current transaction can be observed beside the incumbent process. The incumbent remains authoritative. The comparison should measure evidence coverage, exception discovery, response time, duplicated work and reconciliation—not manufacture a favourable demonstration result.",
+        ],
+      },
+      {
+        heading: "A live pilot is a separate gate",
+        paragraphs: [
+          "A successful shadow does not itself authorise transaction execution. Any controlled-live step needs an agreed function map, named performers, legal and security acceptance, operating procedures, external-system readiness and a safe-pause plan.",
+        ],
+        bullets: [
+          "Name the transaction, data and decision owners",
+          "Keep money, title and authoritative records with approved parties",
+          "Define the evidence that closes each leg",
+          "Record open gates instead of replacing them with synthetic evidence",
         ],
       },
     ],

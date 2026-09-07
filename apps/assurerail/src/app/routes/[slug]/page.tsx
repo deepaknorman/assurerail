@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JsonLd, PublicPage, ReplayAction, StatusStamp, publicStyles as styles } from "@/components/PublicSite";
 import { PUBLIC_ROUTE_PAGES, findRoutePage } from "@/lib/public-content";
+import { ASSURERAIL_ORGANIZATION_ID, publicBreadcrumbs } from "@/lib/public-structured-data";
 
 export function generateStaticParams() {
   return PUBLIC_ROUTE_PAGES.map(({ slug }) => ({ slug }));
@@ -30,13 +31,19 @@ export default async function RoutePage({ params }: { params: Promise<{ slug: st
     >
       <JsonLd value={{
         "@context": "https://schema.org",
-        "@type": "Service",
-        name: `AssureRail ${page.shortLabel} transaction infrastructure`,
-        description: page.summary,
-        url: canonical,
-        areaServed: { "@type": "Country", name: "India" },
-        audience: { "@type": "BusinessAudience", audienceType: "Institutional counterparties" },
-        provider: { "@type": "Organization", name: "AssureRail", url: "https://assurerail.com" },
+        "@graph": [{
+          "@type": "Service",
+          "@id": `${canonical}/#service`,
+          name: `AssureRail ${page.shortLabel} transaction infrastructure`,
+          description: page.summary,
+          url: canonical,
+          areaServed: { "@type": "Country", name: "India" },
+          audience: { "@type": "BusinessAudience", audienceType: "Institutional counterparties" },
+          provider: { "@id": ASSURERAIL_ORGANIZATION_ID },
+        }, publicBreadcrumbs([
+          { name: "Home", path: "/" },
+          { name: page.shortLabel, path: `/routes/${page.slug}` },
+        ])],
       }} />
       <section className={styles.section}>
         <div className={styles.container}>

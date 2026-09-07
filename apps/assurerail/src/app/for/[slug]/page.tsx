@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JsonLd, PublicPage, ReplayAction, StatusStamp, publicStyles as styles } from "@/components/PublicSite";
 import { PERSONA_PAGES, findPersonaPage } from "@/lib/public-content";
+import { ASSURERAIL_WEBSITE_ID, publicBreadcrumbs } from "@/lib/public-structured-data";
 
 export function generateStaticParams() {
   return PERSONA_PAGES.map(({ slug }) => ({ slug }));
@@ -20,12 +21,17 @@ export default async function PersonaPage({ params }: { params: Promise<{ slug: 
     <PublicPage eyebrow={page.label} title={page.title} lead={page.lead} actions={<><ReplayAction /><StatusStamp /></>}>
       <JsonLd value={{
         "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: `${page.label} | AssureRail`,
-        description: page.lead,
-        url: `https://assurerail.com/for/${page.slug}`,
-        audience: { "@type": "BusinessAudience", audienceType: page.label },
-        isPartOf: { "@type": "WebSite", name: "AssureRail", url: "https://assurerail.com" },
+        "@graph": [{
+          "@type": "WebPage",
+          name: `${page.label} | AssureRail`,
+          description: page.lead,
+          url: `https://assurerail.com/for/${page.slug}`,
+          audience: { "@type": "BusinessAudience", audienceType: page.label },
+          isPartOf: { "@id": ASSURERAIL_WEBSITE_ID },
+        }, publicBreadcrumbs([
+          { name: "Home", path: "/" },
+          { name: page.label, path: `/for/${page.slug}` },
+        ])],
       }} />
       <section className={styles.section}>
         <div className={styles.container}>

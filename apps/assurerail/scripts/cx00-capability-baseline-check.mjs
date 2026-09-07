@@ -62,6 +62,7 @@ for (const id of [
   "primary-secondary",
   "tokenised-representations",
   "enterprise-integration",
+  "provider-evidence",
   "controlled-live-production",
 ]) {
   assert.ok(diligenceSource.includes(`id: "${id}"`), `missing protected diligence capability: ${id}`);
@@ -77,5 +78,5 @@ assert.ok(!capabilitySource.includes("settlement risk eliminated"));
 assert.ok(!capabilitySource.includes("e₹"));
 
 console.log(
-  `CX-00 capability baseline: ${expectedRoutes.length} customer routes, ${expectedWebFlags.length} fail-closed web flags and 7 protected diligence capability entries verified.`
+  `CX-00 capability baseline: ${expectedRoutes.length} customer routes, ${expectedWebFlags.length} fail-closed web flags and 8 protected diligence capability entries verified.`
 );

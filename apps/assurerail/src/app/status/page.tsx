@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JsonLd, PublicPage, ReplayAction, publicStyles as styles } from "@/components/PublicSite";
 import { PUBLIC_CAPABILITIES, PUBLIC_CAPABILITY_REVIEWED_AT } from "@/lib/public-capability";
+import { ASSURERAIL_WEBSITE_ID } from "@/lib/public-structured-data";
 
 export const metadata: Metadata = {
   title: "Current availability",
@@ -23,6 +24,7 @@ export default function StatusPage() {
         description: "Current public availability of AssureRail institutional evaluation and services.",
         dateModified: PUBLIC_CAPABILITY_REVIEWED_AT,
         url: "https://assurerail.com/status",
+        isPartOf: { "@id": ASSURERAIL_WEBSITE_ID },
       }} />
       <section className={styles.section}>
         <div className={styles.container}>

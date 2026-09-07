@@ -1,8 +1,8 @@
 import "server-only";
 
-export const DILIGENCE_CONTENT_VERSION = "2026.09.04.1";
-export const DILIGENCE_REVIEWED_AT = "2026-09-04";
-export const DILIGENCE_NEXT_REVIEW_AT = "2026-09-17";
+export const DILIGENCE_CONTENT_VERSION = "2026.09.07.1";
+export const DILIGENCE_REVIEWED_AT = "2026-09-07";
+export const DILIGENCE_NEXT_REVIEW_AT = "2026-09-21";
 export const DILIGENCE_CONTENT_OWNER = "Founder / authorised investor-relations publisher";
 
 export const DILIGENCE_CAPABILITIES = [
@@ -12,6 +12,7 @@ export const DILIGENCE_CAPABILITIES = [
   { id: "primary-secondary", label: "Primary and secondary workflows", state: "SHADOW_GATED", evidenceRef: "PR-13/14/17 · AR-26/27", detail: "Named-audience primary opportunity and conventional secondary DA/PTC journeys without anonymous execution.", open: "Function perimeter, performer, conduct, participant and operating acceptance." },
   { id: "tokenised-representations", label: "Tokenised representations", state: "SHADOW_GATED", evidenceRef: "PR-11/15/16 · AR-28", detail: "DA and PTC representation journeys default to reconciled mirrors of route-defined records.", open: "Legal character, connector finality, custody/key model and network operating evidence." },
   { id: "enterprise-integration", label: "Enterprise integration", state: "SOFTWARE_ONLY", evidenceRef: "PR-19 · AR-29", detail: "Provider-neutral contracts, institution-owned clients, connector profiles, webhooks, replay and exit tooling.", open: "Provider certification, customer UAT and production acceptance." },
+  { id: "provider-evidence", label: "Provider evidence connectors", state: "SHADOW_GATED", evidenceRef: "AR-LENS-01 · PTC preparation Stage 4", detail: "Optional signed monitoring and PTC-preparation evidence can enter the neutral Rail intake path and remains subject to Rail review.", open: "Provider ceremony, customer profile approval, authenticated E2E/DAST, counsel and real-case acceptance." },
   { id: "controlled-live-production", label: "Controlled-live and production", state: "NOT_ACTIVATED", evidenceRef: "PR-12 · AR-30", detail: "Fail-closed activation records, operational gates and a production-scale assessment board are implemented.", open: "No route activates without current legal, security, customer, provider and operating evidence." },
 ] as const;
 
@@ -30,11 +31,11 @@ export const DILIGENCE_DISCLOSURE = [
 ] as const;
 
 export const DILIGENCE_MILESTONES = [
-  { id: "ASSURERAIL_COMPANY_FORMATION", label: "AssureRail company formation and operating-entity decisions", state: "PLANNED_DATE_OPEN", owner: "Founder / legal liaison", lastCheckedAt: "2026-09-04", nextEvidence: "Incorporation evidence and accepted entity/IP/licence/contracting/tenant decisions; no date assumed before mid-October 2026", promotion: "Update contracting and operating-entity statements only after documentary evidence; do not publish the planning date." },
-  { id: "COUNSEL_ROUTE_REVIEW", label: "Counsel route and function review", state: "OPEN", owner: "Founder / legal liaison", lastCheckedAt: "2026-09-04", nextEvidence: "Accepted written route/function advice", promotion: "Update the exact affected route/function only after the written advice is accepted." },
-  { id: "INDEPENDENT_SECURITY_TEST", label: "Independent security test and clean retest", state: "OPEN", owner: "Security lead", lastCheckedAt: "2026-09-04", nextEvidence: "Firm appointment, final report and clean retest", promotion: "Update the security evidence statement; do not infer production readiness." },
-  { id: "DA_HISTORIC_REPLAY", label: "Participant-authorised historic DA replay", state: "OPEN", owner: "DA relationship owner", lastCheckedAt: "2026-09-04", nextEvidence: "Named owner, signed scope and accepted replay dossier", promotion: "Add the reviewed result only with participant permission and qualifications." },
-  { id: "PTC_HISTORIC_REPLAY", label: "Participant/trustee-authorised historic PTC replay", state: "OPEN", owner: "PTC / trustee relationship owner", lastCheckedAt: "2026-09-04", nextEvidence: "Named owners, signed scope and accepted all-leg dossier", promotion: "Add the reviewed result only with trustee/participant permission and qualifications." },
-  { id: "DA_PTC_SHADOW", label: "Current-transaction DA/PTC shadow", state: "OPEN", owner: "Pilot operations lead", lastCheckedAt: "2026-09-04", nextEvidence: "Approved scope, security acceptance and measured divergence report", promotion: "Record measured differences before considering any public case study." },
-  { id: "PARTNER_EXECUTED_PILOT", label: "Partner-executed pilot", state: "OPEN", owner: "Pilot sponsor", lastCheckedAt: "2026-09-04", nextEvidence: "Signed activation, acceptance record and customer-approved outcome", promotion: "Update only the approved functions, cohort, environment and outcome." },
+  { id: "ASSURERAIL_COMPANY_FORMATION", label: "AssureRail company formation and operating-entity decisions", state: "IN_PROGRESS_DATE_OPEN", owner: "Founder / legal liaison", lastCheckedAt: "2026-09-07", nextEvidence: "Incorporation evidence and accepted entity/IP/licence/contracting/tenant decisions; urgency is recorded but no filing or completion date is treated as achieved", promotion: "Update contracting and operating-entity statements only after documentary evidence; do not publish a target date as fact." },
+  { id: "COUNSEL_ROUTE_REVIEW", label: "Counsel route and function review", state: "OPEN", owner: "Founder / legal liaison", lastCheckedAt: "2026-09-07", nextEvidence: "Accepted written route/function advice", promotion: "Update the exact affected route/function only after the written advice is accepted." },
+  { id: "INDEPENDENT_SECURITY_TEST", label: "Independent security test and clean retest", state: "OPEN", owner: "Security lead", lastCheckedAt: "2026-09-07", nextEvidence: "Firm appointment, final report and clean retest", promotion: "Update the security evidence statement; do not infer production readiness." },
+  { id: "DA_HISTORIC_REPLAY", label: "Participant-authorised historic DA replay", state: "OPEN", owner: "DA relationship owner", lastCheckedAt: "2026-09-07", nextEvidence: "Named owner, signed scope and accepted replay dossier", promotion: "Add the reviewed result only with participant permission and qualifications." },
+  { id: "PTC_HISTORIC_REPLAY", label: "Participant/trustee-authorised historic PTC replay", state: "OPEN", owner: "PTC / trustee relationship owner", lastCheckedAt: "2026-09-07", nextEvidence: "Named owners, signed scope and accepted all-leg dossier", promotion: "Add the reviewed result only with trustee/participant permission and qualifications." },
+  { id: "DA_PTC_SHADOW", label: "Current-transaction DA/PTC shadow", state: "OPEN", owner: "Pilot operations lead", lastCheckedAt: "2026-09-07", nextEvidence: "Approved scope, security acceptance and measured divergence report", promotion: "Record measured differences before considering any public case study." },
+  { id: "PARTNER_EXECUTED_PILOT", label: "Partner-executed pilot", state: "OPEN", owner: "Pilot sponsor", lastCheckedAt: "2026-09-07", nextEvidence: "Signed activation, acceptance record and customer-approved outcome", promotion: "Update only the approved functions, cohort, environment and outcome." },
 ] as const;

@@ -17,6 +17,7 @@
     "check:built-public-exposure": "node scripts/built-public-exposure-check.mjs",
     "check:pub-release-browser": "node scripts/pub-release-browser-check.mjs",
     "check:content-freshness": "node scripts/content-freshness-check.mjs",
+    "check:pilot-public": "node ../../scripts/assurerail-pilot-readiness-pack-check.mjs",
     "check:diligence-access": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/diligence-access.test.ts",
     "check:private-ui-access": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/private-ui-access.test.ts",
     "check:demo-access": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/demo-showcase-access.test.ts",

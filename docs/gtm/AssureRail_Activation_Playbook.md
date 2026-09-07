@@ -1,11 +1,13 @@
 # AssureRail activation playbook — replay → shadow → partner-executed pilot
 
-**Status:** current operating/GTM baseline, 4 September 2026
+**Status:** current operating/GTM baseline, 7 September 2026
 
-**Code baseline:** `718e28d0a`
+**Repository baseline:** `5a13235e5` (signed AssurePool PTC-preparation connector and 208-case gate)
 
-**Deployment:** AR-21–AR-30 deployed; 32 Rail migrations applied; API/web health reported green;
-new product flags explicitly off; `ASSURERAIL_OPERATING_MODE=DEMO` unchanged
+**Last reported deployment:** standalone Rail `653b97872`; API/web reported healthy; runtime set to
+`SHADOW`; selected foundation/Lens flags set to their maximum `shadow` posture. The Stage 4
+AssurePool PTC-preparation connector and later simulation evidence are not included in that reported
+deployment and remain deploy-dark work.
 
 **Authority:** deployment is not enablement, customer acceptance, external evidence, controlled-live
 or production activation.
@@ -31,9 +33,9 @@ customer acceptance, legal permission, provider finality, VAPT closure or produc
 
 ### 1.1 Company-formation planning fact
 
-AssureRail company registration is expected to begin shortly, with **no committed completion date
-and no planning assumption earlier than mid-October 2026**. Incorporation is not represented as
-complete and elapsed time cannot close the gate. Public-page preparation, synthetic security work
+AssureRail company registration is now being accelerated, but **no filing or completion date is
+treated as achieved**. Incorporation is not represented as complete and elapsed time cannot close
+the gate. Public-page preparation, synthetic security work
 and authorised historic replay preparation may continue, but contracting entity, novation, IP,
 licence split, Azure tenant/subscription ownership and any owned regulated function remain subject to
 their own founder/counsel/authority decisions. No public page should advertise the target date.
@@ -49,6 +51,7 @@ their own founder/counsel/authority decisions. No public page should advertise t
 | Primary and secondary | Permissioned/named-audience records and guided journeys implemented | Function-specific counsel, conduct and authorised-performer gates open |
 | Tokenised DA/PTC | Separate mirror journeys implemented | Title, custody, connector finality, authoritative-record and live acceptance open |
 | Enterprise integration | Governance and software conformance implemented | Provider security, customer UAT, data, operating and exit evidence open |
+| Signed provider evidence | Optional AssureLens monitoring and AssurePool PTC-preparation intake implemented; every accepted result requires Rail review | Provider key ceremony/profile approval, customer acceptance and real-case evidence open; PTC-preparation connector not yet deployed |
 | Controlled-live/production | Gate and assessment machinery implemented | No exact signed activation; unavailable |
 
 The capability publisher and every customer-facing statement must preserve these distinctions.
@@ -186,12 +189,13 @@ AssureRail application-region design.
 The parked AssurePlane bond-trustee assurance work is outside this activation playbook and has no
 build authority under the first-spine exceptions.
 
-### 10.1 Public/GTM implementation checkpoint — 3 September 2026
+### 10.1 Public/GTM implementation checkpoint — 7 September 2026
 
 The repository now contains the GTM-01 replay/pilot kit, PUB-01 foundation, a disabled-by-default
 INBOUND-01 CRM handoff, PUB-02 route/persona depth and CONTENT-01 resources/structured data. These
-assets are **code-ready, not published by this checkpoint**. They do not change the deployed
-`718e28d0a` capability posture stated in this document.
+assets are **code-ready; publication remains a deliberate founder release decision**. Anonymous
+pages are intentionally minimal; detailed capability/readiness material remains in the protected
+diligence zone. These assets do not change the deployed capability posture stated above.
 
 PUB-02 currently publishes operating boundaries and replay inputs, not customer outcomes. No real
 replay/shadow result exists to populate a case study. INBOUND-01 accepts fixed business-contact and
@@ -213,6 +217,12 @@ until privacy, CRM receiver, WAF, egress and operating evidence is approved.
 7. Begin minimised DA/PTC shadow only after security acceptance.
 8. Prepare the partner-executed pilot only after counsel, provider, operations and PR-12 gates are
    current.
+
+For short-notice mobilisation use
+`docs/gtm/AssureRail_Pilot_In_A_Day_Readiness_Pack.md`, the governed pricing workbook and the draft
+replay/shadow agreement. “In a day” can mean a synthetic private demonstration or a replay
+discovery/data-scope workshop; it cannot waive a contracting, data, security, counsel, provider or
+activation gate.
 
 At every step, unavailable evidence stays open. A synthetic fixture, healthy endpoint, deployed
 flagged-off module, internal dashboard or commercial deadline cannot stand in for it.

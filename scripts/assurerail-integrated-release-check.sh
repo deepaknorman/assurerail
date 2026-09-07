@@ -23,6 +23,7 @@ cd "$REPO_ROOT"
 run "shell syntax" bash -c 'for file in scripts/assurerail-*.sh; do bash -n "$file"; done'
 run "scoped diff hygiene" git diff --check -- apps/assurerail-api apps/assurerail scripts/check-assurerail-invariants.mjs scripts/assurerail-integrated-release-check.sh 'scripts/assurerail-*.sh' docker-compose.assurerail.yml
 run "static architecture and safety invariants" node scripts/check-assurerail-invariants.mjs
+run "pilot/public readiness artifacts" node scripts/assurerail-pilot-readiness-pack-check.mjs
 run "API compile and complete test corpus" npm test --workspace=@assurerail/api
 
 for check in pr18 ar21 ar22 ar23 ar24 ar25 ar26 ar27 ar28 ar29 ar30; do

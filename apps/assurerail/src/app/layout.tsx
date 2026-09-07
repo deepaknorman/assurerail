@@ -10,6 +10,10 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/ibm-plex-mono/600.css";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
+import {
+  ASSURERAIL_ORGANIZATION_JSON_LD,
+  ASSURERAIL_WEBSITE_JSON_LD,
+} from "@/lib/public-structured-data";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://assurerail.com"),
@@ -19,6 +23,13 @@ export const metadata: Metadata = {
   },
   description:
     "Provider-neutral transaction infrastructure for direct assignment and PTC securitisation, designed to work beside existing lender, trustee, recordkeeper and payment systems.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png", sizes: "64x64" },
+    ],
+    shortcut: "/favicon.png",
+  },
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -39,12 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('arail-theme');if(t&&t!=='system')document.documentElement.setAttribute('data-theme',t);}catch(e){}" }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "AssureRail",
-          url: "https://assurerail.com",
-          logo: "https://assurerail.com/logo.svg",
-          description: "Provider-neutral institutional transaction infrastructure for direct assignment and PTC transactions.",
-          areaServed: { "@type": "Country", name: "India" },
+          "@graph": [ASSURERAIL_ORGANIZATION_JSON_LD, ASSURERAIL_WEBSITE_JSON_LD],
         }).replace(/</g, "\\u003c") }} />
       </head>
       <body>

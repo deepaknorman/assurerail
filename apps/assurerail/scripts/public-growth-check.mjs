@@ -17,12 +17,14 @@ const required = [
   "src/app/sitemap.ts",
   "src/app/robots.ts",
   "src/lib/public-content.ts",
+  "src/lib/public-structured-data.ts",
+  "public/favicon.png",
 ];
 
 for (const path of required) if (!existsSync(resolve(root, path))) failures.push(`missing ${path}`);
 
 const content = readFileSync(resolve(root, "src/lib/public-content.ts"), "utf8");
-for (const token of ["direct-assignment", "ptc", "originators", "transferees-investors", "trustees", "completed-deal-replay-before-platform-replacement", "authoritative-records-reconciliation-and-digital-representations"]) {
+for (const token of ["direct-assignment", "ptc", "originators", "transferees-investors", "trustees", "completed-deal-replay-before-platform-replacement", "authoritative-records-reconciliation-and-digital-representations", "signed-evidence-packages-still-require-institutional-review", "from-completed-deal-replay-to-a-controlled-shadow"]) {
   if (!content.includes(token)) failures.push(`public content is missing ${token}`);
 }
 
@@ -45,6 +47,9 @@ const allPublic = [
 ].join("\n");
 for (const claim of ["VAPT complete", "production-ready", "atomic settlement", "token transfer equals title", "RBI approved", "SEBI approved", "guaranteed return"]) {
   if (allPublic.toLowerCase().includes(claim.toLowerCase())) failures.push(`unsafe public claim present: ${claim}`);
+}
+for (const confidentialRate of ["0.30%", "0.50%", "30 bps", "50 bps"]) {
+  if (allPublic.includes(confidentialRate)) failures.push(`confidential planning rate present on public surface: ${confidentialRate}`);
 }
 if (!allPublic.includes("Live transaction services are not currently offered")) failures.push("current public availability boundary is absent");
 

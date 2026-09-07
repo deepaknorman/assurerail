@@ -3,7 +3,7 @@ import { PERSONA_PAGES, PUBLIC_ROUTE_PAGES, RESOURCE_ARTICLES } from "@/lib/publ
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://assurerail.com";
-  const reviewedAt = new Date("2026-09-03T00:00:00+05:30");
+  const reviewedAt = new Date("2026-09-07T00:00:00+05:30");
   return [
     { url: base, lastModified: reviewedAt, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/status`, lastModified: reviewedAt, changeFrequency: "weekly", priority: 0.9 },
