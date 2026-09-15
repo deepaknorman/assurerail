@@ -35,8 +35,56 @@ export class EngagementBillingService {
     enabled();
     await this.access.requireHuman({ userId: actor.actorUserId, institutionId: actor.actingInstitutionId, action: "VIEW_CUSTOMER_OPERATIONS" });
     const invoice = await this.invoice(this.db, actor.actingInstitutionId, invoiceId);
-    const receipts = await this.db.customerPaymentReceipt.findMany({ where: { invoiceStatementId: invoice.id, status: "VERIFIED_SHADOW" }, select: { amountMinor: true } });
-    return { invoiceId, operatingMode: "SHADOW", liveStageUnlock: false, ...invoicePaymentPosition(invoice.netFeeMinor, receipts.map(r => r.amountMinor)) };
+    const receipts = await this.netReceipts(this.db, invoice.id);
+    const checkout=await this.db.engagementCheckout.findUnique({where:{invoiceId:invoice.id}});
+    const captured=checkout?.status==="PAID_TEST"&&checkout.mode==="TEST"&&checkout.checkedAt&&checkout.checkedAt.getTime()>Date.now()-5*60000?checkout.verifiedPaidMinor:"0";
+    const position=invoicePaymentPosition(invoice.netFeeMinor,[...receipts,...(captured!=="0"?[captured]:[])]);
+    const pending=await this.db.customerPaymentAdjustment.count({where:{receipt:{invoiceStatementId:invoice.id},status:"PROPOSED"}});
+    return { invoiceId, operatingMode: "SHADOW", liveStageUnlock: false, ...position, bankReceiptsMinor:receipts.reduce((sum,v)=>sum+BigInt(v),0n).toString(),gatewayCapturedMinor:captured,checkoutStatus:checkout?.status??null,fullyReconciled:position.fullyReconciled&&!pending&&checkout?.status!=="HOLD",reconciliationRequired:position.reconciliationRequired||Boolean(pending)||checkout?.status==="HOLD" };
+  }
+
+  private async netReceipts(tx: Tx, invoiceId: string) {
+    const receipts = await tx.customerPaymentReceipt.findMany({ where: { invoiceStatementId: invoiceId, status: "VERIFIED_SHADOW" }, include: { adjustments: true } });
+    return receipts.map(r => (BigInt(r.amountMinor) - (r.adjustments ?? []).filter(a => a.status === "APPROVED").reduce((sum,a) => sum + BigInt(a.amountMinor), 0n)).toString()).filter(v => v !== "0");
+  }
+
+  async proposeAdjustment(actor: InternalOpsActor, institutionId: string, receiptId: string, body: { requestRef?: unknown; kind?: unknown; amountMinor?: unknown; evidenceRef?: unknown; evidenceDigest?: unknown; reason?: unknown; stepUpEvidenceId?: unknown }) {
+    enabled(); await this.staff.require({ userId: actor.actorUserId, permission: "COMMERCIAL_INVOICE_PREPARE", scopeType: "GLOBAL", scopeRef: null });
+    if (body.kind !== "REFUND" && body.kind !== "REVERSAL") throw new BadRequestException("REFUND or REVERSAL required; this records evidence of a completed movement, it does not send money");
+    const kind = body.kind, evidenceRef = ref(body.evidenceRef,"evidenceRef"), evidenceDigest = ref(body.evidenceDigest,"evidenceDigest",80), reason = ref(body.reason,"reason",1000), requestRef = ref(body.requestRef,"requestRef");
+    let amountMinor: string; try { amountMinor = exactMinor(body.amountMinor,"amountMinor",false); } catch(e) { throw new BadRequestException((e as Error).message); }
+    return this.transaction(async tx => {
+      const r = await tx.customerPaymentReceipt.findUnique({ where: { id: receiptId } });
+      if (!r) throw new NotFoundException("receipt not found");
+      await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "CustomerInvoiceStatement" WHERE "id" = ${r.invoiceStatementId} FOR UPDATE`);
+      await this.invoice(tx,institutionId,r.invoiceStatementId);
+      if (r.status !== "VERIFIED_SHADOW" || BigInt(amountMinor) > BigInt(r.amountMinor)) throw new ConflictException("verified receipt and bounded adjustment required");
+      await this.evidence(tx,institutionId,evidenceRef,evidenceDigest);
+      const step = ref(body.stepUpEvidenceId,"stepUpEvidenceId");
+      await this.stepUp.consume({ evidenceId: step,userId: actor.actorUserId,sessionId: actor.actorSessionId,institutionId: null,purpose: "INTERNAL_PAYMENT_RECEIPT_PROPOSE" },tx);
+      return tx.customerPaymentAdjustment.create({ data: { id: `padj_${randomUUID()}`, receiptId, requestRef, kind, amountMinor, evidenceRef, evidenceDigest, reason, proposedByUserId: actor.actorUserId, proposalStepUpId: step } });
+    });
+  }
+
+  async reviewAdjustment(actor: InternalOpsActor, institutionId: string, adjustmentId: string, body: { decision?: unknown; stepUpEvidenceId?: unknown }) {
+    enabled(); await this.staff.require({ userId: actor.actorUserId, permission: "COMMERCIAL_INVOICE_REVIEW", scopeType: "GLOBAL", scopeRef: null });
+    if (body.decision !== "APPROVE" && body.decision !== "REJECT") throw new BadRequestException("APPROVE or REJECT required");
+    return this.transaction(async tx => {
+      const a = await tx.customerPaymentAdjustment.findUnique({ where: { id: adjustmentId }, include: { receipt: true } });
+      if (!a) throw new NotFoundException("adjustment not found");
+      await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "CustomerInvoiceStatement" WHERE "id" = ${a.receipt.invoiceStatementId} FOR UPDATE`);
+      await this.invoice(tx,institutionId,a.receipt.invoiceStatementId);
+      if (a.status !== "PROPOSED") throw new ConflictException("adjustment already decided");
+      if (a.proposedByUserId === actor.actorUserId) throw new ForbiddenException("independent adjustment reviewer required");
+      if (body.decision === "APPROVE") {
+        await this.evidence(tx,institutionId,a.evidenceRef,a.evidenceDigest);
+        const prior = await tx.customerPaymentAdjustment.findMany({ where: { receiptId: a.receiptId, status: "APPROVED" } });
+        if (prior.reduce((sum,x) => sum + BigInt(x.amountMinor),BigInt(a.amountMinor)) > BigInt(a.receipt.amountMinor)) throw new ConflictException("adjustments exceed original receipt");
+      }
+      const step = ref(body.stepUpEvidenceId,"stepUpEvidenceId");
+      await this.stepUp.consume({ evidenceId: step,userId: actor.actorUserId,sessionId: actor.actorSessionId,institutionId: null,purpose: "INTERNAL_PAYMENT_RECEIPT_REVIEW" },tx);
+      return tx.customerPaymentAdjustment.update({ where: { id: adjustmentId }, data: { status: body.decision === "APPROVE" ? "APPROVED" : "REJECTED", reviewedByUserId: actor.actorUserId, reviewStepUpId: step, reviewedAt: new Date() } });
+    });
   }
 
   private async invoice(tx: Tx, institutionId: string, invoiceId: string) {
@@ -95,8 +143,8 @@ export class EngagementBillingService {
       if (receipt.status !== "PROPOSED") throw new ConflictException("receipt is already decided");
       if (body.decision === "APPROVE") {
         await this.evidence(tx, institutionId, receipt.evidenceRef, receipt.evidenceDigest);
-        const verified = await tx.customerPaymentReceipt.findMany({ where: { invoiceStatementId: invoice.id, status: "VERIFIED_SHADOW" }, select: { amountMinor: true } });
-        try { validateReceiptReview({ proposer: receipt.proposedByUserId, reviewer: actor.actorUserId, status: receipt.status, netFeeMinor: invoice.netFeeMinor, verifiedAmounts: verified.map(x => x.amountMinor), proposedAmountMinor: receipt.amountMinor }); }
+        const verified = await this.netReceipts(tx, invoice.id);
+        try { validateReceiptReview({ proposer: receipt.proposedByUserId, reviewer: actor.actorUserId, status: receipt.status, netFeeMinor: invoice.netFeeMinor, verifiedAmounts: verified, proposedAmountMinor: receipt.amountMinor }); }
         catch (e) { throw new ConflictException((e as Error).message); }
       }
       const stepUpId = ref(body.stepUpEvidenceId, "stepUpEvidenceId");

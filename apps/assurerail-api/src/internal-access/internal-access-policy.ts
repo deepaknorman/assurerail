@@ -86,6 +86,7 @@ export type InternalPermission = (typeof INTERNAL_PERMISSIONS)[number];
 
 export const INTERNAL_SCOPE_TYPES = [
   "GLOBAL",
+  "INSTITUTION",
   "OPERATING_UNIT",
   "ENVIRONMENT",
   "CASE",

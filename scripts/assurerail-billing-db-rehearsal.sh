@@ -91,3 +91,6 @@ echo "[BILLING-DB] PASS contract=1 fee-rules=2 invoice=1 service-request=1 exit=
 receipt_rows="$(psql_db "$RESTORE_DB" -Atc 'SELECT count(*) FROM "CustomerPaymentReceipt" WHERE status='"'"'VERIFIED_SHADOW'"'"';')"
 [[ "$receipt_rows" == "1" ]] || { echo "receipt restore mismatch" >&2; exit 1; }
 echo "[BILLING-DB] PASS receipt uniqueness, independent review, complete evidence metadata, positive amounts, restore"
+
+echo "[ENGAGEMENT-DB] durable engagement and Razorpay adapter rehearsal"
+(cd "$RAIL_DIR"; DATABASE_URL="$(db_url "$FRESH_DB")" ASSURERAIL_DISPOSABLE_ENGAGEMENT_REHEARSAL=true node dist/customer-operations/assessment-engagement.db-rehearsal.js)

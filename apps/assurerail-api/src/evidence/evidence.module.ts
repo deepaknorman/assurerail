@@ -16,6 +16,6 @@ import { EvidenceObjectStore, S3EvidenceObjectStore } from "./object-store.servi
     { provide: MalwareScanner, useClass: ClamAvMalwareScanner },
     { provide: EvidenceObjectStore, useClass: S3EvidenceObjectStore },
   ],
-  exports: [EvidenceIntakeService],
+  exports: [EvidenceIntakeService, EvidenceObjectStore],
 })
 export class EvidenceModule {}

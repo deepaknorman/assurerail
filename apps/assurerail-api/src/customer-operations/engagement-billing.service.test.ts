@@ -27,7 +27,7 @@ test("invoice position is scoped, and approved receipts never unlock live stages
   const oldMode=process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE,oldOps=process.env.ARAIL_CUSTOMER_OPERATIONS_V1;
   try {
     process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE="shadow";process.env.ARAIL_CUSTOMER_OPERATIONS_V1="shadow";
-    const db={customerInvoiceStatement:{findUnique:async()=>({id:"i",customerContract:{institutionId:"a"},status:"ISSUED_SHADOW",currency:"INR",currencyScale:2,netFeeMinor:"100"})},customerPaymentReceipt:{findMany:async()=>[{amountMinor:"100"}]}};
+    const db={customerInvoiceStatement:{findUnique:async()=>({id:"i",customerContract:{institutionId:"a"},status:"ISSUED_SHADOW",currency:"INR",currencyScale:2,netFeeMinor:"100"})},customerPaymentReceipt:{findMany:async()=>[{amountMinor:"100"}]},engagementCheckout:{findUnique:async()=>null},customerPaymentAdjustment:{count:async()=>0}};
     const service=new EngagementBillingService(db as never,{requireHuman:async()=>({})} as never,{} as never,{} as never);
     const actor={actorUserId:"u",actorSessionId:"s",actingInstitutionId:"a"};
     const r=await service.paymentPosition(actor,"i");assert.equal(r.fullyReconciled,true);assert.equal(r.liveStageUnlock,false);

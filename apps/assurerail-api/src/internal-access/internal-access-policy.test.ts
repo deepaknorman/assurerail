@@ -284,3 +284,10 @@ test("[AR30][RBAC] production-scale assessment, review and activation authority 
     false
   );
 });
+
+test("assessment staff institution scope cannot read or review another seller", () => {
+  const request = { ...activeSysadmin, role: "CASE_OPERATOR", scopeType: "INSTITUTION", scopeRef: "seller-a", permission: "CASE_TASK_PREPARE" as const, requestedScopeType: "INSTITUTION" as const, requestedScopeRef: "seller-a" };
+  assert.equal(evaluateInternalAssignment(request).allowed,true);
+  assert.equal(evaluateInternalAssignment({...request,requestedScopeRef:"seller-b"}).allowed,false);
+  assert.equal(evaluateInternalAssignment({...request,requestedScopeType:"GLOBAL",requestedScopeRef:null}).allowed,false);
+});

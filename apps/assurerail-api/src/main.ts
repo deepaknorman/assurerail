@@ -19,7 +19,7 @@ async function bootstrap() {
   if (!usingDb && process.env.REQUIRE_DB === "true") {
     throw new Error("DATABASE_URL is required (REQUIRE_DB=true) — refusing to start on the ephemeral in-memory store");
   }
-  const app = await NestFactory.create(AppModule, { logger: ["error", "warn", "log"] });
+  const app = await NestFactory.create(AppModule, { logger: ["error", "warn", "log"], rawBody: true });
 
   // Behind Caddy — one proxy hop, so per-IP throttling can't be spoofed via X-Forwarded-For.
   const httpAdapter = app.getHttpAdapter().getInstance() as { set?: (k: string, v: unknown) => void };

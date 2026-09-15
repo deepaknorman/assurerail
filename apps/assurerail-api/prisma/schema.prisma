@@ -1024,6 +1024,7 @@ model IntegrationExitExport {
 // ───────────────── customer operations and commercial administration (PR-20, shadow) ──────────
 
 model CustomerContract {
+  engagements                AssessmentEngagement[]
   buyerWorkspaces            BuyerWorkspace[]
   id                         String      @id
   institutionId              String
@@ -1123,6 +1124,7 @@ model CustomerContractChange {
 }
 
 model CustomerRateCard {
+  engagements        AssessmentEngagement[]
   id                 String           @id
   customerContractId String
   customerContract   CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
@@ -1191,6 +1193,8 @@ model CustomerUsageEvent {
 }
 
 model CustomerInvoiceStatement {
+  checkout           EngagementCheckout?
+  engagementStage    AssessmentEngagementStage?
   id                 String           @id
   customerContractId String
   customerContract   CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
@@ -1221,7 +1225,43 @@ model CustomerInvoiceStatement {
   @@index([customerContractId, periodStart, periodEnd], map: "CustomerInvoiceStatement_contract_period_idx")
 }
 
+model EngagementCheckout {
+  id                 String @id
+  invoiceId          String @unique
+  invoice            CustomerInvoiceStatement @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  provider           String @default("RAZORPAY")
+  mode               String @default("TEST")
+  merchantAccountRef String
+  reference          String @unique
+  amountMinor        String
+  status             String @default("CREATING")
+  providerLinkId     String? @unique
+  checkoutUrl        String?
+  providerPaymentId  String? @unique
+  verifiedPaidMinor  String @default("0")
+  reconciliationDigest String?
+  checkedAt          DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+}
+
+model PaymentWebhookInbox {
+  id                 String @id
+  provider           String
+  merchantAccountRef String
+  eventId            String
+  payloadDigest      String
+  eventType          String
+  providerLinkId     String?
+  providerPaymentId  String?
+  status             String @default("RECEIVED")
+  createdAt          DateTime @default(now())
+  @@unique([provider, merchantAccountRef, eventId])
+  @@index([status, createdAt])
+}
+
 model CustomerPaymentReceipt {
+  adjustments       CustomerPaymentAdjustment[]
   id                 String @id
   invoiceStatementId String
   invoiceStatement   CustomerInvoiceStatement @relation(fields: [invoiceStatementId], references: [id], onDelete: Restrict)
@@ -1243,6 +1283,92 @@ model CustomerPaymentReceipt {
 
   @@unique([collectionAccountRef, bankTransferRef])
   @@index([invoiceStatementId, status])
+}
+
+model AssessmentEngagement {
+  id                 String @id
+  customerContractId String
+  customerContract   CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
+  requestRef         String
+  requestDigest      String
+  billingProfile     Json
+  scope              Json
+  quote              Json
+  quoteDigest        String
+  termsDigest        String
+  rateCardId         String
+  rateCard           CustomerRateCard @relation(fields: [rateCardId], references: [id], onDelete: Restrict, map: "Engagement_ratecard_fk")
+  status             String @default("OFFERED")
+  route              String?
+  acceptedByUserId   String?
+  acceptanceStepUpId String?
+  acceptedAt         DateTime?
+  preparationAcceptedBy String?
+  preparationStepUpId String?
+  preparationAcceptedAt DateTime?
+  offerExpiresAt     DateTime
+  createdAt          DateTime @default(now())
+  stages             AssessmentEngagementStage[]
+  processingJobs     AssessmentProcessingJob[]
+  @@unique([customerContractId, requestRef])
+}
+
+model AssessmentEngagementStage {
+  id                 String @id
+  engagementId       String
+  engagement         AssessmentEngagement @relation(fields: [engagementId], references: [id], onDelete: Restrict)
+  stage              String
+  expectedMinor      String
+  invoiceId          String? @unique
+  invoice            CustomerInvoiceStatement? @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  createdAt          DateTime @default(now())
+  @@unique([engagementId, stage])
+}
+
+model CustomerPaymentAdjustment {
+  id                 String @id
+  receiptId          String
+  receipt            CustomerPaymentReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  requestRef         String @unique
+  kind               String
+  amountMinor        String
+  evidenceRef        String
+  evidenceDigest     String
+  reason             String
+  status             String @default("PROPOSED")
+  proposedByUserId   String
+  proposalStepUpId   String
+  reviewedByUserId   String?
+  reviewStepUpId     String?
+  reviewedAt         DateTime?
+  createdAt          DateTime @default(now())
+  @@index([receiptId, status])
+}
+
+model AssessmentProcessingJob {
+  id                 String @id
+  engagementId       String
+  engagement         AssessmentEngagement @relation(fields: [engagementId], references: [id], onDelete: Restrict)
+  requestRef         String
+  requestDigest      String
+  stage              String
+  evidenceVersionIds Json
+  sourceManifest     Json
+  status             String @default("QUEUED")
+  result             Json?
+  resultDigest       String?
+  errorCode          String?
+  requestedByUserId  String
+  reviewedByUserId   String?
+  reviewEvidenceRef  String?
+  reviewSnapshot     Json?
+  reviewStepUpId     String?
+  reviewedAt         DateTime?
+  startedAt          DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime @default(now())
+  @@unique([engagementId, requestRef])
+  @@index([status, createdAt])
 }
 
 model CustomerInvoiceLine {

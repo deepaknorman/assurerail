@@ -6,6 +6,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { vpost } from "@/lib/venue";
 import "./assessment.css";
+import {EngagementJourney} from "./EngagementJourney";
 
 type Quote = { quoteDigest:string; initialAssessmentMinor:string; committedFixedMinor:string; standaloneFixedMinor:string; committedPreparationBalanceMinor:string; standalonePreparationBalanceMinor:string; standalonePremiumMinor:string; standardFileConnectionMinor:string; uniqueLoanCount:number };
 const money = (minor:string) => new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(Number(BigInt(minor))/100);
@@ -31,7 +32,7 @@ export default function AssessmentCommercialPage() {
   return <><VenueHeader/><main className="assessment-plan">
     <p className="assessment-eyebrow">Your portfolio journey</p><h1>Know the scope. See the cost.</h1>
     <p>Start with an Initial Assessment. Use the findings to decide how to prepare your portfolio and whether to execute with AssureRail.</p>
-    <p className="assessment-notice" role="status">Pricing preview. An accepted quote and reconciled payment are required before paid work starts. Checkout is not enabled in this release.</p>
+    <p className="assessment-notice" role="status">Plan your fees below, then save and accept a scoped engagement. Paid stages require an independently issued invoice and verified payment. This release uses Razorpay test checkout.</p>
     <section><h2>1. Size your assessment</h2><label htmlFor="loan-count">Unique loan accounts <abbr title="Count each loan account once. Correcting documents or rerunning the same agreed portfolio does not increase the count." tabIndex={0}>ⓘ</abbr></label>
     <div className="assessment-count"><input id="loan-count" type="number" min={1} max={1000000} step={1} value={count} onChange={e=>{requestVersion.current++;setCount(e.target.value);setQuote(null);setBusy(false);}}/><button className="btn btn-primary" disabled={busy||!/^\d+$/.test(count)||Number(count)<1||Number(count)>1000000} onClick={()=>void calculate()}>{busy?"Calculating…":"Calculate stage fees"}</button></div>
     {error&&<p role="alert">{error}</p>}</section>
@@ -54,5 +55,6 @@ export default function AssessmentCommercialPage() {
       <label><input type="checkbox" checked={api} onChange={e=>setApi(e.target.checked)}/> Request an API integration quote <abbr title="APIs are scoped and priced on request. They are not a prerequisite for standard file onboarding." tabIndex={0}>ⓘ</abbr></label>
     </fieldset><p>Standard exports remain within core scope. Ongoing technical support, monitoring and third-party expenses require separate accepted scope.</p></section>
     <section><h2>Execution fee explained</h2><p>The marginal schedule is 50 bps on the first ₹10 crore, 40 bps on the next ₹40 crore, 35 bps from ₹50–100 crore and 30 bps above ₹100 crore. <abbr title="One basis point (bps) is 0.01%. Each rate applies only to its slice of consideration, cumulatively across agreed programme closings." tabIndex={0}>What are bps?</abbr></p><p>The ₹5 lakh success-fee minimum remains a proposal requiring explicit acceptance. No close means no success fee. No sale, price or buyer approval is guaranteed.</p><Link className="btn" href="/workspace/operations">View contracts and billing operations</Link></section>
+    <EngagementJourney key={activeInstitutionId} institutionId={activeInstitutionId} count={Number(count)} optionalServices={[...(connection?["SECURE_FILE"]:[]),...(api?["API_QUOTE"]:[])]}/>
   </main></>;
 }
