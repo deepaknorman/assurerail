@@ -36,7 +36,7 @@ export default function AssessmentCommercialPage() {
     <section><h2>1. Size your assessment</h2><label htmlFor="loan-count">Unique loan accounts <abbr title="Count each loan account once. Correcting documents or rerunning the same agreed portfolio does not increase the count." tabIndex={0}>ⓘ</abbr></label>
     <div className="assessment-count"><input id="loan-count" type="number" min={1} max={1000000} step={1} value={count} onChange={e=>{requestVersion.current++;setCount(e.target.value);setQuote(null);setBusy(false);}}/><button className="btn btn-primary" disabled={busy||!/^\d+$/.test(count)||Number(count)<1||Number(count)>1000000} onClick={()=>void calculate()}>{busy?"Calculating…":"Calculate stage fees"}</button></div>
     {error&&<p role="alert">{error}</p>}</section>
-    <section><h2>2. Explore your preparation route</h2><p>You choose after the initial assessment. Both routes include qualified expert review.</p>
+    <section><h2>2. Explore your preparation route</h2><p>You choose after the automated Initial Assessment. Qualified expert review and sign-off begin in Portfolio Preparation.</p>
     <fieldset className="assessment-options"><legend>Preparation route</legend>
       <label><input type="radio" name="route" checked={route==="COMMITTED"} onChange={()=>setRoute("COMMITTED")}/> Execute with AssureRail — ₹500 per loan; ₹5 lakh minimum</label>
       <label><input type="radio" name="route" checked={route==="STANDALONE"} onChange={()=>setRoute("STANDALONE")}/> Standalone preparation — ₹650 per loan; ₹6.5 lakh minimum</label>
@@ -47,7 +47,7 @@ export default function AssessmentCommercialPage() {
       <tr><th scope="row">Combined fixed stages</th><td>{money(route==="COMMITTED"?quote.committedFixedMinor:quote.standaloneFixedMinor)}</td><td>Initial payment counted once</td></tr>
       <tr><th scope="row">Execution</th><td>Separate success fee</td><td>On actual purchase consideration successfully settled</td></tr>
     </tbody></table>}
-    <p>Initial report plus up to three reviewed reassessments within 30 days for the same agreed book. Added loans or changed scope require review.</p>
+    <p>The unsigned Initial Assessment includes one automated report and up to three automated same-book reassessments within 30 days. Added loans or changed scope require a new quote.</p>
     {route==="STANDALONE"?<p>If you later execute with us, the paid 30% premium{quote?` (${money(quote.standalonePremiumMinor)})`:""} can reduce the execution fee. The credit is capped at eligible fees earned; it is not a cash refund.</p>:<p>The accepted same-scope premium may become payable if you voluntarily move execution elsewhere or withdraw the mandate. A failed deal alone does not trigger a top-up.</p>}
     </section>
     <section><h2>3. Select any additional help</h2><p>Optional requests only. No service is purchased by selecting it here.</p><fieldset className="assessment-options"><legend>Buyer system onboarding</legend>

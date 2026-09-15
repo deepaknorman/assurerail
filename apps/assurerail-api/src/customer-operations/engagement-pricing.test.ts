@@ -3,14 +3,16 @@ import assert from "node:assert/strict";
 import { engagementQuote, cumulativeExecutionFee, executionAccrual, withdrawalTopUp } from "./engagement-pricing";
 import { allocateContractorDays } from "./contractor-days";
 import { invoicePaymentPosition, validateReceiptReview } from "./payment-reconciliation";
-test("count routes conserve payments, 30% premium and no rerun count inflation", () => {
+test("count routes conserve the common 30%-of-standalone initial payment and no rerun count inflation", () => {
   for (const n of [1,750,1000,1001,3000,1000000]) {
     const q = engagementQuote(n);
     assert.equal(BigInt(q.initialAssessmentMinor) + BigInt(q.committedPreparationBalanceMinor), BigInt(q.committedFixedMinor));
     assert.equal(BigInt(q.initialAssessmentMinor) + BigInt(q.standalonePreparationBalanceMinor), BigInt(q.standaloneFixedMinor));
     assert.equal(BigInt(q.standaloneFixedMinor) * 10n, BigInt(q.committedFixedMinor) * 13n);
   }
-  assert.equal(engagementQuote(3000).initialAssessmentMinor, "30000000");
+  assert.equal(engagementQuote(1).initialAssessmentMinor, "31200000");
+  assert.equal(engagementQuote(3000).initialAssessmentMinor, "58500000");
+  assert.equal(engagementQuote(3000).committedPreparationBalanceMinor, "91500000");
   for (const n of [0,-1,1.1,NaN,Infinity,"750",1000001]) assert.throws(() => engagementQuote(n));
 });
 test("settled consideration fees and four rounds conserve programme fee", () => {
@@ -28,8 +30,8 @@ test("settled consideration fees and four rounds conserve programme fee", () => 
 test("failed close creates no top-up and prior top-up cannot repeat", () => {
   const p = { route:"COMMITTED" as const, mandateAccepted:true,topUpTermAccepted:true,fixedServiceDelivered:true,previousTopUpMinor:"0" };
   assert.equal(withdrawalTopUp(750,{...p,reason:"FAILED_CLOSE"}),"0");
-  assert.equal(withdrawalTopUp(750,{...p,reason:"VOLUNTARY_SWITCH"}),"15000000");
-  assert.equal(withdrawalTopUp(750,{...p,reason:"VOLUNTARY_SWITCH",previousTopUpMinor:"15000000"}),"0");
+  assert.equal(withdrawalTopUp(750,{...p,reason:"VOLUNTARY_SWITCH"}),"24000000");
+  assert.equal(withdrawalTopUp(750,{...p,reason:"VOLUNTARY_SWITCH",previousTopUpMinor:"24000000"}),"0");
   assert.equal(withdrawalTopUp(750,{...p,reason:"VOLUNTARY_WITHDRAWAL",topUpTermAccepted:false}),"0");
 });
 test("full-day liability survives sharing and unallocated time", () => {

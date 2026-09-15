@@ -4,7 +4,7 @@ This increment adds account-scoped pricing previews and invoice-linked bank rece
 
 Enable only in an approved local/staging environment: API `ASSURERAIL_ENGAGEMENT_BILLING_MODE=shadow` and `ARAIL_CUSTOMER_OPERATIONS_V1=shadow`; web `NEXT_PUBLIC_ASSURERAIL_ENGAGEMENT_BILLING_ENABLED=true`. Configure canonical company collection-account references in `ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS`. Never enter credentials as references. No flags are enabled by this change.
 
-Customer flow: approved login → active institution workspace → Plan an assessment → enter unique loan count → calculate quote → compare committed/standalone routes and optional secure-file/API needs. Optional selection is a preview only. Current pricing500/650per-loan, minima5L/6.5L, initial20%; the later8L/10.4L and3Linitial-floor suggestion is not an accepted policy.
+Customer flow: approved login → active institution workspace → Plan an assessment → enter unique loan count → calculate quote → compare committed/standalone routes and optional secure-file/API needs. Optional selection is a preview only. Current pricing is₹500/₹650 per loan, minima₹8L/₹10.4L. Initial Assessment is 30% of the standalone quote, minimum₹3.12L, credited once to either route. It is automated and unsigned; qualified expert review begins with Portfolio Preparation.
 
 Finance flow:
 

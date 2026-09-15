@@ -2,7 +2,7 @@
 import { exactMinor } from "./fee-calculation";
 import { sha256Digest } from "../contracts/v1";
 
-export const ENGAGEMENT_PRICING_VERSION = "DA-2026-09-15-COUNT-30PREMIUM";
+export const ENGAGEMENT_PRICING_VERSION = "DA-2026-09-15-COUNT-30INITIAL-STANDALONE";
 const minor = (x: unknown, name: string) => BigInt(exactMinor(x, name));
 const max = (a: bigint, b: bigint) => a > b ? a : b;
 const min = (a: bigint, b: bigint) => a < b ? a : b;
@@ -11,9 +11,11 @@ export type PreparationRoute = "COMMITTED" | "STANDALONE";
 export function engagementQuote(loanCount: unknown) {
   if (!Number.isSafeInteger(loanCount) || (loanCount as number) < 1 || (loanCount as number) > 1_000_000) throw new Error("unique admitted loan count must be between 1 and 1000000");
   const count = BigInt(loanCount as number);
-  const committed = max(count * 50_000n, 50_000_000n);
-  const standalone = max(count * 65_000n, 65_000_000n);
-  const initial = committed / 5n;
+  const committed = max(count * 50_000n, 80_000_000n);
+  const standalone = max(count * 65_000n, 104_000_000n);
+  // The common Initial Assessment payment is 30% of the standalone quote. It is
+  // credited once against either route, so both route balances still conserve exactly.
+  const initial = (standalone * 30n + 50n) / 100n;
   const quote = {
     policyVersion: ENGAGEMENT_PRICING_VERSION, currency: "INR", currencyScale: 2,
     uniqueLoanCount: Number(count), initialAssessmentMinor: initial.toString(),
@@ -21,7 +23,9 @@ export function engagementQuote(loanCount: unknown) {
     committedPreparationBalanceMinor: (committed - initial).toString(),
     standalonePreparationBalanceMinor: (standalone - initial).toString(),
     standalonePremiumMinor: (standalone - committed).toString(),
-    includedReviewedReassessments: 3, reassessmentWindowDays: 30,
+    initialDeliveryModel: "AUTOMATED_UNSIGNED_NO_CONSULTANT_REVIEW",
+    preparationDeliveryModel: "QUALIFIED_EXPERT_REVIEW_AND_SIGNOFF",
+    includedAutomatedReassessments: 3, reassessmentWindowDays: 30,
     executionBasis: "ACTUAL_PURCHASE_CONSIDERATION_SETTLED",
     executionMinimumProposalMinor: "50000000",
     executionMinimumStatus: "REQUIRES_EXPLICIT_QUOTE_ACCEPTANCE",

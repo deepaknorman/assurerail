@@ -1362,8 +1362,10 @@ model AssessmentProcessingJob {
   reviewedByUserId   String?
   reviewEvidenceRef  String?
   reviewSnapshot     Json?
+  automatedReleaseSnapshot Json?
   reviewStepUpId     String?
   reviewedAt         DateTime?
+  releasedAt         DateTime?
   startedAt          DateTime?
   completedAt        DateTime?
   createdAt          DateTime @default(now())

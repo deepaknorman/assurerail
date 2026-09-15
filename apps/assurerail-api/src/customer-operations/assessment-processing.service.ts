@@ -13,6 +13,13 @@ import type { InternalOpsActor, ParticipantOpsActor } from "./customer-operation
 import { extractAndValidateOcr, type AiDocument } from "./ocr.adapter";
 import { loanTapeMetrics } from "./loan-tape-metrics";
 type Manifest = {versionId:string;evidenceObjectId:string;digest:string;contentType:string;sizeBytes:number}[];
+const releasedStatus = (stage:string) => stage === "INITIAL" ? "AUTO_RELEASED" : "RELEASED";
+export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{status:string};exceptions:{code:string}[];analysis:{provider:string;findings?:{severity:string}[]}}) {
+  if(input.assetFamily==="OTHER")return "OUTSIDE_CURRENT_SCOPE" as const;
+  if(!["openai","gemini"].includes(input.analysis.provider))return "AUTOMATED_ANALYSIS_INCOMPLETE" as const;
+  if(input.dataQuality.status!=="MATCHED"||input.exceptions.length||input.analysis.findings?.some(f=>f.severity==="CRITICAL"))return "FIX_AND_REASSESS" as const;
+  return "READY_FOR_PORTFOLIO_PREPARATION" as const;
+}
 
 @Injectable()
 export class AssessmentProcessingService {
@@ -46,10 +53,11 @@ export class AssessmentProcessingService {
       const prior=await tx.assessmentProcessingJob.findUnique({where:{engagementId_requestRef:{engagementId:id,requestRef}}});
       if(prior){if(prior.requestDigest!==requestDigest)throw new ConflictException("run reference has different evidence");return this.publicJob(prior);}
       const jobs=await tx.assessmentProcessingJob.findMany({where:{engagementId:id,stage},orderBy:{createdAt:"asc"}});
-      if(jobs.some(j=>["QUEUED","RUNNING","REVIEW_REQUIRED"].includes(j.status)))throw new ConflictException("complete or reject the current run before requesting another");
-      if(jobs.filter(j=>j.status==="RELEASED").length>=4 || jobs.length>=8)throw new ConflictException("included reviewed runs or processing retry allowance exhausted; scope review required");
-      const first=jobs.find(j=>j.status==="RELEASED");
-      if(first?.reviewedAt&&first.reviewedAt.getTime()+30*86400000<=Date.now())throw new ConflictException("included reassessment window has ended");
+      if(jobs.some(j=>["QUEUED","RUNNING","REVIEW_REQUIRED"].includes(j.status)))throw new ConflictException("complete the current run before requesting another");
+      const terminalRelease=releasedStatus(stage);
+      if(jobs.filter(j=>j.status===terminalRelease).length>=4 || jobs.length>=8)throw new ConflictException("included runs or processing retry allowance exhausted; scope review required");
+      const first=jobs.find(j=>j.status===terminalRelease);
+      if(first?.releasedAt&&first.releasedAt.getTime()+30*86400000<=Date.now())throw new ConflictException("included reassessment window has ended");
       const step=bounded(body.stepUpEvidenceId,"stepUpEvidenceId");
       await this.stepUp.consume({evidenceId:step,userId:actor.actorUserId,sessionId:actor.actorSessionId,institutionId:actor.actingInstitutionId,purpose:"ENGAGEMENT_PROCESSING_REQUEST"},tx);
       return this.publicJob(await tx.assessmentProcessingJob.create({data:{id:`aprocess_${randomUUID()}`,engagementId:id,requestRef,requestDigest,stage,evidenceVersionIds:asJson(ids),sourceManifest:asJson(manifest),requestedByUserId:actor.actorUserId}}));
@@ -58,7 +66,7 @@ export class AssessmentProcessingService {
   private validateSource(v:any,institutionId:string,engagementId:string) {
     if(v.evidenceObject.institutionId!==institutionId || v.evidenceObject.purpose!==`ASSESSMENT:${engagementId}` || v.evidenceObject.status!=="AVAILABLE" || v.evidenceObject.currentVersion!==v.version || v.validationStatus!=="VALID" || (v.expiresAt&&v.expiresAt<=new Date()) || !v.documentVersion || v.documentVersion.malwareStatus!=="CLEAN")throw new ForbiddenException("current clean evidence scoped to this engagement required");
   }
-  private publicJob(job:any) { return {id:job.id,stage:job.stage,status:job.status,createdAt:job.createdAt,reviewedAt:job.reviewedAt,errorCode:job.errorCode,...(job.status==="RELEASED"?{result:job.result,resultDigest:job.resultDigest}:{}),liveDecisionAuthority:false}; }
+  private publicJob(job:any) { return {id:job.id,stage:job.stage,status:job.status,createdAt:job.createdAt,releasedAt:job.releasedAt,reviewedAt:job.reviewedAt,errorCode:job.errorCode,...(["AUTO_RELEASED","RELEASED"].includes(job.status)?{result:job.result,resultDigest:job.resultDigest}:{}),liveDecisionAuthority:false}; }
   async list(actor:ParticipantOpsActor,id:string) {await this.engagements.participant(actor);await this.engagements.evidenceAuthority(actor);await this.engagements.scoped(this.db,actor.actingInstitutionId,id);return (await this.db.assessmentProcessingJob.findMany({where:{engagementId:id},orderBy:{createdAt:"desc"}})).map(j=>this.publicJob(j));}
   async internalReport(actor:InternalOpsActor,institutionId:string,id:string,jobId:string) {
     engagementEnabled();await this.staff.require({userId:actor.actorUserId,permission:"CASE_TASK_PREPARE",scopeType:"INSTITUTION",scopeRef:institutionId});
@@ -101,8 +109,16 @@ export class AssessmentProcessingService {
       // Bounded AI input; extraction covers all supplied files. A budget skip is explicit in the report.
       const analysis=JSON.stringify(sources).length<=120000?await analyseSources(sources):{provider:"NOT_RUN",model:null,findings:[],qualification:"AI_INPUT_BUDGET_EXCEEDED"};
       const dataQuality=loanTapeMetrics(tapes,(job.engagement.scope as {uniqueLoanCount:number}).uniqueLoanCount);
-      const result={manifest,dataQuality,extraction:{segmentCount:sources.length,sourceCount:manifest.length,exceptions,ocrProvenance},analysis,qualifications:["PREPARATION_INSIGHTS_ONLY","NOT_BUYER_APPROVAL","CREDIT_AND_ELIGIBILITY_ASSESSMENT_REQUIRES_ASSESSMENT_PROVIDER","NO_AUTOMATIC_LEGAL_OR_CREDIT_OPINION"],sources};
-      await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING"},data:{status:"REVIEW_REQUIRED",result:asJson(result),resultDigest:sha256Digest(result),completedAt:new Date()}});
+      const extraction={segmentCount:sources.length,sourceCount:manifest.length,exceptions,ocrProvenance};
+      const outcome=job.stage==="INITIAL"?automatedInitialOutcome({assetFamily:(job.engagement.scope as {assetFamily:string}).assetFamily,dataQuality,exceptions,analysis}):null;
+      const release=job.stage==="INITIAL"?{method:"AUTOMATED_UNSIGNED",outcome,expertReviewed:false,professionalSignoff:false}:{method:"QUALIFIED_EXPERT_REVIEW_REQUIRED",outcome:null,expertReviewed:false,professionalSignoff:false};
+      const result={manifest,dataQuality,extraction,analysis,release,qualifications:["PRELIMINARY_PREPARATION_INSIGHTS_ONLY","NOT_BUYER_APPROVAL","NOT_AN_ASSURANCE_OR_PROFESSIONAL_OPINION","NO_AUTOMATIC_LEGAL_OR_CREDIT_OPINION"],sources};
+      const resultDigest=sha256Digest(result),completedAt=new Date();
+      if(job.stage==="INITIAL"){
+        await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING",stage:"INITIAL"},data:{status:"AUTO_RELEASED",result:asJson(result),resultDigest,automatedReleaseSnapshot:asJson({engine:"ASSURERAIL_INITIAL_AUTOMATION",engineVersion:"1",resultDigest,analysisProvider:analysis.provider,analysisModel:"model" in analysis?analysis.model:null,outcome}),completedAt,releasedAt:completedAt}});
+      }else{
+        await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING",stage:"PREPARATION"},data:{status:"REVIEW_REQUIRED",result:asJson(result),resultDigest,completedAt}});
+      }
     }catch{await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING"},data:{status:"FAILED",errorCode:"PROCESSING_FAILED_REVIEW_REQUIRED",completedAt:new Date()}});}
   }
   async review(actor:InternalOpsActor,institutionId:string,id:string,jobId:string,body:{decision?:unknown;resultDigest?:unknown;reviewEvidenceRef?:unknown;stepUpEvidenceId?:unknown}) {
@@ -112,7 +128,8 @@ export class AssessmentProcessingService {
     return this.engagements.transaction(async tx=>{
       const e=await this.engagements.scoped(tx,institutionId,id),job=await tx.assessmentProcessingJob.findUnique({where:{id:jobId}});
       if(!job||job.engagementId!==id)throw new NotFoundException("run not found");
-      if(job.status!=="REVIEW_REQUIRED"||job.resultDigest!==body.resultDigest)throw new ConflictException("matching pending report required");
+      if(job.stage!=="PREPARATION")throw new ConflictException("Initial Assessment is automatically released without expert review; only Portfolio Preparation accepts a qualified sign-off");
+      if(job.status!=="REVIEW_REQUIRED"||job.resultDigest!==body.resultDigest)throw new ConflictException("matching pending preparation report required");
       if(job.requestedByUserId===actor.actorUserId)throw new ForbiddenException("independent reviewer required");
       const credentials=JSON.parse(process.env.ASSURERAIL_QUALIFIED_REVIEWERS_JSON??"[]") as {userId:string;expiresAt:string;assetFamilies:string[];qualificationRef:string}[];
       const credential=credentials.find(c=>c.userId===actor.actorUserId&&new Date(c.expiresAt)>new Date()&&c.assetFamilies.includes((e.scope as {assetFamily:string}).assetFamily)&&c.qualificationRef);
@@ -126,7 +143,8 @@ export class AssessmentProcessingService {
       const current=evidence?.versions.find(v=>v.version===evidence.currentVersion);
       if(!evidence||evidence.institutionId!==institutionId||evidence.purpose!==`ASSESSMENT_REVIEW:${jobId}:${job.resultDigest}`||evidence.status!=="AVAILABLE"||!current||current.validationStatus!=="VALID"||(current.expiresAt&&current.expiresAt<=new Date()))throw new ForbiddenException("validated sign-off evidence bound to this report required");
       const step=bounded(body.stepUpEvidenceId,"stepUpEvidenceId");await this.stepUp.consume({evidenceId:step,userId:actor.actorUserId,sessionId:actor.actorSessionId,institutionId:null,purpose:"ENGAGEMENT_REPORT_REVIEW"},tx);
-      const changed=await tx.assessmentProcessingJob.updateMany({where:{id:jobId,status:"REVIEW_REQUIRED"},data:{status:decision==="RELEASE"?"RELEASED":"REJECTED",reviewedByUserId:actor.actorUserId,reviewEvidenceRef,reviewSnapshot:asJson({qualification:credential,evidenceVersionId:current.id,evidenceDigest:current.payloadDigest,resultDigest:job.resultDigest}),reviewStepUpId:step,reviewedAt:new Date()}});
+      const releasedAt=new Date();
+      const changed=await tx.assessmentProcessingJob.updateMany({where:{id:jobId,status:"REVIEW_REQUIRED",stage:"PREPARATION"},data:{status:decision==="RELEASE"?"RELEASED":"REJECTED",reviewedByUserId:actor.actorUserId,reviewEvidenceRef,reviewSnapshot:asJson({qualification:credential,evidenceVersionId:current.id,evidenceDigest:current.payloadDigest,resultDigest:job.resultDigest}),reviewStepUpId:step,reviewedAt:releasedAt,releasedAt}});
       if(changed.count!==1)throw new ConflictException("report already decided");
       return {jobId,status:decision==="RELEASE"?"RELEASED":"REJECTED",qualificationRef:credential.qualificationRef,liveDecisionAuthority:false};
     });

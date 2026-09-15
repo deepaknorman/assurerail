@@ -107,7 +107,8 @@ export class AssessmentEngagementService {
       if (e.status !== "ACCEPTED_SHADOW" || e.route || e.quoteDigest !== body.quoteDigest) throw new ConflictException("accepted quote and unselected preparation route required");
       await this.requirePaid(tx, actor.actingInstitutionId, id, "INITIAL");
       const report = await tx.assessmentProcessingJob.findFirst({ where: { engagementId: id, stage: "INITIAL" }, orderBy: { createdAt: "desc" } });
-      if (!report || report.status !== "RELEASED") throw new ConflictException("latest initial run must be reviewed and released before preparation");
+      if (!report || report.status !== "AUTO_RELEASED") throw new ConflictException("latest automated Initial Assessment must be complete before preparation");
+      if ((report.result as {release?:{outcome?:string}} | null)?.release?.outcome !== "READY_FOR_PORTFOLIO_PREPARATION") throw new ConflictException("resolve the automated Initial Assessment outcome before accepting preparation");
       for (const source of report.sourceManifest as {versionId:string}[]) {
         const v = await tx.evidenceVersion.findUnique({where:{id:source.versionId},include:{evidenceObject:true,documentVersion:true}});
         if (!v || v.evidenceObject.institutionId !== actor.actingInstitutionId || v.evidenceObject.purpose !== `ASSESSMENT:${id}` || v.evidenceObject.status !== "AVAILABLE" || v.evidenceObject.currentVersion !== v.version || v.validationStatus !== "VALID" || (v.expiresAt && v.expiresAt <= new Date()) || v.documentVersion?.malwareStatus !== "CLEAN") throw new ConflictException("initial report evidence has changed; reassess before preparation");
