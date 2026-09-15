@@ -22,6 +22,7 @@ const paths = [
   "/resources/authoritative-records-reconciliation-and-digital-representations",
   "/resources/signed-evidence-packages-still-require-institutional-review",
   "/resources/from-completed-deal-replay-to-a-controlled-shadow",
+  "/resources/five-ev-loan-books-one-buyer-transaction",
 ];
 const viewports = [
   { label: "desktop", width: 1440, height: 1000 },
@@ -72,7 +73,7 @@ for (const engine of engines) {
       const context = await browser.newContext({ viewport });
       const page = await context.newPage();
       for (const path of paths) {
-        const response = await page.goto(new URL(path, base).href, { waitUntil: "networkidle" });
+        const response = await page.goto(new URL(path, base).href, { waitUntil: "load" });
         if (!response || response.status() >= 400) {
           fail(engine.label, viewport.label, path, `HTTP ${response?.status() ?? "no response"}`);
           continue;

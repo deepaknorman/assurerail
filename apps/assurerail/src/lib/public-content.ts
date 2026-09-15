@@ -113,7 +113,13 @@ export type ResourceArticle = {
   publishedAt: string;
   reviewedAt: string;
   readingMinutes: number;
-  sections: readonly { heading: string; paragraphs: readonly string[]; bullets?: readonly string[] }[];
+  sections: readonly {
+    heading: string;
+    paragraphs: readonly string[];
+    bullets?: readonly string[];
+    table?: { caption: string; columns: readonly string[]; rows: readonly (readonly string[])[] };
+  }[];
+  sources?: readonly { label: string; href: string }[];
 };
 
 export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
@@ -289,6 +295,146 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
           "Record open gates instead of replacing them with synthetic evidence",
         ],
       },
+    ],
+  },
+  {
+    slug: "five-ev-loan-books-one-buyer-transaction",
+    title: "Five EV loan books, one ₹55 crore buyer transaction: the numbers and the work",
+    description:
+      "A worked illustration of how five NBFCs with ₹10–12 crore EV books can prepare one buyer-sized cohort, allocate costs and preserve seller-level records.",
+    publishedAt: "2026-09-16",
+    reviewedAt: "2026-09-16",
+    readingMinutes: 9,
+    sections: [
+      {
+        heading: "Start with the structure, not the headline pool size",
+        paragraphs: [
+          "This example uses five NBFCs, each offering ₹11 crore of performing EV receivables at the same cutoff date. Together they present a ₹55 crore economic cohort to one buyer. The working assumption is 825 admitted loans per seller, or 4,125 loans in total, based on an average outstanding balance of about ₹1.33 lakh.",
+          "The loans do not lose their seller-level identity. Each account keeps its originator, source record, repayment history, security evidence and transfer chain. A buyer may acquire the five seller pools through coordinated assignments. If the parties instead issue securitisation notes, the SPE, trustee, tranching, retention and other applicable requirements must be separately designed and approved. Under the RBI definition, securitisation involves at least two tranches with different credit risk, so ‘single tranche’ should not be used as a legal description without counsel confirming the structure.",
+        ],
+        table: {
+          caption: "Illustrative cohort at the midpoint of the ₹10–12 crore range",
+          columns: ["Item", "Per NBFC", "Five-NBFC cohort"],
+          rows: [
+            ["Offered principal / assumed settled consideration", "₹11.00cr", "₹55.00cr"],
+            ["Admitted loans", "825", "4,125"],
+            ["Average outstanding per loan", "≈₹1.33L", "≈₹1.33L"],
+            ["Buyer", "One common buyer", "One coordinated transaction"],
+          ],
+        },
+      },
+      {
+        heading: "The gated preparation process",
+        paragraphs: [
+          "Each seller first accepts its own scope and pays for an automated Initial Assessment. AssureRail ingests the loan tape and evidence, reconciles totals, identifies missing fields and documents, calculates portfolio measures, tests stated economics and returns an unsigned preliminary report. There is no consultant or qualified human sign-off in this stage. A seller may correct the source material and use up to three included automated reassessments within 30 days.",
+          "A seller that proceeds then pays the remaining fixed fee for Portfolio Preparation. This is where qualified experts review the evidence, exceptions, legal and financial work within their accepted scope and sign off the prepared output. The five prepared seller packs are then mapped to one common cutoff, eligibility vocabulary, buyer data schema and transaction timetable. The buyer still performs its own diligence and makes its own credit and purchase decision.",
+        ],
+        bullets: [
+          "Gate 1 — each seller uploads its loan tape, evidence index and portfolio history",
+          "Gate 2 — automated assessment returns reconciliation, exceptions, concentration measures and indicative economics",
+          "Gate 3 — the seller fixes gaps and reassesses before paying for expert preparation",
+          "Gate 4 — qualified reviewers approve seller-specific prepared packs",
+          "Gate 5 — AssureRail forms the common buyer view without hiding seller-level differences",
+          "Gate 6 — buyer diligence, conditions, documents and settlement remain attributable to the responsible parties",
+        ],
+      },
+      {
+        heading: "What each NBFC pays before execution",
+        paragraphs: [
+          "The execution-committed route is ₹500 per admitted loan with an ₹8 lakh minimum for Initial Assessment plus Portfolio Preparation. The standalone route is ₹650 per loan with a ₹10.4 lakh minimum. In this example both routes are governed by their minimums because 825 multiplied by either per-loan rate is lower than the relevant minimum.",
+          "The Initial Assessment invoice is 30% of the standalone fixed-stage quote. It is credited once against either route. Each seller therefore pays ₹3.12 lakh before automated processing, then ₹4.88 lakh before Portfolio Preparation if it commits execution to AssureRail. A seller choosing standalone preparation pays ₹7.28 lakh at that point instead.",
+        ],
+        table: {
+          caption: "Fixed-stage invoices, before applicable tax",
+          columns: ["Payment", "Per NBFC", "Five NBFCs"],
+          rows: [
+            ["Initial Assessment: 30% × ₹10.4L", "₹3.12L", "₹15.60L"],
+            ["Committed Portfolio Preparation balance", "₹4.88L", "₹24.40L"],
+            ["Committed fixed-stage total", "₹8.00L", "₹40.00L"],
+            ["Standalone Portfolio Preparation balance", "₹7.28L", "₹36.40L"],
+            ["Standalone fixed-stage total", "₹10.40L", "₹52.00L"],
+          ],
+        },
+      },
+      {
+        heading: "One cohort fee, allocated back to each seller",
+        paragraphs: [
+          "Under one accepted cohort execution mandate, the marginal success-fee schedule is applied once to the cohort’s actual purchase consideration successfully settled: 50 basis points on the first ₹10 crore, 40 basis points on the next ₹40 crore, 35 basis points on the next ₹50 crore and 30 basis points above ₹100 crore, subject to a proposed ₹5 lakh minimum. The resulting fee is allocated to each seller by its share of settled consideration. Separate mandates or closings are quoted separately and do not automatically receive cohort pricing.",
+          "At ₹55 crore settled, the calculation is ₹5 lakh on the first ₹10 crore, ₹16 lakh on the next ₹40 crore and ₹1.75 lakh on the final ₹5 crore. The ₹22.75 lakh cohort execution fee is ₹4.55 lakh per seller when all five settle ₹11 crore. Together with the committed fixed stages, core AssureRail fees are ₹62.75 lakh, or about 1.14% of the illustration, before tax and external charges.",
+        ],
+        table: {
+          caption: "Core fees at ₹55 crore settled under one cohort mandate",
+          columns: ["Fee component", "Per NBFC", "Five NBFCs"],
+          rows: [
+            ["Committed fixed stages", "₹8.00L", "₹40.00L"],
+            ["Execution: first ₹10cr × 50bps", "₹1.00L allocated", "₹5.00L"],
+            ["Execution: next ₹40cr × 40bps", "₹3.20L allocated", "₹16.00L"],
+            ["Execution: final ₹5cr × 35bps", "₹0.35L allocated", "₹1.75L"],
+            ["Total core AssureRail fee", "₹12.55L", "₹62.75L"],
+            ["Core fee as share of consideration", "≈1.14%", "≈1.14%"],
+          ],
+        },
+      },
+      {
+        heading: "The ₹50–60 crore range",
+        paragraphs: [
+          "If all five sellers settle at the same amount, the committed fixed-stage total remains ₹40 lakh in this loan-count illustration. The execution fee changes with actual consideration. Purchase price, excluded accounts and a partial close can therefore change the final invoice.",
+        ],
+        table: {
+          caption: "Sensitivity before tax, external costs and optional services",
+          columns: ["Settled per NBFC", "Cohort settled", "Execution fee total", "Core fees including ₹40L fixed"],
+          rows: [
+            ["₹10cr", "₹50cr", "₹21.00L", "₹61.00L"],
+            ["₹11cr", "₹55cr", "₹22.75L", "₹62.75L"],
+            ["₹12cr", "₹60cr", "₹24.50L", "₹64.50L"],
+          ],
+        },
+      },
+      {
+        heading: "Shared costs need a disclosed allocation rule",
+        paragraphs: [
+          "Seller-specific work stays with that seller. A common trustee, counsel, escrow provider, rating process, verification exercise or buyer interface may create a shared bill. Before anyone commits spend, the engagement schedule should state whether that bill is divided equally, by admitted principal, by settled consideration or by measured use. At equal ₹11 crore contributions, each seller would bear 20% of a genuinely common expense. If one seller closes at a different amount, pro-rata settled consideration is usually easier to defend than an equal split.",
+          "AssureRail charges ₹50,000 for each accepted point-to-point secure file connection covering setup, testing and validation. Reusing one validated buyer interface is not five new setup charges. APIs, recurring connector operations and third-party provider fees need separate accepted scopes. No supplier expense should be hidden inside the success-fee calculation.",
+        ],
+        table: {
+          caption: "Example allocation of a hypothetical ₹10 lakh common external bill",
+          columns: ["Seller", "Settled consideration", "Allocation share", "Allocated cost"],
+          rows: [
+            ["NBFC 1", "₹11cr", "20%", "₹2.00L"],
+            ["NBFC 2", "₹11cr", "20%", "₹2.00L"],
+            ["NBFC 3", "₹11cr", "20%", "₹2.00L"],
+            ["NBFC 4", "₹11cr", "20%", "₹2.00L"],
+            ["NBFC 5", "₹11cr", "20%", "₹2.00L"],
+          ],
+        },
+      },
+      {
+        heading: "Optional services change the comparison",
+        paragraphs: [
+          "A seller that already has its buyer need not purchase buyer arrangement. Managed transaction and escrow coordination is proposed at ₹1 lakh per seller programme. Buyer arrangement, only when selected and actually provided, is 5 basis points of attributable settled consideration with a ₹1.25 lakh minimum and ₹10 lakh cap. Monitoring activation and ongoing monitoring are separate because they continue after closing.",
+          "At the ₹55 crore midpoint, core fees are ₹62.75 lakh. Adding managed coordination for all five sellers adds ₹5 lakh. Adding one new shared buyer file connection adds ₹0.5 lakh. If AssureRail also arranged the buyer for every seller, the ₹1.25 lakh per-seller minimum would add ₹6.25 lakh. The resulting ₹74.5 lakh is about 1.35% of consideration, before tax, monitoring and external expenses. These are selectable services, not a forced package.",
+        ],
+      },
+      {
+        heading: "What the sellers gain—and what must still be proven",
+        paragraphs: [
+          "The practical gain is access to a buyer-sized opportunity while preserving a clear account-by-account and seller-by-seller record. The cohort can share a buyer timetable, common data dictionary, diligence index, agreed interface and some third-party work. Earlier automated gap discovery also reduces the chance of paying for full expert preparation on an unusable book.",
+          "The financial gain cannot be stated from pool size alone. Each seller’s net economic proceeds are its actual purchase consideration, less debt released, AssureRail fees, its allocated external costs, taxes and any other agreed deductions. Price below par can overwhelm fee savings: one percentage point on ₹55 crore is ₹55 lakh. The seller should compare that full proceeds bridge, retained risks, servicing duties and timing against keeping the loans or using another route.",
+          "For scale only, 1.5% of ₹55 crore is ₹82.5 lakh. The ₹62.75 lakh core illustration is ₹19.75 lakh lower, but that difference is meaningful only if the competing 1.5% covers the same work and neither side omits external charges. It is an arithmetic comparator, not a claimed market benchmark or guaranteed saving.",
+        ],
+        bullets: [
+          "A buyer large enough to consider a ₹50–60 crore opportunity",
+          "Every admitted loan tested against the declared machine-readable rules, with document coverage reported separately",
+          "Seller-specific remediation instead of one opaque pooled exception list",
+          "Common buyer formatting and a controlled diligence room",
+          "Transparent allocation of shared costs and settlement deductions",
+          "No guarantee of eligibility, buyer approval, price, timing or closing",
+        ],
+      },
+    ],
+    sources: [
+      { label: "RBI Securitisation of Standard Assets Directions, 2021", href: "https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=12165" },
+      { label: "RBI Transfer of Loan Exposures Directions, 2021", href: "https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=12166" },
     ],
   },
 ] as const;
