@@ -6,5 +6,8 @@ import { StoreModule } from "../store/store.module";
 import { CustomerOperationsInternalController, CustomerOperationsParticipantController } from "./customer-operations.controllers";
 import { CustomerOperationsService } from "./customer-operations.service";
 
-@Module({ imports: [StoreModule, SecurityModule, InstitutionsModule, InternalAccessModule], controllers: [CustomerOperationsParticipantController, CustomerOperationsInternalController], providers: [CustomerOperationsService] })
+import { EngagementBillingService } from "./engagement-billing.service";
+import { EngagementBillingParticipantController, EngagementBillingInternalController } from "./engagement-billing.controllers";
+
+@Module({ imports: [StoreModule, SecurityModule, InstitutionsModule, InternalAccessModule], controllers: [EngagementBillingParticipantController, EngagementBillingInternalController, CustomerOperationsParticipantController, CustomerOperationsInternalController], providers: [EngagementBillingService, CustomerOperationsService] })
 export class CustomerOperationsModule {}

@@ -1215,9 +1215,34 @@ model CustomerInvoiceStatement {
   createdAt          DateTime         @default(now())
   lines              CustomerInvoiceLine[]
   creditCorrections  CustomerCreditCorrection[]
+  paymentReceipts    CustomerPaymentReceipt[]
 
   @@unique([customerContractId, statementRef], map: "CustomerInvoiceStatement_contract_ref")
   @@index([customerContractId, periodStart, periodEnd], map: "CustomerInvoiceStatement_contract_period_idx")
+}
+
+model CustomerPaymentReceipt {
+  id                 String @id
+  invoiceStatementId String
+  invoiceStatement   CustomerInvoiceStatement @relation(fields: [invoiceStatementId], references: [id], onDelete: Restrict)
+  collectionAccountRef String
+  bankTransferRef    String
+  amountMinor       String
+  currency          String
+  evidenceRef       String
+  evidenceDigest    String
+  receivedAt        DateTime
+  status            String @default("PROPOSED")
+  proposedByUserId   String
+  proposalStepUpId   String
+  reviewedByUserId   String?
+  reviewStepUpId     String?
+  reviewedAt        DateTime?
+  reviewReason      String?
+  createdAt         DateTime @default(now())
+
+  @@unique([collectionAccountRef, bankTransferRef])
+  @@index([invoiceStatementId, status])
 }
 
 model CustomerInvoiceLine {
