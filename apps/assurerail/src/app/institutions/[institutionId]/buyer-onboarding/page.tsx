@@ -1,0 +1,69 @@
+"use client";
+import {useCallback,useEffect,useRef,useState} from "react";
+import {useParams} from "next/navigation";
+import Link from "next/link";
+import {useAuth} from "@/lib/auth-context";
+import {vget,vpost} from "@/lib/venue";
+import {requestTotpStepUp} from "@/lib/institutions";
+import {VenueHeader} from "@/components/VenueHeader";
+import "./buyer-onboarding.css";
+type Criteria=Record<string,string|string[]|number|number[]|boolean>;
+type Profile={id:string;version:number;revision:number;status:string;criteria:Criteria;digest:string|null;approvals:Record<string,{actor:string}>};
+type Overview={workspace:{id:string;status:string;expiresAt:string};profiles:Profile[];activeProfileId:string|null;choices:Record<string,string[]>;capabilities:Record<string,boolean>};
+const multi=new Set(["assets","subtypes","originators","borrowers","exclusions","requiredEvidence","specialistReviews","servicing","formats","states"]);
+const ranges=new Set(["ticketCr","sellerTicketCr","remainingMonths","walMonths","yieldBps"]);
+const labels:Record<string,string>={assets:"Asset families",subtypes:"Loan types",originators:"Accepted originators",borrowers:"Borrower types",psl:"Priority sector preference",geography:"Geographic coverage",states:"Accepted states / union territories",ticketCr:"Programme size (₹ crore)",sellerTicketCr:"Each seller’s contribution (₹ crore)",remainingMonths:"Remaining loan term (months)",walMonths:"Weighted average life (months)",yieldBps:"Indicative purchase yield (basis points)",maxSellers:"Maximum sellers",maxDpd:"Maximum days past due",minSeasoningMonths:"Minimum seasoning (months)",maxLtvPct:"Maximum loan-to-value (%)",maxOemPct:"Maximum manufacturer concentration (%)",maxStatePct:"Maximum state concentration (%)",exclusions:"Excluded records",requiredEvidence:"Required preparation evidence",historyMonths:"Performance history (months)",specialistReviews:"Specialist reviews",diligence:"Buyer diligence approach",servicing:"Permitted servicers",remittance:"Remittance frequency",reporting:"Reporting frequency",formats:"Reporting formats",priceBasis:"Purchase pricing method",closingMode:"Closing arrangement",exceptionPolicy:"Exception handling",requireBuyerPrecheck:"Buyer review required before portfolio preparation",validFrom:"Effective from",validTo:"Review / expiry date"};
+const help:Record<string,string>={requiredEvidence:"Loan tape means the loan-level data file. Reconciliation checks its totals and records against the source system. KYC means know-your-customer evidence.",subtypes:"Select every supported loan type. A programme must still meet the agreed pooling and diligence rules.",remainingMonths:"Time from the agreed cutoff date to the final scheduled payment.",sellerTicketCr:"The principal one seller is expected to contribute; ₹1 crore equals ₹100 lakh.",maxStatePct:"Maximum share of programme principal located in any single state.",formats:"An approved API is a separately authorised system connection; selecting it does not activate access.",psl:"Priority sector eligibility remains subject to the bank’s own classification and evidence review.",walMonths:"Average time to receive principal, weighted by each scheduled principal repayment.",yieldBps:"100 basis points equal one percentage point. A preference is not a purchase quote.",maxDpd:"Days past due measures how long a scheduled payment is overdue.",minSeasoningMonths:"Minimum time loans must have been outstanding. Applicable transfer requirements still need review.",maxLtvPct:"Outstanding loan divided by supported collateral value, expressed as a percentage.",maxOemPct:"Maximum exposure to one vehicle manufacturer across all sellers in the proposed programme.",originators:"Select both if previously approved originators and new originators may be considered.",closingMode:"Sequential allows separate seller closings. Simultaneous requires the agreed cohort to close together.",priceBasis:"Purchase price depends on actual cash flows, risk, diligence and agreed terms.",specialistReviews:"Select all applicable reviews. Scope after evidence means the final specialist scope is still to be agreed."};
+const sections=[{title:"1. Lending mandate",keys:["assets","subtypes","originators","borrowers","psl","requireBuyerPrecheck"]},{title:"2. Size, term and coverage",keys:["ticketCr","sellerTicketCr","maxSellers","remainingMonths","walMonths","geography","states"]},{title:"3. Credit and concentration",keys:["maxDpd","minSeasoningMonths","maxLtvPct","maxOemPct","maxStatePct","exclusions"]},{title:"4. Evidence and diligence",keys:["requiredEvidence","historyMonths","diligence","specialistReviews"]},{title:"5. Servicing and reporting",keys:["servicing","remittance","reporting","formats"]},{title:"6. Economics and closing",keys:["yieldBps","priceBasis","closingMode","exceptionPolicy"]},{title:"7. Validity and approval",keys:["validFrom","validTo"]}];
+const words=(s:string)=>s.split("_").map(w=>["EV","CSV","XLSX","API","PSL","KYC","LLP"].includes(w)?w:w.toLowerCase()).join(" ").replace(/^./,c=>c.toUpperCase());
+export default function BuyerOnboarding(){
+ const {institutionId}=useParams<{institutionId:string}>();
+ const {loading,firebaseUser,venueUser,needsOnboarding,activeInstitutionId}=useAuth();
+ const [data,setData]=useState<Overview|null>(null),[draft,setDraft]=useState<Criteria>({}),[error,setError]=useState(""),[message,setMessage]=useState(""),[totp,setTotp]=useState(""),[busy,setBusy]=useState(false);
+ const epoch=useRef(0),identity=`${firebaseUser?.uid??""}:${activeInstitutionId??""}:${institutionId}`;
+ const ready=process.env.NEXT_PUBLIC_ASSURERAIL_BUYER_ONBOARDING_ENABLED==="true"&&!loading&&!!firebaseUser&&!!venueUser&&!needsOnboarding&&activeInstitutionId===institutionId;
+ const base=`/v1/rail/institutions/${encodeURIComponent(institutionId)}/buyer-onboarding`;
+ const load=useCallback(async()=>{const ticket=epoch.current;const next=await vget<Overview>(base,{institutionId});if(ticket===epoch.current){setData(next);setDraft(next.profiles[0]?.criteria??{});}},[base,institutionId]);
+ useEffect(()=>{epoch.current++;setBusy(false);setData(null);setDraft({});setTotp("");setError("");if(ready)void load().catch(e=>setError(e.message));return()=>{epoch.current++;};},[identity,ready,load]);
+ const p=data?.profiles[0],editable=!!data?.capabilities.EDIT_BUYER_PROFILE&&p?.status==="DRAFT";
+ function field(key:string,value:Criteria[string]){setDraft(old=>{const next={...old,[key]:value};if(key==="assets")next.subtypes=(old.subtypes as string[]??[]).filter(s=>(value as string[]).includes(s.split("_")[0]));if(key==="geography"&&value==="ALL_INDIA")next.states=[];return next;});}
+ async function act(action:string,reviewRole?:string){
+  setBusy(true);setError("");setMessage("");const ticket=epoch.current;
+  try{const purpose=action==="CREATE"||action==="SAVE"?"BUYER_PROFILE_SAVE":action==="SUBMIT"?"BUYER_PROFILE_SUBMIT":"BUYER_PROFILE_REVIEW";
+   const stepUpEvidenceId=await requestTotpStepUp({code:totp,purpose,institutionId});
+   if(ticket!==epoch.current)throw new Error("Session changed. Reload before continuing.");
+   await vpost(action==="CREATE"?`${base}/profiles`:`${base}/profiles/${encodeURIComponent(p!.id)}`,{stepUpEvidenceId,...(action==="CREATE"?{}:{action,expectedRevision:p!.revision,...(action==="SAVE"?{criteria:draft}:{}),...(reviewRole?{reviewRole,digest:p!.digest}:{})})},{institutionId});
+   if(ticket===epoch.current){await load();setMessage("Action recorded. The approved version remains the authority for matching.");}
+  }catch(e){if(ticket===epoch.current)setError((e as Error).message);}finally{if(ticket===epoch.current){setBusy(false);setTotp("");}}
+ }
+ if(process.env.NEXT_PUBLIC_ASSURERAIL_BUYER_ONBOARDING_ENABLED!=="true")return <><VenueHeader/><main className="buyer-journey"><h1>Buyer onboarding</h1><p>This workspace is not enabled in this release.</p></main></>;
+ return <><VenueHeader/><main className="buyer-journey"><Link href={`/institutions/${encodeURIComponent(institutionId)}`}>← Institution workspace</Link><h1>Your purchase requirements</h1><p>Set the portfolios you want to review and the evidence your team needs to make a decision.</p>
+ {!ready?<p>Sign in with an approved account and select this institution in your workspace.</p>:<>
+ {error&&<p role="alert" className="buyer-alert">{error}</p>}{message&&<p role="status">{message}</p>}
+ {!data?<p>Access requires a current MSA verified by two authorised staff and an active buyer mandate.</p>:<>
+ <button type="button" disabled={busy||!totp} onClick={async()=>{
+   setBusy(true);setError("");const ticket=epoch.current;
+   try{const stepUpEvidenceId=await requestTotpStepUp({code:totp,purpose:"ASSESSMENT_PROVIDER_LAUNCH",institutionId});
+    if(ticket!==epoch.current)throw new Error("Session changed. Restart the handoff.");
+    const r=await vpost<{postUrl:string;ticket:string}>(`${base}/provider-launch`,{stepUpEvidenceId},{institutionId});
+    if(ticket!==epoch.current)throw new Error("Session changed. Restart the handoff.");
+    const form=document.createElement("form");form.method="POST";form.action=r.postUrl;
+    const input=document.createElement("input");input.type="hidden";input.name="ticket";input.value=r.ticket;form.appendChild(input);document.body.appendChild(form);form.submit();form.remove();
+   }catch(e){if(ticket===epoch.current)setError((e as Error).message);}finally{if(ticket===epoch.current){setBusy(false);setTotp("");}}
+ }}>Open your authorised AssurePool workspace</button><p>Enter an authenticator code below to start a secure, one-time handoff. AssurePool checks your mapped account and current portfolio permissions.</p>
+ <ol className="buyer-steps"><li>MSA verified</li><li>Workspace access approved</li><li>Set requirements</li><li>Independent approvals</li></ol>
+ <div className="buyer-summary">MSA valid until {new Date(data.workspace.expiresAt).toLocaleDateString("en-IN")} · {p?`Version ${p.version} / ${words(p.status)}`:"Requirements not started"}<br/>{data.activeProfileId?"An approved profile is available for preparation matching.":"No current approved profile is available for matching."}</div>
+ {p&&<>{sections.map(section=><section key={section.title}><h2>{section.title}</h2><div className="buyer-fields">{section.keys.filter(k=>k!=="states"||draft.geography==="SELECTED_STATES").map(key=>{
+  const title=labels[key],options=data.choices[key]?.filter(o=>key!=="subtypes"||(draft.assets as string[]??[]).includes(o.split("_")[0]));
+  return <fieldset key={key} disabled={!editable||busy} className={multi.has(key)?"buyer-wide":""}><legend>{title}{help[key]&&<span className="buyer-help" tabIndex={0} aria-label={help[key]}>?<span role="tooltip">{help[key]}</span></span>}</legend>
+  {options?(multi.has(key)?<div className="buyer-options">{options.map(value=><label key={value}><input type="checkbox" checked={(draft[key] as string[]??[]).includes(value)} onChange={e=>field(key,e.target.checked?[...(draft[key] as string[]??[]),value]:(draft[key] as string[]??[]).filter(v=>v!==value))}/>{words(value)}</label>)}</div>:<select aria-label={title} value={String(draft[key]??"")} onChange={e=>field(key,e.target.value)}><option value="" disabled>Choose an option</option>{options.map(o=><option key={o} value={o}>{words(o)}</option>)}</select>):ranges.has(key)?<div className="buyer-range">{[0,1].map(i=><label key={i}>{i===0?"Minimum":"Maximum"}<input aria-label={`${title} ${i===0?"minimum":"maximum"}`} type="number" min="0" step="any" value={(draft[key] as number[]|undefined)?.[i]??""} onChange={e=>{const pair=[...((draft[key] as number[])??[0,0])];pair[i]=Number(e.target.value);field(key,pair);}}/></label>)}</div>:key==="requireBuyerPrecheck"?<select aria-label={title} value={draft[key]===undefined?"":String(draft[key])} onChange={e=>field(key,e.target.value==="true")}><option value="" disabled>Choose an option</option><option value="true">Required</option><option value="false">Not required</option></select>:<input aria-label={title} type={key.startsWith("valid")?"date":"number"} min="0" value={String(draft[key]??"")} onChange={e=>field(key,key.startsWith("valid")?e.target.value:Number(e.target.value))}/>}
+  </fieldset>;
+ })}</div></section>)}<section><h2>Approval record</h2><p>Credit, legal and operations need different authorised reviewers. The preparer and submitter cannot approve their own profile.</p><ul>{["CREDIT","LEGAL","OPERATIONS"].map(r=><li key={r}>{words(r)}: {p.approvals[r]?"Review recorded":"Pending"}</li>)}</ul><p>Submitting uses your last saved version. Save any edits first.</p></section></>}
+ <section><h2>Confirm your action</h2><label>Authenticator code<input aria-label="Authenticator code" type="password" inputMode="numeric" autoComplete="one-time-code" value={totp} onChange={e=>setTotp(e.target.value)} maxLength={6}/></label><div className="buyer-actions">
+ {data.capabilities.EDIT_BUYER_PROFILE&&(!p||["APPROVED","REJECTED"].includes(p.status))&&<button disabled={busy} onClick={()=>act("CREATE")}>{p?"Create next version":"Start requirements"}</button>}
+ {editable&&<><button disabled={busy} onClick={()=>act("SAVE")}>Save draft</button><button disabled={busy||JSON.stringify(draft)!==JSON.stringify(p?.criteria)} onClick={()=>act("SUBMIT")}>Submit saved version</button></>}
+ {p?.status==="SUBMITTED"&&["CREDIT","LEGAL","OPERATIONS"].filter(r=>data.capabilities[`APPROVE_BUYER_${r}`]&&!p.approvals[r]).map(r=><span key={r}><button disabled={busy} onClick={()=>act("APPROVE",r)}>Approve as {words(r)}</button><button disabled={busy} onClick={()=>act("REJECT",r)}>Return as {words(r)}</button></span>)}
+ </div></section><details><summary>Version history</summary><ul>{data.profiles.map(x=><li key={x.id}>Version {x.version}: {words(x.status)}{x.id===data.activeProfileId?" — current approved requirements":""}</li>)}</ul></details>
+ </>}
+ </>}</main></>;
+}

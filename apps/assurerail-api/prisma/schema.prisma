@@ -173,6 +173,7 @@ model InternalAccessEvent {
 // signed/digested snapshot; it does not make the provider a runtime authority over Rail membership.
 
 model Institution {
+  buyerWorkspace   BuyerWorkspace?
   id               String    @id
   legalName        String
   institutionKind  String
@@ -1023,6 +1024,7 @@ model IntegrationExitExport {
 // ───────────────── customer operations and commercial administration (PR-20, shadow) ──────────
 
 model CustomerContract {
+  buyerWorkspaces            BuyerWorkspace[]
   id                         String      @id
   institutionId              String
   institution                Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
@@ -1057,6 +1059,44 @@ model CustomerContract {
 
   @@unique([institutionId, contractRef, version], map: "CustomerContract_institution_ref_version")
   @@index([institutionId, status, effectiveAt, expiresAt], map: "CustomerContract_scope_status_term")
+}
+
+/// Formal signed-MSA verification is separate from shadow commercial contract acceptance.
+model BuyerWorkspace {
+  id                  String @id
+  institutionId       String @unique
+  institution         Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  customerContractId  String
+  customerContract    CustomerContract @relation(fields: [customerContractId], references: [id], onDelete: Restrict)
+  status              String @default("PENDING_MSA")
+  signedMsaDigest     String
+  signedEvidenceRef   String
+  signatureReviewRef String?
+  proposedByUserId    String
+  verifiedByUserId    String?
+  verifiedAt         DateTime?
+  expiresAt          DateTime
+  createdAt          DateTime @default(now())
+  profiles           BuyerRequirementsProfile[]
+  events             BuyerOnboardingEvent[]
+}
+
+model BuyerRequirementsProfile {
+  id             String @id
+  workspaceId    String
+  workspace      BuyerWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  version        Int
+  revision       Int @default(0)
+  status         String @default("DRAFT")
+  criteria       Json
+  digest         String?
+  createdBy      String
+  submittedBy    String?
+  submittedAt    DateTime?
+  approvals      Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@unique([workspaceId, version])
 }
 
 model CustomerContractChange {
@@ -4005,4 +4045,15 @@ model OpsControl {
   lastSweepAt      DateTime?
   lastFindingCount Int       @default(0)
   updatedAt        DateTime  @updatedAt
+}
+
+model BuyerOnboardingEvent {
+  id String @id
+  workspaceId String
+  workspace BuyerWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  actorUserId String
+  event String
+  detail Json
+  createdAt DateTime @default(now())
+  @@index([workspaceId, createdAt])
 }

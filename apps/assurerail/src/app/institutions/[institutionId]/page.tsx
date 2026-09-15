@@ -168,6 +168,7 @@ export default function InstitutionWorkspacePage() {
             <p className="tier-note">{workspace.connectorReadiness.message}</p>
             <p className="boundary-note">Connector certification is limited to replay/shadow intake and grants no institutional, route or transaction authority.</p>
             {contextActive && <Link className="btn btn-secondary" href={`/institutions/${encodeURIComponent(institutionId)}/evidence`}>Open connectors and evidence</Link>}
+            {contextActive && process.env.NEXT_PUBLIC_ASSURERAIL_BUYER_ONBOARDING_ENABLED === "true" && <Link className="btn btn-secondary" href={`/institutions/${encodeURIComponent(institutionId)}/buyer-onboarding`}>Set buyer requirements</Link>}
           </article>
         </section>
 

@@ -1,0 +1,47 @@
+/* Synthetic disposable-database service rehearsal. Authority/step-up adapters are explicit test doubles; the database, transactions and service are real. */
+const assert=require('node:assert/strict');
+const {PrismaClient}=require('../apps/assurerail-api/node_modules/@prisma/assurerail-client');
+const {BuyerOnboardingService}=require('../apps/assurerail-api/dist/buyer-onboarding/buyer-onboarding.service');
+const {completeCriteria}=require('../apps/assurerail-api/dist/buyer-onboarding/buyer-criteria.test');
+const url=process.env.BUYER_ONBOARDING_TEST_URL;
+if(!url||!/^postgresql:\/\/[^@]+@127\.0\.0\.1:\d+\/buyer_onboarding_test$/.test(url))throw new Error('dedicated loopback test database required');
+const db=new PrismaClient({datasources:{db:{url}}});
+const digest='sha256:'+'a'.repeat(64),inst='SYNTHETIC-BUYER',contractId='SYNTHETIC-MSA',evidenceRef='SYNTHETIC-SIGNED-MSA';
+const staff=id=>({actorUserId:id,actorSessionId:'test-session-'+id});
+const actor=id=>({...staff(id),actingInstitutionId:inst});
+let deny=false,proofFailure=false;
+const access={requireHuman:async a=>{if(deny||a.institutionId!==inst)throw new Error('authority denied');},evaluateHuman:async()=>({allowed:!deny})};
+const svc=new BuyerOnboardingService(db,access,{require:async()=>{if(deny)throw new Error('staff denied');}},{consume:async()=>{if(proofFailure)throw new Error('step-up failed');}});
+const proof={stepUpEvidenceId:'synthetic-test-proof'};
+async function main(){
+ const now=new Date(),past=new Date(now.getTime()-86400000),future=new Date(now.getTime()+365*86400000);
+ await db.institution.create({data:{id:inst,legalName:'Synthetic buyer — not a bank commitment',institutionKind:'BANK',jurisdiction:'IND',legalIdentifiers:{},status:'ACTIVE',applicantUserId:'maker'}});
+ await db.customerContract.create({data:{id:contractId,institutionId:inst,contractRef:'SYNTHETIC',currency:'INR',currencyScale:2,termsDigest:digest,termsEvidenceRef:evidenceRef,status:'ACTIVE_SHADOW',proposedByUserId:'maker',proposalStepUpId:'test',participantAcceptedByUserId:'buyer',participantAcceptedAt:past,effectiveAt:past,expiresAt:future,renewalReviewAt:future}});
+ await db.evidenceObject.create({data:{id:evidenceRef,institutionId:inst,evidenceType:'SIGNED_MSA',classification:'T1',purpose:'BUYER_ONBOARDING',status:'AVAILABLE',currentVersion:1,retentionUntilAt:future,createdByUserId:'maker',versions:{create:{id:'synthetic-version',version:1,schemaId:'signed-msa',schemaVersion:'1',payloadDigest:digest,signatureStatus:'TEST_ONLY',result:'TEST_ONLY',sourceAsOfAt:past,qualifications:{synthetic:true},validationStatus:'VALID',validationDetail:{synthetic:true},createdByUserId:'maker'}}}});
+ await svc.proposeWorkspace(staff('maker'),inst,{...proof,contractId,signedEvidenceRef:evidenceRef,signedMsaDigest:digest,expiresAt:future.toISOString()});
+ await assert.rejects(()=>svc.overview(actor('buyer')),/MSA/);
+ await assert.rejects(()=>svc.verifyWorkspace(staff('maker'),inst,{...proof,signedMsaDigest:digest,signatureReviewRef:'review'}),/independent/);
+ await svc.verifyWorkspace(staff('checker'),inst,{...proof,signedMsaDigest:digest,signatureReviewRef:'synthetic-signature-review'});
+ let p=await svc.createProfile(actor('preparer'),proof);
+ const c=completeCriteria();c.validFrom=now.toISOString().slice(0,10);c.validTo=new Date(now.getTime()+30*86400000).toISOString().slice(0,10);
+ p=await svc.changeProfile(actor('preparer'),p.id,{...proof,action:'SAVE',expectedRevision:p.revision,criteria:c});
+ await assert.rejects(()=>svc.changeProfile(actor('preparer'),p.id,{...proof,action:'SAVE',expectedRevision:0,criteria:c}),/changed/);
+ proofFailure=true;await assert.rejects(()=>svc.changeProfile(actor('preparer'),p.id,{...proof,action:'SUBMIT',expectedRevision:p.revision}),/step-up/);proofFailure=false;
+ assert.equal((await db.buyerRequirementsProfile.findUnique({where:{id:p.id}})).status,'DRAFT');
+ p=await svc.changeProfile(actor('preparer'),p.id,{...proof,action:'SUBMIT',expectedRevision:p.revision});
+ await assert.rejects(()=>svc.changeProfile(actor('preparer'),p.id,{...proof,action:'APPROVE',reviewRole:'CREDIT',expectedRevision:p.revision,digest:p.digest}),/independent/);
+ for(const role of ['CREDIT','LEGAL','OPERATIONS'])p=await svc.changeProfile(actor(role.toLowerCase()),p.id,{...proof,action:'APPROVE',reviewRole:role,expectedRevision:p.revision,digest:p.digest});
+ assert.equal((await svc.overview(actor('buyer'))).activeProfileId,p.id);
+ const next=await svc.createProfile(actor('preparer'),proof);assert.equal(next.version,2);assert.equal((await svc.overview(actor('buyer'))).activeProfileId,p.id);
+ const concurrent=await Promise.allSettled([30,60].map(maxDpd=>svc.changeProfile(actor('preparer'),next.id,{...proof,action:'SAVE',expectedRevision:0,criteria:{...c,maxDpd}})));
+ assert.equal(concurrent.filter(r=>r.status==='fulfilled').length,1);
+ await db.buyerRequirementsProfile.update({where:{id:next.id},data:{status:'APPROVED',digest:p.digest,approvals:p.approvals,criteria:{...c,validTo:'2020-01-01'}}});
+ assert.equal((await svc.overview(actor('buyer'))).activeProfileId,null,'expired or inconsistent newest approval must not revive an older profile');
+ deny=true;await assert.rejects(()=>svc.overview(actor('buyer')),/authority/);deny=false;
+ await db.customerContract.update({where:{id:contractId},data:{status:'SUSPENDED'}});await assert.rejects(()=>svc.overview(actor('buyer')),/MSA/);
+ await db.customerContract.update({where:{id:contractId},data:{status:'ACTIVE_SHADOW'}});
+ await db.evidenceObject.update({where:{id:evidenceRef},data:{status:'QUARANTINED'}});await assert.rejects(()=>svc.overview(actor('buyer')),/evidence/);
+ assert.ok(await db.buyerOnboardingEvent.count()>=10);
+ console.log('PASS: real buyer service persistence, MSA gate, independent reviews, revisions, rollback, concurrency, withdrawal; authority and MFA use explicit doubles');
+}
+main().finally(()=>db.$disconnect()).catch(e=>{console.error(e);process.exitCode=1;});

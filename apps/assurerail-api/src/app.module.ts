@@ -134,6 +134,12 @@ const dbModules = process.env.DATABASE_URL ? [
     && inspectPersistenceFlags(process.env).customerOperations === "shadow"
     ? [require("./customer-operations/customer-operations.module").CustomerOperationsModule]
     : []),
+  ...(process.env.ASSURERAIL_BUYER_ONBOARDING_ENABLED === "true"
+    && Boolean(process.env.DATABASE_URL)
+    && inspectPersistenceFlags(process.env).participantAdmission !== "off"
+    && inspectPersistenceFlags(process.env).internalRbac !== "off"
+    ? [require("./buyer-onboarding/buyer-onboarding.module").BuyerOnboardingModule]
+    : []),
   ...(inspectPersistenceFlags(process.env).hostedAlpha === "shadow"
     && inspectPersistenceFlags(process.env).participantAdmission !== "off"
     && inspectPersistenceFlags(process.env).transactionCase !== "off"
