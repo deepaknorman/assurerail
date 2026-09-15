@@ -1,5 +1,8 @@
 # NBFC account, engagement and billing workflow
 
+**Current commercial policy (15 September):** ₹500/loan execution-committed (₹5L minimum) or ₹650/loan standalone (₹6.5L minimum) for the combined fixed stages. Common initial payment: 20% of the committed quote. Choose after Initial Assessment and pay the selected route total less that payment before preparation. Execution fees are additional; paid additional services require separate selection and acceptance. Both fixed stages require qualified manual expert sign-off; 99% underlying automation is a target to prove. Top-up applies only to voluntary switch/withdrawal of an accepted execution mandate, not failed close alone. See the [current policy](../../../../docs/design/AssureRail_Product_Stages_2026-09-15.md) and [commercial pack](../../../../docs/gtm/pitch-pack-2026-09-15/README.md). Runtime migration and acceptance are still required.
+
+
 15 September 2026. Founder-confirmed product requirements. Implement in the standalone AssureRail customer experience. This records the required behaviour; it does not assert that billing, collections or settlement integrations are complete.
 
 The earlier execution calculator and pricing workbooks must be migrated to this policy before they are used for a new customer quote. This update records requirements and commercial policy; it does not change their runtime calculations or activate payment collection.
@@ -8,11 +11,11 @@ The earlier execution calculator and pricing workbooks must be migrated to this 
 
 | Stage | Pricing | Collection and start condition |
 |---|---|---|
-| Initial Assessment | Fixed accepted engagement quote; current bands ₹50,000 / ₹75,000 / ₹1,00,000 before tax | Pay the full amount due upfront. Paid processing starts only after receipt reconciliation and allocation to this engagement. |
-| Portfolio Preparation | Separate fixed engagement quote; preserve an explicitly agreed credit for reusable Initial Assessment work | Pay the full incremental amount due upfront before preparation begins. No automatic upgrade or collection deferred to execution. |
-| Buyer Review & Execution | Separate success fee; approximately 30 bps as the quote baseline | Calculated on actual purchase consideration successfully settled. Collected from escrow at successful settlement under the accepted distribution schedule. |
+| Initial Assessment | 20% of committed fixed quote: ₹500/loan, ₹5L minimum; credited once to either route, before tax | Pay the full amount due upfront. Paid processing starts only after receipt reconciliation and allocation to this engagement. |
+| Portfolio Preparation | Selected route total less initial payment: committed ₹500/loan (min ₹5L) or standalone ₹650/loan (min ₹6.5L) | Pay the full incremental amount due upfront before preparation begins. No automatic upgrade or collection deferred to execution. |
+| Buyer Review & Execution | Core Platform Execution & Success Fee: marginal 50/40/35/30 bps at ₹10/50/100cr boundaries; proposed ₹5L minimum. Additional services separately selected and quoted | Calculated on actual purchase consideration successfully settled. Collected from escrow at successful settlement under the accepted distribution schedule. |
 
-The founder expressly selected **actual purchase consideration settled**, rather than loan principal proposed or transferred, as the execution fee base. The success fee is **additional to assessment/preparation fees**: earlier stage payments do not reduce it. Thirty bps is a proposed starting rate, not an industry tariff or a rate automatically accepted by every customer. Freeze the actual rate, basis and completion trigger in the execution quote.
+The founder expressly selected **actual purchase consideration settled**, rather than loan principal proposed or transferred, as the execution fee base. The success fee is **additional to assessment/preparation fees**: committed-route stage payments do not reduce it; only a standalone-premium conversion credit is eligible. The founder selected the four marginal rates on15September2026. The₹5L minimum is proposed and subject to accepted transaction terms. Freeze the actual rate, basis and completion trigger in the execution quote.
 
 This supersedes the earlier principal-based, all-inclusive Gold pricing illustration for this NBFC journey. Do not carry the earlier 60/35/20 bps tiers, common-programme charges, minima or automatic preparation credits into the new success fee. Other product pricing and already accepted customer contracts require their own scope/change process.
 
@@ -23,7 +26,7 @@ This supersedes the earlier principal-based, all-inclusive Gold pricing illustra
 3. **Create Initial Assessment engagement.** Capture asset, book, cutoff, record-count band and ownership/data authority; check supported scope before charging. Show fixed fee, applicable taxes, included outputs, review cycles and correction window. Accept the order and processing terms with versioned authority evidence.
 4. **Pay and activate.** Offer approved payment link or bank-transfer instructions. Issue the authoritative invoice and reconcile payment to this specific engagement. The paid work queue opens only when the invoice is satisfied under the approved payment and withholding rules.
 5. **Upload, assess and improve.** Guided loan-tape/document uploads, saved progress, checks, source-linked questions, reviewer release and included correction/reassessment cycles stay in the account. A second unrelated book is a new engagement. Do not charge again for an included same-scope run.
-6. **Request Portfolio Preparation.** Issue a separate accepted scope and invoice, showing any applicable Initial Assessment credit exactly once. Collect the full remaining amount upfront, then activate preparation. The seller can retain its paid assessment and decline this stage.
+6. **Choose route and request Portfolio Preparation.** Show standalone and committed quotes; record route, mandate/scope/term if committed, then issue the accepted scope and invoice with Initial Assessment payment credited once. Collect the full remaining amount upfront, then activate preparation. The seller can retain its paid assessment and decline this stage.
 7. **Accept execution engagement.** Show separately the rate in bps and percent, selected consideration base, indicative fee, taxes/withholding, successful-close definition and escrow collection authority. Obtain the seller's buyer-disclosure mandate and the transaction/provider approvals required for execution. There is no upfront execution success-fee charge.
 8. **Close and reconcile.** Calculate the fee from the actual successful closing, record the invoice and approved escrow line, and reconcile the fee receipt. Show the seller its closing statement, paid fees and residual cash. Keep incomplete or ambiguous closings pending rather than treating them as successful.
 
@@ -39,29 +42,52 @@ This supersedes the earlier principal-based, all-inclusive Gold pricing illustra
 
 ## Success-fee calculation and escrow collection
 
-`execution fee before tax = eligible actual settled purchase consideration × accepted bps ÷ 10,000`
+`execution fee before tax = max(accepted minimum, sum(each eligible settled consideration slice × accepted bps ÷ 10,000))`, with zero success fee if no successful close.
 
-At 30 bps, the rate is 0.30%. The eligible base is the buyer's actual purchase consideration for the successfully completed acquisition, before distributions to the seller's existing lender, AssureRail and other payees. It excludes unrelated escrow deposits, unclosed books and cancelled consideration. The transaction quote must define treatment of price adjustments and separately paid accrued-interest items; do not infer the base from an arbitrary escrow credit.
+The marginal slices are first₹10cr at50bps, above₹10cr through₹50cr at40bps, above₹50cr through₹100cr at35bps, and above₹100cr at30bps. The eligible base is the buyer's actual purchase consideration for the successfully completed acquisition, before distributions to the seller's existing lender, AssureRail and other payees. It excludes unrelated escrow deposits, unclosed books and cancelled consideration. The transaction quote must define treatment of price adjustments and separately paid accrued-interest items; do not infer the base from an arbitrary escrow credit.
 
 Calculate with exact currency arithmetic and the accepted rounding policy. For multiple successful partial closings, compute the cumulative fee on eligible consideration and subtract the execution fee already accounted for, so rounding and repeat events do not produce duplicate charges. Each seller retains a separate base, invoice and fee balance. If an all-or-nothing closing was agreed, an incomplete batch is not successful merely because one payment message was acknowledged.
 
 Escrow release conditions must align the contractual successful-close trigger with the bank/provider's accepted settlement process. The seller's direction and approved distribution statement authorise the fee line; AssureRail cannot take an unagreed amount. Fee payment is part of the agreed successful closing, not a general account-sweep permission. Unknown payment outcomes require reconciliation before retry. Corrected or reversed transactions follow the agreed adjustment/refund process.
 
-| Actual consideration settled | Execution fee at 30 bps, before tax |
+| Actual consideration settled | Execution fee under revised slabs and proposed minimum, before tax |
 |---|---:|
-| ₹8.40cr | ₹2.52L |
-| ₹10cr | ₹3L |
-| ₹25cr | ₹7.50L |
-| ₹50cr | ₹15L |
+| ₹8.40cr | ₹5L |
+| ₹10cr | ₹5L |
+| ₹25cr | ₹11L |
+| ₹50cr | ₹21L |
+| ₹100cr | ₹38.50L |
+| ₹125cr | ₹46L |
 
-Example with the existing full-preparation price assumption: ₹50,000 Initial Assessment plus ₹2.50L upfront on upgrade reaches ₹3L total preparation fees. A subsequent successful ₹10cr sale adds a ₹3L execution fee. Total AssureRail fees are ₹6L before tax and external expenses. Earlier fees are already paid; only the due execution invoice and other separately authorised payables enter the closing distribution.
+Example with the existing full-preparation price assumption: At750loans the selected committed minimum means₹1L Initial Assessment plus₹4L upfront before preparation, reaching₹5L total fixed fees. A subsequent successful ₹10cr sale adds a ₹5L execution fee. Total AssureRail fees are₹10L before tax and external expenses. Earlier fees are already paid; only the due execution invoice and other separately authorised payables enter the closing distribution.
 
-For five sellers each using that ₹3L preparation scope and each settling ₹10cr at 30 bps, total AssureRail fees would be ₹30L before tax, not the earlier ₹50L cohort illustration. Recalculate margins and break-even from this policy and actual accepted rates; do not retain the old revenue assumptions silently.
+For five sellers each using that ₹5L preparation scope and each settling ₹10cr under the revised schedule, total AssureRail fees would be₹50L before tax. This equals the historical headline by coincidence, with a different fee basis and timing. Recalculate margins and break-even from this policy and actual accepted rates; do not retain the old revenue assumptions silently.
 
 ## Account dashboard and implementation acceptance
 
 Show stage, engagement reference, accepted scope/quote, amount due, paid/credited amounts, payment status, owner, next action, outstanding documents, report versions and remaining included reviews. Use separate commercial and delivery states: “payment pending” is not “under review”, and “execution terms accepted” is not “sale completed”.
 
-Acceptance requires proving that: unpaid or partially paid stages cannot begin; payment events cannot unlock the wrong organisation/book/stage; credits cannot be consumed twice; included reruns are not re-invoiced; execution uses settled consideration rather than principal; failed/unclosed sales create no success fee; prior preparation fees do not reduce the execution fee; partial closings and duplicate receipts cannot double charge; and the seller statement reconciles the approved fee and actual escrow receipt.
+Acceptance requires proving that: unpaid or partially paid stages cannot begin; payment events cannot unlock the wrong organisation/book/stage; credits cannot be consumed twice; included reruns are not re-invoiced; execution uses settled consideration rather than principal; failed/unclosed sales create no success fee; committed preparation fees do not reduce execution; standalone-premium credit is capped and applied once; partial closings and duplicate receipts cannot double charge; and the seller statement reconciles the approved fee and actual escrow receipt.
 
 The customer interface belongs in AssureRail. Reused assessment capabilities operate behind its governed integration. The NBFC should not need an AssureLocker account, a developer key or access to a developer portal to purchase and complete these stages.
+
+## Route and review acceptance additions
+
+- Do not start preparation without an accepted route and full reconciled balance: for 3,000 loans, initial ₹3L; next ₹12L committed or ₹16.5L standalone. The standalone balance is not 80% of its total.
+- Freeze both alternative quotes and loan scope. A committed order needs an explicit mandate, scope, term and responsibilities. Existing buyers do not automatically trigger a buyer-arrangement add-on. Core fee and additional scopes need explicit acceptance.
+- A voluntary execution switch/withdrawal can create only the accepted fixed-price difference, less prior top-ups. Failed close, adverse findings, market delay, expiry or a system timeout alone must not auto-invoice a top-up. Partial scope and provider-default exceptions need review. No double minimum, blocked report export or automatic sweep.
+- Both Initial Assessment and Portfolio Preparation need named qualified expert release. AI cannot approve its own evidence or conclusions. Track coverage, confidence, material exceptions, overrides and actual expert hours; keep review costs until automation savings are measured.
+- Monitoring and query/dispute coordination are optional bounded services. Do not imply legal representation, adjudication or guaranteed dispute resolution. Additional charges require accepted scopes and prices.
+
+These are requirements added to the commercial handoff; this documentation change does not prove these states are implemented in the running application.
+
+
+## Standalone conversion credit
+
+Standalone conversion: the full 30% premium actually paid for the same agreed scope is credited against eligible AssureRail execution fees at successful closing, capped at cumulative fees earned and applied once across partial closes. No cash refund or tax/external-cost offset. For 3,000 loans: ₹19.5L standalone fixed fees, ₹4.5L credit; ₹98.5L gross base execution becomes ₹94L collected, giving ₹113.5L combined fees. The committed route has no additional fixed-stage credit. This replaces the earlier 50% preparation-credit suggestion. Agree the execution scope, credit validity, eligible scope and treatment of refunds/reversals before conversion. No standalone conversion uptake or withdrawal recovery is assumed in the aggregate forecast.
+
+## Current modular execution proposal
+
+The founder agreed **Platform Execution & Success Fee + Additional Services**. Customer-facing metal tiers are superseded; additional-service rates still need accepted quotes. The existing marginal50/40/35/30bps schedule is the core success fee, charged once. Itemise optional arrangement, managed escrow coordination, custom buyer LMS/ERP integration, recurring technical feeds and monitoring/support. Buyer requirements describe outcomes; they do not auto-select paid services or remove the seller's acceptable provider choices. Nothing paid is preselected; mandatory fixed-stage expert review stays included. Standard buyer-format export is included within core scope; custom connectors are separately quoted after reuse review.
+
+The detailed service proposal and cost justification are in the [additional-service specification](../../../../docs/design/AssureRail_Execution_And_Additional_Services_2026-09-15.md). New add-on rates remain recommendations. The30%standalone premium conversion credit offsets only the core fee once; no additional-service uptake is assumed in the aggregate forecast. Production billing, buyer-system integration and recurring service activation still require implementation and acceptance.
