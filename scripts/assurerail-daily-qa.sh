@@ -5,16 +5,23 @@
 #   1. Pull latest main (ff-only)
 #   2. Rebuild the venue SHADOW worktree at origin/main (isolated from local dev)
 #   3. Deps ONLINE (npm install offline-first + the venue's OWN prisma client) — only phase with egress
-#   4. NO-EGRESS build of apps/assurerail-api under macOS sandbox-exec (build-time egress = a bug)
-#   5. Venue unit tests (k-anon, tape integrity) on the compiled dist
-#   6. AssureRail invariants (secrets/CORS/ledger-atomicity/segregation) on the shadow source
-#   7. repository-local gitleaks scan when installed
-#   8. scripts/assurerail-strix-daily.sh (timeboxed autonomous scan of the venue source)
-#   9. Dated report → docs/qa/daily/arail/DAILY_ARAIL_<date>.md (+ exit 1 if any gate failed)
+#   4. Deterministic offline security harness under its own deny-network sandbox
+#   5. NO-EGRESS build of apps/assurerail-api under macOS sandbox-exec (build-time egress = a bug)
+#   6. Venue unit tests (k-anon, tape integrity) on the compiled dist
+#   7. AssureRail invariants (secrets/CORS/ledger-atomicity/segregation) on the shadow source
+#   8. repository-local gitleaks scan when installed
+#   9. scripts/assurerail-strix-daily.sh (timeboxed autonomous scan of the venue source)
+#  10. Dated report → docs/qa/daily/arail/DAILY_ARAIL_<date>.md (+ exit 1 if any gate failed)
 # Fail-soft: every step records PASS/FAIL/SKIP; the run always produces a report.
 # ─────────────────────────────────────────────────────────────────────────────
 set -u
 export CHECKPOINT_DISABLE=1 NEXT_TELEMETRY_DISABLED=1 TURBO_TELEMETRY_DISABLED=1 CI=1
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+if [ "${1:-}" = "--offline-security" ]; then
+  shift
+  exec "$SCRIPT_DIR/assurerail-offline-security-daily.sh" "$@"
+fi
 
 REPO="${ARAIL_REPO_ROOT:-$(git rev-parse --show-toplevel)}"
 SHADOW="${ARAIL_SHADOW_ROOT:-${REPO}-shadow}"
@@ -64,30 +71,36 @@ fi
 step "Shadow deps (npm install, offline-first)" bash -c "cd '$SHADOW' && npm install --prefer-offline --no-audit --no-fund"
 step "Venue prisma client" bash -c "cd '$SHADOW/apps/assurerail-api' && npm exec -- prisma generate --schema prisma/schema.prisma"
 
-# ── 4. NO-EGRESS builds ──────────────────────────────────────────────────────
+# ── 4. deterministic daily offline security lane ─────────────────────────────
+step "Daily offline security harness" env \
+  ARAIL_REPO_ROOT="$SHADOW" \
+  ARAIL_OFFLINE_SECURITY_EVIDENCE_DIR="$REPORT_DIR/offline-security" \
+  "$SHADOW/scripts/assurerail-offline-security-daily.sh"
+
+# ── 5. NO-EGRESS builds ──────────────────────────────────────────────────────
 step "NO-EGRESS build — venue api (tsc)" sandbox-exec -p "$NO_EGRESS" bash -c "cd '$SHADOW/apps/assurerail-api' && npx tsc"
 
-# ── 5. venue unit tests (compiled dist) ──────────────────────────────────────
+# ── 6. venue unit tests (compiled dist) ──────────────────────────────────────
 step "Venue unit tests (k-anon, tape integrity)" bash -c "cd '$SHADOW/apps/assurerail-api' && node --test 'dist/**/*.test.js'"
 
-# ── 6. venue invariants (secrets / CORS / ledger atomicity / segregation) ────
+# ── 7. venue invariants (secrets / CORS / ledger atomicity / segregation) ────
 step "AssureRail invariants" bash -c "cd '$SHADOW' && node scripts/check-assurerail-invariants.mjs"
 
-# ── 7. security scan ─────────────────────────────────────────────────────────
+# ── 8. security scan ─────────────────────────────────────────────────────────
 if command -v gitleaks >/dev/null 2>&1; then
   step "Local secret scan (gitleaks)" bash -c "cd '$SHADOW' && gitleaks git --no-banner --redact"
 else
   skip "Local secret scan" "gitleaks is not installed"
 fi
 
-# ── 8. Strix autonomous security agent (venue-scoped) ────────────────────────
+# ── 9. Strix autonomous security agent (venue-scoped) ────────────────────────
 if [ -x "$REPO/scripts/assurerail-strix-daily.sh" ]; then
   step "AssureRail Strix (timeboxed)" "$REPO/scripts/assurerail-strix-daily.sh" "$SHADOW"
 else
   skip "AssureRail Strix" "scripts/assurerail-strix-daily.sh missing"
 fi
 
-# ── 9. summary ───────────────────────────────────────────────────────────────
+# ── 10. summary ──────────────────────────────────────────────────────────────
 {
   echo ""; echo "## Summary"; echo ""
   echo "| Result | Count | Steps |"; echo "|---|---|---|"

@@ -19,7 +19,10 @@
     "demo:check": "npm run check:demo-access --workspace=@assurerail/web && npm run check:ar-demo01 --workspace=@assurerail/web",
     "demo:preflight": "bash scripts/assurerail-demo-preflight.sh --source",
     "demo:browser": "npm run check:ar-demo01-browser --workspace=@assurerail/web",
-    "pilot:check": "node scripts/assurerail-pilot-readiness-pack-check.mjs"
+    "pilot:check": "node scripts/assurerail-pilot-readiness-pack-check.mjs",
+    "security:offline-daily": "bash scripts/assurerail-offline-security-daily.sh",
+    "policy:generate": "node scripts/generate-assurerail-commercial-policy.mjs",
+    "policy:check": "node scripts/generate-assurerail-commercial-policy.mjs --check && node scripts/check-assurerail-commercial-policy.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1"

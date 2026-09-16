@@ -6,6 +6,10 @@
 # a pass — the runner renders it ⚠ SKIP; exit 0 here would hide a scan that never ran). Secrets are
 # supplied directly to this process at runtime and never read from another product's environment.
 set -u
+if [ "${ARAIL_OFFLINE_ONLY:-0}" = "1" ]; then
+  echo "SKIP: Strix requires Docker, network access and a live model credential; it is excluded from the deterministic offline security lane"
+  exit 3
+fi
 REPO="${ARAIL_REPO_ROOT:-$(git rev-parse --show-toplevel)}"
 TARGET="${1:-$REPO}"
 STRIX_BIN="${ARAIL_STRIX_BIN:-$HOME/.venvs/strix/bin/strix}"

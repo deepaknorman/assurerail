@@ -21,6 +21,16 @@ class ExtractionTest(unittest.TestCase):
         with self.assertRaises(UnicodeDecodeError):
             worker.extract(b'loan\n\xff', "text/csv")
 
+    def test_csv_column_bomb_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "COLUMN_LIMIT_EXCEEDED"):
+            worker.extract((",".join(["x"] * 501)).encode(), "text/csv")
+
+    def test_empty_and_unsupported_documents_fail_closed(self):
+        with self.assertRaisesRegex(ValueError, "EMPTY_DOCUMENT"):
+            worker.extract(b"", "text/csv")
+        with self.assertRaisesRegex(ValueError, "UNSUPPORTED_DOCUMENT_TYPE"):
+            worker.extract(b"borrower data", "text/plain")
+
     def workbook(self, sheet, extra=None):
         output = io.BytesIO()
         with zipfile.ZipFile(output, "w") as z:
@@ -47,6 +57,14 @@ class ExtractionTest(unittest.TestCase):
             worker.extract(self.workbook('<!DOCTYPE sheet [<!ENTITY x "secret">]><sheet/>'), mime)
         with self.assertRaisesRegex(ValueError, "EXTERNAL"):
             worker.extract(self.workbook('<sheet/>', ("xl/externalLinks/link1.xml", "")), mime)
+
+    def test_workbook_duplicate_archive_entry_is_rejected(self):
+        output = io.BytesIO()
+        with zipfile.ZipFile(output, "w") as archive:
+            archive.writestr("xl/worksheets/sheet1.xml", "<sheet/>")
+            archive.writestr("xl/worksheets/sheet1.xml", "<sheet/>")
+        with self.assertRaisesRegex(ValueError, "UNSAFE_WORKBOOK_ARCHIVE"):
+            worker.extract(output.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
     def test_pdf_text_and_blank_page_ocr_gap(self):
         from pypdf import PdfWriter
