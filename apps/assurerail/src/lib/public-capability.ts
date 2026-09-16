@@ -11,8 +11,8 @@ export type PublicCapability = {
   summary: string;
 };
 
-export const PUBLIC_CAPABILITY_REVIEWED_AT = "2026-09-07";
-export const PUBLIC_CAPABILITY_NEXT_REVIEW_AT = "2026-10-07";
+export const PUBLIC_CAPABILITY_REVIEWED_AT = "2026-09-16";
+export const PUBLIC_CAPABILITY_NEXT_REVIEW_AT = "2026-10-16";
 
 /**
  * Publication-safe view of the AssureRail capability register.
@@ -23,12 +23,12 @@ export const PUBLIC_CAPABILITY_NEXT_REVIEW_AT = "2026-10-07";
  */
 export const PUBLIC_CAPABILITIES: readonly PublicCapability[] = [
   {
-    id: "private-evaluation",
-    label: "Private product evaluation",
-    state: "PRIVATE_EVALUATION",
-    publicLabel: "Available",
+    id: "initial-assessment",
+    label: "Automated Initial Assessment",
+    state: "BY_ARRANGEMENT",
+    publicLabel: "Applications open",
     summary:
-      "Institutional teams can review the proposition and agree a suitably bounded evaluation.",
+      "Approved NBFC portfolios can apply for a paid, automated and unsigned Initial Assessment.",
   },
   {
     id: "completed-deal-review",
@@ -36,7 +36,7 @@ export const PUBLIC_CAPABILITIES: readonly PublicCapability[] = [
     state: "BY_ARRANGEMENT",
     publicLabel: "By arrangement",
     summary:
-      "A completed DA or PTC can be examined without changing the original transaction or its records.",
+      "A completed conventional DA can be examined without changing the original transaction or its records.",
   },
   {
     id: "live-transaction-services",
@@ -52,14 +52,14 @@ export const PUBLIC_ROUTE_MODES = [
   {
     route: "Direct assignment",
     conventional:
-      "Coordinate a bilateral transfer while each institution keeps its own decision and records.",
+      "Phase 1: prepare a bilateral transfer while each institution keeps its own decision and records.",
     tokenised:
       "A future representation option only where the transaction structure and applicable permissions support it.",
   },
   {
     route: "PTC",
     conventional:
-      "Coordinate the parties and evidence while the trustee and appointed providers retain their roles.",
+      "Later phase: conventional PTC discovery continues while production resources focus on direct assignment.",
     tokenised:
       "A separately evaluated future option; it is not implied by conventional PTC support.",
   },

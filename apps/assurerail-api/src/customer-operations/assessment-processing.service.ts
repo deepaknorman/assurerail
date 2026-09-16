@@ -108,7 +108,10 @@ export class AssessmentProcessingService {
       }
       // Bounded AI input; extraction covers all supplied files. A budget skip is explicit in the report.
       const analysis=JSON.stringify(sources).length<=120000?await analyseSources(sources):{provider:"NOT_RUN",model:null,findings:[],qualification:"AI_INPUT_BUDGET_EXCEEDED"};
-      const dataQuality=loanTapeMetrics(tapes,(job.engagement.scope as {uniqueLoanCount:number}).uniqueLoanCount);
+      const scope=job.engagement.scope as {primaryPairCount?:number;linkedPartyCount?:number;uniqueLoanCount?:number};
+      const quotedPrimaryPairs=scope.primaryPairCount ?? scope.uniqueLoanCount;
+      if (!quotedPrimaryPairs) throw new Error("ENGAGEMENT_PRIMARY_PAIR_COUNT_MISSING");
+      const dataQuality=loanTapeMetrics(tapes,quotedPrimaryPairs,scope.linkedPartyCount ?? 0);
       const extraction={segmentCount:sources.length,sourceCount:manifest.length,exceptions,ocrProvenance};
       const outcome=job.stage==="INITIAL"?automatedInitialOutcome({assetFamily:(job.engagement.scope as {assetFamily:string}).assetFamily,dataQuality,exceptions,analysis}):null;
       const release=job.stage==="INITIAL"?{method:"AUTOMATED_UNSIGNED",outcome,expertReviewed:false,professionalSignoff:false}:{method:"QUALIFIED_EXPERT_REVIEW_REQUIRED",outcome:null,expertReviewed:false,professionalSignoff:false};

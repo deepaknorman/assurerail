@@ -11,8 +11,8 @@ import {loanTapeMetrics} from "./loan-tape-metrics";
 import {automatedInitialOutcome} from "./assessment-processing.service";
 
 test("loan tape reconciles quoted scope, rejects duplicates and does not silently fill missing balances",()=>{
- const tape={contentType:"text/csv",segments:[{text:'["loan_id","principal_minor"]'},{text:'["001","100"]'},{text:'["002","200"]'}]};
- const r=loanTapeMetrics([tape],2);assert.equal(r.status,"MATCHED");assert.equal(r.parsedPrincipalMinor,"300");assert.equal(loanTapeMetrics([tape],3).status,"QUOTED_COUNT_MISMATCH");assert.equal(loanTapeMetrics([tape,tape],2).duplicateRecords,2);assert.equal(loanTapeMetrics([{...tape,segments:[...tape.segments,{text:'["003",""]'}]}],3).invalidRecords,1);assert.equal(loanTapeMetrics([],0).coverageEstablished,false);assert.equal(loanTapeMetrics([{...tape,contentType:"application/pdf"}],2).status,"TAPE_MAPPING_REQUIRED");
+ const tape={contentType:"text/csv",segments:[{text:'["loan_id","party_id","party_role","principal_minor"]'},{text:'["001","B1","BORROWER","100"]'},{text:'["001","B2","CO_BORROWER","100"]'},{text:'["001","G1","LINKED_PARTY","100"]'},{text:'["002","B3","BORROWER","200"]'}]};
+ const r=loanTapeMetrics([tape],3,1);assert.equal(r.status,"MATCHED");assert.equal(r.parsedPrimaryPairCount,3);assert.equal(r.parsedLinkedPartyCount,1);assert.equal(r.parsedUniqueLoanCountActual,2);assert.equal(r.parsedPrincipalMinor,"300");assert.equal(loanTapeMetrics([tape],4,1).status,"QUOTED_COUNT_MISMATCH");assert.equal(loanTapeMetrics([tape],3,0).status,"QUOTED_COUNT_MISMATCH");assert.equal(loanTapeMetrics([tape,tape],3,1).duplicateRecords,4);assert.equal(loanTapeMetrics([{...tape,segments:[...tape.segments,{text:'["003","B4","BORROWER",""]'}]}],4,1).invalidRecords,1);assert.equal(loanTapeMetrics([],0).coverageEstablished,false);assert.equal(loanTapeMetrics([{...tape,contentType:"application/pdf"}],3,1).status,"TAPE_MAPPING_REQUIRED");
 });
 
 test("Initial Assessment outcome is automated, conservative and never an expert sign-off",()=>{
@@ -27,7 +27,8 @@ test("Initial Assessment outcome is automated, conservative and never an expert 
 
 const tax={feeBasis:"NOTIONAL_BASIS_POINTS",rateValue:"1800",roundingMode:"HALF_UP"} as const;
 test("accepted quote separately funds initial and preparation, with approved tax and unchanged founder pricing",()=>{
- const q=acceptedPricing(3000,tax);assert.deepEqual(q.initial,{baseMinor:"58500000",taxMinor:"10530000",totalMinor:"69030000"});assert.equal(q.committedPreparation.baseMinor,"91500000");assert.equal(q.standalonePreparation.baseMinor,"136500000");assert.equal(acceptedPricing(100,tax).initial.baseMinor,"31200000");assert.throws(()=>acceptedPricing(500,{...tax,minimumFeeMinor:"100"}),/without floor/);
+ const scope={primaryPairCount:3000,linkedPartyCount:0,sellerProposedConsiderationMinor:"10000000000",aggregateProgrammeConsiderationMinor:"10000000000"};
+ const q=acceptedPricing(scope,tax);assert.deepEqual(q.initial,{baseMinor:"58500000",taxMinor:"10530000",totalMinor:"69030000"});assert.equal(q.committedPreparation.baseMinor,"91500000");assert.equal(q.standalonePreparation.baseMinor,"136500000");assert.equal(acceptedPricing({...scope,primaryPairCount:100},tax).initial.baseMinor,"31200000");assert.throws(()=>acceptedPricing(scope,{...tax,minimumFeeMinor:"100"}),/without floor/);
 });
 test("billing validates registration selection and GST state consistency",()=>{
  const profile={legalName:"Synthetic NBFC",billingEmail:"billing@example.test",address:"Test address",stateCode:"27",postalCode:"400001",gstRegistration:"UNREGISTERED"};assert.equal(billingProfile(profile).gstin,null);assert.throws(()=>billingProfile({...profile,gstRegistration:"REGISTERED",gstin:"29ABCDE1234F1Z5"}),/mismatch/);

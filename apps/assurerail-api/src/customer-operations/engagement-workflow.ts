@@ -1,4 +1,4 @@
-import { engagementQuote, type PreparationRoute } from "./engagement-pricing";
+import { engagementQuote, type EngagementQuoteInput, type PreparationRoute } from "./engagement-pricing";
 import { calculateExactFee, type ExactFeeRule } from "./fee-calculation";
 import { sha256Digest } from "../contracts/v1";
 
@@ -22,8 +22,8 @@ export function stagePrice(baseMinor: string, taxRule: ExactFeeRule) {
   const taxMinor = calculateExactFee(taxRule, { quantityMinor: "1", notionalMinor: baseMinor }).feeMinor;
   return { baseMinor, taxMinor, totalMinor: (BigInt(baseMinor) + BigInt(taxMinor)).toString() };
 }
-export function acceptedPricing(count: unknown, taxRule: ExactFeeRule) {
-  const q = engagementQuote(count);
+export function acceptedPricing(input: EngagementQuoteInput, taxRule: ExactFeeRule) {
+  const q = engagementQuote(input);
   return { ...q, initial: stagePrice(q.initialAssessmentMinor, taxRule), committedPreparation: stagePrice(q.committedPreparationBalanceMinor, taxRule), standalonePreparation: stagePrice(q.standalonePreparationBalanceMinor, taxRule) };
 }
 export function stageAmount(quote: ReturnType<typeof acceptedPricing>, stage: string, route: PreparationRoute | null) {

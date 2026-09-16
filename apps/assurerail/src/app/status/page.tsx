@@ -14,8 +14,8 @@ export default function StatusPage() {
     <PublicPage
       eyebrow={`Public information · updated ${PUBLIC_CAPABILITY_REVIEWED_AT}`}
       title="Current availability"
-      lead="AssureRail is being evaluated with institutional stakeholders. This page states only what an external visitor can request today."
-      actions={<ReplayAction label="Discuss a private evaluation" />}
+      lead="Initial Assessment applications are open for approved NBFC portfolios. Live transfer, funds movement and settlement remain separately activated."
+      actions={<ReplayAction label="Discuss an Initial Assessment" />}
     >
       <JsonLd value={{
         "@context": "https://schema.org",

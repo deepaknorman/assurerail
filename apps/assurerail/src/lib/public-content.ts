@@ -39,9 +39,9 @@ export const PUBLIC_ROUTE_PAGES: readonly PublicRoutePage[] = [
   {
     slug: "ptc",
     shortLabel: "PTC",
-    title: "Trustee-controlled PTC orchestration with the legal record left intact",
+    title: "Conventional PTC is a later AssureRail phase",
     summary:
-      "Coordinate the issuer, investors, trustee and appointed providers through one transaction view while preserving their respective roles.",
+      "PTC discovery continues while Phase 1 production work focuses on conventional direct assignment.",
     whoDecides:
       "The trustee is the final transaction-control authority in the AssureRail workflow. Investors retain their investment decisions and appointed parties retain their regulated functions.",
     authoritativeRecord:
@@ -57,6 +57,7 @@ export const PUBLIC_ROUTE_PAGES: readonly PublicRoutePage[] = [
       "A reproducible review output",
     ],
     unavailable: [
+      "PTC production onboarding is not part of the Phase 1 direct-assignment service",
       "No public offer, placement, issuance or trading function is currently offered",
       "PTC decisions and appointed-provider roles remain with the appropriate institutions",
     ],
@@ -82,7 +83,7 @@ export const PERSONA_PAGES: readonly PersonaPage[] = [
       "Start with one completed transaction, identify every hand-off and return a reusable evidence map without replacing the LMS or source ledger.",
     retains: ["Asset selection and source records", "Commercial decision and counterparty choice", "Execution by its appointed and authorised teams"],
     gains: ["One versioned case and request register", "Explicit evidence gaps and completion breaks", "A portable dossier for the next proof stage"],
-    firstProof: "A completed conventional DA and, separately, a completed conventional PTC with a named transaction-file owner.",
+    firstProof: "A completed conventional DA with a named transaction-file owner. PTC is a separate later-phase evaluation.",
   },
   {
     slug: "transferees-investors",
@@ -309,7 +310,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
       {
         heading: "Start with the structure, not the headline pool size",
         paragraphs: [
-          "This example uses five NBFCs, each offering ₹11 crore of performing EV receivables at the same cutoff date. Together they present a ₹55 crore economic cohort to one buyer. The working assumption is 825 admitted loans per seller, or 4,125 loans in total, based on an average outstanding balance of about ₹1.33 lakh.",
+          "This example uses five NBFCs, each offering ₹11 crore of performing EV receivables at the same cutoff date. Together they present a ₹55 crore economic cohort to one buyer. The working assumption is 825 unique loan–borrower pairs per seller, or 4,125 primary billing units in total, based on an average outstanding balance of about ₹1.33 lakh and no separately chargeable linked parties.",
           "The loans do not lose their seller-level identity. Each account keeps its originator, source record, repayment history, security evidence and transfer chain. A buyer may acquire the five seller pools through coordinated assignments. If the parties instead issue securitisation notes, the SPE, trustee, tranching, retention and other applicable requirements must be separately designed and approved. Under the RBI definition, securitisation involves at least two tranches with different credit risk, so ‘single tranche’ should not be used as a legal description without counsel confirming the structure.",
         ],
         table: {
@@ -317,7 +318,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
           columns: ["Item", "Per NBFC", "Five-NBFC cohort"],
           rows: [
             ["Offered principal / assumed settled consideration", "₹11.00cr", "₹55.00cr"],
-            ["Admitted loans", "825", "4,125"],
+            ["Unique loan–borrower pairs", "825", "4,125"],
             ["Average outstanding per loan", "≈₹1.33L", "≈₹1.33L"],
             ["Buyer", "One common buyer", "One coordinated transaction"],
           ],
@@ -326,7 +327,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
       {
         heading: "The gated preparation process",
         paragraphs: [
-          "Each seller first accepts its own scope and pays for an automated Initial Assessment. AssureRail ingests the loan tape and evidence, reconciles totals, identifies missing fields and documents, calculates portfolio measures, tests stated economics and returns an unsigned preliminary report. There is no consultant or qualified human sign-off in this stage. A seller may correct the source material and use up to three included automated reassessments within 30 days.",
+          "Each seller first accepts its own scope and pays for an automated Initial Assessment. AssureRail ingests the loan tape and evidence, reconciles totals, identifies missing fields and documents, calculates portfolio measures, tests stated economics and returns an unsigned preliminary report. There is no consultant or qualified human sign-off in this stage. A seller may correct the source material and use the automated reassessment allowance stated in its accepted quote.",
           "A seller that proceeds then pays the remaining fixed fee for Portfolio Preparation. This is where qualified experts review the evidence, exceptions, legal and financial work within their accepted scope and sign off the prepared output. The five prepared seller packs are then mapped to one common cutoff, eligibility vocabulary, buyer data schema and transaction timetable. The buyer still performs its own diligence and makes its own credit and purchase decision.",
         ],
         bullets: [
@@ -341,8 +342,9 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
       {
         heading: "What each NBFC pays before execution",
         paragraphs: [
-          "The execution-committed route is ₹500 per admitted loan with an ₹8 lakh minimum for Initial Assessment plus Portfolio Preparation. The standalone route is ₹650 per loan with a ₹10.4 lakh minimum. In this example both routes are governed by their minimums because 825 multiplied by either per-loan rate is lower than the relevant minimum.",
+          "The execution-committed route is ₹500 per unique loan–borrower pair plus ₹250 for each separate linked loan-party pair, with an ₹8 lakh seller minimum for Initial Assessment plus Portfolio Preparation. The standalone route is ₹650 plus ₹325 respectively, with a ₹10.4 lakh seller minimum. This illustration assumes no separate linked parties, so both routes are governed by their minimums.",
           "The Initial Assessment invoice is 30% of the standalone fixed-stage quote. It is credited once against either route. Each seller therefore pays ₹3.12 lakh before automated processing, then ₹4.88 lakh before Portfolio Preparation if it commits execution to AssureRail. A seller choosing standalone preparation pays ₹7.28 lakh at that point instead.",
+          "The accepted programme is below ₹100 crore, so no large-programme supplement applies. Above that threshold, only the excess programme consideration attracts the applicable supplement and each seller receives its share by proposed consideration.",
         ],
         table: {
           caption: "Fixed-stage invoices, before applicable tax",
@@ -357,36 +359,35 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
         },
       },
       {
-        heading: "One cohort fee, allocated back to each seller",
+        heading: "Seller-specific execution fees within one coordinated cohort",
         paragraphs: [
-          "Under one accepted cohort execution mandate, the marginal success-fee schedule is applied once to the cohort’s actual purchase consideration successfully settled: 50 basis points on the first ₹10 crore, 40 basis points on the next ₹40 crore, 35 basis points on the next ₹50 crore and 30 basis points above ₹100 crore, subject to a proposed ₹5 lakh minimum. The resulting fee is allocated to each seller by its share of settled consideration. Separate mandates or closings are quoted separately and do not automatically receive cohort pricing.",
-          "At ₹55 crore settled, the calculation is ₹5 lakh on the first ₹10 crore, ₹16 lakh on the next ₹40 crore and ₹1.75 lakh on the final ₹5 crore. The ₹22.75 lakh cohort execution fee is ₹4.55 lakh per seller when all five settle ₹11 crore. Together with the committed fixed stages, core AssureRail fees are ₹62.75 lakh, or about 1.14% of the illustration, before tax and external charges.",
+          "Each seller accepts its own execution mandate. For that seller, the marginal success fee is 40 basis points on the first ₹25 crore of cumulative actual purchase consideration successfully settled and 30 basis points above ₹25 crore, subject to a ₹5 lakh seller minimum. Multiple closings for the same seller continue from that seller’s previous cumulative amount; the slabs do not restart.",
+          "At ₹11 crore settled per seller, 40 basis points produces ₹4.40 lakh, so the ₹5 lakh seller minimum applies. Across five sellers, execution fees are ₹25 lakh. Together with ₹40 lakh of committed fixed-stage fees, core AssureRail fees are ₹65 lakh, or about 1.18% of the illustration, before tax and external charges.",
         ],
         table: {
-          caption: "Core fees at ₹55 crore settled under one cohort mandate",
+          caption: "Core fees at ₹55 crore settled through five seller mandates",
           columns: ["Fee component", "Per NBFC", "Five NBFCs"],
           rows: [
             ["Committed fixed stages", "₹8.00L", "₹40.00L"],
-            ["Execution: first ₹10cr × 50bps", "₹1.00L allocated", "₹5.00L"],
-            ["Execution: next ₹40cr × 40bps", "₹3.20L allocated", "₹16.00L"],
-            ["Execution: final ₹5cr × 35bps", "₹0.35L allocated", "₹1.75L"],
-            ["Total core AssureRail fee", "₹12.55L", "₹62.75L"],
-            ["Core fee as share of consideration", "≈1.14%", "≈1.14%"],
+            ["Execution: ₹11cr × 40bps", "₹4.40L calculated", "₹22.00L calculated"],
+            ["Seller minimum applied", "₹5.00L billed", "₹25.00L billed"],
+            ["Total core AssureRail fee", "₹13.00L", "₹65.00L"],
+            ["Core fee as share of consideration", "≈1.18%", "≈1.18%"],
           ],
         },
       },
       {
         heading: "The ₹50–60 crore range",
         paragraphs: [
-          "If all five sellers settle at the same amount, the committed fixed-stage total remains ₹40 lakh in this loan-count illustration. The execution fee changes with actual consideration. Purchase price, excluded accounts and a partial close can therefore change the final invoice.",
+          "If all five sellers settle at the same amount, the committed fixed-stage total remains ₹40 lakh in this unit-count illustration. Between ₹10 crore and ₹12 crore per seller, the calculated 40-basis-point amount remains below the ₹5 lakh seller minimum, so execution fees remain ₹25 lakh in aggregate. Above ₹12.5 crore per seller, the marginal calculation exceeds the floor.",
         ],
         table: {
           caption: "Sensitivity before tax, external costs and optional services",
           columns: ["Settled per NBFC", "Cohort settled", "Execution fee total", "Core fees including ₹40L fixed"],
           rows: [
-            ["₹10cr", "₹50cr", "₹21.00L", "₹61.00L"],
-            ["₹11cr", "₹55cr", "₹22.75L", "₹62.75L"],
-            ["₹12cr", "₹60cr", "₹24.50L", "₹64.50L"],
+            ["₹10cr", "₹50cr", "₹25.00L", "₹65.00L"],
+            ["₹11cr", "₹55cr", "₹25.00L", "₹65.00L"],
+            ["₹12cr", "₹60cr", "₹25.00L", "₹65.00L"],
           ],
         },
       },
@@ -442,19 +443,19 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
       {
         heading: "What that makes the total transaction cost",
         paragraphs: [
-          "Core AssureRail fees of ₹62.75 lakh plus ₹30.61 lakh of working external costs produce ₹93.36 lakh before GST, or about 1.70% of the ₹55 crore settled consideration. At equal participation, that is about ₹18.67 lakh per seller: ₹12.55 lakh of core AssureRail fees and ₹6.12 lakh of external costs. One RTO action per vehicle would increase the pre-GST total to about ₹97.49 lakh, or 1.77%.",
-          "For working-base cash planning, applying 18% GST to the modelled taxable services produces an illustrative gross outlay of about ₹108.81 lakh, or 1.98%. The economic cost after input-tax credit depends on each NBFC’s tax position. If 50% of all that GST were eligible and claimed, the illustrative net cost would be about ₹101.09 lakh, or 1.84%. Tax advisers must confirm the actual treatment.",
+          "Core AssureRail fees of ₹65 lakh plus ₹30.61 lakh of working external costs produce ₹95.61 lakh before GST, or about 1.74% of the ₹55 crore settled consideration. At equal participation, that is about ₹19.12 lakh per seller: ₹13 lakh of core AssureRail fees and ₹6.12 lakh of external costs. One RTO action per vehicle would increase the pre-GST total to about ₹99.74 lakh, or 1.81%.",
+          "For working-base cash planning, applying the same illustrative tax treatment to the revised fees produces a gross outlay of about ₹111.47 lakh, or 2.03%. The economic cost after input-tax credit depends on each NBFC’s tax position. If 50% of the modelled GST were eligible and claimed, the illustrative net cost would be about ₹103.54 lakh, or 1.88%. Tax advisers must confirm the actual treatment.",
         ],
         table: {
           caption: "Illustrative all-in cost of the core route",
           columns: ["Measure", "Cohort", "Per NBFC at equal shares", "Share of ₹55cr"],
           rows: [
-            ["Core AssureRail fees", "₹62.75L", "₹12.55L", "1.14%"],
+            ["Core AssureRail fees", "₹65.00L", "₹13.00L", "1.18%"],
             ["Standard external allowance", "₹20.40L", "₹4.08L", "0.37%"],
             ["Quote-dependent working reserve", "₹10.21L", "₹2.04L", "0.19%"],
-            ["Working total before GST", "₹93.36L", "₹18.67L", "1.70%"],
-            ["Gross cash outlay with illustrative GST", "₹108.81L", "₹21.76L", "1.98%"],
-            ["Illustrative net with 50% eligible GST credit", "₹101.09L", "₹20.22L", "1.84%"],
+            ["Working total before GST", "₹95.61L", "₹19.12L", "1.74%"],
+            ["Gross cash outlay with illustrative GST", "₹111.47L", "₹22.29L", "2.03%"],
+            ["Illustrative net with 50% eligible GST credit", "₹103.54L", "₹20.71L", "1.88%"],
             ["Add if independent CA and EV work is required", "+₹15.62L", "+₹3.12L", "+0.28%"],
           ],
         },
@@ -462,15 +463,15 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
       {
         heading: "Net proceeds versus other funding routes",
         paragraphs: [
-          "The clean comparison separates asset-sale proceeds from borrowing. The table assumes a ₹55 crore pool, ₹35.75 crore of existing debt to release (65% of principal), a par DA sale, the ₹93.36 lakh working pre-GST DA cost above, and the user-supplied 8–11% borrowing-cost range. It excludes credit losses, servicing income, tax on sale profit, cash timing and any premium paid by a buyer.",
+          "The clean comparison separates asset-sale proceeds from borrowing. The table assumes a ₹55 crore pool, ₹35.75 crore of existing debt to release (65% of principal), a par DA sale, the ₹95.61 lakh working pre-GST DA cost above, and the user-supplied 8–11% borrowing-cost range. It excludes credit losses, servicing income, tax on sale profit, cash timing and any premium paid by a buyer.",
           "DA produces the greatest day-one cash because the asset is sold. A loan or NCD leaves the receivables and their future spread with the NBFC, but also leaves a repayment obligation, capital usage and credit risk. For a PTC backed by loans whose original maturity exceeds 24 months, the illustration retains 10% MRR; actual tranches, credit enhancement and investor price control the cash result. Co-lending is shown separately because the current RBI framework requires an ex-ante arrangement and transfer of the partner share shortly after origination, so it is not a general retrofit for this seasoned book.",
         ],
         table: {
           caption: "Illustrative day-one liquidity comparison, ₹ crore",
           columns: ["Route", "Gross cash / funding", "Upfront cost or retention", "Net before debt release", "Cash after ₹35.75cr debt release", "Continuing economics"],
           rows: [
-            ["DA at ₹100", "₹55.00", "₹0.93 cost", "₹54.07", "₹18.32", "Sold share has no funding liability; seller gives up future loan spread"],
-            ["DA at ₹99", "₹54.45", "₹0.93 cost", "₹53.52", "₹17.77", "One price point reduces proceeds by about ₹55L before the small fee adjustment"],
+            ["DA at ₹100", "₹55.00", "₹0.96 cost", "₹54.04", "₹18.29", "Sold share has no funding liability; seller gives up future loan spread"],
+            ["DA at ₹99", "₹54.45", "₹0.96 cost", "₹53.49", "₹17.74", "One price point reduces proceeds by about ₹55L"],
             ["Other DA route at assumed all-in 1.5%", "₹55.00", "₹0.83 cost", "₹54.18", "₹18.43", "Only comparable if 1.5% includes every external and platform item"],
             ["PTC with 10% MRR", "₹49.50", "₹0.69 assumed transaction cost", "₹48.81", "₹13.06", "₹5.50cr retained exposure; waterfall, servicing and investor yield continue"],
             ["PTC plus 5% cash enhancement", "₹49.50", "₹0.69 cost + ₹2.75 cash support", "₹46.06", "₹10.31", "Credit enhancement remains at risk; avoid double-counting it if it forms part of MRR"],
@@ -483,7 +484,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
         heading: "Optional services change the comparison",
         paragraphs: [
           "A seller that already has its buyer need not purchase buyer arrangement. Managed transaction and escrow coordination is proposed at ₹1 lakh per seller programme. Buyer arrangement, only when selected and actually provided, is 5 basis points of attributable settled consideration with a ₹1.25 lakh minimum and ₹10 lakh cap. Monitoring activation and ongoing monitoring are separate because they continue after closing.",
-          "At the ₹55 crore midpoint, core fees are ₹62.75 lakh. Adding managed coordination for all five sellers adds ₹5 lakh. Adding one new shared buyer file connection adds ₹0.5 lakh. If AssureRail also arranged the buyer for every seller, the ₹1.25 lakh per-seller minimum would add ₹6.25 lakh. AssureRail fees would then be ₹74.5 lakh. With ₹30.61 lakh of working external costs, the total becomes ₹105.11 lakh before GST, or about 1.91% of consideration. It becomes ₹120.73 lakh, or 2.19%, if the independent CA and EV scopes are also required. These are selectable services, not a forced package.",
+          "At the ₹55 crore midpoint, core fees are ₹65 lakh. Adding managed coordination for all five sellers adds ₹5 lakh. Adding one new shared buyer file connection adds ₹0.5 lakh. If AssureRail also arranged the buyer for every seller, the ₹1.25 lakh per-seller minimum would add ₹6.25 lakh. AssureRail fees would then be ₹76.75 lakh. With ₹30.61 lakh of working external costs, the total becomes ₹107.36 lakh before GST, or about 1.95% of consideration. It becomes ₹122.98 lakh, or 2.24%, if the independent CA and EV scopes are also required. These are selectable services, not a forced package.",
         ],
       },
       {
@@ -491,7 +492,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
         paragraphs: [
           "The practical gain is access to a buyer-sized opportunity while preserving a clear account-by-account and seller-by-seller record. The cohort can share a buyer timetable, common data dictionary, diligence index, agreed interface and some third-party work. Earlier automated gap discovery also reduces the chance of paying for full expert preparation on an unusable book.",
           "The financial gain cannot be stated from pool size alone. Each seller’s net economic proceeds are its actual purchase consideration, less debt released, AssureRail fees, its allocated external costs, taxes and any other agreed deductions. Price below par can overwhelm fee savings: one percentage point on ₹55 crore is ₹55 lakh. The seller should compare that full proceeds bridge, retained risks, servicing duties and timing against keeping the loans or using another route.",
-          "For scale only, 1.5% of ₹55 crore is ₹82.5 lakh. AssureRail’s ₹62.75 lakh core fee is ₹19.75 lakh lower. The ₹93.36 lakh working total including the additional quote reserve is ₹10.86 lakh above a genuinely all-inclusive 1.5% price. If the competing 1.5% excludes escrow, legal, duty, registry, bureau, buyer-counsel or technical costs, those must be added before comparing. This is an arithmetic comparator, not a claimed market benchmark or guaranteed saving.",
+          "For scale only, 1.5% of ₹55 crore is ₹82.5 lakh. AssureRail’s ₹65 lakh core fee is ₹17.5 lakh lower. The ₹95.61 lakh working total including the additional quote reserve is ₹13.11 lakh above a genuinely all-inclusive 1.5% price. If the competing 1.5% excludes escrow, legal, duty, registry, bureau, buyer-counsel or technical costs, those must be added before comparing. This is an arithmetic comparator, not a claimed market benchmark or guaranteed saving.",
         ],
         bullets: [
           "A buyer large enough to consider a ₹50–60 crore opportunity",

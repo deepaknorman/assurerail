@@ -1,0 +1,124 @@
+{
+  "policyVersion": "DA-2026-09-16-PILOT-1",
+  "effectiveDate": "2026-09-16",
+  "currency": "INR",
+  "currencyScale": 2,
+  "phase": {
+    "productionPriority": "CONVENTIONAL_DA",
+    "deferred": ["PTC"]
+  },
+  "fixedStages": {
+    "counting": {
+      "primaryUnit": "UNIQUE_SELLER_LOAN_BORROWER_PAIR",
+      "linkedPartyUnit": "UNIQUE_LOAN_LINKED_PARTY_PAIR",
+      "reconcileEveryVariance": true
+    },
+    "committed": {
+      "primaryUnitFeeMinor": "50000",
+      "linkedPartyFeeMinor": "25000",
+      "minimumFeeMinor": "80000000",
+      "largeProgrammeThresholdMinor": "100000000000",
+      "largeProgrammeSupplementBps": 10
+    },
+    "standalone": {
+      "primaryUnitFeeMinor": "65000",
+      "linkedPartyFeeMinor": "32500",
+      "minimumFeeMinor": "104000000",
+      "largeProgrammeThresholdMinor": "100000000000",
+      "largeProgrammeSupplementBps": 13
+    },
+    "initialAssessment": {
+      "invoicePercentOfStandaloneFixedQuote": 30,
+      "deliveryModel": "AUTOMATED_UNSIGNED_NO_HUMAN_CONTENT_REVIEW",
+      "includedAutomatedReassessments": 3,
+      "reassessmentWindowDays": 30,
+      "reassessmentAllowanceStatus": "PILOT_DEFAULT_PENDING_FOUNDER_CONFIRMATION"
+    },
+    "portfolioPreparation": {
+      "deliveryModel": "QUALIFIED_EXPERT_REVIEW_AND_SIGNOFF",
+      "remainingAcceptedRouteBalanceDueUpfront": true
+    },
+    "scopeReconciliation": {
+      "tolerancePercent": 0,
+      "refundRequiresFormalClosure": true,
+      "maximumRefundPercentOfOriginalEstimate": 20,
+      "otherwiseRetainAsCustomerCredit": true,
+      "customerCreditValidityMonths": 12,
+      "workspaceInactivityRefreshDays": 90
+    }
+  },
+  "execution": {
+    "feeBasis": "SELLER_SHARE_OF_ACTUAL_PURCHASE_CONSIDERATION_SETTLED",
+    "perSellerCumulative": true,
+    "minimumFeeMinor": "50000000",
+    "slabs": [
+      {
+        "throughConsiderationMinor": "25000000000",
+        "rateBps": 40
+      },
+      {
+        "throughConsiderationMinor": null,
+        "rateBps": 30
+      }
+    ],
+    "noSuccessfulCloseNoSuccessFee": true,
+    "standalonePremiumConversionCredit": {
+      "eligible": true,
+      "cashRefund": false,
+      "applyOnce": true,
+      "capAtEligibleExecutionFeesEarned": true
+    },
+    "committedRouteTopUp": {
+      "onlyForVoluntarySwitchOrWithdrawal": true,
+      "failedCloseExcluded": true,
+      "buyerRejectionExcluded": true
+    }
+  },
+  "additionalServices": {
+    "customerSelectionRequired": true,
+    "routineThirdPartyServices": {
+      "publishedAssureRailRate": true,
+      "supplierCostBufferPercent": 25,
+      "ordinaryInScopeOverrunsAbsorbedByAssureRail": true,
+      "deliveryEfficiencyRetainedByAssureRail": true
+    },
+    "secureFileConnection": {
+      "feeMinor": "5000000",
+      "unit": "ACCEPTED_POINT_TO_POINT_CONNECTION",
+      "includes": ["SETUP", "TESTING", "VALIDATION"]
+    },
+    "apiIntegration": "QUOTE_ON_REQUEST",
+    "ongoingMonitoring": "OPTIONAL"
+  },
+  "commercialGovernance": {
+    "internalAssureRailRevenueBenchmarkBps": 60,
+    "benchmarkIsInvoiceFormula": false,
+    "benchmarkMayBePubliclyDisclosed": false,
+    "quotesDependOnServiceAndCorpus": true,
+    "gstSeparate": true,
+    "contractorDayCostMinor": "2500000",
+    "contractorBillingRule": "FULL_DAY_WHEN_PERSON_WORKS_SHARE_ACROSS_ENGAGEMENTS"
+  },
+  "referral": {
+    "basePercent": 8.5,
+    "basis": "COLLECTED_ASSURERAIL_FEES_ACROSS_THREE_CORE_STAGES_ONLY",
+    "eligible": ["INITIAL_ASSESSMENT", "PORTFOLIO_PREPARATION", "CORE_EXECUTION"],
+    "excludes": ["ADDITIONAL_SERVICES", "ARRANGEMENT", "INTEGRATION", "LARGE_PROGRAMME_SUPPLEMENT", "MONITORING", "THIRD_PARTY_PASS_THROUGHS", "GST", "REFUNDS", "CREDITS"],
+    "largeProgrammeSupplementExclusionStatus": "PILOT_DEFAULT_EXCLUDED_PENDING_FOUNDER_CONFIRMATION",
+    "paymentTiming": "QUARTERLY_IN_ARREARS",
+    "acceptedRegistrationWindowMonths": 6,
+    "lapseWithoutEvidencedIntroductionDays": 60,
+    "ingestFormattingPaidBySeller": true
+  },
+  "payments": {
+    "checkoutPrimary": "RAZORPAY",
+    "checkoutSecondary": "MAXIMUS_SUBJECT_TO_TECHNICAL_AND_COMMERCIAL_ACCEPTANCE",
+    "successFeeCollection": "ACCEPTED_ESCROW_DISTRIBUTION_AT_SETTLEMENT"
+  },
+  "documentAutomation": {
+    "primary": "gpt-5.6-luna",
+    "fallback": "gemini-3-flash-preview",
+    "humanReviewAtInitialAssessment": false,
+    "humanExpertSignoffAtPortfolioPreparation": true
+  }
+}

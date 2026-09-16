@@ -47,8 +47,8 @@ export function PublicFooter() {
         </div>
       </div>
       <div className={styles.disclaimer}>
-        AssureRail is available for private institutional evaluation. Live transaction services,
-        custody, funds handling and settlement are not currently offered. Institutional counterparties
+        Initial Assessment applications are open for approved NBFC portfolios. Live transfer,
+        funds movement and settlement services remain subject to separate institutional activation. Institutional counterparties
         only; not investment, legal, tax or financial advice.
       </div>
     </footer>

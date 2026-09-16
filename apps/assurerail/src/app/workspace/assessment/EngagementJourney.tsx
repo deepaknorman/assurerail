@@ -2,12 +2,13 @@
 import {useEffect,useRef,useState} from "react";
 import {vget,vpost} from "@/lib/venue";
 import {requestTotpStepUp} from "@/lib/institutions";
+import type {AssessmentQuoteScope} from "./page";
 type Price={baseMinor:string;taxMinor:string;totalMinor:string};
-type Engagement={id:string;status:string;quoteDigest:string;termsDigest:string;route:string|null;billingProfile:{legalName:string;billingEmail:string;address:string};quote:{initial:Price;committedPreparation:Price;standalonePreparation:Price};scope:{bookRef:string;assetFamily:string};stages:{stage:string;invoiceId:string|null;invoice:{status:string}|null}[]};
+type Engagement={id:string;status:string;quoteDigest:string;termsDigest:string;route:string|null;billingProfile:{legalName:string;billingEmail:string;address:string};quote:{initial:Price;committedPreparation:Price;standalonePreparation:Price};scope:{bookRef:string;assetFamily:string;primaryPairCount:number;linkedPartyCount:number;sellerProposedConsiderationMinor:string;aggregateProgrammeConsiderationMinor:string};stages:{stage:string;invoiceId:string|null;invoice:{status:string}|null}[]};
 type Contract={id:string;contractRef:string;status:string;termsDigest:string;termsEvidenceRef:string};
 type Run={id:string;status:string;stage:string;errorCode:string|null;result?:{analysis:{findings:{description:string;severity:string;quote:string;locator:string}[];qualification:string};qualifications:string[];extraction:{exceptions:{code:string;locator:string}[]}}};
 const money=(s:string)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(Number(s)/100);
-export function EngagementJourney({institutionId,count,optionalServices}:{institutionId:string;count:number;optionalServices:string[]}){
+export function EngagementJourney({institutionId,quoteScope,optionalServices}:{institutionId:string;quoteScope:AssessmentQuoteScope;optionalServices:string[]}){
   const base=`/v1/rail/institutions/${encodeURIComponent(institutionId)}`;
   const [contracts,setContracts]=useState<Contract[]>([]),[engagements,setEngagements]=useState<Engagement[]>([]),[contractId,setContractId]=useState("");
   const [error,setError]=useState(""),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[code,setCode]=useState("");
@@ -16,7 +17,7 @@ export function EngagementJourney({institutionId,count,optionalServices}:{instit
   const [selected,setSelected]=useState(""),[runs,setRuns]=useState<Run[]>([]),[checkout,setCheckout]=useState<string|null>(null);
   const requestRef=useRef(crypto.randomUUID());
   const optionalServiceKey=optionalServices.join("|");
-  useEffect(()=>{requestRef.current=crypto.randomUUID();},[contractId,count,optionalServiceKey]);
+  useEffect(()=>{requestRef.current=crypto.randomUUID();},[contractId,quoteScope.primaryPairCount,quoteScope.linkedPartyCount,quoteScope.sellerProposedConsiderationMinor,quoteScope.aggregateProgrammeConsiderationMinor,optionalServiceKey]);
   const current=engagements.find(e=>e.id===selected);
   const field=(key:keyof typeof form,value:string)=>{requestRef.current=crypto.randomUUID();setForm(f=>({...f,[key]:value}));};
   async function load(){const [overview,list]=await Promise.all([vget<{contracts:Contract[]}>(`${base}/customer-operations/overview`),vget<Engagement[]>(`${base}/engagements`)]);setContracts(overview.contracts.filter(c=>c.status==="ACTIVE_SHADOW"));setEngagements(list);}
@@ -40,11 +41,11 @@ export function EngagementJourney({institutionId,count,optionalServices}:{instit
       <label>GST registration<select value={form.gstRegistration} onChange={e=>field("gstRegistration",e.target.value)}><option value="REGISTERED">Registered</option><option value="UNREGISTERED">Unregistered</option></select></label>
       {form.gstRegistration==="REGISTERED"&&<label>GSTIN<input maxLength={15} value={form.gstin} onChange={e=>field("gstin",e.target.value)}/></label>}
     </fieldset>
-    <button className="btn btn-primary" disabled={busy||!contractId} onClick={()=>void act(async()=>{const result=await vpost<Engagement>(`${base}/engagements`,{contractId,requestRef:requestRef.current,uniqueLoanCount:count,bookRef:form.bookRef,assetFamily:form.assetFamily,asOfDate:form.asOfDate,billingProfile:form,optionalServices});setSelected(result.id);setMessage("Quote saved. Review the amounts and terms before accepting.");})}>Save scope and obtain quote</button>
+    <button className="btn btn-primary" disabled={busy||!contractId} onClick={()=>void act(async()=>{const result=await vpost<Engagement>(`${base}/engagements`,{contractId,requestRef:requestRef.current,...quoteScope,bookRef:form.bookRef,assetFamily:form.assetFamily,asOfDate:form.asOfDate,billingProfile:form,optionalServices});setSelected(result.id);setMessage("Quote saved. Review the amounts and terms before accepting.");})}>Save scope and obtain quote</button>
     <h2>Your engagements</h2><label>Choose a book<select value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Choose an engagement</option>{engagements.map(e=><option key={e.id} value={e.id}>{e.scope.bookRef} — {e.status.replaceAll("_"," ")}</option>)}</select></label>
     {current&&<><table><caption>Accepted-scope stage pricing</caption><thead><tr><th>Stage</th><th>Fee</th><th>Tax</th><th>Total</th></tr></thead><tbody>{[["Initial Assessment",current.quote.initial],["Preparation: execute with us",current.quote.committedPreparation],["Preparation: standalone",current.quote.standalonePreparation]].map(([label,p])=>{const price=p as Price;return <tr key={label as string}><th>{label as string}</th><td>{money(price.baseMinor)}</td><td>{money(price.taxMinor)}</td><td>{money(price.totalMinor)}</td></tr>;})}</tbody></table>
       <p>Billing details saved with this quote: <strong>{current.billingProfile.legalName}</strong>, {current.billingProfile.address}; {current.billingProfile.billingEmail}. Editing the form above requires saving a new quote.</p>
-      <p>Tax follows your organisation’s approved rate card. Execution and separately accepted ancillary work are additional.</p>
+      <p>Quoted scope: {current.scope.primaryPairCount.toLocaleString("en-IN")} loan–borrower pairs, {current.scope.linkedPartyCount.toLocaleString("en-IN")} linked parties. Tax follows your organisation’s approved rate card. Execution and separately accepted ancillary work are additional.</p>
       <p>Agreement terms: <code>{current.termsDigest}</code>. Read the accepted agreement in <a href="/workspace/operations">Contracts and billing</a>.</p>
       <label>Authenticator code<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={e=>setCode(e.target.value)}/></label>
       {current.status==="OFFERED"?<><fieldset className="assessment-options"><legend>Acceptance</legend><label><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/> I accept the displayed quote and the referenced agreement. The automated Initial Assessment is unsigned and does not guarantee a sale or buyer approval.</label><label><input type="checkbox" checked={authority} onChange={e=>setAuthority(e.target.checked)}/> We have authority to supply and process this book’s loan records and evidence.</label></fieldset><button className="btn btn-primary" disabled={busy||!accepted||!authority||code.length!==6} onClick={()=>void act(async()=>{await vpost(`${base}/engagements/${current.id}/accept`,{quoteDigest:current.quoteDigest,dataAuthorityConfirmed:authority,termsAccepted:accepted,stepUpEvidenceId:await proof("ENGAGEMENT_ACCEPT")});setMessage("Accepted. Our billing team will prepare and independently issue the stage invoice; this is a payment control, not portfolio review.");})}>Accept Initial Assessment</button></>:<>

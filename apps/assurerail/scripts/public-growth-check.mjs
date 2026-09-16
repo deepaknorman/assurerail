@@ -51,7 +51,7 @@ for (const claim of ["VAPT complete", "production-ready", "atomic settlement", "
 for (const pricingControl of ["actual purchase consideration successfully settled", "before tax and external charges", "not a claimed market benchmark or guaranteed saving"]) {
   if (!content.includes(pricingControl)) failures.push(`public pricing explanation is missing control: ${pricingControl}`);
 }
-if (!allPublic.includes("Live transaction services are not currently offered")) failures.push("current public availability boundary is absent");
+if (!/Live transfer,\s+funds movement and settlement services remain subject to separate institutional activation/.test(allPublic)) failures.push("current public availability boundary is absent");
 
 if (failures.length) {
   console.error("GTM-01/PUB-01/INBOUND-01/PUB-02/CONTENT-01 check FAILED");

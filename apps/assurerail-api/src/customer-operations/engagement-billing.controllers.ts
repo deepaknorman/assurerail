@@ -1,6 +1,7 @@
 import { Body, Controller, ForbiddenException, Get, Header, Param, Post, Req, UnauthorizedException } from "@nestjs/common";
 import type { Request } from "express";
 import { EngagementBillingService } from "./engagement-billing.service";
+import type { EngagementQuoteInput } from "./engagement-pricing";
 type RailRequest = Request & { user?: { id?: string; session?: { id?: string; activeInstitutionId?: string | null } | null; activeInstitution?: { institutionId?: string } | null } };
 export function billingActor(req: RailRequest, institutionId?: string) {
   if (!req.user?.id || !req.user.session?.id) throw new UnauthorizedException("approved authenticated session required");
@@ -12,7 +13,7 @@ const actor = billingActor;
 export class EngagementBillingParticipantController {
   constructor(private readonly service: EngagementBillingService) {}
   @Post("quote-preview") @Header("Cache-Control", "no-store")
-  preview(@Req() req: RailRequest, @Param("institutionId") id: string, @Body() body: { uniqueLoanCount?: unknown }) { return this.service.preview(actor(req, id), body); }
+  preview(@Req() req: RailRequest, @Param("institutionId") id: string, @Body() body: EngagementQuoteInput) { return this.service.preview(actor(req, id), body); }
   @Get("invoices/:invoiceId/payment-position") @Header("Cache-Control", "no-store")
   position(@Req() req: RailRequest, @Param("institutionId") id: string, @Param("invoiceId") invoiceId: string) { return this.service.paymentPosition(actor(req, id), invoiceId); }
 }

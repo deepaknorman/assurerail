@@ -68,25 +68,24 @@ export default function Home() {
           <div className={`${styles.container} ${styles.heroGrid}`}>
             <div className={styles.heroCopy}>
               <p className={styles.eyebrow}>Institutional transaction infrastructure · Domestic India first</p>
-              <h1>One governed rail for loan transfers and securitisation.</h1>
+              <h1>Prepare loan portfolios for a governed direct assignment.</h1>
               <p className={styles.lede}>
-                AssureRail coordinates direct assignment and PTC transactions across the institutions,
-                evidence and systems already carrying authority—conventional first, with tokenised
-                representations only where separately approved.
+                Apply for an automated Initial Assessment, fix evidence gaps and progress to expert-reviewed
+                Portfolio Preparation. Conventional direct assignment is Phase 1; PTC follows later.
               </p>
               <div className={styles.actions}>
                 <Link
                   className={styles.primaryAction}
-                  href="/replay"
+                  href="/login"
                 >
-                  Propose a completed-deal replay <ArrowRight size={17} />
+                  Apply for Initial Assessment <ArrowRight size={17} />
                 </Link>
                 <a className={styles.secondaryAction} href="#status">Current availability</a>
               </div>
               <div className={styles.statusLine} aria-label="Current product status">
-                <span><i className={styles.statusDot} /> Private institutional evaluation</span>
-                <span>DA and PTC</span>
-                <span>Live services not currently offered</span>
+                <span><i className={styles.statusDot} /> Applications open for approved NBFC portfolios</span>
+                <span>Conventional DA · Phase 1</span>
+                <span>Live settlement separately activated</span>
               </div>
             </div>
 
@@ -132,9 +131,9 @@ export default function Home() {
         <section className={styles.section} id="routes">
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>Two transaction routes</p>
-              <h2>Direct assignment and PTC each retain their own institutional structure.</h2>
-              <p>AssureRail is designed for conventional transactions first. Any future digital representation is evaluated separately.</p>
+              <p className={styles.eyebrow}>Phased route delivery</p>
+              <h2>Conventional direct assignment comes first.</h2>
+              <p>PTC remains a separate later-phase route. Any future digital representation is evaluated separately.</p>
             </div>
             <div className={styles.modeMatrix} role="table" aria-label="AssureRail transaction routes and representations">
               <div className={`${styles.modeCell} ${styles.modeCorner}`} role="columnheader">Route</div>
@@ -174,7 +173,7 @@ export default function Home() {
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
               <p className={styles.eyebrow}>Current availability · updated {PUBLIC_CAPABILITY_REVIEWED_AT}</p>
-              <h2>Private evaluation now. Live transaction services are not currently offered.</h2>
+              <h2>Initial Assessment applications are open for approved NBFC portfolios.</h2>
               <p>Detailed product, security and readiness information is shared with authorised parties through controlled diligence.</p>
             </div>
             <div className={styles.capabilityList}>
@@ -209,10 +208,10 @@ export default function Home() {
         <section className={styles.closing}>
           <div className={styles.container}>
             <Building2 size={26} aria-hidden="true" />
-            <h2>Start with a transaction you have already completed.</h2>
-            <p>Under an agreed NDA and data scope, replay the evidence and hand-offs without changing the authoritative process.</p>
-            <Link href="/replay">
-              Discuss a replay <ArrowRight size={17} />
+            <h2>Start with a bounded, paid Initial Assessment.</h2>
+            <p>Use an approved account to declare the portfolio, accept the quote and upload evidence for automated assessment.</p>
+            <Link href="/login">
+              Apply for Initial Assessment <ArrowRight size={17} />
             </Link>
           </div>
         </section>
@@ -222,8 +221,8 @@ export default function Home() {
         <div className={styles.container}>
           <Logo />
           <p>
-            AssureRail is available for private institutional evaluation. Live transaction services,
-            custody, funds handling and settlement are not currently offered. Institutional counterparties
+            Initial Assessment applications are open for approved NBFC portfolios. Live transfer,
+            funds movement and settlement services remain subject to separate institutional activation. Institutional counterparties
             only; not investment, legal, tax or financial advice.
           </p>
           <div className={styles.footerLinks}>

@@ -10,7 +10,7 @@ import { sha256Digest } from "../contracts/v1";
 import { acceptedPricing, ASSET_FAMILIES, billingProfile, engagementAcceptanceDigest, paidStageReadiness, stageAmount } from "./engagement-workflow";
 import { calculateExactFee, type ExactFeeRule } from "./fee-calculation";
 import type { ParticipantOpsActor, InternalOpsActor } from "./customer-operations.service";
-import type { PreparationRoute } from "./engagement-pricing";
+import { quoteExpiryAt, type EngagementQuoteInput, type PreparationRoute } from "./engagement-pricing";
 
 export function engagementEnabled() {
   if (process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE !== "shadow" || inspectPersistenceFlags(process.env).customerOperations !== "shadow") throw new ForbiddenException("engagement billing is disabled");
@@ -54,7 +54,19 @@ export class AssessmentEngagementService {
     return this.db.assessmentEngagement.findMany({ where: { customerContract: { institutionId: actor.actingInstitutionId } }, include: { stages: { include: { invoice: true } } }, orderBy: { createdAt: "desc" }, take: 100 });
   }
 
-  async offer(actor: ParticipantOpsActor, body: { contractId?: unknown; requestRef?: unknown; uniqueLoanCount?: unknown; assetFamily?: unknown; bookRef?: unknown; asOfDate?: unknown; billingProfile?: unknown; optionalServices?: unknown }) {
+  async offer(actor: ParticipantOpsActor, body: {
+    contractId?: unknown;
+    requestRef?: unknown;
+    primaryPairCount?: unknown;
+    linkedPartyCount?: unknown;
+    sellerProposedConsiderationMinor?: unknown;
+    aggregateProgrammeConsiderationMinor?: unknown;
+    assetFamily?: unknown;
+    bookRef?: unknown;
+    asOfDate?: unknown;
+    billingProfile?: unknown;
+    optionalServices?: unknown;
+  }) {
     await this.participant(actor, true);
     const contractId = bounded(body.contractId, "contractId"), requestRef = bounded(body.requestRef, "requestRef"), bookRef = bounded(body.bookRef, "bookRef");
     const assetFamily = bounded(body.assetFamily, "assetFamily"), asOfDate = bounded(body.asOfDate, "asOfDate", 10);
@@ -64,7 +76,13 @@ export class AssessmentEngagementService {
     const optionalServices = body.optionalServices ?? [];
     if (!Array.isArray(optionalServices) || optionalServices.length > 2 || new Set(optionalServices).size !== optionalServices.length || optionalServices.some(v => !["SECURE_FILE", "API_QUOTE"].includes(v))) throw new BadRequestException("invalid optional service selections");
     let profile; try { profile = billingProfile(body.billingProfile); } catch (e) { throw new BadRequestException((e as Error).message); }
-    const scope = { bookRef, assetFamily, asOfDate, uniqueLoanCount: body.uniqueLoanCount, optionalServiceRequests: [...optionalServices].sort(), optionalServicesPurchased: false, transactionRoute: "DA", representation: "CONVENTIONAL" };
+    const quoteInput: EngagementQuoteInput = {
+      primaryPairCount: body.primaryPairCount,
+      linkedPartyCount: body.linkedPartyCount,
+      sellerProposedConsiderationMinor: body.sellerProposedConsiderationMinor,
+      aggregateProgrammeConsiderationMinor: body.aggregateProgrammeConsiderationMinor,
+    };
+    const scope = { bookRef, assetFamily, asOfDate, ...quoteInput, optionalServiceRequests: [...optionalServices].sort(), optionalServicesPurchased: false, transactionRoute: "DA", representation: "CONVENTIONAL" };
     const requestDigest = sha256Digest({ contractId, profile, scope });
     return this.transaction(async tx => {
       const contract = await tx.customerContract.findUnique({ where: { id: contractId } });
@@ -78,9 +96,9 @@ export class AssessmentEngagementService {
       const tax = card.feeRules.find(r => Object.entries(dimensions).every(([k,v]) => r[k as keyof typeof dimensions] === v) && r.metric === "ENGAGEMENT_TAX");
       const fee = card.feeRules.find(r => Object.entries(dimensions).every(([k,v]) => r[k as keyof typeof dimensions] === v) && r.metric === "ENGAGEMENT_STAGE_FEE");
       if (!tax || !fee || fee.feeBasis !== "PER_UNIT_MINOR" || fee.rateValue !== "1" || fee.minimumFeeMinor != null || fee.maximumFeeMinor != null) throw new ConflictException("approved stage fee and tax rules required");
-      let quote: Quote; try { quote = acceptedPricing(body.uniqueLoanCount, tax as ExactFeeRule); } catch(e) { throw new BadRequestException((e as Error).message); }
+      let quote: Quote; try { quote = acceptedPricing(quoteInput, tax as ExactFeeRule); } catch(e) { throw new BadRequestException((e as Error).message); }
       const quoteDigest = engagementAcceptanceDigest({ quote, scope, billingProfile: profile, contractId, termsDigest: contract.termsDigest });
-      return tx.assessmentEngagement.create({ data: { id: `eng_${randomUUID()}`, customerContractId: contractId, requestRef, requestDigest, billingProfile: asJson(profile), scope: asJson(scope), quote: asJson(quote), quoteDigest, termsDigest: contract.termsDigest, rateCardId: card.id, offerExpiresAt: new Date(Math.min(now.getTime() + 7 * 86400000, card.expiresAt.getTime(), contract.expiresAt.getTime())) } });
+      return tx.assessmentEngagement.create({ data: { id: `eng_${randomUUID()}`, customerContractId: contractId, requestRef, requestDigest, billingProfile: asJson(profile), scope: asJson(scope), quote: asJson(quote), quoteDigest, termsDigest: contract.termsDigest, rateCardId: card.id, offerExpiresAt: new Date(Math.min(quoteExpiryAt(now).getTime(), card.expiresAt.getTime(), contract.expiresAt.getTime())) } });
     });
   }
 
@@ -113,7 +131,7 @@ export class AssessmentEngagementService {
         const v = await tx.evidenceVersion.findUnique({where:{id:source.versionId},include:{evidenceObject:true,documentVersion:true}});
         if (!v || v.evidenceObject.institutionId !== actor.actingInstitutionId || v.evidenceObject.purpose !== `ASSESSMENT:${id}` || v.evidenceObject.status !== "AVAILABLE" || v.evidenceObject.currentVersion !== v.version || v.validationStatus !== "VALID" || (v.expiresAt && v.expiresAt <= new Date()) || v.documentVersion?.malwareStatus !== "CLEAN") throw new ConflictException("initial report evidence has changed; reassess before preparation");
       }
-      if ((report.result as {dataQuality?:{status:string}} | null)?.dataQuality?.status !== "MATCHED") throw new ConflictException("reconcile loan tape and quoted unique-loan count before accepting preparation");
+      if ((report.result as {dataQuality?:{status:string}} | null)?.dataQuality?.status !== "MATCHED") throw new ConflictException("reconcile the loan tape and quoted loan–borrower pair count before accepting preparation");
       const step = bounded(body.stepUpEvidenceId, "stepUpEvidenceId");
       await this.stepUp.consume({ evidenceId: step, userId: actor.actorUserId, sessionId: actor.actorSessionId, institutionId: actor.actingInstitutionId, purpose: "ENGAGEMENT_PREPARATION_ACCEPT" }, tx);
       await tx.assessmentEngagementStage.create({ data: { id: `est_${randomUUID()}`, engagementId: id, stage: "PREPARATION", expectedMinor: stageAmount(e.quote as unknown as Quote, "PREPARATION", route).totalMinor } });

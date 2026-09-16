@@ -8,14 +8,15 @@ test("new billing refuses activation without both shadow flags",async()=>{
   try {
     process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE="off";
     const service=new EngagementBillingService({} as never,{} as never,{} as never,{} as never);
-    await assert.rejects(()=>service.preview({actorUserId:"u",actorSessionId:"s",actingInstitutionId:"a"},{uniqueLoanCount:750}),/disabled/);
+    await assert.rejects(()=>service.preview({actorUserId:"u",actorSessionId:"s",actingInstitutionId:"a"},{primaryPairCount:750,linkedPartyCount:0,sellerProposedConsiderationMinor:"1",aggregateProgrammeConsiderationMinor:"1"}),/disabled/);
   } finally {if(old===undefined)delete process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE;else process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE=old;}
 });
 test("participant requests reject anonymous and mismatched session institution before calling service",()=>{
   let calls=0;const controller=new EngagementBillingParticipantController({preview:()=>{calls++;}} as never);
-  assert.throws(()=>controller.preview({} as never,"a",{uniqueLoanCount:750}),/authenticated/);
-  assert.throws(()=>controller.preview({user:{id:"u",session:{id:"s",activeInstitutionId:"b"},activeInstitution:{institutionId:"a"}}} as never,"a",{uniqueLoanCount:750}),/context/);
-  assert.throws(()=>controller.preview({user:{id:"u",session:{id:"s",activeInstitutionId:"a"},activeInstitution:{institutionId:"b"}}} as never,"a",{uniqueLoanCount:750}),/context/);
+  const quote={primaryPairCount:750,linkedPartyCount:0,sellerProposedConsiderationMinor:"1",aggregateProgrammeConsiderationMinor:"1"};
+  assert.throws(()=>controller.preview({} as never,"a",quote),/authenticated/);
+  assert.throws(()=>controller.preview({user:{id:"u",session:{id:"s",activeInstitutionId:"b"},activeInstitution:{institutionId:"a"}}} as never,"a",quote),/context/);
+  assert.throws(()=>controller.preview({user:{id:"u",session:{id:"s",activeInstitutionId:"a"},activeInstitution:{institutionId:"b"}}} as never,"a",quote),/context/);
   assert.equal(calls,0);
 });
 test("internal receipt requests reject participant context",()=>{

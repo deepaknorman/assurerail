@@ -6,7 +6,7 @@ import { InstitutionAccessService } from "../institutions/institution-access.ser
 import { InternalAccessService } from "../internal-access/internal-access.service";
 import { StepUpService } from "../institutions/step-up.service";
 import { inspectPersistenceFlags } from "../persistence/feature-flags";
-import { engagementQuote } from "./engagement-pricing";
+import { engagementQuote, type EngagementQuoteInput } from "./engagement-pricing";
 import { exactMinor } from "./fee-calculation";
 import { invoicePaymentPosition, validateReceiptReview } from "./payment-reconciliation";
 import type { InternalOpsActor, ParticipantOpsActor } from "./customer-operations.service";
@@ -24,10 +24,10 @@ function enabled() {
 export class EngagementBillingService {
   constructor(private readonly db: PrismaService, private readonly access: InstitutionAccessService, private readonly staff: InternalAccessService, private readonly stepUp: StepUpService) {}
 
-  async preview(actor: ParticipantOpsActor, body: { uniqueLoanCount?: unknown }) {
+  async preview(actor: ParticipantOpsActor, body: EngagementQuoteInput) {
     enabled();
     await this.access.requireHuman({ userId: actor.actorUserId, institutionId: actor.actingInstitutionId, action: "VIEW_CUSTOMER_OPERATIONS" });
-    try { return { ...engagementQuote(body.uniqueLoanCount), status: "PREVIEW_NOT_ACCEPTED", paymentAuthority: false }; }
+    try { return { ...engagementQuote(body), status: "PREVIEW_NOT_ACCEPTED", paymentAuthority: false }; }
     catch (e) { throw new BadRequestException((e as Error).message); }
   }
 
