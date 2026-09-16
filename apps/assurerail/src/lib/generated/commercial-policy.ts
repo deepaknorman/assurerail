@@ -35,7 +35,7 @@ export const commercialPolicy = {
       "deliveryModel": "AUTOMATED_UNSIGNED_NO_HUMAN_CONTENT_REVIEW",
       "includedAutomatedReassessments": 3,
       "reassessmentWindowDays": 30,
-      "reassessmentAllowanceStatus": "PILOT_DEFAULT_PENDING_FOUNDER_CONFIRMATION"
+      "reassessmentAllowanceStatus": "APPROVED_PILOT_DEFAULT"
     },
     "portfolioPreparation": {
       "deliveryModel": "QUALIFIED_EXPERT_REVIEW_AND_SIGNOFF",

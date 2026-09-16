@@ -20,6 +20,13 @@ test("fixed routes price primary pairs, linked parties, minima and the common 30
   assert.equal(minimum.primaryPairCount, 1);
   assert.equal(minimum.linkedPartyCount, 0);
 
+  const representativePilot = engagementQuote(scope(750));
+  assert.equal(representativePilot.committedFixedMinor, "80000000");
+  assert.equal(representativePilot.standaloneFixedMinor, "104000000");
+  assert.equal(representativePilot.initialAssessmentMinor, "31200000");
+  assert.equal(representativePilot.committedPreparationBalanceMinor, "48800000");
+  assert.equal(representativePilot.standalonePreparationBalanceMinor, "72800000");
+
   const variable = engagementQuote(scope(3_000, 400));
   assert.equal(variable.committedFixedMinor, "160000000");
   assert.equal(variable.standaloneFixedMinor, "208000000");
