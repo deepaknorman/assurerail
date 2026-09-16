@@ -1,6 +1,6 @@
 # AssureRail governed buyer SFTP export foundation
 
-**Status:** implemented as a sandbox-only domain foundation; no production buyer connection is activated  
+**Status:** implemented as a sandbox-only domain foundation; no production buyer connection is activated
 **Date:** 17 September 2026
 
 ## Purpose and boundary

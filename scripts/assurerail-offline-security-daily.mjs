@@ -65,6 +65,7 @@ const cleanEnvironment = {
   PATH: ["/usr/bin", "/bin", "/usr/sbin", "/sbin", "/usr/local/bin", path.join(repo, "node_modules/.bin")].join(":"),
   CI: "1",
   NODE_ENV: "test",
+  PYTHONDONTWRITEBYTECODE: "1",
   NEXT_TELEMETRY_DISABLED: "1",
   TURBO_TELEMETRY_DISABLED: "1",
   CHECKPOINT_DISABLE: "1",

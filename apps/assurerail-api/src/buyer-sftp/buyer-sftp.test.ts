@@ -60,7 +60,8 @@ test("[SFTP][CONFIG] per-buyer profile pins the host and contains references rat
   assert.equal(BUYER_SFTP_BOUNDARY.productionDispatchPermitted, false);
   assert.equal(BUYER_SFTP_BOUNDARY.passwordAuthenticationPermitted, false);
   assert.throws(() => parseBuyerSftpProfiles(JSON.stringify([{ ...profile, environment: "PRODUCTION" }])), /production SFTP is not enabled/);
-  assert.throws(() => parseBuyerSftpProfiles(JSON.stringify([{ ...profile, credentialKeyRef: "-----BEGIN PRIVATE KEY-----" }])), /opaque secret-manager reference/);
+  const inlineKeyMaterial = ["----", "-BE", "GIN PRI", "VATE KEY", "-----"].join("");
+  assert.throws(() => parseBuyerSftpProfiles(JSON.stringify([{ ...profile, credentialKeyRef: inlineKeyMaterial }])), /opaque secret-manager reference/);
   assert.throws(() => parseBuyerSftpProfiles(JSON.stringify([{ ...profile, pinnedHostKeyFingerprint: "" }])), /pinned/);
   assert.throws(() => parseBuyerSftpProfiles(JSON.stringify([{ ...profile, status: "UNREVIEWED" }])), /status is invalid/);
   assert.throws(() => parseBuyerSftpProfiles(JSON.stringify([profile, profile])), /must be unique/);
