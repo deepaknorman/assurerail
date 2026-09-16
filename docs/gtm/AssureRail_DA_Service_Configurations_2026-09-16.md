@@ -111,7 +111,7 @@ The Base external estimate uses ₹1.65 lakh for fresh bureau pulls, ₹3 lakh f
 
 For Full, use the existing proposed monitoring formula only with an accepted shared-day operating plan: ₹75,000 activation per seller/pool reporting unit, then ₹25,000 per reporting unit per month plus ₹5 per active loan per month. One consolidated 4,125-loan reporting unit costs about **₹6.23 lakh** for activation plus 12 months; five seller sub-pools cost about **₹21.23 lakh**. Adding the ₹4 lakh buyer-counsel base produces a first-year Full increment of approximately **₹10.23–25.23 lakh** above Premium, before GST, RTO and field work.
 
-The Base working total is ₹6.79 lakh below a genuinely all-inclusive 1.5% comparator of ₹82.50 lakh. Premium before RTO and field work is ₹0.69 lakh above it. If a competing 1.5% quote excludes counsel, escrow, bureau, registry, duty, filings or monitoring, those costs must be added before comparison. Compare identical inclusions and tax treatment.
+A 1.5% alternative should be treated as a platform/adviser fee rather than presumed all-inclusive. At ₹55 crore it is ₹82.50 lakh before external costs. Adding the same Base external scope produces ₹99.21 lakh; adding the Premium external scope produces ₹106.69 lakh. AssureRail is therefore ₹23.50 lakh lower on either like-for-like scope because the external assumptions cancel in the comparison. Supplier quotes, inclusions and tax treatment must still be aligned line by line.
 
 ## Day-one funding-route comparison
 
@@ -123,13 +123,44 @@ Using the same ₹55 crore pool and an illustrative ₹35.75 crore existing-debt
 | **DA Premium at par** | **₹54.17cr** | **₹18.42cr** | Adds modelled registry and assignment-duty allowances |
 | **DA Premium plus one RTO action per vehicle** | **₹54.13cr** | **₹18.38cr** | Adds ₹4.13L of modelled RTO actions |
 | **DA Base priced at ₹99** | **₹53.69cr** | **₹17.94cr** | ₹55L lower price, partly offset by a slightly lower execution fee |
-| **Other DA route at assumed all-in 1.5%** | **₹54.18cr** | **₹18.43cr** | Better than Premium by only ₹0.69L if genuinely all-inclusive; worse than Base by ₹6.79L |
+| **Other DA: 1.5% fee plus Base external costs** | **₹54.01cr** | **₹18.26cr** | ₹99.21L total modelled cost; ₹23.50L more than AssureRail Base |
+| **Other DA: 1.5% fee plus Premium external costs** | **₹53.93cr** | **₹18.18cr** | ₹106.69L total modelled cost; ₹23.50L more than AssureRail Premium |
 | **PTC with 10% MRR** | **₹48.81cr** | **₹13.06cr** | ₹5.50cr retained exposure; waterfall and servicing economics continue |
 | **PTC plus 5% cash enhancement** | **₹46.06cr** | **₹10.31cr** | Retention and ₹2.75cr cash support remain at risk |
 | **80% warehouse / term refinance** | **₹43.56cr** | **₹7.81cr** | ₹44cr debt remains; annual interest at 8–11% is approximately ₹3.52–4.84cr at full utilisation |
 | **Co-lending** | Not comparable | — | Ex-ante route for future originations rather than a sale of this seasoned pool |
 
 The PTC illustration assumes 10% MRR for underlying loans whose original maturity exceeds 24 months and an assumed 1.25% transaction cost. If the applicable MRR is 5%, or credit enhancement is structured within rather than in addition to MRR, the PTC cash result changes. The term-funding row compares day-one liquidity only; lifetime economics require remaining WAL, amortisation, credit losses, servicing cost, capital usage and the retained 24% borrower yield.
+
+## ₹125 crore comparison
+
+The primary ₹125 crore case retains five sellers and the ₹1.33 lakh average outstanding balance from the EV illustration, producing approximately 9,375 admitted loans. Existing-debt release remains 65%, or ₹81.25 crore. The larger population lifts fixed-stage fees above their seller minimums.
+
+| Model component | ₹125cr working value |
+|---|---:|
+| Fixed-stage fees: 9,375 loans × ₹500 | ₹46.88L |
+| Candidate execution fee | ₹40.00L |
+| Total AssureRail fees | **₹86.88L / 0.70%** |
+| Base external costs | ₹23.62L |
+| Base total | **₹110.50L / 0.88%** |
+| Premium external costs | ₹31.10L |
+| Premium total | **₹117.98L / 0.94%** |
+| Premium plus one RTO action per vehicle | **₹127.35L / 1.02%** |
+
+| Route | Net before debt release | Residual cash after ₹81.25cr debt release | What remains |
+|---|---:|---:|---|
+| **DA Base at par** | **₹123.90cr** | **₹42.65cr** | No funding liability on the sold share; future spread surrendered |
+| **DA Premium at par** | **₹123.82cr** | **₹42.57cr** | Adds registry and assignment-duty allowances |
+| **DA Premium plus one RTO action per vehicle** | **₹123.73cr** | **₹42.48cr** | Adds approximately ₹9.38L of RTO actions |
+| **DA Base priced at ₹99** | **₹122.65cr** | **₹41.40cr** | ₹1.25cr lower gross price; candidate execution fee falls to ₹39.63L |
+| **Other DA: 1.5% fee plus Base external costs** | **₹122.89cr** | **₹41.64cr** | ₹211.12L total cost; approximately ₹100.63L more than AssureRail Base |
+| **Other DA: 1.5% fee plus Premium external costs** | **₹122.81cr** | **₹41.56cr** | ₹218.60L total cost; approximately ₹100.63L more than AssureRail Premium |
+| **PTC with 10% MRR** | **₹110.94cr** | **₹29.69cr** | ₹12.50cr retained exposure |
+| **PTC plus 5% cash enhancement** | **₹104.69cr** | **₹23.44cr** | Adds ₹6.25cr cash support at risk |
+| **80% warehouse / term refinance** | **₹99.00cr** | **₹17.75cr** | ₹100cr debt remains; annual interest is approximately ₹8–11cr at full utilisation |
+| **Co-lending** | Not comparable | — | Future origination route rather than a sale of the seasoned pool |
+
+Loan count still matters. At the same ₹125 crore consideration, Base modelled cost is approximately **₹100.21 lakh / 0.80%** for 4,125 loans, **₹110.50 lakh / 0.88%** for 9,375 loans and **₹142.28 lakh / 1.14%** for 15,000 loans. Even the 15,000-loan case remains below a 1.5% fee before adding the alternative provider's external costs.
 
 ## Quoting and presentation rules
 
