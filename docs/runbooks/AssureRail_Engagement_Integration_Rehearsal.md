@@ -23,8 +23,14 @@ All new capabilities are off by default. Use an isolated test environment and sy
 
 | Configuration | Test value / meaning |
 |---|---|
+| `ASSURERAIL_OPERATING_MODE` | `SHADOW` |
+| `ARAIL_PARTICIPANT_ADMISSION_V1` | `shadow` |
+| `ARAIL_NEUTRAL_INGRESS_V1` | `shadow` |
+| `ARAIL_DURABLE_RELAY_MODE` | `shadow`; durable evidence only, with network egress suppressed |
+| `ARAIL_DEVELOPER_PORTAL_V1` | `shadow` |
+| `ARAIL_INTERNAL_RBAC_V1` | `shadow` or `enforce` |
 | `ASSURERAIL_ENGAGEMENT_BILLING_MODE` | `shadow` |
-| `ARAIL_CUSTOMER_OPERATIONS_V1` | `shadow`; existing persistence prerequisites also apply |
+| `ARAIL_CUSTOMER_OPERATIONS_V1` | `shadow` |
 | `NEXT_PUBLIC_ASSURERAIL_ENGAGEMENT_BILLING_ENABLED` | `true` for the authenticated web journey |
 | `ASSURERAIL_CHECKOUT_MODE` | `razorpay_test`; live credentials are rejected |
 | `ASSURERAIL_RAZORPAY_ACCOUNT_ID` | Stable merchant `acc_...` identity, independently confirmed; not the rotating API key ID |

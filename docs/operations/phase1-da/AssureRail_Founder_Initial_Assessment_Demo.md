@@ -24,6 +24,28 @@ memberships and mandates through the normal administration path. Store credentia
 secret manager or private test-account file. Never commit a password, TOTP seed, bearer token or
 Firebase key.
 
+## Demo deployment controls
+
+The two commercial flags do not enable this journey by themselves. The API must run with the
+following dependency-complete shadow profile:
+
+| Control | Demo value |
+|---|---|
+| Runtime | `ASSURERAIL_OPERATING_MODE=SHADOW` |
+| Admission and intake | `ARAIL_PARTICIPANT_ADMISSION_V1=shadow`; `ARAIL_NEUTRAL_INGRESS_V1=shadow` |
+| Durable event handling | `ARAIL_DURABLE_RELAY_MODE=shadow` |
+| Developer and staff authority | `ARAIL_DEVELOPER_PORTAL_V1=shadow`; `ARAIL_INTERNAL_RBAC_V1=shadow` or `enforce` |
+| Customer operations and billing | `ARAIL_CUSTOMER_OPERATIONS_V1=shadow`; `ASSURERAIL_ENGAGEMENT_BILLING_MODE=shadow` |
+| Authenticated web journey | `NEXT_PUBLIC_ASSURERAIL_ENGAGEMENT_BILLING_ENABLED=true` |
+| Test checkout | `ASSURERAIL_CHECKOUT_MODE=razorpay_test` plus server-side test merchant, key, webhook and allowed collection-account references |
+| Evidence intake | Private object storage, certified upload profile and reachable ClamAV scanner |
+| Assessment processing | `ASSURERAIL_DOCUMENT_PROCESSING_MODE=shadow` and a dedicated extractor runtime |
+
+Keep AI disabled until the approved provider account, processing authority and server-side secrets
+are installed. When enabled for the synthetic demonstration, use GPT-5.6 Luna as primary and
+Gemini 3 Flash only as the approved availability fallback. No unrelated DA, PTC, tokenised or live
+adapter flag is required for this journey.
+
 ## Synthetic case
 
 - Asset family: `VEHICLE_EV`.

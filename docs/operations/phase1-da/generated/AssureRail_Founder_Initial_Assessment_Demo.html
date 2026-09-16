@@ -23,6 +23,20 @@
 <tr><td>AssureRail invoice checker</td><td>Independent invoice issue authority</td><td>Review and issue the invoice</td></tr>
 </tbody></table></div>
 <p>Provision identities in the approved Firebase test project and assign institution-scoped memberships and mandates through the normal administration path. Store credentials in the approved secret manager or private test-account file. Never commit a password, TOTP seed, bearer token or Firebase key.</p>
+<h2>Demo deployment controls</h2>
+<p>The two commercial flags do not enable this journey by themselves. The API must run with the following dependency-complete shadow profile:</p>
+<div class="table-wrap"><table><thead><tr><th>Control</th><th>Demo value</th></tr></thead><tbody>
+<tr><td>Runtime</td><td><code>ASSURERAIL_OPERATING_MODE=SHADOW</code></td></tr>
+<tr><td>Admission and intake</td><td><code>ARAIL_PARTICIPANT_ADMISSION_V1=shadow</code>; <code>ARAIL_NEUTRAL_INGRESS_V1=shadow</code></td></tr>
+<tr><td>Durable event handling</td><td><code>ARAIL_DURABLE_RELAY_MODE=shadow</code></td></tr>
+<tr><td>Developer and staff authority</td><td><code>ARAIL_DEVELOPER_PORTAL_V1=shadow</code>; <code>ARAIL_INTERNAL_RBAC_V1=shadow</code> or <code>enforce</code></td></tr>
+<tr><td>Customer operations and billing</td><td><code>ARAIL_CUSTOMER_OPERATIONS_V1=shadow</code>; <code>ASSURERAIL_ENGAGEMENT_BILLING_MODE=shadow</code></td></tr>
+<tr><td>Authenticated web journey</td><td><code>NEXT_PUBLIC_ASSURERAIL_ENGAGEMENT_BILLING_ENABLED=true</code></td></tr>
+<tr><td>Test checkout</td><td><code>ASSURERAIL_CHECKOUT_MODE=razorpay_test</code> plus server-side test merchant, key, webhook and allowed collection-account references</td></tr>
+<tr><td>Evidence intake</td><td>Private object storage, certified upload profile and reachable ClamAV scanner</td></tr>
+<tr><td>Assessment processing</td><td><code>ASSURERAIL_DOCUMENT_PROCESSING_MODE=shadow</code> and a dedicated extractor runtime</td></tr>
+</tbody></table></div>
+<p>Keep AI disabled until the approved provider account, processing authority and server-side secrets are installed. When enabled for the synthetic demonstration, use GPT-5.6 Luna as primary and Gemini 3 Flash only as the approved availability fallback. No unrelated DA, PTC, tokenised or live adapter flag is required for this journey.</p>
 <h2>Synthetic case</h2>
 <ul>
 <li>Asset family: <code>VEHICLE_EV</code>.</li>
