@@ -21,6 +21,10 @@ export class AssessmentEngagementController {
 @Controller("v1/rail/internal/engagements/institutions/:institutionId")
 export class AssessmentEngagementInternalController {
   constructor(private readonly service: AssessmentEngagementService) {}
+  @Post("design-partners")
+  proposeDesignPartner(@Req() req: Request, @Param("institutionId") id: string, @Body() body: Parameters<AssessmentEngagementService["proposeDesignPartner"]>[2]) { return this.service.proposeDesignPartner(billingActor(req), id, body); }
+  @Post("design-partners/:couponId/review")
+  reviewDesignPartner(@Req() req: Request, @Param("institutionId") id: string, @Param("couponId") couponId: string, @Body() body: Parameters<AssessmentEngagementService["reviewDesignPartner"]>[3]) { return this.service.reviewDesignPartner(billingActor(req), id, couponId, body); }
   @Post(":engagementId/stages/:stage/invoice")
   invoice(@Req() req: Request, @Param("institutionId") id: string, @Param("engagementId") e: string, @Param("stage") stage: string, @Body() body: Parameters<AssessmentEngagementService["prepareInvoice"]>[4]) { return this.service.prepareInvoice(billingActor(req),id,e,stage,body); }
 }

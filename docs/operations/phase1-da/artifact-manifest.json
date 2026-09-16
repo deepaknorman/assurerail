@@ -1,7 +1,7 @@
 {
   "manifestVersion": "1.0",
   "programme": "AssureRail Phase 1 conventional DA",
-  "generatedAtPolicyDate": "2026-09-16",
+  "generatedAtPolicyDate": "2026-09-17",
   "classifications": {
     "PUBLIC": "May be published after the public-claims release check.",
     "SHARED_PASSWORD": "May be shared through the single controlled download password after recipient and version are recorded.",
@@ -96,6 +96,14 @@
       "title": "Uninterrupted conventional DA execution chain",
       "source": "docs/operations/phase1-da/AssureRail_Uninterrupted_DA_Execution_Chain.md",
       "output": "docs/operations/phase1-da/generated/AssureRail_Uninterrupted_DA_Execution_Chain.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-DESIGN-PARTNER",
+      "title": "Design-partner pricing control",
+      "source": "docs/operations/phase1-da/AssureRail_Design_Partner_Pricing_Control.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Design_Partner_Pricing_Control.html",
       "classification": "INTERNAL",
       "status": "CURRENT"
     },

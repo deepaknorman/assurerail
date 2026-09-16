@@ -32,7 +32,7 @@ export class CustomerOperationsService {
 
   async participantOverview(actor: ParticipantOpsActor) {
     enabled(); await this.participant(actor, "VIEW_CUSTOMER_OPERATIONS"); const institutionId = actor.actingInstitutionId;
-    const [contracts, cohorts, requests, reviews, exits] = await Promise.all([
+    const [contracts, cohorts, requests, reviews, exits, designPartnerCoupon] = await Promise.all([
       this.db.customerContract.findMany({
         where: { institutionId, status: { notIn: ["PROPOSED", "REJECTED"] } },
         include: {
@@ -46,6 +46,7 @@ export class CustomerOperationsService {
             include: {
               lines: true,
               creditCorrections: { where: { status: "APPROVED" } },
+              designPartnerDiscount: true,
             },
             orderBy: { periodEnd: "desc" },
           },
@@ -57,8 +58,9 @@ export class CustomerOperationsService {
       this.db.customerServiceRequest.findMany({ where: { institutionId }, include: { messages: { orderBy: { createdAt: "asc" } } }, orderBy: { createdAt: "desc" } }),
       this.db.customerOperationalReview.findMany({ where: { institutionId }, orderBy: { periodEnd: "desc" } }),
       this.db.customerDataExitExport.findMany({ where: { institutionId }, orderBy: { createdAt: "desc" } }),
+      this.db.customerDesignPartnerCoupon.findFirst({ where: { institutionId, status: "APPROVED" }, select: { programmeCode: true, discountBps: true, status: true, reviewedAt: true } }),
     ]);
-    return { institutionId, pricingChangesAuthority: false as const, transactionAuthorityAffected: false as const, contracts, cohorts, serviceRequests: requests, operationalReviews: reviews, exitExports: exits };
+    return { institutionId, pricingChangesAuthority: false as const, transactionAuthorityAffected: false as const, designPartnerCoupon, contracts, cohorts, serviceRequests: requests, operationalReviews: reviews, exitExports: exits };
   }
 
   async proposeContract(actor: InternalOpsActor, institutionId: string, body: { contractRef?: unknown; currency?: unknown; currencyScale?: unknown; termsDigest?: unknown; termsEvidenceRef?: unknown; effectiveAt?: unknown; expiresAt?: unknown; renewalReviewAt?: unknown; stepUpEvidenceId?: unknown }) {
@@ -163,7 +165,7 @@ export class CustomerOperationsService {
     enabled(); const authority = await this.participant(actor, "EXPORT_CUSTOMER_DATA"); const institutionId = actor.actingInstitutionId; const highWaterAt = new Date(); const stepUpEvidenceId = required(body.stepUpEvidenceId, "stepUpEvidenceId", 160);
     const [institution, contracts, cohorts, requests, reviews, cases, rooms] = await Promise.all([
       this.db.institution.findUniqueOrThrow({ where: { id: institutionId }, select: { id: true, legalName: true, institutionKind: true, jurisdiction: true, legalIdentifiers: true, status: true, admission: true, members: { select: { id: true, userId: true, membershipRole: true, status: true, effectiveAt: true, expiresAt: true } }, appointments: true, routeEntitlements: true } }),
-      this.db.customerContract.findMany({ where: { institutionId, status: { notIn: ["PROPOSED", "REJECTED"] } }, include: { changes: { where: { status: "APPROVED" } }, rateCards: { where: { status: { notIn: ["PROPOSED", "REJECTED"] } }, include: { feeRules: true } }, usageEvents: true, invoiceStatements: { where: { status: { not: "DRAFT" } }, include: { lines: true, creditCorrections: { where: { status: "APPROVED" } } } } } }), this.db.customerImplementationCohort.findMany({ where: { institutionId } }), this.db.customerServiceRequest.findMany({ where: { institutionId }, include: { messages: true } }), this.db.customerOperationalReview.findMany({ where: { institutionId } }),
+      this.db.customerContract.findMany({ where: { institutionId, status: { notIn: ["PROPOSED", "REJECTED"] } }, include: { changes: { where: { status: "APPROVED" } }, rateCards: { where: { status: { notIn: ["PROPOSED", "REJECTED"] } }, include: { feeRules: true } }, usageEvents: true, invoiceStatements: { where: { status: { not: "DRAFT" } }, include: { lines: true, creditCorrections: { where: { status: "APPROVED" } }, designPartnerDiscount: true } } } }), this.db.customerImplementationCohort.findMany({ where: { institutionId } }), this.db.customerServiceRequest.findMany({ where: { institutionId }, include: { messages: true } }), this.db.customerOperationalReview.findMany({ where: { institutionId } }),
       this.db.transactionCase.findMany({ where: { OR: [{ ownerInstitutionId: institutionId }, { parties: { some: { institutionId } } }] }, select: { id: true, caseReference: true, transactionRoute: true, representation: true, assetClass: true, lifecycleLeg: true, operatingMode: true, status: true, aggregateVersion: true, createdAt: true, updatedAt: true } }),
       this.db.caseRoom.findMany({ where: { transactionCase: { OR: [{ ownerInstitutionId: institutionId }, { parties: { some: { institutionId } } }] } }, select: { id: true, transactionCaseId: true, purpose: true, status: true, policyVersion: true, createdAt: true, closedAt: true } }),
     ]);

@@ -11,6 +11,7 @@ import { acceptedPricing, ASSET_FAMILIES, billingProfile, engagementAcceptanceDi
 import { calculateExactFee, type ExactFeeRule } from "./fee-calculation";
 import type { ParticipantOpsActor, InternalOpsActor } from "./customer-operations.service";
 import { quoteExpiryAt, type EngagementQuoteInput, type PreparationRoute } from "./engagement-pricing";
+import { DESIGN_PARTNER_DISCOUNT_BPS, DESIGN_PARTNER_MAX_ENTITIES, DESIGN_PARTNER_PROGRAMME, designPartnerInvoiceDiscount, validatedDesignPartnerPayable } from "./design-partner-discount";
 
 export function engagementEnabled() {
   if (process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE !== "shadow" || inspectPersistenceFlags(process.env).customerOperations !== "shadow") throw new ForbiddenException("engagement billing is disabled");
@@ -40,9 +41,54 @@ export class AssessmentEngagementService {
     await this.access.requireHuman({userId:actor.actorUserId,institutionId:actor.actingInstitutionId,action:manage?"MANAGE_EVIDENCE":"VIEW_EVIDENCE"});
   }
   async scoped(tx: Tx, institutionId: string, id: string) {
-    const e = await tx.assessmentEngagement.findUnique({ where: { id }, include: { customerContract: true, stages: { include: { invoice: true } } } });
+    const e = await tx.assessmentEngagement.findUnique({ where: { id }, include: { customerContract: true, stages: { include: { invoice: { include: { designPartnerDiscount: { include: { coupon: true } } } } } } } });
     if (!e || e.customerContract.institutionId !== institutionId) throw new NotFoundException("engagement not found");
     return e;
+  }
+
+  async proposeDesignPartner(actor: InternalOpsActor, institutionId: string, body: { evidenceRef?: unknown; signedScopeAt?: unknown; stepUpEvidenceId?: unknown }) {
+    engagementEnabled();
+    await this.staff.require({ userId: actor.actorUserId, permission: "COMMERCIAL_CREDIT_PROPOSE", scopeType: "GLOBAL", scopeRef: null });
+    const evidenceRef = bounded(body.evidenceRef, "evidenceRef", 500), signedScopeAt = new Date(bounded(body.signedScopeAt, "signedScopeAt", 80)), step = bounded(body.stepUpEvidenceId, "stepUpEvidenceId");
+    if (!Number.isFinite(signedScopeAt.getTime()) || signedScopeAt > new Date()) throw new BadRequestException("signedScopeAt must be a valid non-future instant");
+    return this.transaction(async tx => {
+      const institution = await tx.institution.findUnique({ where: { id: institutionId } });
+      if (!institution || institution.status !== "ACTIVE" || institution.institutionKind !== "NBFC") throw new ConflictException("active NBFC seller institution required");
+      const existing = await tx.customerDesignPartnerCoupon.findFirst({ where: { institutionId, status: { in: ["PROPOSED", "APPROVED"] } }, orderBy: { createdAt: "desc" } });
+      if (existing) {
+        if (existing.status === "PROPOSED" && (existing.evidenceRef !== evidenceRef || existing.signedScopeAt.getTime() !== signedScopeAt.getTime())) throw new ConflictException("design-partner proposal already exists with different signed-scope evidence");
+        return existing;
+      }
+      await this.stepUp.consume({ evidenceId: step, userId: actor.actorUserId, sessionId: actor.actorSessionId, institutionId: null, purpose: "INTERNAL_CREDIT_PROPOSE" }, tx);
+      return tx.customerDesignPartnerCoupon.create({ data: { id: `dpc_${randomUUID()}`, institutionId, programmeCode: DESIGN_PARTNER_PROGRAMME, discountBps: DESIGN_PARTNER_DISCOUNT_BPS, evidenceRef, signedScopeAt, proposedByUserId: actor.actorUserId, proposalStepUpId: step } });
+    });
+  }
+
+  async reviewDesignPartner(actor: InternalOpsActor, institutionId: string, couponId: string, body: { decision?: unknown; reason?: unknown; stepUpEvidenceId?: unknown }) {
+    engagementEnabled();
+    await this.staff.require({ userId: actor.actorUserId, permission: "COMMERCIAL_CREDIT_REVIEW", scopeType: "GLOBAL", scopeRef: null });
+    const decision = body.decision === "APPROVE" || body.decision === "REJECT" ? body.decision : null;
+    if (!decision) throw new BadRequestException("decision must be APPROVE or REJECT");
+    const reason = bounded(body.reason, "reason", 1_000), step = bounded(body.stepUpEvidenceId, "stepUpEvidenceId");
+    return this.transaction(async tx => {
+      const coupon = await tx.customerDesignPartnerCoupon.findFirst({ where: { id: couponId, institutionId } });
+      if (!coupon) throw new NotFoundException("design-partner proposal not found");
+      if (coupon.status !== "PROPOSED") throw new ConflictException("design-partner proposal is already decided");
+      if (coupon.proposedByUserId === actor.actorUserId) throw new ForbiddenException("design-partner proposer cannot review the same proposal");
+      await this.stepUp.consume({ evidenceId: step, userId: actor.actorUserId, sessionId: actor.actorSessionId, institutionId: null, purpose: "INTERNAL_CREDIT_REVIEW" }, tx);
+      let slot: number | null = null;
+      if (decision === "APPROVE") {
+        await tx.$executeRaw(Prisma.sql`LOCK TABLE "CustomerDesignPartnerCoupon" IN EXCLUSIVE MODE`);
+        const candidates = await tx.customerDesignPartnerCoupon.findMany({ where: { status: { in: ["PROPOSED", "APPROVED"] } }, orderBy: [{ signedScopeAt: "asc" }, { createdAt: "asc" }, { id: "asc" }], select: { id: true } });
+        if (!candidates.slice(0, DESIGN_PARTNER_MAX_ENTITIES).some(item => item.id === couponId)) throw new ConflictException("seller is not one of the first two recorded signed assessment scopes");
+        const assigned = await tx.customerDesignPartnerCoupon.findMany({ where: { status: "APPROVED" }, select: { slot: true } });
+        slot = [1, 2].find(candidate => !assigned.some(item => item.slot === candidate)) ?? null;
+        if (slot === null || assigned.length >= DESIGN_PARTNER_MAX_ENTITIES) throw new ConflictException("both lifetime design-partner slots have already been assigned");
+      }
+      const changed = await tx.customerDesignPartnerCoupon.updateMany({ where: { id: couponId, status: "PROPOSED" }, data: { status: decision === "APPROVE" ? "APPROVED" : "REJECTED", slot, reviewedByUserId: actor.actorUserId, reviewStepUpId: step, reviewReason: reason, reviewedAt: new Date() } });
+      if (changed.count !== 1) throw new ConflictException("design-partner proposal was concurrently decided");
+      return tx.customerDesignPartnerCoupon.findUniqueOrThrow({ where: { id: couponId } });
+    });
   }
   private active(contract: { status: string; effectiveAt: Date; expiresAt: Date; currency: string; currencyScale: number }) {
     const now = new Date();
@@ -145,16 +191,20 @@ export class AssessmentEngagementService {
       const e = await this.scoped(tx, institutionId, id); this.active(e.customerContract);
       const s = e.stages.find(s => s.stage === stage);
       if (e.status !== "ACCEPTED_SHADOW" || !s) throw new ConflictException("accepted stage required");
-      if (s.invoiceId) return tx.customerInvoiceStatement.findUniqueOrThrow({ where: { id: s.invoiceId }, include: { lines: true } });
+      if (s.invoiceId) return tx.customerInvoiceStatement.findUniqueOrThrow({ where: { id: s.invoiceId }, include: { lines: true, designPartnerDiscount: true } });
       const card = await tx.customerRateCard.findUniqueOrThrow({ where: { id: e.rateCardId }, include: { feeRules: true } });
       // Accepted pricing is retained across later rate-card supersession, never recalculated from a new card.
       const amount = stageAmount(e.quote as unknown as Quote, stage, e.route as PreparationRoute | null);
       const rules = ["ENGAGEMENT_STAGE_FEE", "ENGAGEMENT_TAX"].map(metric => card.feeRules.find(r => r.metric === metric && Object.entries(dimensions).every(([k,v]) => r[k as keyof typeof dimensions] === v)));
       if (rules.some(r => !r)) throw new ConflictException("accepted rate rules unavailable");
+      const taxRule = rules.find(rule => rule!.metric === "ENGAGEMENT_TAX") as ExactFeeRule;
+      const coupon = await tx.customerDesignPartnerCoupon.findFirst({ where: { institutionId, status: "APPROVED" } });
+      const discount = coupon ? designPartnerInvoiceDiscount(amount, taxRule, coupon) : null;
       const step = bounded(body.stepUpEvidenceId, "stepUpEvidenceId");
       await this.stepUp.consume({ evidenceId: step, userId: actor.actorUserId, sessionId: actor.actorSessionId, institutionId: null, purpose: "INTERNAL_INVOICE_PREPARE" }, tx);
       const now = new Date(), invoiceId = `inv_${randomUUID()}`;
-      const statement = await tx.customerInvoiceStatement.create({ data: { id: invoiceId, customerContractId: e.customerContractId, customerRateCardId: e.rateCardId, statementRef: `${id}:${stage}`, periodStart: now, periodEnd: new Date(now.getTime()+1), currency: "INR", currencyScale: 2, grossFeeMinor: amount.totalMinor, creditMinor: "0", netFeeMinor: amount.totalMinor, statementDigest: sha256Digest({ engagementId: id, stage, quoteDigest: e.quoteDigest, amount, billingProfile: e.billingProfile }), preparedByUserId: actor.actorUserId, preparationStepUpId: step } });
+      const statement = await tx.customerInvoiceStatement.create({ data: { id: invoiceId, customerContractId: e.customerContractId, customerRateCardId: e.rateCardId, statementRef: `${id}:${stage}`, periodStart: now, periodEnd: new Date(now.getTime()+1), currency: "INR", currencyScale: 2, grossFeeMinor: amount.totalMinor, creditMinor: discount?.totalCreditMinor ?? "0", netFeeMinor: discount?.discountedTotalMinor ?? amount.totalMinor, statementDigest: sha256Digest({ engagementId: id, stage, quoteDigest: e.quoteDigest, amount, designPartnerDiscount: discount, billingProfile: e.billingProfile }), preparedByUserId: actor.actorUserId, preparationStepUpId: step } });
+      if (discount && coupon) await tx.customerInvoiceDiscount.create({ data: { id: `idisc_${randomUUID()}`, invoiceId, couponId: coupon.id, programmeCode: discount.programmeCode, discountBps: discount.discountBps, standardBaseMinor: discount.standardBaseMinor, standardTaxMinor: discount.standardTaxMinor, standardTotalMinor: discount.standardTotalMinor, discountedBaseMinor: discount.discountedBaseMinor, discountedTaxMinor: discount.discountedTaxMinor, discountedTotalMinor: discount.discountedTotalMinor, baseCreditMinor: discount.baseCreditMinor, taxCreditMinor: discount.taxCreditMinor, totalCreditMinor: discount.totalCreditMinor, snapshotDigest: discount.snapshotDigest } });
       for (const rule of rules) {
         const isTax = rule!.metric === "ENGAGEMENT_TAX";
         const input = { quantityMinor: isTax ? "1" : amount.baseMinor, notionalMinor: amount.baseMinor };
@@ -164,7 +214,7 @@ export class AssessmentEngagementService {
         await tx.customerInvoiceLine.create({ data: { id: `iline_${randomUUID()}`, invoiceStatementId: invoiceId, usageEventId: event.id, feeRuleId: rule!.id, basisMinor: calculation.basisMinor, rateValue: rule!.rateValue, calculatedFeeMinor: calculation.feeMinor, calculationDigest: sha256Digest({ eventId: event.id, ruleId: rule!.id, ...calculation }) } });
       }
       await tx.assessmentEngagementStage.update({ where: { id: s.id }, data: { invoiceId } });
-      return statement; // Existing independent invoice review endpoint must issue it.
+      return tx.customerInvoiceStatement.findUniqueOrThrow({ where: { id: statement.id }, include: { lines: true, designPartnerDiscount: true } }); // Existing independent invoice review endpoint must issue it.
     });
   }
 
@@ -178,7 +228,10 @@ export class AssessmentEngagementService {
     const checkoutPaid = checkout?.status === "PAID_TEST" && checkout.mode === "TEST" && checkout.checkedAt && checkout.checkedAt.getTime() > Date.now()-5*60000;
     const received = bankReceived + (checkoutPaid ? BigInt(checkout.verifiedPaidMinor) : 0n);
     const unresolvedWebhook = checkout?.providerPaymentId ? await tx.paymentWebhookInbox.count({where:{merchantAccountRef:checkout.merchantAccountRef,providerPaymentId:checkout.providerPaymentId,OR:[{eventType:{startsWith:"refund."}},{eventType:{startsWith:"payment.dispute."}}]}}) : 0;
-    const result = paidStageReadiness({ invoiceStatus: s.invoice.status, grossMinor: s.invoice.grossFeeMinor, netMinor: s.invoice.netFeeMinor, expectedMinor: s.expectedMinor, receivedMinor: received.toString(), unresolvedAdjustment: Boolean(unresolvedWebhook) || checkout?.status === "HOLD" || receipts.some(r => r.adjustments.some(a => a.status === "PROPOSED")) });
+    let payableMinor = s.expectedMinor;
+    try { payableMinor = validatedDesignPartnerPayable(s.invoice, institutionId) ?? s.expectedMinor; }
+    catch { throw new ConflictException("INVALID_DESIGN_PARTNER_DISCOUNT"); }
+    const result = paidStageReadiness({ invoiceStatus: s.invoice.status, grossMinor: s.invoice.grossFeeMinor, netMinor: s.invoice.netFeeMinor, quotedMinor: s.expectedMinor, payableMinor, receivedMinor: received.toString(), unresolvedAdjustment: Boolean(unresolvedWebhook) || checkout?.status === "HOLD" || receipts.some(r => r.adjustments.some(a => a.status === "PROPOSED")) });
     if (!result.ready) throw new ConflictException(result.reason);
     return { engagement: e, stage: s, operatingMode: "SHADOW", liveStageUnlock: false as const };
   }

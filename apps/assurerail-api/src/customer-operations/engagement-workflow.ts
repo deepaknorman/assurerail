@@ -34,10 +34,10 @@ export function stageAmount(quote: ReturnType<typeof acceptedPricing>, stage: st
 export function engagementAcceptanceDigest(input: { quote: unknown; scope: unknown; billingProfile: unknown; contractId: string; termsDigest: string }) { return sha256Digest(input); }
 
 /** Credits/refunds must be resolved explicitly; they cannot silently make a paid stage eligible. */
-export function paidStageReadiness(input: { invoiceStatus: string; grossMinor: string; netMinor: string; expectedMinor: string; receivedMinor: string; unresolvedAdjustment: boolean }) {
+export function paidStageReadiness(input: { invoiceStatus: string; grossMinor: string; netMinor: string; quotedMinor: string; payableMinor: string; receivedMinor: string; unresolvedAdjustment: boolean }) {
   if (input.unresolvedAdjustment) return { ready: false, reason: "PAYMENT_ADJUSTMENT_PENDING" };
   if (input.invoiceStatus !== "ISSUED_SHADOW") return { ready: false, reason: "ISSUED_UNCORRECTED_INVOICE_REQUIRED" };
-  if (input.grossMinor !== input.expectedMinor || input.netMinor !== input.expectedMinor) return { ready: false, reason: "ACCEPTED_QUOTE_MISMATCH" };
-  if (input.receivedMinor !== input.expectedMinor) return { ready: false, reason: BigInt(input.receivedMinor) > BigInt(input.expectedMinor) ? "OVERPAYMENT_REQUIRES_RECONCILIATION" : "PAYMENT_OUTSTANDING" };
+  if (input.grossMinor !== input.quotedMinor || input.netMinor !== input.payableMinor) return { ready: false, reason: "ACCEPTED_QUOTE_MISMATCH" };
+  if (input.receivedMinor !== input.payableMinor) return { ready: false, reason: BigInt(input.receivedMinor) > BigInt(input.payableMinor) ? "OVERPAYMENT_REQUIRES_RECONCILIATION" : "PAYMENT_OUTSTANDING" };
   return { ready: true, reason: "PAID_SHADOW_ONLY" };
 }

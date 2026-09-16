@@ -100,6 +100,14 @@ export const DOWNLOAD_CATALOG = [
     "releaseGate": null
   },
   {
+    "id": "DA-DESIGN-PARTNER",
+    "title": "Design-partner pricing control",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
+  },
+  {
     "id": "DA-FOUNDER-IA-DEMO",
     "title": "Founder Initial Assessment demonstration",
     "classification": "INTERNAL",

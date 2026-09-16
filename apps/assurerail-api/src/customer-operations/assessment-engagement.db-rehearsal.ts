@@ -25,7 +25,14 @@ async function main(){
  await assert.rejects(()=>db.assessmentEngagement.update({where:{id:offer.id},data:{quote:{tampered:true}}}),/immutable/);
  assert.equal((await engagements.readiness(actor,offer.id,"INITIAL")).readyForShadowProcessing,false);
  await assert.rejects(()=>engagements.readiness({...actor,actingInstitutionId:"other"},offer.id,"INITIAL"),/not found/);
- const invoice=await engagements.prepareInvoice(maker,actor.actingInstitutionId,offer.id,"INITIAL",{stepUpEvidenceId:"invoice-step"});assert.equal(invoice.grossFeeMinor,"36816000");assert.equal((await engagements.prepareInvoice(maker,actor.actingInstitutionId,offer.id,"INITIAL",{stepUpEvidenceId:"unused"})).id,invoice.id);
+ const coupon=await engagements.proposeDesignPartner(maker,actor.actingInstitutionId,{evidenceRef:"founder-decision.synthetic",signedScopeAt:"2026-01-01T00:00:00Z",stepUpEvidenceId:"coupon-propose"});
+ await assert.rejects(()=>engagements.reviewDesignPartner(maker,actor.actingInstitutionId,coupon.id,{decision:"APPROVE",reason:"self review",stepUpEvidenceId:"coupon-self"}),/cannot review/);
+ await engagements.reviewDesignPartner(checker,actor.actingInstitutionId,coupon.id,{decision:"APPROVE",reason:"Synthetic independent approval",stepUpEvidenceId:"coupon-review"});
+ for(const id of ["inst-design-partner-2","inst-design-partner-3"])await db.institution.create({data:{id,legalName:id,institutionKind:"NBFC",jurisdiction:"IND",legalIdentifiers:{},status:"ACTIVE",applicantUserId:"synthetic"}});
+ const coupon2=await engagements.proposeDesignPartner(maker,"inst-design-partner-2",{evidenceRef:"founder-decision.synthetic",signedScopeAt:"2026-01-02T00:00:00Z",stepUpEvidenceId:"coupon-propose-2"});await engagements.reviewDesignPartner(checker,"inst-design-partner-2",coupon2.id,{decision:"APPROVE",reason:"Synthetic second approval",stepUpEvidenceId:"coupon-review-2"});
+ const coupon3=await engagements.proposeDesignPartner(maker,"inst-design-partner-3",{evidenceRef:"founder-decision.synthetic",signedScopeAt:"2026-01-03T00:00:00Z",stepUpEvidenceId:"coupon-propose-3"});await assert.rejects(()=>engagements.reviewDesignPartner(checker,"inst-design-partner-3",coupon3.id,{decision:"APPROVE",reason:"Synthetic third approval",stepUpEvidenceId:"coupon-review-3"}),/first two|both lifetime/);
+ await assert.rejects(()=>db.customerDesignPartnerCoupon.update({where:{id:coupon.id},data:{discountBps:1}}),/immutable|constraint/);
+ const invoice=await engagements.prepareInvoice(maker,actor.actingInstitutionId,offer.id,"INITIAL",{stepUpEvidenceId:"invoice-step"});assert.equal(invoice.grossFeeMinor,"36816000");assert.equal(invoice.creditMinor,"11044800");assert.equal(invoice.netFeeMinor,"25771200");assert.equal(invoice.designPartnerDiscount?.discountedBaseMinor,"21840000");assert.equal((await engagements.prepareInvoice(maker,actor.actingInstitutionId,offer.id,"INITIAL",{stepUpEvidenceId:"unused"})).id,invoice.id);
  await assert.rejects(()=>billing.issueInvoice(maker,actor.actingInstitutionId,invoice.id,{reason:"Synthetic",stepUpEvidenceId:"step"}),/preparer cannot/);
  await billing.issueInvoice(checker,actor.actingInstitutionId,invoice.id,{reason:"Synthetic independent check",stepUpEvidenceId:"review-step"});
  let creates=0,paid=false,reference="";
@@ -33,8 +40,8 @@ async function main(){
   const path=String(url);
   if(path.includes("api.openai.com"))return new Response(JSON.stringify({status:"completed",output:[{type:"message",content:[{type:"output_text",text:'{"findings":[]}'}]}],usage:{input_tokens:10,output_tokens:5}}));
   if(init?.method==="POST"){creates++;reference=JSON.parse(init.body as string).reference_id;}
-  const link={id:"plink_Synthetic",reference_id:reference,amount:36816000,amount_paid:paid?36816000:0,currency:"INR",status:paid?"paid":"created",short_url:"https://rzp.io/i/synthetic",payments:paid?[{payment_id:"pay_Synthetic",amount:36816000,status:"captured"}]:[]};
-  return new Response(JSON.stringify(path.includes("/payments/")?{id:"pay_Synthetic",amount:36816000,currency:"INR",status:"captured",captured:true,amount_refunded:0,refund_status:null}:link));
+  const link={id:"plink_Synthetic",reference_id:reference,amount:Number(invoice.netFeeMinor),amount_paid:paid?Number(invoice.netFeeMinor):0,currency:"INR",status:paid?"paid":"created",short_url:"https://rzp.io/i/synthetic",payments:paid?[{payment_id:"pay_Synthetic",amount:Number(invoice.netFeeMinor),status:"captured"}]:[]};
+  return new Response(JSON.stringify(path.includes("/payments/")?{id:"pay_Synthetic",amount:Number(invoice.netFeeMinor),currency:"INR",status:"captured",captured:true,amount_refunded:0,refund_status:null}:link));
  }) as typeof fetch;
  const created=await checkout.create(actor,offer.id,"INITIAL");assert.equal(created.status,"OPEN");await checkout.create(actor,offer.id,"INITIAL");assert.equal(creates,1);
  paid=true;await checkout.refresh(actor,offer.id,"INITIAL");assert.equal((await engagements.readiness(actor,offer.id,"INITIAL")).readyForShadowProcessing,true);
@@ -62,7 +69,7 @@ async function main(){
  assert.equal((await engagements.readiness(actor,offer.id,"INITIAL")).readyForShadowProcessing,false);
  await checkout.refresh(actor,offer.id,"INITIAL");assert.equal((await db.engagementCheckout.findUniqueOrThrow({where:{invoiceId:invoice.id}})).status,"HOLD");
  await assert.rejects(()=>engagements.requirePaid(db,actor.actingInstitutionId,offer.id,"INITIAL"),/PAYMENT_ADJUSTMENT_PENDING/);
- console.log("[ENGAGEMENT-DB] PASS accepted quote freeze, idempotent offer/invoice/checkout, scoped access, independent invoice review, exact tax, captured payment, signed webhook replay, refund hold and paid-stage revocation; synthetic identity and provider stubs");
+ console.log("[ENGAGEMENT-DB] PASS entity-bound maker/checker design-partner coupon, pre-tax discount, accepted quote freeze, idempotent invoice/checkout, exact tax, captured payment, signed webhook replay, refund hold and paid-stage revocation; synthetic identity and provider stubs");
  }finally{globalThis.fetch=originalFetch;await db.$disconnect();}
 }
 void main().catch(e=>{console.error("[ENGAGEMENT-DB] FAILED",e.message);process.exitCode=1;});

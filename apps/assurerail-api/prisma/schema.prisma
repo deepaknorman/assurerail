@@ -231,6 +231,7 @@ model Institution {
   customerServiceRequests  CustomerServiceRequest[]
   customerOperationalReviews CustomerOperationalReview[]
   customerDataExitExports  CustomerDataExitExport[]
+  designPartnerCoupons     CustomerDesignPartnerCoupon[]
   secondaryTransferEvidence   SecondaryTransferEvidence[]
   secondaryTransferBreaks     SecondaryTransferBreak[] @relation("SecondaryTransferBreakOwnerInstitution")
   secondaryTransferRepairs    SecondaryTransferRepair[] @relation("SecondaryTransferRepairProviderInstitution")
@@ -1220,9 +1221,61 @@ model CustomerInvoiceStatement {
   lines              CustomerInvoiceLine[]
   creditCorrections  CustomerCreditCorrection[]
   paymentReceipts    CustomerPaymentReceipt[]
+  designPartnerDiscount CustomerInvoiceDiscount?
 
   @@unique([customerContractId, statementRef], map: "CustomerInvoiceStatement_contract_ref")
   @@index([customerContractId, periodStart, periodEnd], map: "CustomerInvoiceStatement_contract_period_idx")
+}
+
+/// Founder-approved lifetime pricing for the first two seller institutions. Approval is
+/// entity-bound, non-expiring and independently reviewed; approved slots are immutable in storage.
+model CustomerDesignPartnerCoupon {
+  id                 String      @id
+  institutionId      String
+  institution        Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  programmeCode      String      @default("DESIGN_PARTNER_30")
+  discountBps        Int         @default(3000)
+  status             String      @default("PROPOSED") // PROPOSED | APPROVED | REJECTED
+  slot               Int?        @unique
+  evidenceRef        String
+  signedScopeAt      DateTime
+  proposedByUserId   String
+  proposalStepUpId   String
+  reviewedByUserId   String?
+  reviewStepUpId     String?
+  reviewReason       String?
+  reviewedAt         DateTime?
+  createdAt          DateTime    @default(now())
+  invoiceDiscounts   CustomerInvoiceDiscount[]
+
+  @@index([status, createdAt])
+  @@index([institutionId, status])
+  @@index([signedScopeAt, createdAt])
+}
+
+/// Immutable invoice-time evidence of the discount actually applied. The standard quote remains
+/// intact; gross, credit and net values on the invoice reconcile to this snapshot.
+model CustomerInvoiceDiscount {
+  id                    String      @id
+  invoiceId             String      @unique
+  invoice               CustomerInvoiceStatement @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  couponId              String
+  coupon                 CustomerDesignPartnerCoupon @relation(fields: [couponId], references: [id], onDelete: Restrict)
+  programmeCode         String
+  discountBps           Int
+  standardBaseMinor     String
+  standardTaxMinor      String
+  standardTotalMinor    String
+  discountedBaseMinor   String
+  discountedTaxMinor    String
+  discountedTotalMinor  String
+  baseCreditMinor       String
+  taxCreditMinor        String
+  totalCreditMinor      String
+  snapshotDigest        String
+  createdAt             DateTime    @default(now())
+
+  @@index([couponId, createdAt])
 }
 
 model EngagementCheckout {

@@ -1,7 +1,7 @@
 /* Generated from config/assurerail-da-commercial-policy.json. Do not edit. */
 export const commercialPolicy = {
-  "policyVersion": "DA-2026-09-16-PILOT-1",
-  "effectiveDate": "2026-09-16",
+  "policyVersion": "DA-2026-09-17-PILOT-2",
+  "effectiveDate": "2026-09-17",
   "currency": "INR",
   "currencyScale": 2,
   "phase": {

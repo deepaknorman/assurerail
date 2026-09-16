@@ -34,7 +34,7 @@ test("billing validates registration selection and GST state consistency",()=>{
  const profile={legalName:"Synthetic NBFC",billingEmail:"billing@example.test",address:"Test address",stateCode:"27",postalCode:"400001",gstRegistration:"UNREGISTERED"};assert.equal(billingProfile(profile).gstin,null);assert.throws(()=>billingProfile({...profile,gstRegistration:"REGISTERED",gstin:"29ABCDE1234F1Z5"}),/mismatch/);
 });
 test("paid stages reject short, excess, adjusted and corrected invoices",()=>{
- const input={invoiceStatus:"ISSUED_SHADOW",grossMinor:"100",netMinor:"100",expectedMinor:"100",receivedMinor:"100",unresolvedAdjustment:false};assert.equal(paidStageReadiness(input).ready,true);
+ const input={invoiceStatus:"ISSUED_SHADOW",grossMinor:"100",netMinor:"100",quotedMinor:"100",payableMinor:"100",receivedMinor:"100",unresolvedAdjustment:false};assert.equal(paidStageReadiness(input).ready,true);
  for(const change of [{receivedMinor:"99"},{receivedMinor:"101"},{netMinor:"90"},{invoiceStatus:"CORRECTED"},{unresolvedAdjustment:true}])assert.equal(paidStageReadiness({...input,...change}).ready,false);
 });
 test("Razorpay signature checks exact raw bytes and supports controlled secret rotation",()=>{

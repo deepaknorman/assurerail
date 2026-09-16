@@ -1,7 +1,7 @@
 /* Generated from config/assurerail-da-commercial-policy.json. Do not edit. */
 export const commercialPolicy = {
-  "policyVersion": "DA-2026-09-16-PILOT-1",
-  "effectiveDate": "2026-09-16",
+  "policyVersion": "DA-2026-09-17-PILOT-2",
+  "effectiveDate": "2026-09-17",
   "currency": "INR",
   "currencyScale": 2,
   "phase": {
@@ -106,9 +106,33 @@ export const commercialPolicy = {
     "contractorDayCostMinor": "2500000",
     "contractorBillingRule": "FULL_DAY_WHEN_PERSON_WORKS_SHARE_ACROSS_ENGAGEMENTS"
   },
+  "designPartnerProgramme": {
+    "programmeCode": "DESIGN_PARTNER_30",
+    "maximumSellerInstitutionsEver": 2,
+    "discountPercent": 30,
+    "eligibility": "FIRST_TWO_NBFC_SELLER_ENTITIES_TO_SIGN_AN_ASSESSMENT_SCOPE_AND_RECEIVE_INDEPENDENT_APPROVAL",
+    "term": "ENTITY_BOUND_LIFETIME_NON_EXPIRING",
+    "application": "MAKER_CHECKER_APPROVED_INVOICE_CREDIT_BEFORE_GST",
+    "eligibleFeeClasses": [
+      "INITIAL_ASSESSMENT",
+      "PORTFOLIO_PREPARATION",
+      "CORE_EXECUTION_SUCCESS_FEE",
+      "LARGE_PROGRAMME_SUPPLEMENT"
+    ],
+    "excludedFeeClasses": [
+      "ADDITIONAL_SERVICES",
+      "THIRD_PARTY_PASS_THROUGHS",
+      "SECURE_FILE_CONNECTION",
+      "API_INTEGRATION",
+      "ONGOING_MONITORING",
+      "CONTRACTOR_DAY_RATES"
+    ],
+    "exclusionSetStatus": "PILOT_DEFAULT_PENDING_FOUNDER_CONFIRMATION",
+    "standardRateCardRemainsUnchanged": true
+  },
   "referral": {
     "basePercent": 8.5,
-    "basis": "COLLECTED_ASSURERAIL_FEES_ACROSS_THREE_CORE_STAGES_ONLY",
+    "basis": "COLLECTED_DISCOUNTED_ASSURERAIL_FEES_ACROSS_THREE_CORE_STAGES_ONLY",
     "eligible": [
       "INITIAL_ASSESSMENT",
       "PORTFOLIO_PREPARATION",

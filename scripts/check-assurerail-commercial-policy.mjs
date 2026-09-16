@@ -38,6 +38,10 @@ required(policy.documentAutomation.humanExpertSignoffAtPortfolioPreparation === 
 required(policy.execution.feeBasis === "SELLER_SHARE_OF_ACTUAL_PURCHASE_CONSIDERATION_SETTLED", "Execution basis drifted");
 required(JSON.stringify(policy.execution.slabs) === JSON.stringify([{throughConsiderationMinor:"25000000000",rateBps:40},{throughConsiderationMinor:null,rateBps:30}]), "Execution slabs must be marginal 40/30 bps at ₹25cr");
 required(policy.referral.basePercent === 8.5, "Referral base rate drifted");
+required(policy.referral.basis === "COLLECTED_DISCOUNTED_ASSURERAIL_FEES_ACROSS_THREE_CORE_STAGES_ONLY", "Referral must use collected discounted fees");
+required(policy.designPartnerProgramme.maximumSellerInstitutionsEver === 2 && policy.designPartnerProgramme.discountPercent === 30, "Design-partner lifetime cap or discount drifted");
+required(policy.designPartnerProgramme.application === "MAKER_CHECKER_APPROVED_INVOICE_CREDIT_BEFORE_GST", "Design-partner discount must remain independently approved and pre-tax");
+required(policy.designPartnerProgramme.standardRateCardRemainsUnchanged === true, "Design-partner offer cannot rewrite the standard rate card");
 required(policy.additionalServices.routineThirdPartyServices.supplierCostBufferPercent === 25, "Third-party service buffer drifted");
 required(policy.fixedStages.scopeReconciliation.customerCreditValidityMonths === 12, "Customer credit must remain valid for 12 months after formal closure");
 required(policy.fixedStages.scopeReconciliation.workspaceInactivityRefreshDays === 90, "Workspace evidence refresh must remain at 90 inactive days");

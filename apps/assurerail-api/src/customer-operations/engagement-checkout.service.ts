@@ -6,6 +6,7 @@ import { sha256Digest } from "../contracts/v1";
 import { AssessmentEngagementService, bounded, engagementEnabled } from "./assessment-engagement.service";
 import type { ParticipantOpsActor } from "./customer-operations.service";
 import { RazorpayAdapter, capturedPaymentAmount, validatePaymentLink, verifyRazorpayWebhook } from "./razorpay.adapter";
+import { validatedDesignPartnerPayable } from "./design-partner-discount";
 
 @Injectable()
 export class EngagementCheckoutService {
@@ -26,7 +27,10 @@ export class EngagementCheckoutService {
       const invoice = e.stages.find(s => s.stage === stage)?.invoice;
       if (e.status !== "ACCEPTED_SHADOW" || e.customerContract.status !== "ACTIVE_SHADOW" || e.customerContract.expiresAt <= new Date() || !invoice || invoice.status !== "ISSUED_SHADOW") throw new ConflictException("current accepted engagement and issued invoice required");
       const s = e.stages.find(s => s.stage === stage)!;
-      if (invoice.netFeeMinor !== s.expectedMinor || invoice.grossFeeMinor !== s.expectedMinor) throw new ConflictException("invoice differs from accepted quote");
+      let payableMinor = s.expectedMinor;
+      try { payableMinor = validatedDesignPartnerPayable(invoice, actor.actingInstitutionId) ?? s.expectedMinor; }
+      catch { throw new ConflictException("invoice has an invalid design-partner discount"); }
+      if (invoice.netFeeMinor !== payableMinor || invoice.grossFeeMinor !== s.expectedMinor) throw new ConflictException("invoice differs from accepted quote");
       const existing = await tx.engagementCheckout.findUnique({ where: { invoiceId: invoice.id } });
       if (existing) {
         if (existing.merchantAccountRef !== account) throw new ConflictException("checkout belongs to a different merchant configuration");
