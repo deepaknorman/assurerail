@@ -8,6 +8,12 @@ export class AssessmentProcessingController {
   constructor(private readonly service:AssessmentProcessingService) {}
   @Get() @Header("Cache-Control","no-store")
   list(@Req() req:Request,@Param("institutionId") id:string,@Param("engagementId") e:string){return this.service.list(billingActor(req,id),e);}
+  @Get("policy") @Header("Cache-Control","no-store")
+  policy(@Req() req:Request,@Param("institutionId") id:string,@Param("engagementId") e:string){return this.service.policy(billingActor(req,id),e);}
+  @Get("remediation") @Header("Cache-Control","no-store")
+  remediation(@Req() req:Request,@Param("institutionId") id:string,@Param("engagementId") e:string){return this.service.remediation(billingActor(req,id),e);}
+  @Post("remediation/:itemId/plan")
+  plan(@Req() req:Request,@Param("institutionId") id:string,@Param("engagementId") e:string,@Param("itemId") itemId:string,@Body() body:Parameters<AssessmentProcessingService["planRemediation"]>[3]){return this.service.planRemediation(billingActor(req,id),e,itemId,body);}
   @Post()
   request(@Req() req:Request,@Param("institutionId") id:string,@Param("engagementId") e:string,@Body() body:Parameters<AssessmentProcessingService["request"]>[2]){return this.service.request(billingActor(req,id),e,body);}
   @Post("upload/:stage")

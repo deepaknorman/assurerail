@@ -45,18 +45,16 @@ async function main(){
  await db.railDocumentVersion.create({data:{id:"synthetic-document",documentFamilyId:"synthetic-family",evidenceVersionId:version.id,version:1,filename:"synthetic.csv",claimedContentType:"text/csv",detectedContentType:"text/csv",sizeBytes:bytes.length,storageRef:"s3://synthetic/tape",malwareStatus:"CLEAN",encryptionClass:"SSE_KMS"}});
  const processing=new AssessmentProcessingService(db,engagements,{get:async()=>({body:Readable.from([bytes])})} as never,staff as never,step as never,{} as never);
  process.env.ASSURERAIL_DOCUMENT_PROCESSING_MODE="shadow";process.env.ASSURERAIL_AI_ENABLED="true";process.env.ASSURERAIL_OPENAI_DATA_PROCESSING_APPROVED="true";process.env.ASSURERAIL_OPENAI_API_KEY="synthetic-key-"+"x".repeat(32);
- for(let run=0;run<4;run++){
-  const queued=await processing.request(actor,offer.id,{stage:"INITIAL",requestRef:`synthetic-run-${run}`,evidenceVersionIds:[version.id],stepUpEvidenceId:"synthetic-step"});
-  await processing.runNext();const report=await db.assessmentProcessingJob.findUniqueOrThrow({where:{id:queued.id}});assert.equal(report.status,"AUTO_RELEASED");
-  assert.equal((report.automatedReleaseSnapshot as any).engine,"ASSURERAIL_INITIAL_AUTOMATION");
-  assert.equal(report.reviewedByUserId,null);assert.equal(report.reviewEvidenceRef,null);
-  assert.equal((await processing.list(actor,offer.id)).find(r=>r.id===queued.id)?.status,"AUTO_RELEASED");
-  await assert.rejects(()=>processing.review(checker,actor.actingInstitutionId,offer.id,report.id,{decision:"RELEASE",resultDigest:report.resultDigest,reviewEvidenceRef:"unused",stepUpEvidenceId:"unused"}),/automatically released/);
- }
- await assert.rejects(()=>processing.request(actor,offer.id,{stage:"INITIAL",requestRef:"fifth-run",evidenceVersionIds:[version.id],stepUpEvidenceId:"step"}),/exhausted/);
+ const queued=await processing.request(actor,offer.id,{stage:"INITIAL",requestRef:"synthetic-run-0",evidenceVersionIds:[version.id],stepUpEvidenceId:"synthetic-step"});
+ await processing.runNext();const report=await db.assessmentProcessingJob.findUniqueOrThrow({where:{id:queued.id}});assert.equal(report.status,"AUTO_RELEASED");
+ assert.equal((report.automatedReleaseSnapshot as any).engine,"ASSURERAIL_INITIAL_AUTOMATION");
+ assert.equal(report.reviewedByUserId,null);assert.equal(report.reviewEvidenceRef,null);
+ assert.equal((await processing.list(actor,offer.id)).find(r=>r.id===queued.id)?.status,"AUTO_RELEASED");
+ assert.equal((await processing.policy(actor,offer.id)).remainingIncludedReassessments,3);
+ await assert.rejects(()=>processing.review(checker,actor.actingInstitutionId,offer.id,report.id,{decision:"RELEASE",resultDigest:report.resultDigest,reviewEvidenceRef:"unused",stepUpEvidenceId:"unused"}),/automatically released/);
  await engagements.choosePreparation(actor,offer.id,{route:"COMMITTED",quoteDigest:offer.quoteDigest,mandateAndTopUpAccepted:true,stepUpEvidenceId:"prep-step"});
  await assert.rejects(()=>engagements.requirePaid(db,actor.actingInstitutionId,offer.id,"PREPARATION"),/invoiced stage/);
- console.log("[ENGAGEMENT-DB] PASS clean versioned evidence -> local CSV extraction -> unsigned automated Initial Assessment release; four-run allowance; preparation requires another paid invoice (scanner and identity are synthetic fixtures)");
+ console.log("[ENGAGEMENT-DB] PASS clean versioned evidence -> local CSV extraction -> unsigned automated Initial Assessment release; three reassessments remain; preparation requires another paid invoice (scanner and identity are synthetic fixtures)");
  const raw=Buffer.from(JSON.stringify({account_id:"acc_Synthetic",event:"payment_link.paid",payload:{payment_link:{entity:{id:"plink_Synthetic"}},payment:{entity:{id:"pay_Synthetic"}}}})),sig=createHmac("sha256","w".repeat(32)).update(raw).digest("hex");
  assert.equal((await checkout.webhook(raw,sig,"synthetic-event")).replay,false);assert.equal((await checkout.webhook(raw,sig,"synthetic-event")).replay,true);
  await assert.rejects(()=>checkout.webhook(raw,"a".repeat(64),"bad-signature"),/signature/);

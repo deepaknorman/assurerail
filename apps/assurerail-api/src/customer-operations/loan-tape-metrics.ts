@@ -9,19 +9,21 @@ export function loanTapeMetrics(
 ) {
   const primaryPairs=new Set<string>(),linkedPairs=new Set<string>(),allPairs=new Set<string>();
   const loanBalances=new Map<string,bigint>();
+  const recordIssues:{code:"INVALID_RECORD"|"DUPLICATE_PAIR"|"INCONSISTENT_LOAN_BALANCE";rowNumber:number;loanId:string|null;partyId:string|null;partyRole:string|null}[]=[];
   let invalidRecords=0,duplicateRecords=0,principal=0n,mappingRequired=false;
   for(const tape of tapes){
     if(tape.contentType!=="text/csv"||!tape.segments.length){mappingRequired=true;continue;}
     const rows=tape.segments.map(s=>JSON.parse(s.text) as string[]),headers=rows[0];
     const loanIndex=headers.indexOf("loan_id"),partyIndex=headers.indexOf("party_id"),roleIndex=headers.indexOf("party_role"),principalIndex=headers.indexOf("principal_minor");
     if(loanIndex<0||partyIndex<0||roleIndex<0||principalIndex<0||new Set(headers).size!==headers.length){mappingRequired=true;continue;}
-    for(const row of rows.slice(1)){
+    for(const [offset,row] of rows.slice(1).entries()){
       if(row.every(v=>v===""))continue;
       const loanId=row[loanIndex],partyId=row[partyIndex],partyRole=row[roleIndex],amount=row[principalIndex];
-      if(row.length!==headers.length||!loanId||loanId.trim()!==loanId||loanId.length>160||!partyId||partyId.trim()!==partyId||partyId.length>160||!["BORROWER","CO_BORROWER","LINKED_PARTY"].includes(partyRole)||!/^[1-9][0-9]{0,29}$/.test(amount??"")){invalidRecords++;continue;}
+      const rowNumber=offset+2;
+      if(row.length!==headers.length||!loanId||loanId.trim()!==loanId||loanId.length>160||!partyId||partyId.trim()!==partyId||partyId.length>160||!["BORROWER","CO_BORROWER","LINKED_PARTY"].includes(partyRole)||!/^[1-9][0-9]{0,29}$/.test(amount??"")){invalidRecords++;recordIssues.push({code:"INVALID_RECORD",rowNumber,loanId:validIdentifier(loanId)?loanId:null,partyId:validIdentifier(partyId)?partyId:null,partyRole:["BORROWER","CO_BORROWER","LINKED_PARTY"].includes(partyRole)?partyRole:null});continue;}
       const balance=BigInt(amount),knownBalance=loanBalances.get(loanId),pair=`${loanId}\u0000${partyId}`;
-      if(knownBalance!==undefined&&knownBalance!==balance){invalidRecords++;continue;}
-      if(allPairs.has(pair)){duplicateRecords++;continue;}
+      if(knownBalance!==undefined&&knownBalance!==balance){invalidRecords++;recordIssues.push({code:"INCONSISTENT_LOAN_BALANCE",rowNumber,loanId,partyId,partyRole});continue;}
+      if(allPairs.has(pair)){duplicateRecords++;recordIssues.push({code:"DUPLICATE_PAIR",rowNumber,loanId,partyId,partyRole});continue;}
       allPairs.add(pair);
       (partyRole==="LINKED_PARTY"?linkedPairs:primaryPairs).add(pair);
       if(knownBalance===undefined){loanBalances.set(loanId,balance);principal+=balance;}
@@ -41,9 +43,14 @@ export function loanTapeMetrics(
     parsedUniqueLoanCountActual:loanBalances.size,
     invalidRecords,
     duplicateRecords,
+    recordIssues,
     parsedPrincipalMinor:principal.toString(),
     currency:"INR",
     currencyScale:2,
     coverageEstablished:status==="MATCHED",
   };
+}
+
+function validIdentifier(value:unknown):value is string {
+  return typeof value==="string"&&Boolean(value)&&value.trim()===value&&value.length<=160;
 }

@@ -1310,6 +1310,7 @@ model AssessmentEngagement {
   createdAt          DateTime @default(now())
   stages             AssessmentEngagementStage[]
   processingJobs     AssessmentProcessingJob[]
+  remediationItems   AssessmentRemediationItem[]
   @@unique([customerContractId, requestRef])
 }
 
@@ -1351,6 +1352,11 @@ model AssessmentProcessingJob {
   engagement         AssessmentEngagement @relation(fields: [engagementId], references: [id], onDelete: Restrict)
   requestRef         String
   requestDigest      String
+  scopeDigest        String?
+  baselineRunId      String?
+  baselineRun        AssessmentProcessingJob? @relation("AssessmentReassessmentBaseline", fields: [baselineRunId], references: [id], onDelete: Restrict)
+  derivedRuns        AssessmentProcessingJob[] @relation("AssessmentReassessmentBaseline")
+  reassessmentOrdinal Int @default(0)
   stage              String
   evidenceVersionIds Json
   sourceManifest     Json
@@ -1369,8 +1375,39 @@ model AssessmentProcessingJob {
   startedAt          DateTime?
   completedAt        DateTime?
   createdAt          DateTime @default(now())
+  remediationItems   AssessmentRemediationItem[]
   @@unique([engagementId, requestRef])
   @@index([status, createdAt])
+  @@index([baselineRunId])
+}
+
+model AssessmentRemediationItem {
+  id                       String @id
+  engagementId             String
+  engagement               AssessmentEngagement @relation(fields: [engagementId], references: [id], onDelete: Restrict)
+  sourceRunId              String
+  sourceRun                AssessmentProcessingJob @relation(fields: [sourceRunId], references: [id], onDelete: Restrict)
+  gapKey                   String
+  category                 String
+  severity                 String
+  summary                  String
+  affectedScope            String
+  affectedPairs            Json
+  affectedPairCount        Int
+  unresolvedRecordCount    Int @default(0)
+  defaultOwnerRole         String
+  ownerRole                String?
+  requiredEvidenceTypes    Json
+  correctionEvidenceVersionIds Json
+  status                   String @default("OPEN")
+  plannedByUserId          String?
+  planningStepUpId         String?
+  plannedAt                DateTime?
+  resolvedByRunId          String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @default(now()) @updatedAt
+  @@unique([sourceRunId, gapKey])
+  @@index([engagementId, sourceRunId, status])
 }
 
 model CustomerInvoiceLine {
