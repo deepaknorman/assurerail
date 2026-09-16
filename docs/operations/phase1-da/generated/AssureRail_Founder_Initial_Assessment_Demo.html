@@ -30,16 +30,16 @@
 <li>First tape: one valid row plus a duplicate of the same seller–loan–borrower pair.</li>
 <li>Corrected tape: one valid row only, uploaded as the next version of the same evidence family.</li>
 <li>Purchase consideration: synthetic ₹1 crore in integer paise.</li>
-<li>Expected minimum-route Initial Assessment invoice before GST: ₹3.12 lakh; the system calculates</li>
-<p>tax from the frozen rate card.</p>
+<li>Expected standard minimum-route Initial Assessment invoice before GST: ₹3.12 lakh. For an</li>
+<p>approved design-partner seller, the same frozen quote shows a 30% credit and ₹2.184 lakh taxable service fee; the system calculates GST on that discounted fee.</p>
 </ul>
 <h2>Presenter sequence</h2>
 <ol>
 <li>Sign in as the seller commercial administrator and open <strong>Assessment</strong>.</li>
 <li>Enter the synthetic book scope. Show that count means the unique seller–loan–borrower pair and</li>
 <p>that linked parties are a separate ₹250 unit where applicable.</p>
-<li>Show the frozen committed and standalone totals and the 30% Initial Assessment invoice. Accept</li>
-<p>the current terms and seller data authority with step-up authentication.</p>
+<li>Show the frozen committed and standalone totals and the Initial Assessment invoice. If using a</li>
+<p>design-partner fixture, show the standard amount, entity-bound programme credit and discounted taxable amount separately. Accept the current terms and seller data authority with step-up authentication.</p>
 <li>As the AssureRail invoice maker and checker, prepare and independently issue the invoice. Open the</li>
 <p>Razorpay test checkout and use its test success route. Confirm that processing remains blocked until payment is verified.</p>
 <li>As seller data preparer, upload the first synthetic CSV and request Initial Assessment. Refresh</li>

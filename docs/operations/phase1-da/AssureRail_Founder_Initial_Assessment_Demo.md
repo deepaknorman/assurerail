@@ -31,15 +31,18 @@ Firebase key.
 - First tape: one valid row plus a duplicate of the same seller–loan–borrower pair.
 - Corrected tape: one valid row only, uploaded as the next version of the same evidence family.
 - Purchase consideration: synthetic ₹1 crore in integer paise.
-- Expected minimum-route Initial Assessment invoice before GST: ₹3.12 lakh; the system calculates
-  tax from the frozen rate card.
+- Expected standard minimum-route Initial Assessment invoice before GST: ₹3.12 lakh. For an
+  approved design-partner seller, the same frozen quote shows a 30% credit and ₹2.184 lakh taxable
+  service fee; the system calculates GST on that discounted fee.
 
 ## Presenter sequence
 
 1. Sign in as the seller commercial administrator and open **Assessment**.
 2. Enter the synthetic book scope. Show that count means the unique seller–loan–borrower pair and
    that linked parties are a separate ₹250 unit where applicable.
-3. Show the frozen committed and standalone totals and the 30% Initial Assessment invoice. Accept
+3. Show the frozen committed and standalone totals and the Initial Assessment invoice. If using a
+   design-partner fixture, show the standard amount, entity-bound programme credit and discounted
+   taxable amount separately. Accept
    the current terms and seller data authority with step-up authentication.
 4. As the AssureRail invoice maker and checker, prepare and independently issue the invoice. Open the
    Razorpay test checkout and use its test success route. Confirm that processing remains blocked
@@ -82,4 +85,3 @@ npm run security:offline-daily
 The disposable PostgreSQL engagement rehearsal exercises quote freeze, independent invoice issue,
 Razorpay test payment, clean evidence, automated unsigned release and payment-reversal hold. It is a
 service-level control rehearsal and does not replace the account-driven browser demonstration.
-

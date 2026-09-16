@@ -14,17 +14,17 @@ commit-tied technical evidence and measured commercial outcomes at each irrevers
 
 | Gate | Deliverable | Completion evidence | Current position |
 |---|---|---|---|
-| 1 | Commercial policy locked | Versioned policy, deterministic quote and billing tests | Implemented; 750-record validation slice remains subject to ₹8L committed / ₹10.4L standalone fixed-stage minima. Initial invoice is ₹3.12L before tax at those minima. No pilot waiver is assumed. |
+| 1 | Commercial policy locked | Versioned policy, deterministic quote and billing tests | Implemented. Standard minima are ₹8L committed / ₹10.4L standalone. The first two approved NBFC design-partner entities receive a lifetime 30% invoice credit under a permanent two-slot maker-checker control. |
 | 2 | Seller admitted | Signed scope, data authority, declared counts/corpus, payment receipt | Platform foundation implemented; real seller and collected payment remain external gates. |
 | 3 | Automated Initial Assessment | Full admitted-population rule outcomes, AI findings with source citations, unsigned report | Processing foundation implemented; representative real-format evaluation and live document evidence required. |
-| 4 | AI assurance | Evaluation battery and tamper-evident run receipt | Build in progress; no throughput or accuracy claim until evidence is tied to a commit. |
-| 5 | Remediation and reassessment | Structured gaps, affected pairs, owners, evidence, comparable rerun and change summary | Build in progress; three automated same-scope reruns within 30 days. Workspace remains available afterward. |
+| 4 | AI assurance | Evaluation battery and tamper-evident run receipt | Implemented in shadow mode with numeric fidelity, citation, coverage, false-clean, abstention, drift, prompt-injection, reproducibility and cost checks. Controlled real-document evidence remains required before a performance claim. |
+| 5 | Remediation and reassessment | Structured gaps, affected pairs, owners, evidence, comparable rerun and change summary | Implemented in shadow mode; three automated same-scope reruns within 30 days. Workspace remains available afterward and changed scope is requoted. |
 | 6 | Portfolio Preparation | Remaining accepted-route balance collected; qualified section reviewers sign their own work | Workflow foundation exists; named contractors and accepted rates remain external gates. |
 | 7 | Buyer policy evaluation | Approved MSA-bound buyer profile compiled into traceable preparation checks | Compiler v0 implemented with ten worked cases; bank-specific criteria remain an external input. |
-| 8 | Buyer delivery | Governed SFTP package, manifest, acknowledgements and reconciliation | Provider-neutral local foundation in progress; each buyer's sandbox and acceptance remain external gates. |
+| 8 | Buyer delivery | Governed SFTP package, manifest, acknowledgements and reconciliation | Provider-neutral SFTP foundation implemented with per-buyer profiles, host pinning, manifest digests, maker-checker approval, idempotency and acknowledgement reconciliation. Each buyer's sandbox and acceptance remain external gates. |
 | 9 | Coordinated closing rehearsal | CPs, document slots, seller-specific distribution, VAN/escrow pack, separate seller/buyer authorisation and repair evidence | Deterministic dry-rehearsal foundation implemented; no live funds or legal-completion claim. |
-| 10 | Hardening | RBAC/tenant, hostile-input, replay/idempotency, secret, dependency and offline-security checks | Required before demo handoff and repeated after integration. |
-| 11 | Demo evidence | Synthetic end-to-end seller and buyer journey, failure cases and downloadable evidence | Run only after Gates 3–10 integrate and pass. |
+| 10 | Hardening | RBAC/tenant, hostile-input, replay/idempotency, secret, dependency and offline-security checks | Daily deny-network harness implemented and passing at the latest reviewed commit; repeat after every integration and release candidate. |
+| 11 | Demo evidence | Synthetic end-to-end seller and buyer journey, failure cases and downloadable evidence | Service-level PostgreSQL, Razorpay-test, automated Initial Assessment and reversal rehearsal passes. Account-driven browser demonstration still requires provisioned Firebase test identities and a demo deployment. |
 | 12 | Counterparty acceptance | Written seller, buyer, payment, SFTP and escrow acceptance as applicable | External gate; code and demos do not satisfy it. |
 | 13 | Controlled live transaction | Collected payment, authorised data, approved professionals, buyer decision and provider settlement | Requires founder/counterparty actions and Claude security/release approval under the collaboration protocol. |
 
@@ -43,6 +43,12 @@ large-programme supplement:
 All figures exclude applicable tax, selected additional services, third-party costs and execution
 success fees. The admitted count and corpus are reconciled without a tolerance band.
 
+For either of the first two independently approved design-partner NBFC entities, the standard quote
+remains visible and a lifetime 30% invoice credit applies to the eligible core fees. At the same
+minimum slice this gives ₹5.60L committed, ₹7.28L standalone and a ₹2.184L Initial Assessment
+invoice before GST. The discount is entity-bound and does not apply to the current pilot exclusion
+set of ancillary services, pass-throughs, SFTP, API work, monitoring or contractor day rates.
+
 ## External inputs that do not stop internal work
 
 - Sevenfincorp supplies a named seller, authority and representative material.
@@ -52,6 +58,16 @@ success fees. The admitted count and corpus are reconciled without a tolerance b
 - Razorpay, the selected bank/escrow provider and each buyer activate credentials or sandboxes.
 - Live invoicing, money movement, regulator contact and customer-data use remain separately
   authorised actions.
+
+## Remaining integration truth
+
+- The fixed-stage design-partner credit is integrated with invoice preparation, Razorpay test
+  checkout and paid-stage gating. The execution success-fee arithmetic has the same 30% treatment,
+  but its persisted settlement invoice still needs to be joined to the coordinated-closing record.
+- Real buyer criteria, SFTP endpoints and acknowledgement formats must come from HDFC, Axis or the
+  selected buyer. The adapter stays in sandbox until that acceptance exists.
+- Live escrow/VAN instructions require the selected provider's API and operating acceptance. The
+  current closing pack is deterministic rehearsal evidence and does not move funds.
 
 ## Release handoff
 
