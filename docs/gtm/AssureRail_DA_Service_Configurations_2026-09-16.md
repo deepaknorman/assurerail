@@ -113,6 +113,24 @@ For Full, use the existing proposed monitoring formula only with an accepted sha
 
 The Base working total is ₹6.79 lakh below a genuinely all-inclusive 1.5% comparator of ₹82.50 lakh. Premium before RTO and field work is ₹0.69 lakh above it. If a competing 1.5% quote excludes counsel, escrow, bureau, registry, duty, filings or monitoring, those costs must be added before comparison. Compare identical inclusions and tax treatment.
 
+## Day-one funding-route comparison
+
+Using the same ₹55 crore pool and an illustrative ₹35.75 crore existing-debt release, the candidate schedule produces the following pre-GST liquidity comparison. The debt release is repayment of an existing liability, not a transaction cost or economic profit.
+
+| Route | Net before debt release | Residual cash after debt release | What remains |
+|---|---:|---:|---|
+| **DA Base at par** | **₹54.24cr** | **₹18.49cr** | No funding liability on the sold share; seller gives up its future spread |
+| **DA Premium at par** | **₹54.17cr** | **₹18.42cr** | Adds modelled registry and assignment-duty allowances |
+| **DA Premium plus one RTO action per vehicle** | **₹54.13cr** | **₹18.38cr** | Adds ₹4.13L of modelled RTO actions |
+| **DA Base priced at ₹99** | **₹53.69cr** | **₹17.94cr** | ₹55L lower price, partly offset by a slightly lower execution fee |
+| **Other DA route at assumed all-in 1.5%** | **₹54.18cr** | **₹18.43cr** | Better than Premium by only ₹0.69L if genuinely all-inclusive; worse than Base by ₹6.79L |
+| **PTC with 10% MRR** | **₹48.81cr** | **₹13.06cr** | ₹5.50cr retained exposure; waterfall and servicing economics continue |
+| **PTC plus 5% cash enhancement** | **₹46.06cr** | **₹10.31cr** | Retention and ₹2.75cr cash support remain at risk |
+| **80% warehouse / term refinance** | **₹43.56cr** | **₹7.81cr** | ₹44cr debt remains; annual interest at 8–11% is approximately ₹3.52–4.84cr at full utilisation |
+| **Co-lending** | Not comparable | — | Ex-ante route for future originations rather than a sale of this seasoned pool |
+
+The PTC illustration assumes 10% MRR for underlying loans whose original maturity exceeds 24 months and an assumed 1.25% transaction cost. If the applicable MRR is 5%, or credit enhancement is structured within rather than in addition to MRR, the PTC cash result changes. The term-funding row compares day-one liquidity only; lifetime economics require remaining WAL, amortisation, credit losses, servicing cost, capital usage and the retained 24% borrower yield.
+
 ## Quoting and presentation rules
 
 1. Present the three configurations side by side, followed by a line-item proceeds bridge for the selected configuration.
