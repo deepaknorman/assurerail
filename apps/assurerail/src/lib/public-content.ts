@@ -304,7 +304,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
       "A worked illustration of how five NBFCs with ₹10–12 crore EV books can prepare one buyer-sized cohort, allocate costs and preserve seller-level records.",
     publishedAt: "2026-09-16",
     reviewedAt: "2026-09-16",
-    readingMinutes: 9,
+    readingMinutes: 11,
     sections: [
       {
         heading: "Start with the structure, not the headline pool size",
@@ -396,15 +396,45 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
           "Seller-specific work stays with that seller. A common trustee, counsel, escrow provider, rating process, verification exercise or buyer interface may create a shared bill. Before anyone commits spend, the engagement schedule should state whether that bill is divided equally, by admitted principal, by settled consideration or by measured use. At equal ₹11 crore contributions, each seller would bear 20% of a genuinely common expense. If one seller closes at a different amount, pro-rata settled consideration is usually easier to defend than an equal split.",
           "AssureRail charges ₹50,000 for each accepted point-to-point secure file connection covering setup, testing and validation. Reusing one validated buyer interface is not five new setup charges. APIs, recurring connector operations and third-party provider fees need separate accepted scopes. No supplier expense should be hidden inside the success-fee calculation.",
         ],
+      },
+      {
+        heading: "A practical external-cost budget",
+        paragraphs: [
+          "For this 4,125-loan illustration, the standard external allowance is ₹20.40 lakh before GST, or about ₹4.08 lakh per seller and 0.37% of ₹55 crore. This includes transaction counsel, administration, contingency, conditional registry actions and conditional assignment duty. It is a constructed procurement budget, not an industry tariff or supplier quote.",
+          "Assignment duty and registry treatment depend on the actual documents, security interests and relevant states. The table uses ₹1 lakh of conditional duty per seller and ₹2.48 lakh of conditional registry charges across the cohort. Counsel and the buyer must confirm whether those assumptions apply before a quote becomes binding.",
+          "Portfolio Preparation already includes qualified expert review. An external CA factual-verification engagement and EV field programme should be added only when the buyer requires independent reliance or work outside that scope. In the model those conditional services add ₹15.62 lakh, taking external costs to ₹36.02 lakh, or 0.65%. Escrow-provider, bank, bureau, RTO, ROC, NeSL and extra buyer-counsel charges remain unpriced until quoted.",
+        ],
         table: {
-          caption: "Example allocation of a hypothetical ₹10 lakh common external bill",
-          columns: ["Seller", "Settled consideration", "Allocation share", "Allocated cost"],
+          caption: "Standard external-cost allowance for the five-seller cohort, before GST",
+          columns: ["External item", "Cohort allowance", "Share of ₹55cr"],
           rows: [
-            ["NBFC 1", "₹11cr", "20%", "₹2.00L"],
-            ["NBFC 2", "₹11cr", "20%", "₹2.00L"],
-            ["NBFC 3", "₹11cr", "20%", "₹2.00L"],
-            ["NBFC 4", "₹11cr", "20%", "₹2.00L"],
-            ["NBFC 5", "₹11cr", "20%", "₹2.00L"],
+            ["Transaction counsel: common documents and five seller schedules", "₹10.50L", "0.19%"],
+            ["Execution, travel and administration", "₹1.25L", "0.02%"],
+            ["Professional-cost contingency", "₹1.18L", "0.02%"],
+            ["Conditional registry searches and modifications", "₹2.48L", "0.05%"],
+            ["Conditional assignment duty", "₹5.00L", "0.09%"],
+            ["Standard external allowance", "₹20.40L", "0.37%"],
+            ["Conditional independent CA, EV checks and related contingency", "+₹15.62L", "+0.28%"],
+            ["Expanded external allowance if required", "₹36.02L", "0.65%"],
+          ],
+        },
+      },
+      {
+        heading: "What that makes the total transaction cost",
+        paragraphs: [
+          "Core AssureRail fees of ₹62.75 lakh plus the ₹20.40 lakh standard external allowance produce ₹83.15 lakh before GST, or about 1.51% of the ₹55 crore settled consideration. At equal participation, that is about ₹16.63 lakh per seller: ₹12.55 lakh of core AssureRail fees and ₹4.08 lakh of external costs. If buyer-required independent CA and EV work is added, the total rises to ₹98.77 lakh, or 1.80%.",
+          "For standard-scope cash planning, applying 18% GST to the ₹62.75 lakh AssureRail fee and the modelled ₹12.93 lakh taxable external-services portion produces an illustrative gross outlay of about ₹96.77 lakh, or 1.76%. The economic cost after input-tax credit depends on each NBFC’s tax position. If 50% of all that GST were eligible and claimed, the illustrative net cost would be about ₹89.96 lakh, or 1.64%. Tax advisers must confirm the actual treatment.",
+        ],
+        table: {
+          caption: "Illustrative all-in cost of the core route",
+          columns: ["Measure", "Cohort", "Per NBFC at equal shares", "Share of ₹55cr"],
+          rows: [
+            ["Core AssureRail fees", "₹62.75L", "₹12.55L", "1.14%"],
+            ["Standard external allowance before GST", "₹20.40L", "₹4.08L", "0.37%"],
+            ["Standard total before GST", "₹83.15L", "₹16.63L", "1.51%"],
+            ["Gross cash outlay with illustrative GST", "₹96.77L", "₹19.35L", "1.76%"],
+            ["Illustrative net with 50% eligible GST credit", "₹89.96L", "₹17.99L", "1.64%"],
+            ["Expanded total if independent CA and EV work is required", "₹98.77L", "₹19.75L", "1.80%"],
           ],
         },
       },
@@ -412,7 +442,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
         heading: "Optional services change the comparison",
         paragraphs: [
           "A seller that already has its buyer need not purchase buyer arrangement. Managed transaction and escrow coordination is proposed at ₹1 lakh per seller programme. Buyer arrangement, only when selected and actually provided, is 5 basis points of attributable settled consideration with a ₹1.25 lakh minimum and ₹10 lakh cap. Monitoring activation and ongoing monitoring are separate because they continue after closing.",
-          "At the ₹55 crore midpoint, core fees are ₹62.75 lakh. Adding managed coordination for all five sellers adds ₹5 lakh. Adding one new shared buyer file connection adds ₹0.5 lakh. If AssureRail also arranged the buyer for every seller, the ₹1.25 lakh per-seller minimum would add ₹6.25 lakh. The resulting ₹74.5 lakh is about 1.35% of consideration, before tax, monitoring and external expenses. These are selectable services, not a forced package.",
+          "At the ₹55 crore midpoint, core fees are ₹62.75 lakh. Adding managed coordination for all five sellers adds ₹5 lakh. Adding one new shared buyer file connection adds ₹0.5 lakh. If AssureRail also arranged the buyer for every seller, the ₹1.25 lakh per-seller minimum would add ₹6.25 lakh. AssureRail fees would then be ₹74.5 lakh. With the ₹20.40 lakh standard external allowance, the total becomes ₹94.90 lakh before GST, or about 1.73% of consideration. It becomes ₹110.52 lakh, or 2.01%, if the independent CA and EV scopes are also required. These are selectable services, not a forced package.",
         ],
       },
       {
@@ -420,7 +450,7 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
         paragraphs: [
           "The practical gain is access to a buyer-sized opportunity while preserving a clear account-by-account and seller-by-seller record. The cohort can share a buyer timetable, common data dictionary, diligence index, agreed interface and some third-party work. Earlier automated gap discovery also reduces the chance of paying for full expert preparation on an unusable book.",
           "The financial gain cannot be stated from pool size alone. Each seller’s net economic proceeds are its actual purchase consideration, less debt released, AssureRail fees, its allocated external costs, taxes and any other agreed deductions. Price below par can overwhelm fee savings: one percentage point on ₹55 crore is ₹55 lakh. The seller should compare that full proceeds bridge, retained risks, servicing duties and timing against keeping the loans or using another route.",
-          "For scale only, 1.5% of ₹55 crore is ₹82.5 lakh. The ₹62.75 lakh core illustration is ₹19.75 lakh lower, but that difference is meaningful only if the competing 1.5% covers the same work and neither side omits external charges. It is an arithmetic comparator, not a claimed market benchmark or guaranteed saving.",
+          "For scale only, 1.5% of ₹55 crore is ₹82.5 lakh. AssureRail’s ₹62.75 lakh core fee is ₹19.75 lakh lower. The standard total including external costs is ₹83.15 lakh before GST—₹0.65 lakh above a genuinely all-inclusive 1.5% price. With the conditional independent CA and EV scopes it is ₹98.77 lakh, or ₹16.27 lakh above. If the competing 1.5% excludes legal, duty, registry, verification or technical costs, those must be added before comparing. This is an arithmetic comparator, not a claimed market benchmark or guaranteed saving.",
         ],
         bullets: [
           "A buyer large enough to consider a ₹50–60 crore opportunity",
@@ -435,6 +465,8 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
     sources: [
       { label: "RBI Securitisation of Standard Assets Directions, 2021", href: "https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=12165" },
       { label: "RBI Transfer of Loan Exposures Directions, 2021", href: "https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=12166" },
+      { label: "CBIC GST rates for legal, accounting and professional services", href: "https://cbic-gst.gov.in/hindi/gst-goods-services-rates.html" },
+      { label: "CGST Act section 17(4): NBFC input-tax-credit option", href: "https://cbic-gst.gov.in/hindi/CGST-bill-e.html" },
     ],
   },
 ] as const;
