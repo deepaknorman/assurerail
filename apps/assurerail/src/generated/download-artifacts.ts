@@ -90,6 +90,62 @@ export const DOWNLOAD_CATALOG = [
     "status": "CURRENT",
     "route": "/downloads/assurerail/phase1-da/commercial-terms",
     "releaseGate": "Controlled-download password, recipient and version log"
+  },
+  {
+    "id": "DA-EXECUTION-CHAIN",
+    "title": "Uninterrupted conventional DA execution chain",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
+  },
+  {
+    "id": "DA-FOUNDER-IA-DEMO",
+    "title": "Founder Initial Assessment demonstration",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
+  },
+  {
+    "id": "DA-CLOSING-REHEARSAL",
+    "title": "Coordinated closing rehearsal",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
+  },
+  {
+    "id": "DA-IA-REMEDIATION",
+    "title": "Initial Assessment remediation and reassessment",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
+  },
+  {
+    "id": "DA-BUYER-POLICY-COMPILER",
+    "title": "Buyer policy compiler implementation",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
+  },
+  {
+    "id": "DA-BUYER-PROFILE-SCREEN",
+    "title": "Buyer profile screening model",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
+  },
+  {
+    "id": "DA-BUYER-SFTP",
+    "title": "Buyer SFTP export foundation",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
   }
 ] as const satisfies readonly DownloadCatalogItem[];
 

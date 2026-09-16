@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Founder Initial Assessment demonstration | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail founder Initial Assessment demonstration</h1>
+<p><strong>Classification:</strong> INTERNAL <strong>Purpose:</strong> repeatable demonstration of the paid seller journey using synthetic data only</p>
+<h2>Demonstration boundary</h2>
+<p>Use the authenticated AssureRail workspace and a disposable synthetic seller. The payment provider must remain in Razorpay test mode, document processing in shadow mode and every uploaded record must be invented. The demonstration proves implemented workflow and controls. It does not prove bank acceptance, live payment collection, buyer connectivity, legal transfer or production readiness.</p>
+<h2>Accounts prepared outside the repository</h2>
+<div class="table-wrap"><table><thead><tr><th>Account</th><th>Required authority</th><th>Demonstrated action</th></tr></thead><tbody>
+<tr><td>Seller commercial administrator</td><td>Manage customer operations; accept engagement; step-up</td><td>Create scope, inspect quote and accept terms</td></tr>
+<tr><td>Seller data preparer</td><td>Manage evidence and customer operations; step-up</td><td>Upload the tape, attach corrected evidence and request processing</td></tr>
+<tr><td>AssureRail invoice preparer</td><td><code>COMMERCIAL_INVOICE_PREPARE</code></td><td>Prepare the Initial Assessment invoice</td></tr>
+<tr><td>AssureRail invoice checker</td><td>Independent invoice issue authority</td><td>Review and issue the invoice</td></tr>
+</tbody></table></div>
+<p>Provision identities in the approved Firebase test project and assign institution-scoped memberships and mandates through the normal administration path. Store credentials in the approved secret manager or private test-account file. Never commit a password, TOTP seed, bearer token or Firebase key.</p>
+<h2>Synthetic case</h2>
+<ul>
+<li>Asset family: <code>VEHICLE_EV</code>.</li>
+<li>One seller; one quoted unique seller–loan–borrower pair; no linked party.</li>
+<li>First tape: one valid row plus a duplicate of the same seller–loan–borrower pair.</li>
+<li>Corrected tape: one valid row only, uploaded as the next version of the same evidence family.</li>
+<li>Purchase consideration: synthetic ₹1 crore in integer paise.</li>
+<li>Expected minimum-route Initial Assessment invoice before GST: ₹3.12 lakh; the system calculates</li>
+<p>tax from the frozen rate card.</p>
+</ul>
+<h2>Presenter sequence</h2>
+<ol>
+<li>Sign in as the seller commercial administrator and open <strong>Assessment</strong>.</li>
+<li>Enter the synthetic book scope. Show that count means the unique seller–loan–borrower pair and</li>
+<p>that linked parties are a separate ₹250 unit where applicable.</p>
+<li>Show the frozen committed and standalone totals and the 30% Initial Assessment invoice. Accept</li>
+<p>the current terms and seller data authority with step-up authentication.</p>
+<li>As the AssureRail invoice maker and checker, prepare and independently issue the invoice. Open the</li>
+<p>Razorpay test checkout and use its test success route. Confirm that processing remains blocked until payment is verified.</p>
+<li>As seller data preparer, upload the first synthetic CSV and request Initial Assessment. Refresh</li>
+<p>until the result is <code>AUTO RELEASED</code>.</p>
+<li>Show the unsigned automated result, source-grounded finding or tape exception, AI run receipt,</li>
+<p>remediation owner, affected pair, and the statement that no consultant or professional signed it.</p>
+<li>Upload the corrected tape as a replacement version. Select it, attach it to the remediation item</li>
+<p>with step-up authentication, and include that item in the next reassessment.</p>
+<li>Run the comparable reassessment. Show resolved, continuing and new gaps, before/after data</li>
+<p>quality, the remaining allowance, and the unchanged accepted scope digest.</p>
+<li>Show that the workspace and upload path remain available after the included allowance. Explain</li>
+<p>that three automated same-scope reassessments are included within 30 days; changed scope is requoted.</p>
+<li>Stop at Portfolio Preparation. Explain that qualified human review and sign-off begin there and</li>
+<p>require the remaining accepted-route payment before work starts.</p>
+</ol>
+<h2>Required evidence after each rehearsal</h2>
+<ul>
+<li>tested commit and deployment identifier;</li>
+<li>synthetic account-to-role map with secrets removed;</li>
+<li>quote and invoice digests, Razorpay test receipt and webhook replay result;</li>
+<li>source evidence version digests, Initial Assessment result digest and AI run-receipt digest;</li>
+<li>remediation and reassessment lineage, including resolved/continuing/new gap summary;</li>
+<li>screenshots or browser trace with synthetic identifiers only; and</li>
+<li>failed-control observations, owner and retest result.</li>
+</ul>
+<h2>Local control rehearsal</h2>
+<p>From the AssureRail repository, run:</p>
+<pre><code>npm run policy:check
+npm test --workspace=@assurerail/api
+npm run build --workspace=@assurerail/web
+npm run security:offline-daily</code></pre>
+<p>The disposable PostgreSQL engagement rehearsal exercises quote freeze, independent invoice issue, Razorpay test payment, clean evidence, automated unsigned release and payment-reversal hold. It is a service-level control rehearsal and does not replace the account-driven browser demonstration.</p></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

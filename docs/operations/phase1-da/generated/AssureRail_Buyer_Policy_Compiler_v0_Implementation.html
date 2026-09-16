@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Buyer policy compiler implementation | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail buyer-policy compiler v0 — implementation boundary</h1>
+<p>This implementation follows <code>docs/design/AssureRail_Buyer_Policy_Compiler_v0_Spec.md</code> and sits alongside, rather than replacing, the buyer-profile screen.</p>
+<h2>Two separate controls</h2>
+<ol>
+<li>The <strong>buyer-profile screen</strong> compares a proposed analytical cohort with the approved structured</li>
+<p>onboarding profile: accepted asset families, programme and seller-ticket ranges, originator routes, concentration limits, evidence families and operational preferences.</p>
+<li>The <strong>buyer-policy compiler</strong> evaluates buyer-authored, cited decision-table rows over admitted</li>
+<p>loan, borrower, linked-party, document and book facts.</p>
+</ol>
+<p>The first is a coarse preparation screen. The second produces record-level outcomes and remediation work. Neither is a buyer credit, legal, valuation, pricing or acquisition decision.</p>
+<h2>Safe decision-table language</h2>
+<p>The compiler does not execute buyer-provided code or arbitrary expressions. Its allow-listed operators are equality/inequality, numeric bounds, set inclusion, presence and an as-of-date check. Every row records:</p>
+<ul>
+<li>a unique check ID and record scope;</li>
+<li>one or more allow-listed predicates and an optional conditional predicate;</li>
+<li>buyer-authored severity and explicit unknown-evidence behaviour;</li>
+<li>the admitted fields it consumes;</li>
+<li>a buyer requirement reference, anchor and excerpt digest.</li>
+</ul>
+<p>Rows are effective-dated, tied to the approved buyer-profile digest and compiled into a deterministic policy digest. There are no default buyer policies and no cross-buyer reuse.</p>
+<h2>Runtime evidence</h2>
+<p>Every admitted fact states whether it is present or unknown, its source evidence references and, where applicable, the AI run receipt that produced it. Unknown or absent evidence follows the row's explicit <code>EXCLUDE</code>, <code>REMEDIATE</code> or <code>DISCLOSE</code> behaviour and never silently passes.</p>
+<p>The output contains record-level checks and citations, preparation outcomes, policy and evaluation digests, buyer-ready numerator/denominator and the fixed qualification <code>BUYER_POLICY_CHECKLIST_NOT_BUYER_DECISION</code>.</p>
+<h2>Gate to first real policy</h2>
+<p>The included EV rows are synthetic executable fixtures matching the specification's ten worked examples. Production rows require a buyer working session, the buyer's own requirement citation, buyer approval of the compiled sheet and linkage to the current MSA-bound profile. Any buyer objection proposed as a new row remains inactive until that buyer confirms it.</p></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

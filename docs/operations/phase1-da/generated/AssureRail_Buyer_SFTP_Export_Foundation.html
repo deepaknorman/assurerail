@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Buyer SFTP export foundation | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail governed buyer SFTP export foundation</h1>
+<p><strong>Status:</strong> implemented as a sandbox-only domain foundation; no production buyer connection is activated <strong>Date:</strong> 17 September 2026</p>
+<h2>Purpose and boundary</h2>
+<p>This component prepares buyer-specific outbound SFTP delivery without making a generic file transfer an authority for a loan transfer, buyer acceptance or settlement. It sits behind AssureRail's engagement and buyer-onboarding controls. The transport boundary is provider-neutral, so a future OpenSSH, managed SFTP or bank adapter can implement the same contract.</p>
+<p>Only SFTP over SSH v2 is in scope. Each buyer has a versioned profile with a pinned host-key fingerprint, dedicated key reference, buyer-approved outbound and acknowledgement folders, schema, document-family allow-list, per-file and aggregate batch limits, retention and retry policy. Profiles contain opaque <code>vault://</code>, <code>kms://</code> or <code>secret://</code> references. They never contain a private key, passphrase or password. Password and keyboard-interactive fallback are outside the contract.</p>
+<p>The implementation is deliberately fail-closed:</p>
+<ul>
+<li>only <code>SANDBOX</code> profiles validate;</li>
+<li>production dispatch is disabled;</li>
+<li>buyer acceptance evidence and an independent profile checker are required;</li>
+<li>every batch needs a seller maker and a different AssureRail checker;</li>
+<li>an integration operator can dispatch only the exact approved bytes;</li>
+<li>profile suspension or pending host-key rotation safe-pauses approved but undispatched batches;</li>
+<li>an upload awaits a buyer acknowledgement and never implies settlement; and</li>
+<li>an ambiguous result cannot be retried until inspection proves that the final manifest is absent.</li>
+</ul>
+<h2>Folder and publication contract</h2>
+<p>For a profile rooted at <code>/assurerail/outbound</code>, AssureRail derives the complete batch folder:</p>
+<pre><code>/assurerail/outbound/&lt;sellerInstitutionId&gt;/&lt;engagementId&gt;/&lt;batchRef&gt;/</code></pre>
+<p>That folder contains allow-listed payload files and <code>&lt;batchRef&gt;.manifest.json</code>. A production adapter must upload payloads under temporary names and publish the manifest last, using the buyer-agreed rename/visibility semantics. The buyer must ignore temporary files and any payload without its final manifest. Folder names and filenames accept bounded identifiers only; traversal, absolute payload names and duplicate filenames are rejected.</p>
+<p>The canonical manifest binds:</p>
+<ul>
+<li>buyer, seller, engagement and optional case;</li>
+<li>profile identity, version, configuration digest and schema version;</li>
+<li>idempotency key, creation time and retention deadline; and</li>
+<li>every filename, document family, media type, byte length and SHA-256 content digest.</li>
+</ul>
+<p>The approved manifest digest and the bytes are checked again immediately before transport. A reused idempotency key returns the existing batch only when its request digest is identical. Reuse with different content fails.</p>
+<h2>State and reconciliation</h2>
+<pre><code>PROPOSED -&gt; APPROVED -&gt; DISPATCHING
+                          |-&gt; AWAITING_ACKNOWLEDGEMENT -&gt; BUYER_ACCEPTED
+                          |                             -&gt; BUYER_REJECTED
+                          |                             -&gt; PARTIAL_REQUIRES_RECONCILIATION
+                          |-&gt; RETRYABLE -&gt; DISPATCHING
+                          |-&gt; AMBIGUOUS_REQUIRES_RECONCILIATION
+                          |       |-&gt; AWAITING_ACKNOWLEDGEMENT (matching manifest is present)
+                          |       |-&gt; RETRYABLE (manifest is proven absent)
+                          |-&gt; FAILED_FINAL</code></pre>
+<p>Automatic retry is limited to explicit pre-acceptance/retriable failures and uses capped exponential backoff. Network timeout, connection loss after send, process interruption and indeterminate provider responses are ambiguous. Operations must inspect the buyer folder using the same pinned profile. An unknown or conflicting inspection remains open for human reconciliation.</p>
+<p>The buyer acknowledgement binds the buyer, batch and manifest digest and accounts for every file by its digest. A partial acknowledgement carries structured rejection reasons and remains open. The acknowledgement is evidence of buyer receipt/validation only.</p>
+<h2>Access, audit and retention</h2>
+<p>The domain checks both role and buyer/seller scope:</p>
+<div class="table-wrap"><table><thead><tr><th>Role</th><th>Permitted operation</th></tr></thead><tbody>
+<tr><td><code>SELLER_EXPORT_MAKER</code></td><td>Propose a batch for its own seller institution</td></tr>
+<tr><td><code>ASSURERAIL_EXPORT_CHECKER</code></td><td>Independently approve an unchanged profile or manifest</td></tr>
+<tr><td><code>ASSURERAIL_INTEGRATION_OPERATOR</code></td><td>Propose profiles, dispatch approved batches and reconcile transport outcomes</td></tr>
+<tr><td><code>BUYER_ACKNOWLEDGER</code></td><td>Record acknowledgements only for its own buyer institution</td></tr>
+</tbody></table></div>
+<p>Every state-changing operation appends an event with actor, tenant scopes, profile/batch references and a digest of bounded detail. Audit events do not contain payloads, credential references or credentials. Production persistence must append these events transactionally with each state change.</p>
+<p>The profile's retention deadline is carried in the manifest. A production adapter and object-store worker must delete staged payload bytes after acknowledged completion or expiry under the agreed record-retention schedule. Batch metadata, manifest digests, acknowledgement evidence and audit records follow AssureRail's legal/audit retention schedule and must not be silently erased with the transport copy.</p>
+<h2>Delivered software evidence</h2>
+<p>The implementation lives in <code>apps/assurerail-api/src/buyer-sftp/</code>:</p>
+<ul>
+<li><code>buyer-sftp.policy.ts</code>: profile validation, host pinning, scopes, allow-list and folder rules;</li>
+<li><code>buyer-sftp.adapter.ts</code>: provider-neutral transport contract and a no-network fake sandbox;</li>
+<li><code>buyer-sftp.domain.ts</code>: manifest, idempotency, maker-checker, state machine, retries,</li>
+<p>reconciliation, acknowledgements and audit events; and</p>
+<li><code>buyer-sftp.test.ts</code>: sandbox tests for secrets, tenant isolation, byte binding, idempotency,</li>
+<p>acknowledgement completeness, backoff and ambiguous-success recovery.</p>
+</ul>
+<p>The fake adapter proves domain behaviour only. It does not establish buyer connectivity, SSH interoperability, cryptographic key custody, network controls, malware safety, production persistence, operational acceptance or bank acceptance.</p>
+<h2>Remaining activation gates</h2>
+<p>Before any production connection, AssureRail needs the named buyer's approved schema and folder contract, endpoint and host key obtained through an independently authenticated channel, dedicated key generation/custody/rotation, IP/network policy, durable transactional repository/outbox, temporary-file publication behaviour, signed acknowledgement format/channel, malware and DLP controls, retention/deletion job, monitoring, customer and buyer UAT, failure/rotation/exit rehearsal, security approval and written operating acceptance. A separate production-capable adapter must keep strict host-key checking and password fallback disabled.</p></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

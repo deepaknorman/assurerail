@@ -39,6 +39,13 @@ Initial Assessment applications are open for approved NBFC portfolios. Until Ass
 | [Buyer onboarding and MSA schedule](./AssureRail_Phase1_DA_Buyer_Onboarding_And_MSA_Schedule.md) | Post-MSA buyer workspace, requirements and RBAC | `AUTHENTICATED` |
 | [Referral partner addendum](./AssureRail_Phase1_DA_Referral_Partner_Addendum.md) | Accepted referral economics and controls | `AUTHENTICATED` |
 | [Quote reconciliation, credit and refund terms](./AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.md) | Quote and billing rules | `SHARED_PASSWORD` |
+| [Uninterrupted execution chain](./AssureRail_Uninterrupted_DA_Execution_Chain.md) | Build, evidence and activation gates in dependency order | `INTERNAL` |
+| [Founder Initial Assessment demonstration](./AssureRail_Founder_Initial_Assessment_Demo.md) | Account-driven synthetic seller rehearsal | `INTERNAL` |
+| [Coordinated closing rehearsal](./AssureRail_DA_Coordinated_Closing_Rehearsal.md) | Seller-specific closing, authorisation and ambiguity repair | `INTERNAL` |
+| [Initial Assessment remediation design](../../design/AssureRail_Initial_Assessment_Remediation_And_Reassessment.md) | Gap ownership, corrected evidence and comparable reassessment | `INTERNAL` |
+| [Buyer policy compiler implementation](../../design/AssureRail_Buyer_Policy_Compiler_v0_Implementation.md) | MSA-bound record checks and traceability | `INTERNAL` |
+| [Buyer profile screening model](../../design/AssureRail_Buyer_Profile_Screen_v0.md) | Structured cohort-level preparation screen | `INTERNAL` |
+| [Buyer SFTP export foundation](../../design/AssureRail_Buyer_SFTP_Export_Foundation.md) | Governed sandbox export, acknowledgement and reconciliation | `INTERNAL` |
 | [Artifact manifest](./artifact-manifest.json) | Distribution and supersession rules | `INTERNAL` |
 
 Generated HTML is a deterministic rendering of these Markdown sources. Edit the source, run `node scripts/build-assurerail-phase1-da-ops-pack.mjs`, review the generated diff and then distribute only at the manifest classification.

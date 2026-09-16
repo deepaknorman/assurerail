@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Coordinated closing rehearsal | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail conventional DA coordinated-closing rehearsal</h1>
+<p><strong>Classification:</strong> INTERNAL <strong>Mode:</strong> dry rehearsal only; no live money, no legal completion claim</p>
+<h2>Objective</h2>
+<p>Exercise the complete evidence and control chain for a conventional DA closing without sending an external payment instruction. The rehearsal tests readiness, authorisation, provider-response handling and repair. It does not test or claim atomic legal transfer.</p>
+<h2>Rehearsal pack</h2>
+<ol>
+<li>Freeze the programme, seller-specific cohort and purchase-consideration schedule.</li>
+<li>Record each condition precedent as pending, satisfied, waived or blocked. A satisfied item</li>
+<p>carries evidence; a waiver carries the authorised decision reference.</p>
+<li>Fill required executed-document slots with immutable evidence-version references and payload</li>
+<p>digests. Preserve replacement versions rather than rewriting history.</p>
+<li>Generate the seller-specific distribution schedule. Debt release, seller net proceeds,</li>
+<p>AssureRail fees, third-party expenses and tax must sum exactly to gross consideration.</p>
+<li>Bind the schedule to a provider profile, VAN reference where available, seller mandate and</li>
+<p>accepted-waterfall digest.</p>
+<li>Require distinct seller and buyer authorisers to approve the exact closing-pack digest using</li>
+<p>step-up evidence. AssureRail has no unilateral release authority.</p>
+<li>Submit only to the local provider sandbox or mock with a unique idempotency reference per leg.</li>
+<li>Reconcile every leg to provider acknowledgement and VAN/bank evidence.</li>
+</ol>
+<h2>Injected failure cases</h2>
+<div class="table-wrap"><table><thead><tr><th>Failure</th><th>Required behaviour</th></tr></thead><tbody>
+<tr><td>Required CP remains pending</td><td>Pack remains not ready; no authorisation</td></tr>
+<tr><td>Executed document is missing</td><td>Pack remains not ready</td></tr>
+<tr><td>Distribution schedule does not balance</td><td>Instruction rejected</td></tr>
+<tr><td>Same person attempts seller and buyer approval</td><td>Authorisation rejected</td></tr>
+<tr><td>Provider accepts but times out before outcome</td><td>Stop automatic retry; query by idempotency/provider reference</td></tr>
+<tr><td>One leg settles and a later leg fails</td><td>Preserve original facts; reconcile statements; obtain dual approval for any corrective instruction</td></tr>
+<tr><td>Provider amount differs</td><td>Reconciliation rejected and exception opened</td></tr>
+<tr><td>VAN shows a credit without matching provider leg</td><td>Never infer successful settlement from VAN alone</td></tr>
+</tbody></table></div>
+<h2>Evidence to retain</h2>
+<ul>
+<li>frozen closing pack and digest;</li>
+<li>CP and document-slot history;</li>
+<li>authorisation evidence and actor/institution scopes;</li>
+<li>exact instruction and idempotency references;</li>
+<li>provider observations and statement/VAN reconciliation;</li>
+<li>append-only repair decisions;</li>
+<li>separate legal-status confirmation from counsel or authorised parties.</li>
+</ul>
+<h2>Release boundary</h2>
+<p>The current implementation is a deterministic dry-rehearsal library with local tests. Live bank or escrow submission remains disabled until a named provider has supplied its contract, sandbox, authentication, callback-signing, idempotency and reconciliation specification and both sides have accepted the operating procedure.</p>
+<h2>Future Plaza signature adapter</h2>
+<p>The closing-pack digest is deliberately provider-neutral so a later Plaza integration may collect institutional multi-signatures without changing the underlying pack. That signature would evidence approval; it would not itself establish legal assignment or instruct a bank unless the transaction documents and appointed provider expressly recognise it.</p>
+<p>Plaza is not a dependency for the first conventional DA. Its stronger prospective use is in PTC, where trustee, servicer and account-bank approvals may govern waterfall versions, distributions, reserve releases and exceptional corrections, and in a regulator-approved tokenisation or CBDC sandbox. Any adapter remains disabled until identity, key custody, signer authority, revocation, quorum, recovery and legal-recognition requirements are accepted by the relevant parties.</p></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

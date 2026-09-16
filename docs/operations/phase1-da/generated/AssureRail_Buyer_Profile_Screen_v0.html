@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Buyer profile screening model | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail buyer-profile screen v0</h1>
+<p><strong>Status:</strong> implemented preparation-screen foundation <strong>Boundary:</strong> buyer policy support; never a buyer credit or acquisition decision</p>
+<h2>Purpose</h2>
+<p>The profile screen converts an approved buyer onboarding profile into deterministic, versionable checks against a proposed analytical cohort. It returns <code>BUYER_POLICY_MATCH</code>, <code>BUYER_REVIEW_REQUIRED</code> or <code>BUYER_POLICY_MISMATCH</code>, accompanied by check-level reason codes and a digest. A match means that the supplied facts meet the recorded profile. It is not an offer, price, legal opinion, eligibility certificate or approval to acquire.</p>
+<p>For multiple sellers, the evaluated object is an analytical and buyer-reviewable cohort. Each seller's ownership, representations, quote, contract and settlement remain separate unless a buyer- and counsel-approved transaction structure expressly aggregates them.</p>
+<h2>Inputs and controls</h2>
+<ul>
+<li>Only the closed, structured criteria vocabulary in <code>buyer-criteria.ts</code> is accepted.</li>
+<li>Buyer profiles remain subject to MSA-bound workspace activation and separate credit, legal and</li>
+<p>operations approvals.</p>
+<li>Monetary inputs use integer minor units; corpus and seller-ticket comparisons do not use binary</li>
+<p>floating-point money.</p>
+<li>Missing risk evidence such as LTV, OEM concentration, state concentration, PSL classification or</li>
+<p>history produces <code>REVIEW</code>; it never silently passes.</p>
+<li>Hard limits such as asset family, ticket size, DPD, seasoning, excluded-loan presence and</li>
+<p>operational compatibility produce deterministic <code>PASS</code> or <code>FAIL</code> results.</p>
+<li>The evaluation digest covers the criteria, supplied candidate facts, results and decision.</li>
+</ul>
+<h2>Ten worked checks</h2>
+<div class="table-wrap"><table><thead><tr><th>Example</th><th>Input difference</th><th>Expected outcome</th></tr></thead><tbody>
+<tr><td>1</td><td>Five ₹10 Cr EV three-wheeler books, 18–36 months remaining, all recorded limits met</td><td>Match</td></tr>
+<tr><td>2</td><td>Gold loans against an EV-only profile</td><td>Mismatch: asset</td></tr>
+<tr><td>3</td><td>Approved-originator route where the profile allows only onboarding of new originators</td><td>Mismatch: originator route</td></tr>
+<tr><td>4</td><td>₹20 Cr programme against a ₹25–100 Cr programme range</td><td>Mismatch: programme ticket</td></tr>
+<tr><td>5</td><td>One seller below the ₹5 Cr per-seller floor</td><td>Mismatch: seller ticket</td></tr>
+<tr><td>6</td><td>Remaining term extends beyond the buyer's maximum</td><td>Mismatch: remaining term</td></tr>
+<tr><td>7</td><td>OEM concentration exceeds the buyer's limit</td><td>Mismatch: concentration</td></tr>
+<tr><td>8</td><td>Repayment-history evidence is missing</td><td>Buyer review required</td></tr>
+<tr><td>9</td><td>PSL status is unverified while PSL is preferred or required</td><td>Buyer review required</td></tr>
+<tr><td>10</td><td>Required buyer precheck has not been completed</td><td>Buyer review required</td></tr>
+</tbody></table></div>
+<p>The executable versions of these examples are in <code>buyer-profile-screen.test.ts</code>.</p>
+<h2>Next integration gate</h2>
+<p>The profile screen should be invoked only with the current approved buyer profile and the frozen, seller-authorised cohort facts. Persistence must record profile ID/version/digest, assessment or preparation version, evaluation digest, time and actor. Re-evaluation is required when the buyer profile, cohort membership, material evidence or cut-off date changes.</p></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

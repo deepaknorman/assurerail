@@ -92,6 +92,62 @@
       "releaseGate": "Controlled-download password, recipient and version log"
     },
     {
+      "id": "DA-EXECUTION-CHAIN",
+      "title": "Uninterrupted conventional DA execution chain",
+      "source": "docs/operations/phase1-da/AssureRail_Uninterrupted_DA_Execution_Chain.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Uninterrupted_DA_Execution_Chain.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-FOUNDER-IA-DEMO",
+      "title": "Founder Initial Assessment demonstration",
+      "source": "docs/operations/phase1-da/AssureRail_Founder_Initial_Assessment_Demo.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Founder_Initial_Assessment_Demo.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-CLOSING-REHEARSAL",
+      "title": "Coordinated closing rehearsal",
+      "source": "docs/operations/phase1-da/AssureRail_DA_Coordinated_Closing_Rehearsal.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_DA_Coordinated_Closing_Rehearsal.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-IA-REMEDIATION",
+      "title": "Initial Assessment remediation and reassessment",
+      "source": "docs/design/AssureRail_Initial_Assessment_Remediation_And_Reassessment.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Initial_Assessment_Remediation_And_Reassessment.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-BUYER-POLICY-COMPILER",
+      "title": "Buyer policy compiler implementation",
+      "source": "docs/design/AssureRail_Buyer_Policy_Compiler_v0_Implementation.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Buyer_Policy_Compiler_v0_Implementation.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-BUYER-PROFILE-SCREEN",
+      "title": "Buyer profile screening model",
+      "source": "docs/design/AssureRail_Buyer_Profile_Screen_v0.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Buyer_Profile_Screen_v0.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-BUYER-SFTP",
+      "title": "Buyer SFTP export foundation",
+      "source": "docs/design/AssureRail_Buyer_SFTP_Export_Foundation.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Buyer_SFTP_Export_Foundation.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
       "id": "GTM-INSTITUTIONAL-LEGACY",
       "title": "Institutional GTM and Pilot Proof deck",
       "source": "docs/decks/AssureRail_Institutional_GTM_Deck.html",
