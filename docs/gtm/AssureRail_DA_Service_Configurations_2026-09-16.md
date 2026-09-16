@@ -1,7 +1,7 @@
 # AssureRail DA service configurations — commercial proposal
 
 **Date:** 16 September 2026
-**Status:** Recommended proposal for founder review. This document does not change the accepted rate card, customer contract or production billing configuration.
+**Status:** Founder-confirmed candidate for modelling. This document does not change the accepted rate card, customer contract or production billing configuration.
 
 ## Recommendation
 
@@ -9,16 +9,14 @@ Offer three named DA configurations: **Base**, **Premium** and **Full**. Base mu
 
 Keep AssureRail fees, external supplier estimates and statutory amounts on separate lines. A configuration defines responsibility and service coverage; it does not convert an unused conditional item into a charge. For each external item, show `included in scope / conditionally required / not applicable`, the source of the requirement, provider, estimate or accepted quote, payer and unused-reserve release treatment.
 
-Reduce the core marginal execution schedule by 10 basis points for competitiveness:
+Model the founder-selected candidate as a two-band marginal execution schedule:
 
 | Settled-consideration slice | Current schedule | Recommended schedule |
 |---|---:|---:|
-| First ₹10 crore | 50 bps | **40 bps** |
-| Above ₹10 crore through ₹50 crore | 40 bps | **30 bps** |
-| Above ₹50 crore through ₹100 crore | 35 bps | **25 bps** |
-| Above ₹100 crore | 30 bps | **20 bps** |
+| First ₹25 crore | Existing 50/40-bps slices | **40 bps** |
+| Above ₹25 crore | Existing 40/35/30-bps slices | **30 bps** |
 
-Retain the proposed ₹5 lakh minimum, cumulative marginal calculation, actual purchase consideration settled as the fee base, and no success fee without a successful close. Fixed-stage pricing remains ₹500 per admitted loan with an ₹8 lakh minimum for the execution-committed route and ₹650 per loan with a ₹10.4 lakh minimum for standalone preparation.
+Retain the proposed ₹5 lakh minimum, cumulative marginal calculation, actual purchase consideration settled as the fee base, and no success fee without a successful close. A flat 30-bps rate on the whole amount above ₹25 crore is rejected because it creates a price cliff: a ₹25.01 crore closing would pay less than a ₹25 crore closing. Fixed-stage pricing remains ₹500 per admitted loan with an ₹8 lakh minimum for the execution-committed route and ₹650 per loan with a ₹10.4 lakh minimum for standalone preparation.
 
 ## Customer-facing configuration matrix
 
@@ -26,7 +24,7 @@ Retain the proposed ₹5 lakh minimum, cumulative marginal calculation, actual p
 |---|:---:|:---:|:---:|---|
 | Automated Initial Assessment and included reruns | ✓ | ✓ | ✓ | Fixed-stage fee; paid upfront |
 | Portfolio Preparation with qualified expert review and sign-off | ✓ | ✓ | ✓ | Fixed-stage fee; paid upfront |
-| Platform Execution & Success Fee | ✓ | ✓ | ✓ | Recommended 40/30/25/20-bps marginal schedule at successful close |
+| Platform Execution & Success Fee | ✓ | ✓ | ✓ | Candidate 40 bps on first ₹25cr and 30 bps above, applied marginally at successful close |
 | Full-population loan-tape rule evaluation | ✓ | ✓ | ✓ | Included; every admitted loan receives a recorded outcome |
 | Qualified CA-led financial and factual review of prepared outputs | ✓ | ✓ | ✓ | Included within Portfolio Preparation |
 | Separate independent CA reliance certificate or buyer-addressed report | If required | If required | If required | Supplier quote; do not describe an included reviewer as independent for buyer-reliance purposes |
@@ -69,18 +67,36 @@ Do not claim that all competitors sample or that sampling is intrinsically inade
 
 Assumptions: five sellers, 825 admitted loans each, ₹11 crore settled consideration each, ₹40 lakh combined fixed-stage fees, and the external-cost working assumptions documented in the EV cohort case. Amounts are before GST.
 
-### Effect of the 10-bps reduction
+### Candidate schedule compared with the alternatives
 
-| Settled consideration | Current execution fee | Recommended execution fee | Reduction |
-|---:|---:|---:|---:|
-| ₹10cr | ₹5.00L minimum | ₹5.00L minimum | ₹0 |
-| ₹25cr | ₹11.00L | ₹8.50L | ₹2.50L |
-| ₹50cr | ₹21.00L | ₹16.00L | ₹5.00L |
-| ₹55cr | ₹22.75L | **₹17.25L** | **₹5.50L** |
-| ₹100cr | ₹38.50L | ₹28.50L | ₹10.00L |
-| ₹300cr | ₹98.50L | ₹68.50L | ₹30.00L |
+| Settled consideration | Current 50/40/35/30 | Earlier 40/30/25/20 proposal | Candidate 40/30 | Effective candidate rate | Saving vs current |
+|---:|---:|---:|---:|---:|---:|
+| ₹10cr | ₹5.00L | ₹5.00L | **₹5.00L minimum** | 50.00 bps | ₹0 |
+| ₹25cr | ₹11.00L | ₹8.50L | **₹10.00L** | 40.00 bps | ₹1.00L |
+| ₹50cr | ₹21.00L | ₹16.00L | **₹17.50L** | 35.00 bps | ₹3.50L |
+| ₹55cr | ₹22.75L | ₹17.25L | **₹19.00L** | 34.55 bps | **₹3.75L** |
+| ₹100cr | ₹38.50L | ₹28.50L | **₹32.50L** | 32.50 bps | ₹6.00L |
+| ₹150cr | ₹53.50L | ₹38.50L | **₹47.50L** | 31.67 bps | ₹6.00L |
+| ₹200cr | ₹68.50L | ₹48.50L | **₹62.50L** | 31.25 bps | ₹6.00L |
+| ₹300cr | ₹98.50L | ₹68.50L | **₹92.50L** | 30.83 bps | ₹6.00L |
 
-At ₹55 crore, AssureRail fixed-stage and execution fees fall from ₹62.75 lakh to **₹57.25 lakh**, or about **1.04%** of consideration. The successful-execution fee becomes ₹3.45 lakh per seller at equal participation; the five sellers' fixed-stage fee remains ₹8 lakh each.
+At ₹55 crore, AssureRail fixed-stage and execution fees fall from ₹62.75 lakh to **₹59 lakh**, or about **1.07%** of consideration. The successful-execution fee becomes ₹3.80 lakh per seller at equal participation; the five sellers' fixed-stage fee remains ₹8 lakh each. The candidate preserves materially more revenue than the earlier four-band reduction on ₹150–300 crore transactions while still lowering the effective rate toward 30 bps as consideration grows.
+
+The proposition at the low end comes from combining smaller seller books into an institutional-size cohort and sharing common work. The founder's observation that conventional DA events are commonly ₹150–200 crore is a market hypothesis to validate before using it as a public industry-minimum claim.
+
+Holding five ₹8 lakh fixed-stage minima and the Base external scope constant illustrates where the pooled proposition becomes price-competitive:
+
+| Five-seller cohort | Candidate execution fee | AssureRail fixed + execution | Base working total | Base share of consideration |
+|---:|---:|---:|---:|---:|
+| ₹25cr | ₹10.00L | ₹50.00L | ₹66.71L | 2.67% |
+| ₹40cr | ₹14.50L | ₹54.50L | ₹71.21L | 1.78% |
+| ₹50cr | ₹17.50L | ₹57.50L | ₹74.21L | 1.48% |
+| ₹55cr | ₹19.00L | ₹59.00L | ₹75.71L | 1.38% |
+| ₹60cr | ₹20.50L | ₹60.50L | ₹77.21L | 1.29% |
+| ₹150cr | ₹47.50L | ₹87.50L | ₹104.21L | 0.69% |
+| ₹200cr | ₹62.50L | ₹102.50L | ₹119.21L | 0.60% |
+
+The model supports a **₹50–60 crore initial pooled target**. Below roughly ₹50 crore, five seller-level fixed minima and common professional work make the percentage cost rise quickly, even though the absolute event size remains accessible. At ₹50 crore, Base is approximately 1.48%; at ₹55 crore it is 1.38%. The advantage at smaller size is therefore access plus full-population preparation, not a claim that every sub-₹50 crore structure has the lowest percentage fee.
 
 ### Configuration economics
 
@@ -88,14 +104,14 @@ The Base external estimate uses ₹1.65 lakh for fresh bureau pulls, ₹3 lakh f
 
 | Configuration | AssureRail fees | Modelled external/other charges | Working total | Share of ₹55cr |
 |---|---:|---:|---:|---:|
-| **Base** | ₹57.25L | ₹16.71L | **₹73.96L** | **1.34%** |
-| **Premium, before RTO and field quote** | ₹57.25L | ₹24.19L, adding ₹2.48L registry and ₹5L duty | **₹81.44L** | **1.48%** |
-| **Premium with one ₹100 RTO action per vehicle** | ₹57.25L | ₹28.32L, before field quote | **₹85.57L** | **1.56%** |
-| **Full, first year** | ₹57.25L | Premium items plus buyer counsel and monitoring | **Quote after reporting-unit design** | — |
+| **Base** | ₹59.00L | ₹16.71L | **₹75.71L** | **1.38%** |
+| **Premium, before RTO and field quote** | ₹59.00L | ₹24.19L, adding ₹2.48L registry and ₹5L duty | **₹83.19L** | **1.51%** |
+| **Premium with one ₹100 RTO action per vehicle** | ₹59.00L | ₹28.32L, before field quote | **₹87.32L** | **1.59%** |
+| **Full, first year** | ₹59.00L | Premium items plus buyer counsel and monitoring | **Quote after reporting-unit design** | — |
 
 For Full, use the existing proposed monitoring formula only with an accepted shared-day operating plan: ₹75,000 activation per seller/pool reporting unit, then ₹25,000 per reporting unit per month plus ₹5 per active loan per month. One consolidated 4,125-loan reporting unit costs about **₹6.23 lakh** for activation plus 12 months; five seller sub-pools cost about **₹21.23 lakh**. Adding the ₹4 lakh buyer-counsel base produces a first-year Full increment of approximately **₹10.23–25.23 lakh** above Premium, before GST, RTO and field work.
 
-The Base working total is ₹8.54 lakh below a genuinely all-inclusive 1.5% comparator of ₹82.50 lakh. Premium before RTO and field work is ₹1.06 lakh below it. This advantage disappears if a competing 1.5% quote excludes counsel, escrow, bureau, registry, duty, filings or monitoring; compare identical inclusions and tax treatment.
+The Base working total is ₹6.79 lakh below a genuinely all-inclusive 1.5% comparator of ₹82.50 lakh. Premium before RTO and field work is ₹0.69 lakh above it. If a competing 1.5% quote excludes counsel, escrow, bureau, registry, duty, filings or monitoring, those costs must be added before comparison. Compare identical inclusions and tax treatment.
 
 ## Quoting and presentation rules
 
