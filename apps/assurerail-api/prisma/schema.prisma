@@ -232,6 +232,7 @@ model Institution {
   customerOperationalReviews CustomerOperationalReview[]
   customerDataExitExports  CustomerDataExitExport[]
   designPartnerCoupons     CustomerDesignPartnerCoupon[]
+  executionFeeInvoices     ExecutionFeeInvoice[]
   secondaryTransferEvidence   SecondaryTransferEvidence[]
   secondaryTransferBreaks     SecondaryTransferBreak[] @relation("SecondaryTransferBreakOwnerInstitution")
   secondaryTransferRepairs    SecondaryTransferRepair[] @relation("SecondaryTransferRepairProviderInstitution")
@@ -1222,6 +1223,7 @@ model CustomerInvoiceStatement {
   creditCorrections  CustomerCreditCorrection[]
   paymentReceipts    CustomerPaymentReceipt[]
   designPartnerDiscount CustomerInvoiceDiscount?
+  executionFeeInvoice   ExecutionFeeInvoice?
 
   @@unique([customerContractId, statementRef], map: "CustomerInvoiceStatement_contract_ref")
   @@index([customerContractId, periodStart, periodEnd], map: "CustomerInvoiceStatement_contract_period_idx")
@@ -1247,6 +1249,7 @@ model CustomerDesignPartnerCoupon {
   reviewedAt         DateTime?
   createdAt          DateTime    @default(now())
   invoiceDiscounts   CustomerInvoiceDiscount[]
+  executionFeeInvoices ExecutionFeeInvoice[]
 
   @@index([status, createdAt])
   @@index([institutionId, status])
@@ -1364,6 +1367,7 @@ model AssessmentEngagement {
   stages             AssessmentEngagementStage[]
   processingJobs     AssessmentProcessingJob[]
   remediationItems   AssessmentRemediationItem[]
+  executionFeeInvoices ExecutionFeeInvoice[]
   @@unique([customerContractId, requestRef])
 }
 
@@ -1377,6 +1381,71 @@ model AssessmentEngagementStage {
   invoice            CustomerInvoiceStatement? @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
   createdAt          DateTime @default(now())
   @@unique([engagementId, stage])
+}
+
+/// Seller-specific, cumulative DA execution fee proposal. It records the accepted consideration,
+/// the frozen commercial policy, both credits and GST in paise. The linked statement is the invoice;
+/// this record never represents custody, settlement authority or proof that funds moved.
+model ExecutionFeeInvoice {
+  id                                   String      @id
+  sellerInstitutionId                  String
+  sellerInstitution                    Institution @relation(fields: [sellerInstitutionId], references: [id], onDelete: Restrict)
+  engagementId                         String
+  engagement                           AssessmentEngagement @relation(fields: [engagementId], references: [id], onDelete: Restrict)
+  transactionCaseId                    String
+  transactionCase                      TransactionCase @relation(fields: [transactionCaseId], references: [id], onDelete: Restrict)
+  invoiceStatementId                   String      @unique
+  invoiceStatement                     CustomerInvoiceStatement @relation(fields: [invoiceStatementId], references: [id], onDelete: Restrict)
+  designPartnerCouponId                String?
+  designPartnerCoupon                  CustomerDesignPartnerCoupon? @relation(fields: [designPartnerCouponId], references: [id], onDelete: Restrict)
+  requestRef                           String
+  closingRef                           String
+  sequence                             Int
+  status                               String      @default("PROPOSED") // PROPOSED | APPROVED | REJECTED
+  policyVersion                        String
+  policyDigest                         String
+  acceptedMinimumMinor                 String
+  previousCumulativeConsiderationMinor String
+  acceptedCumulativeConsiderationMinor String
+  considerationAcceptanceDigest        String
+  sellerAcceptanceEvidenceRef          String
+  buyerAcceptanceEvidenceRef           String
+  acceptedAt                           DateTime
+  cumulativeGrossBaseMinor             String
+  incrementalGrossBaseMinor            String
+  eligibleStandalonePremiumMinor       String
+  previouslyAppliedPremiumMinor        String
+  appliedPremiumCreditMinor            String
+  remainingPremiumMinor                String
+  postPremiumBaseMinor                 String
+  designPartnerProgrammeCode           String?
+  designPartnerDiscountBps             Int?
+  designPartnerCreditBaseMinor         String
+  netBaseMinor                         String
+  grossTaxMinor                        String
+  premiumTaxCreditMinor                String
+  designPartnerTaxCreditMinor          String
+  totalTaxCreditMinor                  String
+  netTaxMinor                          String
+  grossTotalMinor                      String
+  invoiceGrossTotalMinor               String
+  designPartnerTotalCreditMinor        String
+  totalCreditMinor                     String
+  netTotalMinor                        String
+  taxRuleSnapshot                      Json
+  snapshotDigest                       String
+  preparedByUserId                     String
+  preparationStepUpId                  String
+  reviewedByUserId                     String?
+  reviewStepUpId                       String?
+  reviewReason                         String?
+  reviewedAt                           DateTime?
+  createdAt                            DateTime    @default(now())
+
+  @@unique([engagementId, requestRef], map: "ExecutionFeeInvoice_engagement_request_key")
+  @@unique([engagementId, transactionCaseId, sequence], map: "ExecutionFeeInvoice_engagement_case_sequence_key")
+  @@index([sellerInstitutionId, transactionCaseId, closingRef], map: "ExecutionFeeInvoice_seller_case_closing_idx")
+  @@index([engagementId, status, sequence])
 }
 
 model CustomerPaymentAdjustment {
@@ -1899,6 +1968,7 @@ model TransactionCase {
   lifecycleBreaks         RailLifecycleBreak[]
   commercialHandoffs      CommercialCaseHandoff[]
   enterpriseIntegrationBindings EnterpriseCaseIntegrationBinding[]
+  executionFeeInvoices ExecutionFeeInvoice[]
 
   @@unique([ownerInstitutionId, creationIdempotencyKey])
   @@index([ownerInstitutionId, status])
