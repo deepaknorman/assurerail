@@ -1,0 +1,20 @@
+.catalog { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:30px; }
+.artifact { display:flex; min-height:205px; flex-direction:column; padding:24px; border:1px solid var(--line); border-radius:12px; background:#fffefa; }
+.artifact h3 { margin:12px 0 0; font-size:20px; }
+.artifact p { margin:10px 0 0; color:var(--muted); font-size:13px; line-height:1.62; }
+.classification { width:max-content; border:1px solid rgba(17,103,83,.25); border-radius:999px; padding:4px 8px; color:var(--green); background:#edf6f2; font-family:var(--arail-font-mono); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.classificationRestricted { color:#765016; border-color:#dbc18d; background:#fff4dc; }
+.artifactAction { display:inline-flex; width:max-content; align-items:center; margin-top:auto; padding-top:20px; color:var(--green); font-size:13px; font-weight:750; text-decoration:underline; text-underline-offset:3px; }
+.gate { margin-top:30px; padding:24px; border:1px solid var(--line); border-radius:12px; background:#fffefa; }
+.gate h3 { margin:0; font-size:20px; }
+.gate p { max-width:72ch; color:var(--muted); font-size:13px; line-height:1.62; }
+.form { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin-top:18px; }
+.field { display:flex; min-width:min(100%,340px); flex:1; flex-direction:column; gap:7px; }
+.field label { font-size:12px; font-weight:750; }
+.field input { width:100%; border:1px solid #b9c5c3; border-radius:7px; padding:11px 12px; color:var(--ink); background:#fff; font:inherit; }
+.field input:focus { outline:3px solid rgba(27,125,101,.16); border-color:var(--green); }
+.submit { border:0; border-radius:8px; padding:12px 17px; color:#fff; background:var(--green); font:inherit; font-size:13px; font-weight:750; cursor:pointer; }
+.message { margin:16px 0 0; padding:11px 13px; border-left:3px solid var(--amber); color:#694b1c; background:#fff5e3; font-size:12px; }
+.fine { margin-top:14px!important; font-size:11px!important; }
+.honeypot { position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden; }
+@media(max-width:760px){.catalog{grid-template-columns:1fr}.form{align-items:stretch}.submit{width:100%}}

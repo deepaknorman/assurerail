@@ -1,0 +1,121 @@
+{
+  "manifestVersion": "1.0",
+  "programme": "AssureRail Phase 1 conventional DA",
+  "generatedAtPolicyDate": "2026-09-16",
+  "classifications": {
+    "PUBLIC": "May be published after the public-claims release check.",
+    "SHARED_PASSWORD": "May be shared through the single controlled download password after recipient and version are recorded.",
+    "AUTHENTICATED": "Available only inside an approved counterparty workspace or controlled contract process.",
+    "INTERNAL": "AssureRail personnel and specifically authorised advisers or suppliers only."
+  },
+  "artifacts": [
+    {
+      "id": "DA-OPS-INDEX",
+      "title": "Phase 1 operating pack index",
+      "source": "docs/operations/phase1-da/README.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Operating_Pack_Index.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-CUSTOMER-GUIDE",
+      "title": "Conventional DA customer service guide",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Customer_Service_Guide.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Customer_Service_Guide.html",
+      "plannedDownloadRoute": "/downloads/assurerail/phase1-da/customer-service-guide",
+      "classification": "PUBLIC",
+      "status": "CURRENT",
+      "releaseGate": "Public claims and current availability review"
+    },
+    {
+      "id": "DA-RACI",
+      "title": "Participant register and RACI",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Participant_Register_And_RACI.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Participant_Register_And_RACI.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-GATES",
+      "title": "Stage gates and service levels",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Stage_Gates_And_SLAs.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Stage_Gates_And_SLAs.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-PROVIDER-WO",
+      "title": "Provider onboarding and work-order template",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Provider_Onboarding_And_Work_Order.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Provider_Onboarding_And_Work_Order.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
+      "id": "DA-SELLER-SUITE",
+      "title": "Seller document suite",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Seller_Document_Suite.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Seller_Document_Suite.html",
+      "plannedDownloadRoute": "/downloads/assurerail/phase1-da/seller-document-suite",
+      "classification": "AUTHENTICATED",
+      "status": "CURRENT",
+      "releaseGate": "Seller workspace approval and counsel-reviewed executed form"
+    },
+    {
+      "id": "DA-REFERRAL",
+      "title": "Referral partner addendum",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Referral_Partner_Addendum.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Referral_Partner_Addendum.html",
+      "plannedDownloadRoute": "/downloads/assurerail/phase1-da/referral-addendum",
+      "classification": "AUTHENTICATED",
+      "status": "CURRENT",
+      "releaseGate": "Counterparty-specific contract process"
+    },
+    {
+      "id": "DA-BUYER-ONBOARDING",
+      "title": "Buyer onboarding and MSA schedule",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Buyer_Onboarding_And_MSA_Schedule.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Buyer_Onboarding_And_MSA_Schedule.html",
+      "plannedDownloadRoute": "/downloads/assurerail/phase1-da/buyer-onboarding-schedule",
+      "classification": "AUTHENTICATED",
+      "status": "CURRENT",
+      "releaseGate": "Executed buyer MSA and approved buyer institution"
+    },
+    {
+      "id": "DA-COMMERCIAL-TERMS",
+      "title": "Quote reconciliation, credit and refund terms",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.html",
+      "plannedDownloadRoute": "/downloads/assurerail/phase1-da/commercial-terms",
+      "classification": "SHARED_PASSWORD",
+      "status": "CURRENT",
+      "releaseGate": "Controlled-download password, recipient and version log"
+    },
+    {
+      "id": "GTM-INSTITUTIONAL-LEGACY",
+      "title": "Institutional GTM and Pilot Proof deck",
+      "source": "docs/decks/AssureRail_Institutional_GTM_Deck.html",
+      "classification": "INTERNAL",
+      "status": "ARCHIVED_SUPERSEDED",
+      "supersededBy": "DA-CUSTOMER-GUIDE",
+      "reason": "Replay, PTC and tokenisation-led proposition predates the Phase 1 conventional DA decision."
+    },
+    {
+      "id": "GTM-OBJECTIONS-LEGACY",
+      "title": "Objection Handling and Pilot Playbook",
+      "source": "docs/decks/AssureRail_Objection_Handling_And_Pilot_Playbook.html",
+      "classification": "INTERNAL",
+      "status": "ARCHIVED_SUPERSEDED",
+      "supersededBy": "DA-CUSTOMER-GUIDE",
+      "reason": "Replay and PTC field positioning predates the Phase 1 conventional DA decision."
+    },
+    {
+      "id": "PTC-PHASE2",
+      "title": "PTC discovery and design materials",
+      "source": "docs/design/AssureRail_Conventional_PTC_Product_AR24.md",
+      "classification": "INTERNAL",
+      "status": "PHASE2_NOT_CURRENT_OFFER",
+      "reason": "Retained for later discovery; not a Phase 1 customer commitment."
+    }
+  ]
+}

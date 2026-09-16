@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Provider onboarding and work-order template | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail Phase 1 DA provider onboarding and work-order template</h1>
+<p><strong>Version:</strong> 1.0 — 16 September 2026 <strong>Classification:</strong> <code>INTERNAL</code> <strong>Use:</strong> one provider-admission record plus one accepted work order for every case assignment. Admission never authorises work on a customer case by itself.</p>
+<h2>Provider classes</h2>
+<p>This template applies to seller and buyer counsel, CA or financial reviewers, bureau providers or authorised pullers, escrow/VAN/settlement and collection-account banks, ROC/NeSL/RTO/registry agents, field verifiers, technical reviewers, servicers, integration contractors and other case suppliers.</p>
+<h2>Admission checklist</h2>
+<div class="table-wrap"><table><thead><tr><th>Control</th><th>Required evidence</th><th>Approver</th></tr></thead><tbody>
+<tr><td>Legal identity</td><td>Incorporation/registration, PAN/GST, registered address, authorised signatory</td><td>Commercial + Finance</td></tr>
+<tr><td>Qualification and scope</td><td>Professional membership, licence, empanelment or competence evidence appropriate to the service</td><td>Reviewer Coordinator or function owner</td></tr>
+<tr><td>Conflicts and independence</td><td>Conflict declaration; related-party and prior-work disclosure; independence wording where relevant</td><td>Risk / Compliance</td></tr>
+<tr><td>Insurance and liability</td><td>Professional indemnity/cyber cover where proportionate; liability and remedy terms</td><td>Risk / Compliance</td></tr>
+<tr><td>Security and privacy</td><td>Data categories, purpose, location, subprocessors, retention, deletion, incident contact and access method</td><td>Security / Privacy</td></tr>
+<tr><td>Banking and tax</td><td>Verified bank account, cancelled cheque/bank letter, invoice and TDS/GST data</td><td>Finance Checker</td></tr>
+<tr><td>Service capability</td><td>Named leads, locations, capacity, turnarounds, escalation and continuity</td><td>Engagement Operations</td></tr>
+<tr><td>Deliverable standard</td><td>Template, evidence form, signature method, limitation and acceptance criteria</td><td>Function owner</td></tr>
+<tr><td>Commercial schedule</td><td>Fixed/unit/day rates, tax, expenses, validity, cancellation and overrun approval</td><td>Commercial Approver</td></tr>
+<tr><td>Access role</td><td>Least-privilege workspace role and expiry; no shared credentials</td><td>Security / Privacy</td></tr>
+</tbody></table></div>
+<p>No provider receives case data until its admission is current, the case work order is accepted, conflicts are cleared and the provider's scoped identity is active.</p>
+<h2>Provider work order</h2>
+<h3>A. Identification</h3>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Required entry</th></tr></thead><tbody>
+<tr><td>Work-order ID and version</td><td>Stable ID; revisions never overwrite an accepted version</td></tr>
+<tr><td>Case and seller</td><td>Case ID, legal seller name and permitted buyer visibility</td></tr>
+<tr><td>Provider and named personnel</td><td>Legal provider, lead, supporting personnel and professional IDs</td></tr>
+<tr><td>Provider class</td><td>Counsel / CA / bureau / bank / registry / field / technical / servicer / integration / other</td></tr>
+<tr><td>Appointment source</td><td>Seller, buyer, AssureRail managed service or joint instruction</td></tr>
+<tr><td>Contracting party and payer</td><td>Name each separately; specify any seller-authorised settlement deduction</td></tr>
+<tr><td>Effective and expiry dates</td><td>Access and delivery window</td></tr>
+</tbody></table></div>
+<h3>B. Scope and boundary</h3>
+<p>State the exact questions, population or sample, cut-off date, location, record types, standard, assumptions and exclusions. Identify whether the provider must issue a certificate, opinion, report, filing receipt, bank acknowledgement, data file or signed section.</p>
+<p>The work order must state what the deliverable does <strong>not</strong> establish. For example, computational population coverage is not physical verification; counsel review is not a credit decision; a filing receipt is not proof of economic performance.</p>
+<h3>C. Inputs and access</h3>
+<p>List every input, source, permitted purpose, expected format and due date. Record workspace folders or API/SFTP endpoints, authentication method, data-export permission, retention date and deletion/return evidence. Provider access is case- and purpose-specific.</p>
+<h3>D. Deliverables and acceptance</h3>
+<div class="table-wrap"><table><thead><tr><th>Deliverable</th><th>Format and signature</th><th>Due date / SLA</th><th>Acceptance test</th><th>Dependency owner</th></tr></thead><tbody>
+<tr><td><code>[name]</code></td><td><code>[PDF/data/receipt; signing method]</code></td><td><code>[date/time]</code></td><td><code>[completeness, reconciliation, professional wording]</code></td><td><code>[party]</code></td></tr>
+</tbody></table></div>
+<p>AssureRail may check completeness, identity, consistency and agreed format. It does not rewrite or adopt a provider's professional conclusion. Rejection identifies the failed acceptance criterion; it cannot require a different conclusion.</p>
+<h3>E. Fees and change control</h3>
+<p>Record fixed, unit and day rates; GST; approved expenses; invoice milestone; cancellation; and any maximum. A person-day is charged as a full day whenever that person works, and a provider day may be allocated across engagements only when the time record identifies each case and no case is double charged.</p>
+<p>The current internal contractor planning allowance is ₹25,000 per person-day. An accepted work order may state a different negotiated rate. Qualified reviewer invoices are payable within 15 days after the contracted deliverable is accepted, regardless of whether the portfolio later closes; settlement success must not become an unstated condition of professional payment.</p>
+<p>No out-of-scope work, additional person, extra sample, travel or overrun is payable without a versioned change request that states reason, price, timing impact, payer and approving authority. Routine managed services may be sold at a published AssureRail customer rate; the provider invoice remains separate internal evidence.</p>
+<h3>F. Escalation and closure</h3>
+<p>Record operational, professional, information-security and billing contacts. Define critical incident notification, missed-SLA escalation and substitute-person approval. Closure requires deliverable receipt, access removal, data return/deletion evidence, invoice reconciliation and outstanding exception hand-off.</p>
+<h2>Provider-specific additions</h2>
+<ul>
+<li><strong>Counsel:</strong> jurisdiction, reliance addressees, opinion scope, privilege and duplicate-scope check.</li>
+<li><strong>CA / financial reviewer:</strong> membership status, independence, section being signed, procedures and reliance wording.</li>
+<li><strong>Bureau:</strong> permitted purpose, consent/authority, inquiry footprint, response retention and dispute route.</li>
+<li><strong>Bank / VAN / escrow:</strong> account ownership, maker-checker, beneficiary validation, cut-offs, failed payment and unmatched-money handling.</li>
+<li><strong>Registry:</strong> filer authority, credential custody, statutory receipt, rejection/retry and authoritative status check.</li>
+<li><strong>Field / technical:</strong> sample basis, visit proof, geo/time evidence, safety, fraud escalation and unvisited-population wording.</li>
+<li><strong>Servicer / collection bank:</strong> allocation rules, reversals, arrears, remittance timing, statement format and continuity plan.</li>
+<li><strong>Integration contractor:</strong> data map, validation totals, test files, failure/replay, credential handover and production support period.</li>
+</ul></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

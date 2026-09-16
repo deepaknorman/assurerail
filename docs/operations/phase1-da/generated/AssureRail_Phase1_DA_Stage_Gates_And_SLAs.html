@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Stage gates and service levels | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail Phase 1 DA stage gates and service levels</h1>
+<p><strong>Version:</strong> 1.0 — 16 September 2026 <strong>Classification:</strong> <code>INTERNAL</code> <strong>Clock convention:</strong> India business days, measured to 5:00 PM IST. A clock starts only when its listed inputs are complete and pauses for an evidenced customer, buyer, provider or authority dependency.</p>
+<h2>Gate sequence</h2>
+<div class="table-wrap"><table><thead><tr><th>Gate</th><th>Required inputs</th><th>AssureRail output</th><th>Accountable acceptance</th><th>Service level or timing</th><th>Stop / hold conditions</th></tr></thead><tbody>
+<tr><td>G0 — corporate and provider readiness</td><td>Incorporation evidence; bank and GST readiness; live checkout approval; security and support owners</td><td>Signed readiness record</td><td>Final Release Approver</td><td>Before any paid or live work</td><td>If not passed, accept applications and use synthetic or authorised historical demonstrations only</td></tr>
+<tr><td>G1 — application qualified</td><td>Seller identity and authority; asset class; declared corpus; counts; sample schema; purpose</td><td>Qualification outcome and missing-input list</td><td>Commercial Approver</td><td>One business day for complete application triage</td><td>Unsupported asset, authority gap, prohibited data route or no credible buyer path</td></tr>
+<tr><td>G2 — quote accepted and IA paid</td><td>Binding declared scope; unique-pair counts; linked parties; corpus; selected services; accepted terms; payment receipt</td><td>Versioned order, admitted-upload instructions and workspace</td><td>Finance Checker</td><td>Quote expires at 5:00 PM IST on the first Monday after 20 calendar days from issue</td><td>Quote expiry, unpaid amount or changed scope requiring requote</td></tr>
+<tr><td>G3 — intake admitted</td><td>Validated tape; mandatory documents; control totals; upload manifest; seller attestation</td><td>Admitted scope, evidence index, exclusions and reconciliation adjustment</td><td>Engagement Operations</td><td>One business day after complete validation</td><td>Malware, unreadable/encrypted evidence, control-total break or unauthorised personal data</td></tr>
+<tr><td>G4 — Initial Assessment released</td><td>G2 and G3 complete; upward adjustment paid if applicable</td><td>Automated, unsigned assessment; rule outcomes; gaps; indicative economics; remediation plan</td><td>Final Release Approver</td><td>Three business days</td><td>No human merit review; material unresolved processing or provenance exception blocks release</td></tr>
+<tr><td>G5 — reassessment released</td><td>Corrected same-scope evidence; validation complete; run allowance available</td><td>Versioned automated reassessment and change summary</td><td>Final Release Approver</td><td>Two business days</td><td>Changed asset/book/scope moves to reconciliation or requote; workspace remains open</td></tr>
+<tr><td>G6 — Portfolio Preparation starts</td><td>Proceed instruction; remaining fixed-stage payment; complete evidence; reviewer conflicts cleared; work orders accepted</td><td>Preparation plan, reviewer sections and target buyer pack</td><td>Portfolio Preparation Lead</td><td>Clock begins only when all inputs complete</td><td>Missing payment/evidence, reviewer conflict or unsupported reliance request</td></tr>
+<tr><td>G7 — Portfolio Preparation released</td><td>Reconciled admitted pool; exceptions dispositioned; CA/financial section signed; counsel section signed; technical section if triggered</td><td>Buyer-ready pack, schedules, limitations and signed sections</td><td>Final Release Approver</td><td>Twelve business days from G6 start</td><td>Customer/provider dependency pauses clock; no AssureRail whole-case professional sign-off</td></tr>
+<tr><td>G8 — buyer-ready mandate</td><td>Buyer profile/requirements; seller execution mandate; selected itemised services; provider responsibility map</td><td>Case timetable, Q&amp;A protocol, closing checklist and cost schedule</td><td>Seller</td><td>Buyer qualification response target: ten business days</td><td>Buyer requirement outside mandate; unaccepted seller cost; authority or conflict gap</td></tr>
+<tr><td>G9 — providers activated</td><td>Accepted providers; contracts/work orders; data routes; permitted purpose; maker-checker roles</td><td>Activation register and test receipts</td><td>Settlement Coordinator</td><td>Per accepted work order; complete before dependent activity</td><td>Failed conformance test, missing professional cover or no authorised filer/puller</td></tr>
+<tr><td>G10 — buyer diligence complete</td><td>Buyer requests; controlled evidence access; answered Q&amp;A; conditions tracker</td><td>Diligence record and final unresolved-items list</td><td>Buyer</td><td>Acknowledge question in one business day; standard substantive response in five business days if no new external evidence/opinion is needed</td><td>Buyer controls decision and may reject; new external work needs revised timing/scope</td></tr>
+<tr><td>G11 — settlement authorised</td><td>Executed transaction documents; buyer approval; payoff/release figures; settlement distribution schedule; bank acknowledgements; fee/tax invoices</td><td>Locked closing checklist and authorised distribution instruction</td><td>Seller</td><td>Closing timetable agreed by all operative parties</td><td>No unilateral AssureRail instruction; any mismatch or expired figure stops release</td></tr>
+<tr><td>G12 — settlement reconciled</td><td>Bank receipts; distribution confirmations; debt/charge release evidence or controlled post-close condition; registry evidence</td><td>Closing statement, evidence bundle and exception register</td><td>Finance Checker</td><td>Same day where confirmations arrive before cut-off; otherwise next business day</td><td>Gross money never enters an AssureRail account; unmatched amount remains with appointed provider</td></tr>
+<tr><td>G13 — baseline and monitoring choice</td><td>Final pool; closing data; servicing and collection-account setup; selected monitoring scope</td><td>One-time closing baseline; optional monitoring activation record</td><td>Seller and buyer for their allocated periods</td><td>Baseline within five business days of complete closing evidence</td><td>No ongoing monitoring unless selected and funded</td></tr>
+</tbody></table></div>
+<h2>Clock and change rules</h2>
+<ol>
+<li>A service level is a delivery target, not a guarantee of buyer, provider, authority or registry action.</li>
+<li>The case record identifies clock start, pause reason, dependency owner, restart evidence and actual completion.</li>
+<li>Any declared/admitted loan count, linked-party count or corpus variance is recalculated. There is no tolerance band.</li>
+<li>The accepted unit rate and policy version remain fixed for the quote validity and accepted order, while verified quantities, corpus and selected scope determine the revised total.</li>
+<li>The workspace remains open during inactivity. At 90 days, evidence dates, cut-off data, provider quotes and buyer requirements must be refreshed before further reliance.</li>
+<li>A seller may continue remediation after its included reassessment allowance by accepting a new run charge or revised order. An expired allowance does not delete its workspace or evidence history.</li>
+</ol>
+<h2>Pre-live release checklist</h2>
+<p>The G0 approver records evidence for each item:</p>
+<ul>
+<li>Certificate of Incorporation and authorised signatories;</li>
+<li>PAN, GST position and invoice configuration;</li>
+<li>AssureRail operating bank account and reconciled live checkout route;</li>
+<li>approved seller MSA, orders, execution mandate and privacy/data terms;</li>
+<li>approved buyer MSA/onboarding/RBAC route;</li>
+<li>maker-checker finance and settlement assignments;</li>
+<li>approved provider register with at least two eligible CA/financial reviewers and two eligible transaction-counsel reviewers before Portfolio Preparation is sold;</li>
+<li>incident, complaint, privacy and customer-support owners;</li>
+<li>synthetic end-to-end and fail-closed settlement rehearsal evidence; and</li>
+<li>public availability text matching the recorded activation state.</li>
+</ul></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

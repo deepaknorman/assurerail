@@ -5,6 +5,7 @@
   "description": "AssureRail — standalone web application for provider-neutral DA and PTC transaction infrastructure.",
   "scripts": {
     "dev": "next dev -p 3007",
+    "prebuild": "node scripts/package-download-artifacts.mjs",
     "build": "next build",
     "start": "next start -p 3007",
     "clean": "rm -rf .next",
@@ -33,7 +34,9 @@
     "check:ar27": "node scripts/ar27-secondary-product-check.mjs",
     "check:ar28": "node scripts/ar28-tokenised-product-check.mjs",
     "check:ar29": "node scripts/ar29-enterprise-integration-check.mjs",
-    "check:ar30": "node scripts/ar30-production-scale-check.mjs"
+    "check:ar30": "node scripts/ar30-production-scale-check.mjs",
+    "downloads:package": "node scripts/package-download-artifacts.mjs",
+    "check:downloads": "node scripts/package-download-artifacts.mjs --check && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/download-access.test.ts scripts/download-exposure.test.ts"
   },
   "dependencies": {
     "@fontsource/archivo": "^5.3.0",

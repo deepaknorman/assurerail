@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Participant register and RACI | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail Phase 1 DA participant register and RACI</h1>
+<p><strong>Version:</strong> 1.0 — 16 September 2026 <strong>Classification:</strong> <code>INTERNAL</code> <strong>Legend:</strong> <code>A</code> accountable decision owner; <code>R</code> performs the work; <code>C</code> consulted before completion; <code>I</code> receives the resulting record. Each activity has one primary <code>A</code>.</p>
+<h2>Participant and authority register</h2>
+<div class="table-wrap"><table><thead><tr><th>Participant or internal role</th><th>Appointment or admission evidence</th><th>Permitted responsibility</th><th>Express boundary</th></tr></thead><tbody>
+<tr><td>Seller / originator</td><td>KYC, board or delegated authority, workspace membership, accepted order or mandate</td><td>Supply and attest seller data; select scope; remediate; accept seller obligations; authorise settlement distribution</td><td>Cannot approve buyer decision or another seller's data</td></tr>
+<tr><td>Existing lender / charge-holder</td><td>Debt and charge record; authorised payoff or release contact</td><td>Confirm payoff, release conditions and release evidence</td><td>No portfolio-wide access beyond the affected debt/security</td></tr>
+<tr><td>Buyer / direct assignee</td><td>Buyer MSA, onboarded institution, approved users, requirement profile</td><td>State requirements; conduct diligence; approve, price, condition or reject purchase</td><td>Buyer requirements do not silently buy seller-paid work</td></tr>
+<tr><td>Seller counsel</td><td>Engagement or work order and conflict clearance</td><td>Seller-side legal review, schedules, representations and closing deliverables</td><td>Signs only its opinion or work product</td></tr>
+<tr><td>Buyer counsel</td><td>Buyer appointment or accepted seller-borne scope</td><td>Buyer-side legal diligence and closing advice</td><td>Separate from seller counsel; no duplicated charge without approved scope</td></tr>
+<tr><td>CA / financial reviewer</td><td>Qualification, independence and work order</td><td>Review and sign assigned financial, factual or reconciliation section</td><td>No whole-case assurance unless expressly engaged</td></tr>
+<tr><td>Bureau provider / authorised puller</td><td>Permitted-purpose evidence and provider terms</td><td>Produce authorised borrower or account report</td><td>AssureRail normally ingests; it does not invent a bureau purpose</td></tr>
+<tr><td>Escrow provider / settlement bank / VAN bank</td><td>Bank agreement, account/VAN identifiers and authorised signatories</td><td>Receive, identify and distribute settlement money under operative instructions</td><td>AssureRail cannot hold, commingle or unilaterally redirect money</td></tr>
+<tr><td>Collection-account bank</td><td>Account mandate and servicing/collection terms</td><td>Receive post-transfer collections and produce statements</td><td>Distinct from closing settlement unless expressly combined</td></tr>
+<tr><td>ROC / NeSL / RTO / other registry agent</td><td>Filing authority, credentials and work order</td><td>Perform authorised search, filing, satisfaction, assignment or hypothecation action</td><td>Registry remains authoritative; AssureRail records evidence only</td></tr>
+<tr><td>Servicer</td><td>Servicing appointment and data/access schedule</td><td>Collections, allocation, borrower service, arrears and performance reporting</td><td>No change to ownership or settlement authority</td></tr>
+<tr><td>Field verifier / technical reviewer</td><td>Scope, method, geography, sample or population and work order</td><td>Perform assigned physical, collateral or technical checks</td><td>Findings limited to checked scope and effective date</td></tr>
+<tr><td>Data Preparer</td><td>Seller appointment, NDA and scoped workspace role</td><td>Format and upload assigned seller data at seller expense</td><td>Cannot attest, contract, pay, submit, approve or see buyer-private data</td></tr>
+<tr><td>Referral partner</td><td>Accepted referral registration and addendum</td><td>Evidence a qualifying introduction and assist scheduling</td><td>No workspace access, representation authority or fee collection</td></tr>
+<tr><td>AssureRail Commercial Approver</td><td>Internal assignment and approval limit</td><td>Approve quote, discount and scope position</td><td>Cannot self-approve settlement or supplier acceptance</td></tr>
+<tr><td>AssureRail Engagement Operations</td><td>Scoped case assignment</td><td>Run intake, requests, clocks, hand-offs and workspace administration</td><td>Cannot make seller attestations or buyer purchase decision</td></tr>
+<tr><td>Automated Assessment Service</td><td>Versioned rule/model configuration and run receipt</td><td>Process admitted records, index evidence, flag gaps and produce unsigned preliminary output</td><td>Not a human reviewer or professional signatory</td></tr>
+<tr><td>AssureRail Portfolio Preparation Lead</td><td>Scoped case assignment</td><td>Coordinate remediation, model, schedules and reviewer pack</td><td>Cannot sign the CA, legal or technical section</td></tr>
+<tr><td>AssureRail Reviewer Coordinator</td><td>Approved-provider register and case assignment</td><td>Check conflicts, qualifications, work orders and deliverable receipt</td><td>Cannot alter a reviewer's signed conclusion</td></tr>
+<tr><td>AssureRail Finance Maker</td><td>Scoped finance role</td><td>Prepare invoices, ledger entries, distribution schedule draft and reconciliation</td><td>Cannot approve own payment or distribution schedule</td></tr>
+<tr><td>AssureRail Finance Checker</td><td>Independent finance assignment</td><td>Verify invoice, credit, received amount and distribution math</td><td>Cannot originate and approve the same item</td></tr>
+<tr><td>AssureRail Settlement Coordinator</td><td>Case appointment and provider access</td><td>Coordinate closing checklist, provider acknowledgements and evidence</td><td>No custody, unilateral release or change to authorised instructions</td></tr>
+<tr><td>AssureRail Integration Operator</td><td>Scoped connector assignment</td><td>Configure and validate accepted SFTP/API or file exchange</td><td>Cannot alter source data or read unrelated cases</td></tr>
+<tr><td>AssureRail Security / Privacy</td><td>Internal security assignment</td><td>Access control, incident, retention and privacy oversight</td><td>No routine commercial or case approval</td></tr>
+<tr><td>AssureRail Risk / Compliance</td><td>Internal oversight assignment</td><td>Conflict, exception, complaint and control review</td><td>No buyer credit decision or registry act</td></tr>
+<tr><td>AssureRail Final Release Approver</td><td>Independent scoped assignment</td><td>Confirm gate evidence and release the AssureRail deliverable</td><td>Does not sign another professional's section or guarantee closing</td></tr>
+</tbody></table></div>
+<h2>End-to-end RACI</h2>
+<p>Abbreviations: <code>S</code> seller; <code>EL</code> existing lender; <code>B</code> buyer; <code>SC</code> seller counsel; <code>BC</code> buyer counsel; <code>CA</code> reviewer; <code>BK</code> settlement/collection bank as applicable; <code>REG</code> registry agent; <code>SV</code> servicer; <code>FT</code> field/technical reviewer; <code>DP</code> Data Preparer; <code>AR-C</code> AssureRail Commercial; <code>AR-O</code> Operations; <code>AR-P</code> Preparation; <code>AR-F</code> Finance; <code>AR-X</code> Settlement/Integration; <code>AR-R</code> Risk/Release.</p>
+<div class="table-wrap"><table><thead><tr><th>Activity</th><th>A</th><th>R</th><th>C</th><th>I</th></tr></thead><tbody>
+<tr><td>Application, seller authority and declared scope</td><td>S</td><td>S, AR-O</td><td>DP</td><td>AR-C</td></tr>
+<tr><td>Binding quote and selected service lines</td><td>AR-C</td><td>AR-C, AR-F</td><td>S, AR-O</td><td>DP</td></tr>
+<tr><td>Data formatting and upload</td><td>S</td><td>S or DP</td><td>AR-O</td><td>AR-P</td></tr>
+<tr><td>Automated Initial Assessment</td><td>AR-R</td><td>Automated Assessment Service, AR-O</td><td>S for clarification</td><td>AR-C</td></tr>
+<tr><td>Seller remediation and reassessment</td><td>S</td><td>S or DP; Automated Assessment Service</td><td>AR-O</td><td>AR-P</td></tr>
+<tr><td>Admitted pool and control-total reconciliation</td><td>AR-P</td><td>AR-P</td><td>S, CA</td><td>AR-R</td></tr>
+<tr><td>Financial / factual section review</td><td>CA</td><td>CA</td><td>S, AR-P</td><td>B when released</td></tr>
+<tr><td>Seller legal section review and schedules</td><td>SC</td><td>SC</td><td>S, AR-P</td><td>B when released</td></tr>
+<tr><td>Asset / field review when triggered</td><td>FT</td><td>FT</td><td>S, AR-P</td><td>CA, SC, B as scoped</td></tr>
+<tr><td>Buyer onboarding and requirement profile</td><td>B</td><td>B, AR-O</td><td>BC, AR-C</td><td>S for accepted case requirements</td></tr>
+<tr><td>Execution mandate and provider selection</td><td>S</td><td>S, AR-C</td><td>B, SC, AR-X</td><td>selected providers</td></tr>
+<tr><td>Existing debt payoff and charge release</td><td>EL</td><td>EL, S</td><td>SC, BK, REG, AR-X</td><td>B</td></tr>
+<tr><td>Bureau pull when authorised</td><td>S or B, according to permitted purpose</td><td>authorised puller / bureau</td><td>AR-P</td><td>CA, B as permitted</td></tr>
+<tr><td>Buyer diligence and purchase decision</td><td>B</td><td>B, BC</td><td>CA, SC, AR-P</td><td>S</td></tr>
+<tr><td>Buyer questions and evidence response</td><td>S</td><td>AR-O, AR-P, S, relevant reviewer</td><td>B, counsel</td><td>AR-R</td></tr>
+<tr><td>Registry actions</td><td>authorised filer named in closing checklist</td><td>REG or authorised seller representative</td><td>SC, BC, AR-X</td><td>S, B</td></tr>
+<tr><td>Settlement distribution schedule</td><td>S</td><td>AR-F, S</td><td>B, EL, BK, SC</td><td>AR-R</td></tr>
+<tr><td>Funding and settlement distribution</td><td>BK</td><td>BK</td><td>S, B, EL, AR-X</td><td>AR-F, counsel</td></tr>
+<tr><td>Closing evidence and one-time monitoring baseline</td><td>AR-R</td><td>AR-X, AR-O</td><td>S, B, BK, SV</td><td>authorised case users</td></tr>
+<tr><td>Post-close servicing and collections</td><td>SV</td><td>SV, collection bank</td><td>S, B</td><td>monitoring users</td></tr>
+<tr><td>Optional ongoing monitoring</td><td>party named in mandate</td><td>AR-O, SV, collection bank</td><td>S, B</td><td>authorised monitoring users</td></tr>
+<tr><td>Fee, supplier and referral reconciliation</td><td>AR-F</td><td>AR-F maker</td><td>independent AR-F checker, AR-C</td><td>eligible supplier/referral partner</td></tr>
+</tbody></table></div>
+<h2>Access rule</h2>
+<p>RACI participation never grants automatic data access. Access is separately approved for the institution, case, purpose, document class and action. Buyer-private materials remain inaccessible to sellers, Data Preparers and referral partners. A provider sees only the inputs necessary to perform its accepted work order.</p></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

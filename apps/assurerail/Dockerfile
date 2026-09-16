@@ -12,6 +12,11 @@ COPY apps/assurerail/package.json ./apps/assurerail/package.json
 COPY apps/assurerail-api/package.json ./apps/assurerail-api/package.json
 RUN npm ci
 COPY apps/assurerail ./apps/assurerail
+# The download packager embeds only PUBLIC and SHARED_PASSWORD HTML in the server build. Keep
+# authenticated/internal document bodies out of the image build context copied into this stage.
+COPY docs/operations/phase1-da/artifact-manifest.json ./docs/operations/phase1-da/artifact-manifest.json
+COPY docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Customer_Service_Guide.html ./docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Customer_Service_Guide.html
+COPY docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.html ./docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.html
 
 ARG NEXT_PUBLIC_ASSURERAIL_VENUE_URL="http://localhost:3006"
 ARG NEXT_PUBLIC_FIREBASE_API_KEY=""
