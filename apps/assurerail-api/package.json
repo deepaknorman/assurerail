@@ -37,7 +37,8 @@
     "db:rehearse:op01": "bash ../../scripts/assurerail-op01-db-rehearsal.sh",
     "db:rehearse:sim100": "bash ../../scripts/assurerail-sim100-db-rehearsal.sh",
     "seed:admin": "node dist/seed-admin.js",
-    "test": "prisma generate && tsc && node --test \"dist/**/*.test.js\""
+    "test": "prisma generate && tsc && node --test \"dist/**/*.test.js\"",
+    "test:ai-eval": "prisma generate && tsc && node --test dist/ai-assurance/ai-assurance.test.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1052.0",
