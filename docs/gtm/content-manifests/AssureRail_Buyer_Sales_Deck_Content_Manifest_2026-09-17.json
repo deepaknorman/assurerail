@@ -1,0 +1,127 @@
+{
+  "manifestVersion": "1.0",
+  "assetId": 14,
+  "audience": "Bank or institutional buyer credit, treasury, legal, operations, settlement and technology teams",
+  "route": "CONVENTIONAL_DA_PHASE_1",
+  "formatTarget": "HOUSE_STYLE_PPTX_PDF_HTML",
+  "classification": "BUYER_CONFIDENTIAL",
+  "corePromise": "Receive a better-structured portfolio and traceable evidence record while retaining every buyer decision and control.",
+  "slides": [
+    {
+      "number": 1,
+      "title": "A controlled preparation layer for conventional direct assignment",
+      "purpose": "Position AssureRail as evidence, workflow and coordination infrastructure between seller preparation and the buyer's own diligence.",
+      "claims": ["AssureRail does not make the bank's credit, legal, compliance, valuation, pricing or purchase decision."]
+    },
+    {
+      "number": 2,
+      "title": "Why smaller portfolios create disproportionate buyer effort",
+      "purpose": "Show format variation, incomplete histories, evidence gaps, repeated questions and settlement dependencies.",
+      "visual": "Buyer effort by preparation quality, without an unverified market-size claim"
+    },
+    {
+      "number": 3,
+      "title": "Buyer access starts after an executed MSA",
+      "purpose": "Show institutional approval, administrator nomination, MFA, scoped roles, profile approval and synthetic workspace test.",
+      "claims": ["No public buyer self-registration creates authority or portfolio access."]
+    },
+    {
+      "number": 4,
+      "title": "Your requirements are structured, versioned and approved",
+      "purpose": "Show multi-select asset/originator options, ranges for corpus/concentration/performance, controlled diligence choices and hover definitions.",
+      "visual": "Compact buyer settings sections with checkboxes for non-exclusive choices",
+      "claims": ["Free text is limited to bounded exceptions."]
+    },
+    {
+      "number": 5,
+      "title": "Buyer policy becomes traceable preparation checks",
+      "purpose": "Explain the allow-listed decision-table compiler and record-level results.",
+      "visual": "MSA/profile citation → predicate → loan/borrower/document result → exception",
+      "claims": ["Unknown evidence never silently passes and no arbitrary buyer expression executes."]
+    },
+    {
+      "number": 6,
+      "title": "Full-population computation and professional work stay distinct",
+      "purpose": "Show recorded outcomes for each admitted loan beside disclosed legal, CA, field or technical samples.",
+      "claims": ["Computational coverage is not a claim that every source fact or asset was independently verified."]
+    },
+    {
+      "number": 7,
+      "title": "A buyer-ready evidence pack arrives with its exceptions",
+      "purpose": "Show tape/source reconciliation, repayment and arrears history, documents, KYC/authority, security, insurance, debt-release and originator information.",
+      "visual": "Evidence families, version/digest, status, gaps and reviewer ownership"
+    },
+    {
+      "number": 8,
+      "title": "AI organises evidence; rules and accountable people decide",
+      "purpose": "Show source-grounded findings, run receipts, abstentions, deterministic checks and expert boundaries.",
+      "claims": ["Initial Assessment is automated and unsigned.", "Qualified professionals sign only their Portfolio Preparation sections."]
+    },
+    {
+      "number": 9,
+      "title": "Diligence questions remain attributable and closeable",
+      "purpose": "Show source-linked question, owner, requested evidence, priority, response, reviewer involvement and closure.",
+      "claims": ["Standard acknowledgement target: one business day; substantive response target: five business days when no new external act is required, subject to MSA."]
+    },
+    {
+      "number": 10,
+      "title": "Secure file exchange first; APIs only where justified",
+      "purpose": "Present low-friction per-buyer SFTP with host pinning, manifest digests, maker-checker, idempotency and acknowledgements.",
+      "visual": "Sandbox profile → approved export → buyer acknowledgement → reconciliation",
+      "claims": ["₹50,000 is the seller-paid standard accepted point-to-point connection fee; APIs are quoted on request.", "No production connection before the buyer's sandbox and security acceptance."]
+    },
+    {
+      "number": 11,
+      "title": "Closing instructions are balanced and separately authorised",
+      "purpose": "Show CP evidence, final document slots, exact seller-specific waterfall and separate seller/buyer approval.",
+      "visual": "Buyer funding → appointed bank/VAN → debt release, AssureRail fee, approved external legs and seller net",
+      "claims": ["AssureRail records provider observations and ambiguity repair; it does not hold funds or unilaterally release them."]
+    },
+    {
+      "number": 12,
+      "title": "RBAC follows institution, workspace, case, document and action",
+      "purpose": "Show Primary Administrator, Deal Lead, Credit, Legal, Settlement, Monitoring and Auditor roles with maker-checker controls.",
+      "claims": ["A user in one buyer workspace receives no access to another buyer or an uninvited case."]
+    },
+    {
+      "number": 13,
+      "title": "Monitoring is a selected service, not an automatic seller charge",
+      "purpose": "Show one-time closing baseline and optional ongoing monitoring, payer and servicer dependencies.",
+      "claims": ["For DA, year two onward is normally buyer-funded unless the seller remains servicer or documents state another allocation."]
+    },
+    {
+      "number": 14,
+      "title": "Agree one structured pilot framework",
+      "purpose": "Request an MSA design session covering eligibility, evidence, users, SFTP, Q&A, settlement, monitoring and acceptance tests.",
+      "visual": "Decision checklist with named bank owners across credit, legal, operations, settlement, technology and procurement",
+      "claims": ["A profile or pilot acceptance is not a commitment to purchase any pool."]
+    }
+  ],
+  "mustInclude": [
+    "Post-MSA onboarding and approved-login boundary",
+    "Structured multiple-choice buyer requirements",
+    "Record-level buyer-policy compiler and UNKNOWN handling",
+    "Full-population computation versus disclosed sampling",
+    "Evidence provenance and AI run receipts",
+    "Case-scoped RBAC and maker-checker",
+    "Provider-neutral SFTP and acknowledgement controls",
+    "Seller-specific coordinated closing and no-custody boundary",
+    "Optional monitoring"
+  ],
+  "mustExclude": [
+    "Bank logos, HDFC or Axis names without written permission",
+    "Any implication that a buyer endorsed the product or committed to purchase",
+    "Internal 60 bps benchmark or seller referral economics",
+    "PTC, tokenisation, multi-signature or Plaza as current DA dependencies",
+    "Atomic settlement, risk-free, guaranteed compliance or guaranteed data-quality claims",
+    "Raw prompt, model or infrastructure detail that does not help the bank make a decision"
+  ],
+  "canonicalSources": [
+    "docs/operations/phase1-da/AssureRail_Phase1_DA_Buyer_Onboarding_And_MSA_Schedule.md",
+    "docs/design/AssureRail_Buyer_Profile_Screen_v0.md",
+    "docs/design/AssureRail_Buyer_Policy_Compiler_v0_Implementation.md",
+    "docs/design/AssureRail_Buyer_SFTP_Export_Foundation.md",
+    "docs/operations/phase1-da/AssureRail_DA_Coordinated_Closing_Rehearsal.md",
+    "docs/operations/phase1-da/AssureRail_Phase1_DA_Participant_Register_And_RACI.md"
+  ]
+}
