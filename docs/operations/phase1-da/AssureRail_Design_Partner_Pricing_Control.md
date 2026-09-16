@@ -22,6 +22,10 @@ The current pilot exclusion set is additional or ancillary services, third-party
 5. Razorpay checkout and the paid-stage gate require the discounted net amount and validate the coupon and snapshot digest. An ordinary credit correction cannot imitate the programme.
 6. Referral commission remains 8.5% of collected discounted AssureRail fees across the three eligible core stages.
 
+The commercial operations queue must resolve every proposal. A stale `PROPOSED` record retains its
+signed-scope place and can block a later seller from receiving the second slot; the independent
+checker must approve it or reject it with evidence rather than leave it pending.
+
 ## Worked amounts before GST
 
 | Item | Standard | Design partner |

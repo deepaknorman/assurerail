@@ -25,7 +25,7 @@
 <tr><td>6</td><td>Portfolio Preparation</td><td>Remaining accepted-route balance collected; qualified section reviewers sign their own work</td><td>Workflow foundation exists; named contractors and accepted rates remain external gates.</td></tr>
 <tr><td>7</td><td>Buyer policy evaluation</td><td>Approved MSA-bound buyer profile compiled into traceable preparation checks</td><td>Compiler v0 implemented with ten worked cases; bank-specific criteria remain an external input.</td></tr>
 <tr><td>8</td><td>Buyer delivery</td><td>Governed SFTP package, manifest, acknowledgements and reconciliation</td><td>Provider-neutral SFTP foundation implemented with per-buyer profiles, host pinning, manifest digests, maker-checker approval, idempotency and acknowledgement reconciliation. Each buyer's sandbox and acceptance remain external gates.</td></tr>
-<tr><td>9</td><td>Coordinated closing rehearsal</td><td>CPs, document slots, seller-specific distribution, VAN/escrow pack, separate seller/buyer authorisation and repair evidence</td><td>Deterministic dry-rehearsal foundation implemented; no live funds or legal-completion claim.</td></tr>
+<tr><td>9</td><td>Coordinated closing rehearsal</td><td>CPs, document slots, seller-specific distribution, VAN/escrow pack, separate seller/buyer authorisation and repair evidence</td><td>Deterministic dry-rehearsal foundation implemented. The seller-specific execution invoice now freezes the cumulative 40/30bps calculation, accepted consideration, premium credit, applicable design-partner credit and GST, then emits an invoice-bound service-fee leg for the same closing reference. No live funds or legal-completion claim.</td></tr>
 <tr><td>10</td><td>Hardening</td><td>RBAC/tenant, hostile-input, replay/idempotency, secret, dependency and offline-security checks</td><td>Daily deny-network harness implemented and passing at the latest reviewed commit; repeat after every integration and release candidate.</td></tr>
 <tr><td>11</td><td>Demo evidence</td><td>Synthetic end-to-end seller and buyer journey, failure cases and downloadable evidence</td><td>Service-level PostgreSQL, Razorpay-test, automated Initial Assessment and reversal rehearsal passes. Account-driven browser demonstration still requires provisioned Firebase test identities and a demo deployment.</td></tr>
 <tr><td>12</td><td>Counterparty acceptance</td><td>Written seller, buyer, payment, SFTP and escrow acceptance as applicable</td><td>External gate; code and demos do not satisfy it.</td></tr>
@@ -54,8 +54,8 @@
 </ul>
 <h2>Remaining integration truth</h2>
 <ul>
-<li>The fixed-stage design-partner credit is integrated with invoice preparation, Razorpay test</li>
-<p>checkout and paid-stage gating. The execution success-fee arithmetic has the same 30% treatment, but its persisted settlement invoice still needs to be joined to the coordinated-closing record.</p>
+<li>Fixed-stage design-partner credit is integrated with invoice preparation, Razorpay test checkout</li>
+<p>and paid-stage gating. The execution success-fee invoice is persisted, seller-specific and bound to an immutable closing reference and independently reviewed service-fee leg. Provider-side composition and settlement observation remain external integration gates.</p>
 <li>Real buyer criteria, SFTP endpoints and acknowledgement formats must come from HDFC, Axis or the</li>
 <p>selected buyer. The adapter stays in sandbox until that acceptance exists.</p>
 <li>Live escrow/VAN instructions require the selected provider's API and operating acceptance. The</li>
