@@ -14,6 +14,10 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("mode") === "register") setRegister(true);
+  }, []);
+
+  useEffect(() => {
     if (loading) return;
     if (firebaseUser && venueUser) router.replace(needsOnboarding ? "/onboard" : "/console");
   }, [loading, firebaseUser, venueUser, needsOnboarding, router]);
@@ -40,8 +44,8 @@ export default function Login() {
 
       <main className="wrap auth-wrap">
         <div className="auth-card">
-          <h1>Sign in</h1>
-          <p className="auth-sub">Access requires a verified identity and an active institutional admission. Supported identity providers depend on the approved deployment configuration.</p>
+          <h1>{register ? "Create your institutional account" : "Sign in"}</h1>
+          <p className="auth-sub">{register ? "Create the account that will hold your organisation's assessment application and onboarding record." : "Access your institution's assessments, preparation work and transaction cases."}</p>
           {error && <div className="msg err">{error}</div>}
 
           <button className="btn btn-google" disabled={busy} onClick={() => go(loginGoogle)}>Continue with Google</button>

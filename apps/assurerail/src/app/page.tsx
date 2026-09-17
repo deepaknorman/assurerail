@@ -8,35 +8,35 @@ import {
   Network,
   ShieldCheck,
 } from "lucide-react";
-import { Logo, LogoMark } from "@/components/Logo";
+import { LogoMark } from "@/components/Logo";
+import { PublicFooter, PublicHeader } from "@/components/PublicSite";
 import {
   PUBLIC_CAPABILITIES,
   PUBLIC_CAPABILITY_REVIEWED_AT,
   PUBLIC_PROOF_LADDER,
-  PUBLIC_ROUTE_MODES,
 } from "@/lib/public-capability";
 import styles from "./page.module.css";
 
-const PROBLEMS = [
+const CFO_OUTCOMES = [
   {
     Icon: FileCheck2,
-    title: "Repeated diligence",
-    body: "The same pool, documents and exceptions are rebuilt for each accountable participant.",
+    title: "Define the transferable pool",
+    body: "See which loans are ready, which can be remediated and which should stay outside the proposed sale.",
   },
   {
     Icon: ShieldCheck,
-    title: "Completion ambiguity",
-    body: "Signed, funded, transferred, allotted and registered are different events with different owners.",
+    title: "Protect value before diligence",
+    body: "Resolve material data, document and eligibility gaps before they become buyer objections or price pressure.",
   },
   {
     Icon: Database,
-    title: "Reconciliation debt",
-    body: "Tape, documents, cash and holding records can drift as a transaction crosses systems.",
+    title: "Model decision-ready economics",
+    body: "Compare indicative consideration, debt release, fees and deductions in a traceable seller cash view.",
   },
   {
     Icon: Network,
-    title: "Lifecycle fragmentation",
-    body: "Servicing, notices, waterfalls, triggers and reporting remain split across files and inboxes.",
+    title: "Run one controlled close",
+    body: "Coordinate diligence, conditions, approvals and the closing waterfall from a shared transaction record.",
   },
 ] as const;
 
@@ -44,68 +44,52 @@ const SYSTEMS = ["Originator systems", "Investor systems", "Trustee and service 
 
 const DELIVERY_CONTROLS = [
   {
-    title: "Automated evidence review",
-    body: "Native document libraries read supported files first. AI is used only where extraction or validation needs it, and every finding retains a source locator and evidence version.",
+    title: "Review every admitted loan",
+    body: "The assessment applies recorded data and evidence checks across the full admitted population, rather than relying on a sample alone.",
   },
   {
-    title: "Every admitted loan accounted for",
-    body: "Loan-tape records, loan documents and principal are reconciled across the full admitted population. Missing, contradictory and unmatched evidence becomes a remediation task.",
+    title: "Trace every material finding",
+    body: "Each finding keeps its source, evidence version and status so finance, operations and reviewers can resolve the same issue set.",
   },
   {
     title: "Correct and reassess",
-    body: "The seller can repair source data and evidence, then run the automated assessment again within the allowance stated in its accepted quote.",
+    body: "Upload corrected data or evidence and measure what changed through the reassessments included in the accepted quote.",
   },
   {
-    title: "Human judgement at the right stage",
-    body: "Initial Assessment is automated and unsigned. Qualified legal, financial or technical reviewers enter during Portfolio Preparation for the scope they are appointed to review.",
+    title: "Add qualified review before market",
+    body: "Portfolio Preparation brings in the legal, financial and technical professionals required for the accepted scope and buyer route.",
   },
 ] as const;
 
 export default function Home() {
   return (
     <div className={styles.site}>
-      <header className={styles.header}>
-        <div className={styles.container}>
-          <Link href="/" aria-label="AssureRail home" className={styles.brand}>
-            <Logo />
-          </Link>
-          <nav className={styles.nav} aria-label="Primary navigation">
-            <Link href="/routes/direct-assignment">DA</Link>
-            <Link href="/routes/ptc">PTC</Link>
-            <a href="#proof">How it works</a>
-            <Link href="/trust">How we work</Link>
-            <Link href="/resources">Resources</Link>
-            <Link href="/downloads">Downloads</Link>
-            <Link href="/status">Availability</Link>
-            <Link href="/login" className={styles.signIn}>Institution sign in</Link>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader />
 
-      <main>
+      <main id="main-content">
         <section className={styles.hero}>
           <div className={styles.heroGlow} aria-hidden="true" />
           <div className={`${styles.container} ${styles.heroGrid}`}>
             <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>Institutional transaction infrastructure · Domestic India first</p>
-              <h1>Prepare loan portfolios for a governed direct assignment.</h1>
+              <p className={styles.eyebrow}>Loan portfolio assessment and execution · India</p>
+              <h1>Know what can transfer, what needs work and what cash a loan-book sale could release.</h1>
               <p className={styles.lede}>
-                Apply for an automated Initial Assessment, fix evidence gaps and progress to expert-reviewed
-                Portfolio Preparation. Conventional direct assignment is Phase 1; PTC follows later.
+                AssureRail gives NBFC finance teams a paid, full-population Initial Assessment, expert-reviewed
+                Portfolio Preparation and coordinated conventional direct-assignment execution.
               </p>
               <div className={styles.actions}>
                 <Link
                   className={styles.primaryAction}
-                  href="/login"
+                  href="/login?mode=register"
                 >
-                  Apply for Initial Assessment <ArrowRight size={17} />
+                  Start Initial Assessment <ArrowRight size={17} />
                 </Link>
-                <a className={styles.secondaryAction} href="#status">Current availability</a>
+                <a className={styles.secondaryAction} href="#journey">See the three-stage journey</a>
               </div>
               <div className={styles.statusLine} aria-label="Current product status">
                 <span><i className={styles.statusDot} /> Applications open for approved NBFC portfolios</span>
                 <span>Conventional DA · Phase 1</span>
-                <span>Live settlement separately activated</span>
+                <span>Execution by accepted mandate</span>
               </div>
             </div>
 
@@ -124,7 +108,7 @@ export default function Home() {
                   <small>participants · evidence · progress · exceptions</small>
                 </div>
               </div>
-              <p>Existing institutions and systems keep the roles assigned to them.</p>
+              <p>A controlled record from seller preparation through buyer diligence and closing.</p>
             </div>
           </div>
         </section>
@@ -132,12 +116,12 @@ export default function Home() {
         <section className={`${styles.section} ${styles.problemSection}`}>
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>The coordination gap</p>
-              <h2>One transaction lives across many partial systems of truth.</h2>
-              <p>AssureRail is designed to govern the hand-offs without pretending every record belongs on one platform.</p>
+              <p className={styles.eyebrow}>CFO outcomes</p>
+              <h2>Prepare the book, defend its value and control the path to cash.</h2>
+              <p>Start with an evidence-backed view of the portfolio and commit further cost only when the case is worth progressing.</p>
             </div>
             <div className={styles.problemGrid}>
-              {PROBLEMS.map(({ Icon, title, body }) => (
+              {CFO_OUTCOMES.map(({ Icon, title, body }) => (
                 <article key={title} className={styles.problemCard}>
                   <Icon size={22} aria-hidden="true" />
                   <h3>{title}</h3>
@@ -148,34 +132,12 @@ export default function Home() {
           </div>
         </section>
 
-        <section className={styles.section} id="routes">
+        <section className={`${styles.section} ${styles.proofSection}`} id="journey">
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>Phased route delivery</p>
-              <h2>Conventional direct assignment comes first.</h2>
-              <p>PTC remains a separate later-phase route. Any future digital representation is evaluated separately.</p>
-            </div>
-            <div className={styles.modeMatrix} role="table" aria-label="AssureRail transaction routes and representations">
-              <div className={`${styles.modeCell} ${styles.modeCorner}`} role="columnheader">Route</div>
-              <div className={`${styles.modeCell} ${styles.modeHeader}`} role="columnheader">Conventional</div>
-              <div className={`${styles.modeCell} ${styles.modeHeader}`} role="columnheader">Authorised tokenised</div>
-              {PUBLIC_ROUTE_MODES.map((mode) => (
-                <div className={styles.modeRow} role="row" key={mode.route}>
-                  <div className={`${styles.modeCell} ${styles.routeLabel}`} role="rowheader">{mode.route}</div>
-                  <div className={styles.modeCell} role="cell">{mode.conventional}</div>
-                  <div className={styles.modeCell} role="cell">{mode.tokenised}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className={`${styles.section} ${styles.proofSection}`} id="proof">
-          <div className={styles.container}>
-            <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>One gated seller journey</p>
-              <h2>Assess, repair, prepare and then execute.</h2>
-              <p>Each paid stage has its own outcome and gate. Work progresses only after the seller accepts the scope and the responsible institutions are ready.</p>
+              <p className={styles.eyebrow}>One commercial journey</p>
+              <h2>Initial Assessment → Portfolio Preparation → Execution.</h2>
+              <p>Each paid stage produces a clear outcome. The seller chooses whether to progress under the next accepted scope.</p>
             </div>
             <ol className={styles.proofGrid}>
               {PUBLIC_PROOF_LADDER.map((item) => (
@@ -192,9 +154,9 @@ export default function Home() {
         <section className={`${styles.section} ${styles.problemSection}`} id="document-review">
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>What the assessment actually does</p>
-              <h2>Convert a loan book into traceable findings and a repair plan.</h2>
-              <p>The workflow separates machine extraction, deterministic reconciliation and professional judgement so that an AI response is never treated as a transaction decision.</p>
+              <p className={styles.eyebrow}>Portfolio intelligence</p>
+              <h2>Turn the loan book into traceable findings, actions and buyer-ready evidence.</h2>
+              <p>Automation handles population-scale processing. Qualified professionals review the sections appointed during Portfolio Preparation.</p>
             </div>
             <div className={styles.problemGrid}>
               {DELIVERY_CONTROLS.map(({ title, body }) => <article className={styles.problemCard} key={title}><h3>{title}</h3><p>{body}</p></article>)}
@@ -209,9 +171,9 @@ export default function Home() {
         <section className={styles.section} id="status">
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>Current availability · updated {PUBLIC_CAPABILITY_REVIEWED_AT}</p>
-              <h2>Initial Assessment applications are open for approved NBFC portfolios.</h2>
-              <p>Detailed product, security and readiness information is shared with authorised parties through controlled diligence.</p>
+              <p className={styles.eyebrow}>Services · updated {PUBLIC_CAPABILITY_REVIEWED_AT}</p>
+              <h2>Start with the right level of commitment for the portfolio.</h2>
+              <p>Initial Assessment applications are open. Preparation and execution are scoped from the portfolio, buyer route and selected services.</p>
             </div>
             <div className={styles.capabilityList}>
               {PUBLIC_CAPABILITIES.map((capability) => (
@@ -230,14 +192,14 @@ export default function Home() {
         <section className={styles.boundarySection}>
           <div className={`${styles.container} ${styles.boundaryGrid}`}>
             <div>
-              <p className={styles.eyebrow}>Designed to coexist</p>
-              <h2>Keep the institutions and systems already responsible for the transaction.</h2>
+              <p className={styles.eyebrow}>Clear institutional roles</p>
+              <h2>Give every participant one controlled process and a defined decision boundary.</h2>
             </div>
             <ul>
-              <li><CheckCircle2 size={18} /> Each institution retains its own decision and accountability.</li>
-              <li><CheckCircle2 size={18} /> Trustees and appointed providers retain their established roles.</li>
-              <li><CheckCircle2 size={18} /> Existing systems can remain in place during evaluation.</li>
-              <li><CheckCircle2 size={18} /> Any progression is separately agreed and appropriately governed.</li>
+              <li><CheckCircle2 size={18} /> The seller confirms its data, evidence, authority and instructions.</li>
+              <li><CheckCircle2 size={18} /> Qualified reviewers stand behind their appointed sections.</li>
+              <li><CheckCircle2 size={18} /> The buyer retains its credit, legal, pricing and purchase decision.</li>
+              <li><CheckCircle2 size={18} /> Appointed banks and providers hold and move funds; AssureRail coordinates the accepted closing.</li>
             </ul>
           </div>
         </section>
@@ -245,31 +207,16 @@ export default function Home() {
         <section className={styles.closing}>
           <div className={styles.container}>
             <Building2 size={26} aria-hidden="true" />
-            <h2>Start with a bounded, paid Initial Assessment.</h2>
-            <p>Use an approved account to declare the portfolio, accept the quote and upload evidence for automated assessment.</p>
-            <Link href="/login">
+            <h2>Start with a paid Initial Assessment.</h2>
+            <p>Declare the portfolio, receive a case-specific quote and upload the loan tape and evidence through an approved account.</p>
+            <Link href="/login?mode=register">
               Apply for Initial Assessment <ArrowRight size={17} />
             </Link>
           </div>
         </section>
       </main>
 
-      <footer className={styles.footer}>
-        <div className={styles.container}>
-          <Logo />
-          <p>
-            Initial Assessment applications are open for approved NBFC portfolios. Live transfer,
-            funds movement and settlement services remain subject to separate institutional activation. Institutional counterparties
-            only; not investment, legal, tax or financial advice.
-          </p>
-          <div className={styles.footerLinks}>
-            <Link href="/login">Institution sign in</Link>
-            <Link href="/resources">Resources</Link>
-            <Link href="/trust">How we work</Link>
-            <Link href="/replay">Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

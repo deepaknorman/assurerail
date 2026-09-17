@@ -14,52 +14,53 @@ export const PUBLIC_ROUTE_PAGES: readonly PublicRoutePage[] = [
   {
     slug: "direct-assignment",
     shortLabel: "Direct assignment",
-    title: "Prepare a loan portfolio for buyer diligence and direct assignment",
+    title: "Move a prepared loan portfolio into buyer diligence with fewer surprises",
     summary:
-      "Start with automated portfolio assessment, repair evidence gaps, obtain expert-reviewed preparation and activate execution only when the seller and buyer are ready.",
+      "Assess every loan in scope, repair evidence gaps and progress through expert-reviewed preparation to a coordinated direct-assignment closing.",
     whoDecides:
-      "The transferee retains its credit, eligibility and purchase decision. Each institution remains accountable for the acts assigned to it.",
+      "The seller chooses whether to proceed and the buyer retains its credit, eligibility, pricing and purchase decision. Appointed parties approve the work assigned to them.",
     authoritativeRecord:
-      "The institutions continue to rely on the records applicable to their transaction. AssureRail does not become the ownership record merely because it coordinates the process.",
+      "AssureRail keeps the case, evidence, questions and decisions traceable while the applicable lender, buyer, bank and recordkeeper records remain authoritative.",
     replayInputs: [
-      "Declared corpus, unique loan–borrower count and asset family",
-      "Loan tape, performance history and required evidence families",
-      "Named seller owners and an accepted, case-specific quote",
+      "Declared corpus, unique loan–borrower units and linked parties",
+      "Loan tape, performance history and supporting evidence",
+      "Named seller owners, selected services and an accepted quote",
     ],
     railCoordinates: [
-      "Automated assessment with evidence-linked findings and indicative economics",
-      "Loan-count, document-coverage and principal reconciliation across the admitted population",
-      "Seller remediation tasks, reassessment and a clear proceed decision",
+      "Evidence-linked findings, eligibility range and indicative deal economics",
+      "Full-population loan, document and principal reconciliation",
+      "Prioritised remediation, comparable reassessments and a clear next-step decision",
     ],
     unavailable: [
-      "No live matching, funds movement or title transfer is currently offered",
-      "Each lender retains its own credit and purchase decision",
+      "Assessment and preparation improve transaction readiness; they do not guarantee a buyer, purchase price or closing date.",
+      "A buyer independently completes its diligence and decides whether, what and on which terms to purchase.",
+      "Live execution, funds movement and legal transfer begin under separate mandates with the required appointed parties and closing documents.",
     ],
   },
   {
     slug: "ptc",
     shortLabel: "PTC",
-    title: "Conventional PTC is a later AssureRail phase",
+    title: "Prepare for a controlled PTC programme",
     summary:
-      "PTC discovery continues while Phase 1 production work focuses on conventional direct assignment.",
+      "Start with a completed-deal replay to map the parties, evidence and controls needed for a future PTC workflow while AssureRail delivers direct assignment first.",
     whoDecides:
-      "The trustee is the final transaction-control authority in the AssureRail workflow. Investors retain their investment decisions and appointed parties retain their regulated functions.",
+      "Investors retain their investment decisions, and the trustee and other appointed parties retain their contractual, fiduciary and regulated responsibilities.",
     authoritativeRecord:
-      "The transaction continues to rely on its applicable holding and ownership records. AssureRail is designed to surface rather than override a disagreement.",
+      "The applicable trustee, depository, account and transaction records remain authoritative. AssureRail links the workflow to those records and makes unresolved differences visible.",
     replayInputs: [
-      "One representative completed transaction",
+      "One representative completed PTC transaction",
       "The trustee and accountable transaction owners",
-      "An agreed, minimised information scope",
+      "An agreed, minimised evidence and data scope",
     ],
     railCoordinates: [
-      "A shared view of progress and responsibility",
-      "Transaction evidence and open exceptions",
-      "A reproducible review output",
+      "A route-specific map of parties, responsibilities and approvals",
+      "A traceable view of transaction evidence and open exceptions",
+      "A reproducible output and a practical readiness plan",
     ],
     unavailable: [
-      "PTC production onboarding is not part of the Phase 1 direct-assignment service",
-      "No public offer, placement, issuance or trading function is currently offered",
-      "PTC decisions and appointed-provider roles remain with the appropriate institutions",
+      "PTC production onboarding follows the Phase 1 direct-assignment programme and a separate institutional readiness decision.",
+      "Any future offer, placement, issuance, holding or trading capability will require its own approved structure and appointed providers.",
+      "The relevant institutions remain responsible for PTC approvals, investment decisions and appointed-provider functions.",
     ],
   },
 ] as const;
@@ -78,32 +79,32 @@ export const PERSONA_PAGES: readonly PersonaPage[] = [
   {
     slug: "originators",
     label: "Originators and transferors",
-    title: "Find and fix portfolio gaps before buyer diligence begins",
+    title: "Prepare your loan book before buyer diligence begins",
     lead:
-      "Declare the portfolio, upload the loan tape and supporting evidence, and receive an automated assessment before committing to expert preparation or execution.",
-    retains: ["Asset selection and source records", "Commercial decision and counterparty choice", "Execution by its appointed and authorised teams"],
-    gains: ["Full-population tape and document coverage measures", "Explicit evidence gaps, economics and remediation tasks", "A reassessable case that can progress to expert-reviewed preparation"],
-    firstProof: "A bounded, paid and automated Initial Assessment for a declared conventional-DA portfolio. PTC is a separate later-phase evaluation.",
+      "Declare the portfolio, upload the tape and evidence, and receive a practical assessment of readiness, gaps and indicative economics before committing to preparation or execution.",
+    retains: ["Portfolio selection and source records", "Commercial decision and buyer choice", "Approval of every stage, mandate and closing instruction"],
+    gains: ["Full-population loan, principal and document coverage measures", "Prioritised gaps, indicative economics and assigned remediation", "Comparable reassessments and a route into expert-reviewed preparation"],
+    firstProof: "A paid Initial Assessment that turns one declared direct-assignment portfolio into evidence-linked findings, an eligibility range and an actionable repair plan.",
   },
   {
     slug: "transferees-investors",
     label: "Transferees and investors",
-    title: "Set buyer requirements once; review prepared portfolios against them",
+    title: "Receive portfolios prepared against your requirements",
     lead:
-      "After an MSA, a buyer receives an institution-scoped workspace for structured eligibility, evidence, diligence and delivery requirements while retaining every credit and purchase decision.",
-    retains: ["Credit or investment decision", "Risk policy, limits and approvals", "Reliance position and conditions"],
-    gains: ["Structured requirement profiles with versioned acceptance", "Case-scoped access to evidence status and unresolved exceptions", "Controlled file delivery and acknowledgement records when separately activated"],
-    firstProof: "Review one prepared seller case or reconstruct a transaction in which your institution already participated.",
+      "After an MSA, configure eligibility, evidence and delivery preferences in a private workspace, then review prepared portfolios through a consistent diligence path.",
+    retains: ["Credit and purchase decisions", "Risk policy, exposure limits and approvals", "Reliance terms, conditions and final pricing"],
+    gains: ["A structured, versioned buyer-requirement profile", "Case-scoped evidence status, exceptions and seller responses", "Controlled delivery, acknowledgement and decision records when activated"],
+    firstProof: "Align one requirement profile and review a prepared seller case, or replay a completed transaction to test the fit before live use.",
   },
   {
     slug: "trustees",
     label: "Trustees and recordkeepers",
-    title: "Make the transaction-control record easier to reproduce",
+    title: "Make transaction evidence and decisions easier to reproduce",
     lead:
-      "The trustee keeps its authority and its existing recordkeeper relationships. AssureRail records the decision, the evidence relied upon and any unresolved discrepancy.",
-    retains: ["Trustee acceptance and direction", "Appointment and reliance boundaries", "Existing recordkeeping relationships"],
-    gains: ["Structured condition and evidence tracking", "Visible unresolved differences", "Exportable decision and lifecycle history"],
-    firstProof: "Review one completed PTC with the trustee and other accountable transaction owners.",
+      "Use a controlled replay to connect transaction decisions to the evidence relied upon, preserve open discrepancies and test a future PTC operating model.",
+    retains: ["Trustee acceptance and direction", "Appointment, reliance and control boundaries", "Existing recordkeeping relationships"],
+    gains: ["Structured condition and evidence tracking", "Visible, attributable unresolved differences", "Exportable decision and lifecycle history"],
+    firstProof: "Reconstruct one completed PTC with the trustee and accountable transaction owners, then agree what a controlled future workflow would need.",
   },
 ] as const;
 
@@ -359,221 +360,131 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
   },
   {
     slug: "five-ev-loan-books-one-buyer-transaction",
-    title: "Five EV loan books, one ₹55 crore buyer transaction: the numbers and the work",
+    title: "A ₹48 crore declared EV cohort: pricing an illustrative ₹30 crore transfer",
     description:
-      "A worked illustration of how five NBFCs with ₹10–12 crore EV books can prepare one buyer-sized cohort, allocate costs and preserve seller-level records.",
+      "A worked illustration of how three or four NBFCs can prepare an analytical EV cohort, allocate AssureRail fees and preserve separate seller closings.",
     publishedAt: "2026-09-16",
-    reviewedAt: "2026-09-16",
-    readingMinutes: 14,
+    reviewedAt: "2026-09-17",
+    readingMinutes: 10,
     sections: [
       {
-        heading: "Start with the structure, not the headline pool size",
+        heading: "₹48 crore declared is the starting point, not the sale amount",
         paragraphs: [
-          "This example uses five NBFCs, each offering ₹11 crore of performing EV receivables at the same cutoff date. Together they present a ₹55 crore economic cohort to one buyer. The working assumption is 825 unique loan–borrower pairs per seller, or 4,125 primary billing units in total, based on an average outstanding balance of about ₹1.33 lakh and no separately chargeable linked parties.",
-          "The loans do not lose their seller-level identity. Each account keeps its originator, source record, repayment history, security evidence and transfer chain. A buyer may acquire the five seller pools through coordinated assignments. If the parties instead issue securitisation notes, the SPE, trustee, tranching, retention and other applicable requirements must be separately designed and approved. Under the RBI definition, securitisation involves at least two tranches with different credit risk, so ‘single tranche’ should not be used as a legal description without counsel confirming the structure.",
+          "Assume three or four NBFCs declare ₹48 crore of EV receivables at a common cutoff date. The cohort lets them use one preparation framework and approach a buyer with a meaningful analytical opportunity. It does not make ₹48 crore eligible, transferable or saleable.",
+          "For this illustration, screening, evidence work and the proposed transaction design reduce the working transferable amount to about ₹30 crore. That number remains indicative until each seller's evidence is reviewed, the buyer completes diligence and the parties agree the final pool, price and closing conditions.",
         ],
         table: {
-          caption: "Illustrative cohort at the midpoint of the ₹10–12 crore range",
-          columns: ["Item", "Per NBFC", "Five-NBFC cohort"],
+          caption: "Keep the transaction measures separate",
+          columns: ["Measure", "Illustrative treatment", "What it means"],
           rows: [
-            ["Offered principal / assumed settled consideration", "₹11.00cr", "₹55.00cr"],
-            ["Unique loan–borrower pairs", "825", "4,125"],
-            ["Average outstanding per loan", "≈₹1.33L", "≈₹1.33L"],
-            ["Buyer", "One common buyer", "One coordinated transaction"],
+            ["Declared principal", "₹48.00cr across 3–4 sellers", "The population offered for assessment"],
+            ["Indicative eligible range", "Produced after rules and evidence checks", "Excludes loans that currently fail the accepted criteria"],
+            ["Indicative transferable amount", "About ₹30.00cr in this scenario", "Eligible principal after the confirmed transaction design and retention"],
+            ["Gross consideration", "Transferable principal × agreed price ÷ 100", "Cash payable before deductions; it is not automatically ₹30cr"],
+            ["Indicative net cash", "Gross consideration less debt release, fees, tax and expenses", "The seller-specific treasury outcome"],
           ],
         },
       },
       {
-        heading: "The gated preparation process",
+        heading: "Explain why loans leave the proposed pool",
         paragraphs: [
-          "Each seller first accepts its own scope and pays for an automated Initial Assessment. AssureRail ingests the loan tape and evidence, reconciles totals, identifies missing fields and documents, calculates portfolio measures, tests stated economics and returns an unsigned preliminary report. There is no consultant or qualified human sign-off in this stage. A seller may correct the source material and use the automated reassessment allowance stated in its accepted quote.",
-          "A seller that proceeds then pays the remaining fixed fee for Portfolio Preparation. This is where qualified experts review the evidence, exceptions, legal and financial work within their accepted scope and sign off the prepared output. The five prepared seller packs are then mapped to one common cutoff, eligibility vocabulary, buyer data schema and transaction timetable. The buyer still performs its own diligence and makes its own credit and purchase decision.",
+          "The eligible range should show three exclusion buckets rather than one unexplained haircut. Time-cured loans fail a timing criterion today and may be tested again later. Remediable or evidence-conditional loans need corrected data, documents or deeper evidence before they can enter the high case. Structural or concentration-cap exclusions remain outside this proposed cohort unless the accepted rules change.",
+          "The low eligible case removes all three buckets. The high eligible case may include remediable loans after the stated evidence condition is satisfied, while continuing to exclude time-cured and structural loans. The indicative transferable range then applies the confirmed transaction structure and retention to the eligible range. Net cash comes only after price, debt release, fees, tax and expenses are applied seller by seller.",
         ],
         bullets: [
-          "Gate 1 — each seller uploads its loan tape, evidence index and portfolio history",
-          "Gate 2 — automated assessment returns reconciliation, exceptions, concentration measures and indicative economics",
-          "Gate 3 — the seller fixes gaps and reassesses before paying for expert preparation",
-          "Gate 4 — qualified reviewers approve seller-specific prepared packs",
-          "Gate 5 — AssureRail forms the common buyer view without hiding seller-level differences",
-          "Gate 6 — buyer diligence, conditions, documents and settlement remain attributable to the responsible parties",
+          "Time-cured — potentially re-screened when the relevant timing condition is met",
+          "Remediable or evidence-conditional — potentially restored after a stated data or evidence condition is resolved",
+          "Structural or cap exclusion — outside the proposed cohort under the accepted product, buyer or concentration rules",
         ],
       },
       {
-        heading: "What each NBFC pays before execution",
+        heading: "Count the work correctly",
         paragraphs: [
-          "The execution-committed route is ₹500 per unique loan–borrower pair plus ₹250 for each separate linked loan-party pair, with an ₹8 lakh seller minimum for Initial Assessment plus Portfolio Preparation. The standalone route is ₹650 plus ₹325 respectively, with a ₹10.4 lakh seller minimum. This illustration assumes no separate linked parties, so both routes are governed by their minimums.",
-          "The Initial Assessment invoice is 30% of the standalone fixed-stage quote. It is credited once against either route. Each seller therefore pays ₹3.12 lakh before automated processing, then ₹4.88 lakh before Portfolio Preparation if it commits execution to AssureRail. A seller choosing standalone preparation pays ₹7.28 lakh at that point instead.",
-          "The accepted programme is below ₹100 crore, so no large-programme supplement applies. Above that threshold, only the excess programme consideration attracts the applicable supplement and each seller receives its share by proposed consideration.",
+          "Loan count alone does not price the fixed stages. One primary unit is each unique seller–loan–borrower or seller–loan–co-borrower combination. Every co-borrower creates another primary unit. A guarantor, security provider or other separately linked party creates a separate loan–linked-party unit. The seller remains part of the primary key, so a borrower appearing in two sellers' books is counted in each and flagged as a cross-seller concentration signal.",
+          "The table uses the ₹48 crore declared population, co-borrowers on 40% of loans and separately linked parties on 25% of loans. These are planning assumptions, not facts about an incoming book; the quote uses the seller-declared and reconciled counts.",
         ],
         table: {
-          caption: "Fixed-stage invoices, before applicable tax",
-          columns: ["Payment", "Per NBFC", "Five NBFCs"],
+          caption: "Illustrative countable work at different average outstanding balances",
+          columns: ["Average outstanding", "Loans", "Primary units", "Linked-party units"],
           rows: [
-            ["Initial Assessment: 30% × ₹10.4L", "₹3.12L", "₹15.60L"],
-            ["Committed Portfolio Preparation balance", "₹4.88L", "₹24.40L"],
-            ["Committed fixed-stage total", "₹8.00L", "₹40.00L"],
-            ["Standalone Portfolio Preparation balance", "₹7.28L", "₹36.40L"],
-            ["Standalone fixed-stage total", "₹10.40L", "₹52.00L"],
+            ["₹1.5L", "3,200", "4,480", "800"],
+            ["₹3L", "1,600", "2,240", "400"],
+            ["₹5L", "960", "1,344", "240"],
+            ["₹8L", "600", "840", "150"],
           ],
         },
       },
       {
-        heading: "Seller-specific execution fees within one coordinated cohort",
+        heading: "The three paid stages remain gated",
         paragraphs: [
-          "Each seller accepts its own execution mandate. For that seller, the marginal success fee is 40 basis points on the first ₹25 crore of cumulative actual purchase consideration successfully settled and 30 basis points above ₹25 crore, subject to a ₹5 lakh seller minimum. Multiple closings for the same seller continue from that seller’s previous cumulative amount; the slabs do not restart.",
-          "At ₹11 crore settled per seller, 40 basis points produces ₹4.40 lakh, so the ₹5 lakh seller minimum applies. Across five sellers, execution fees are ₹25 lakh. Together with ₹40 lakh of committed fixed-stage fees, core AssureRail fees are ₹65 lakh, or about 1.18% of the illustration, before tax and external charges.",
-        ],
-        table: {
-          caption: "Core fees at ₹55 crore settled through five seller mandates",
-          columns: ["Fee component", "Per NBFC", "Five NBFCs"],
-          rows: [
-            ["Committed fixed stages", "₹8.00L", "₹40.00L"],
-            ["Execution: ₹11cr × 40bps", "₹4.40L calculated", "₹22.00L calculated"],
-            ["Seller minimum applied", "₹5.00L billed", "₹25.00L billed"],
-            ["Total core AssureRail fee", "₹13.00L", "₹65.00L"],
-            ["Core fee as share of consideration", "≈1.18%", "≈1.18%"],
-          ],
-        },
-      },
-      {
-        heading: "The ₹50–60 crore range",
-        paragraphs: [
-          "If all five sellers settle at the same amount, the committed fixed-stage total remains ₹40 lakh in this unit-count illustration. Between ₹10 crore and ₹12 crore per seller, the calculated 40-basis-point amount remains below the ₹5 lakh seller minimum, so execution fees remain ₹25 lakh in aggregate. Above ₹12.5 crore per seller, the marginal calculation exceeds the floor.",
-        ],
-        table: {
-          caption: "Sensitivity before tax, external costs and optional services",
-          columns: ["Settled per NBFC", "Cohort settled", "Execution fee total", "Core fees including ₹40L fixed"],
-          rows: [
-            ["₹10cr", "₹50cr", "₹25.00L", "₹65.00L"],
-            ["₹11cr", "₹55cr", "₹25.00L", "₹65.00L"],
-            ["₹12cr", "₹60cr", "₹25.00L", "₹65.00L"],
-          ],
-        },
-      },
-      {
-        heading: "Shared costs need a disclosed allocation rule",
-        paragraphs: [
-          "Seller-specific work stays with that seller. A common trustee, counsel, escrow provider, rating process, verification exercise or buyer interface may create a shared bill. Before anyone commits spend, the engagement schedule should state whether that bill is divided equally, by admitted principal, by settled consideration or by measured use. At equal ₹11 crore contributions, each seller would bear 20% of a genuinely common expense. If one seller closes at a different amount, pro-rata settled consideration is usually easier to defend than an equal split.",
-          "AssureRail charges ₹50,000 for each accepted point-to-point secure file connection covering setup, testing and validation. Reusing one validated buyer interface is not five new setup charges. APIs, recurring connector operations and third-party provider fees need separate accepted scopes. No supplier expense should be hidden inside the success-fee calculation.",
-        ],
-      },
-      {
-        heading: "A practical external-cost budget",
-        paragraphs: [
-          "For this 4,125-loan illustration, the standard external allowance is ₹20.40 lakh before GST, or about ₹4.08 lakh per seller and 0.37% of ₹55 crore. This includes transaction counsel, administration, contingency, conditional registry work other than the separately modelled RTO, ROC and NeSL items, and conditional assignment duty. It is a constructed procurement budget, not an industry tariff or supplier quote.",
-          "Assignment duty and registry treatment depend on the actual documents, security interests and relevant states. The table uses ₹1 lakh of conditional duty per seller and ₹2.48 lakh of conditional registry charges across the cohort. Counsel and the buyer must confirm whether those assumptions apply before a quote becomes binding.",
-          "Portfolio Preparation already includes qualified expert review. An external CA factual-verification engagement and EV field programme should be added only when the buyer requires independent reliance or work outside that scope. In the model those conditional services add ₹15.62 lakh, taking external costs to ₹36.02 lakh, or 0.65%. Escrow-provider, bank, bureau, RTO, ROC, NeSL and extra buyer-counsel charges remain unpriced until quoted.",
-        ],
-        table: {
-          caption: "Standard external-cost allowance for the five-seller cohort, before GST",
-          columns: ["External item", "Cohort allowance", "Share of ₹55cr"],
-          rows: [
-            ["Transaction counsel: common documents and five seller schedules", "₹10.50L", "0.19%"],
-            ["Execution, travel and administration", "₹1.25L", "0.02%"],
-            ["Professional-cost contingency", "₹1.18L", "0.02%"],
-            ["Conditional registry searches and modifications", "₹2.48L", "0.05%"],
-            ["Conditional assignment duty", "₹5.00L", "0.09%"],
-            ["Standard external allowance", "₹20.40L", "0.37%"],
-            ["Conditional independent CA, EV checks and related contingency", "+₹15.62L", "+0.28%"],
-            ["Expanded external allowance if required", "₹36.02L", "0.65%"],
-          ],
-        },
-      },
-      {
-        heading: "Deriving the remaining quote-dependent items",
-        paragraphs: [
-          "The previously unpriced items can be converted into a controlled reserve rather than left blank. The working base is ₹10.21 lakh before GST and before any RTO re-endorsement. It is additive to the ₹20.40 lakh standard external allowance, taking working external costs to ₹30.61 lakh, or 0.56% of ₹55 crore. Every row remains conditional: procure a quote, confirm who bears it and release unused reserves at closing. Fresh bureau pulls also require a permitted purpose and the necessary borrower authority; reuse recent reports when the buyer accepts them.",
-          "RTO treatment is the largest binary item. A coordinated assignment may preserve the originator as servicer and security-holder of record for the buyer, in which case no per-vehicle RTO action is assumed. If counsel requires one ₹100 action for every admitted vehicle, add about ₹4.13 lakh; cancellation plus a fresh endorsement at two ₹100 actions adds about ₹8.25 lakh, before state, smart-card and service charges.",
-        ],
-        table: {
-          caption: "Quote-dependent external items for 4,125 EV loans, before GST",
-          columns: ["Item", "Derivation", "Working base", "Planning range"],
-          rows: [
-            ["Escrow bank, orchestration and VAN", "Public bank anchors span 0.10% with a ₹0.20L cap to 0.10% of ₹55cr; negotiate one fixed cohort scope", "₹3.00L", "₹0.20–5.50L"],
-            ["Fresh bureau portfolio pulls", "4,125 × ₹40 planning rate; obtain institutional quote", "₹1.65L", "₹1.03–2.48L"],
-            ["RTO hypothecation actions", "₹100 × vehicles × required actions", "₹0", "₹0–8.25L"],
-            ["ROC charge filing and professional support", "5 × ₹600 government fee plus ₹10,000 filing support in base", "₹0.53L", "₹0.28–1.28L"],
-            ["NeSL individual debt records", "4,125 × ₹25 if fresh submission is required", "₹1.03L", "₹0–1.03L"],
-            ["Additional buyer counsel passed to sellers", "32-hour base; 20–50 hours × ₹12,500 blended planning rate", "₹4.00L", "₹2.50–6.25L"],
-            ["Working reserve, excluding RTO", "Sum of working-base rows", "₹10.21L", "₹4.01–16.54L"],
-          ],
-        },
-      },
-      {
-        heading: "What that makes the total transaction cost",
-        paragraphs: [
-          "Core AssureRail fees of ₹65 lakh plus ₹30.61 lakh of working external costs produce ₹95.61 lakh before GST, or about 1.74% of the ₹55 crore settled consideration. At equal participation, that is about ₹19.12 lakh per seller: ₹13 lakh of core AssureRail fees and ₹6.12 lakh of external costs. One RTO action per vehicle would increase the pre-GST total to about ₹99.74 lakh, or 1.81%.",
-          "For working-base cash planning, applying the same illustrative tax treatment to the revised fees produces a gross outlay of about ₹111.47 lakh, or 2.03%. The economic cost after input-tax credit depends on each NBFC’s tax position. If 50% of the modelled GST were eligible and claimed, the illustrative net cost would be about ₹103.54 lakh, or 1.88%. Tax advisers must confirm the actual treatment.",
-        ],
-        table: {
-          caption: "Illustrative all-in cost of the core route",
-          columns: ["Measure", "Cohort", "Per NBFC at equal shares", "Share of ₹55cr"],
-          rows: [
-            ["Core AssureRail fees", "₹65.00L", "₹13.00L", "1.18%"],
-            ["Standard external allowance", "₹20.40L", "₹4.08L", "0.37%"],
-            ["Quote-dependent working reserve", "₹10.21L", "₹2.04L", "0.19%"],
-            ["Working total before GST", "₹95.61L", "₹19.12L", "1.74%"],
-            ["Gross cash outlay with illustrative GST", "₹111.47L", "₹22.29L", "2.03%"],
-            ["Illustrative net with 50% eligible GST credit", "₹103.54L", "₹20.71L", "1.88%"],
-            ["Add if independent CA and EV work is required", "+₹15.62L", "+₹3.12L", "+0.28%"],
-          ],
-        },
-      },
-      {
-        heading: "Net proceeds versus other funding routes",
-        paragraphs: [
-          "The clean comparison separates asset-sale proceeds from borrowing. The table assumes a ₹55 crore pool, ₹35.75 crore of existing debt to release (65% of principal), a par DA sale, the ₹95.61 lakh working pre-GST DA cost above, and the user-supplied 8–11% borrowing-cost range. It excludes credit losses, servicing income, tax on sale profit, cash timing and any premium paid by a buyer.",
-          "DA produces the greatest day-one cash because the asset is sold. A loan or NCD leaves the receivables and their future spread with the NBFC, but also leaves a repayment obligation, capital usage and credit risk. For a PTC backed by loans whose original maturity exceeds 24 months, the illustration retains 10% MRR; actual tranches, credit enhancement and investor price control the cash result. Co-lending is shown separately because the current RBI framework requires an ex-ante arrangement and transfer of the partner share shortly after origination, so it is not a general retrofit for this seasoned book.",
-        ],
-        table: {
-          caption: "Illustrative day-one liquidity comparison, ₹ crore",
-          columns: ["Route", "Gross cash / funding", "Upfront cost or retention", "Net before debt release", "Cash after ₹35.75cr debt release", "Continuing economics"],
-          rows: [
-            ["DA at ₹100", "₹55.00", "₹0.96 cost", "₹54.04", "₹18.29", "Sold share has no funding liability; seller gives up future loan spread"],
-            ["DA at ₹99", "₹54.45", "₹0.96 cost", "₹53.49", "₹17.74", "One price point reduces proceeds by about ₹55L"],
-            ["Other DA route at assumed all-in 1.5%", "₹55.00", "₹0.83 cost", "₹54.18", "₹18.43", "Only comparable if 1.5% includes every external and platform item"],
-            ["PTC with 10% MRR", "₹49.50", "₹0.69 assumed transaction cost", "₹48.81", "₹13.06", "₹5.50cr retained exposure; waterfall, servicing and investor yield continue"],
-            ["PTC plus 5% cash enhancement", "₹49.50", "₹0.69 cost + ₹2.75 cash support", "₹46.06", "₹10.31", "Credit enhancement remains at risk; avoid double-counting it if it forms part of MRR"],
-            ["80% warehouse / term refinance", "₹44.00", "₹0.44 assumed 1% setup", "₹43.56", "₹7.81", "₹44cr debt remains; annual interest at 8–11% is ₹3.52–4.84cr at full utilisation"],
-            ["Co-lending for new production", "Up to ₹49.50 partner share at 90:10", "Ongoing escrow, servicing and integration", "Not a sale of this pool", "Not comparable", "Both lenders retain at least 10% of each new loan and share revenue and risk"],
-          ],
-        },
-      },
-      {
-        heading: "Optional services change the comparison",
-        paragraphs: [
-          "A seller that already has its buyer need not purchase buyer arrangement. Managed transaction and escrow coordination is proposed at ₹1 lakh per seller programme. Buyer arrangement, only when selected and actually provided, is 5 basis points of attributable settled consideration with a ₹1.25 lakh minimum and ₹10 lakh cap. Monitoring activation and ongoing monitoring are separate because they continue after closing.",
-          "At the ₹55 crore midpoint, core fees are ₹65 lakh. Adding managed coordination for all five sellers adds ₹5 lakh. Adding one new shared buyer file connection adds ₹0.5 lakh. If AssureRail also arranged the buyer for every seller, the ₹1.25 lakh per-seller minimum would add ₹6.25 lakh. AssureRail fees would then be ₹76.75 lakh. With ₹30.61 lakh of working external costs, the total becomes ₹107.36 lakh before GST, or about 1.95% of consideration. It becomes ₹122.98 lakh, or 2.24%, if the independent CA and EV scopes are also required. These are selectable services, not a forced package.",
-        ],
-      },
-      {
-        heading: "What the sellers gain—and what must still be proven",
-        paragraphs: [
-          "The practical gain is access to a buyer-sized opportunity while preserving a clear account-by-account and seller-by-seller record. The cohort can share a buyer timetable, common data dictionary, diligence index, agreed interface and some third-party work. Earlier automated gap discovery also reduces the chance of paying for full expert preparation on an unusable book.",
-          "The financial gain cannot be stated from pool size alone. Each seller’s net economic proceeds are its actual purchase consideration, less debt released, AssureRail fees, its allocated external costs, taxes and any other agreed deductions. Price below par can overwhelm fee savings: one percentage point on ₹55 crore is ₹55 lakh. The seller should compare that full proceeds bridge, retained risks, servicing duties and timing against keeping the loans or using another route.",
-          "For scale only, 1.5% of ₹55 crore is ₹82.5 lakh. AssureRail’s ₹65 lakh core fee is ₹17.5 lakh lower. The ₹95.61 lakh working total including the additional quote reserve is ₹13.11 lakh above a genuinely all-inclusive 1.5% price. If the competing 1.5% excludes escrow, legal, duty, registry, bureau, buyer-counsel or technical costs, those must be added before comparing. This is an arithmetic comparator, not a claimed market benchmark or guaranteed saving.",
+          "Each seller accepts its own quote and pays the Initial Assessment amount before processing. The automated, unsigned assessment reconciles the admitted tape and evidence, returns evidence-linked gaps and indicative economics, and supports the same-scope reassessments included in the accepted quote. It has no qualified human content review or professional sign-off.",
+          "A seller that proceeds pays the remaining accepted fixed-stage balance before Portfolio Preparation. Qualified legal, financial or technical professionals then review and approve only the sections for which they are appointed. Execution starts under a separate seller mandate, and its success fee is earned only on that seller's actual purchase consideration successfully settled.",
         ],
         bullets: [
-          "A buyer large enough to consider a ₹50–60 crore opportunity",
-          "Every admitted loan tested against the declared machine-readable rules, with document coverage reported separately",
-          "Seller-specific remediation instead of one opaque pooled exception list",
-          "Common buyer formatting and a controlled diligence room",
-          "Transparent allocation of shared costs and settlement deductions",
-          "No guarantee of eligibility, buyer approval, price, timing or closing",
+          "Initial Assessment — automated, paid upfront and unsigned",
+          "Portfolio Preparation — qualified expert review and sign-off within the accepted scope",
+          "Execution — coordinated buyer diligence and closing under separate seller mandates",
         ],
       },
-    ],
-    sources: [
-      { label: "RBI Securitisation of Standard Assets Directions, 2021", href: "https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=12165" },
-      { label: "RBI Transfer of Loan Exposures Directions, 2021", href: "https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=12166" },
-      { label: "CBIC GST rates for legal, accounting and professional services", href: "https://cbic-gst.gov.in/hindi/gst-goods-services-rates.html" },
-      { label: "CGST Act section 17(4): NBFC input-tax-credit option", href: "https://cbic-gst.gov.in/hindi/CGST-bill-e.html" },
-      { label: "Bank of Baroda escrow-account charges", href: "https://bankofbaroda.bank.in/accounts/current-accounts/bob-escrow-current-account-scheme" },
-      { label: "Federal Bank escrow charges", href: "https://federal.bank.in/escrow-current-account" },
-      { label: "MCA CHG-1 filing instruction kit", href: "https://www.mca.gov.in/content/dam/mca/mca-forms-instruction-kit/Instruction%20Kit_CHG-1.pdf" },
-      { label: "NeSL fee structure effective 1 August 2026", href: "https://www.nesl.co.in/wp-content/uploads/2026/08/Revised-IU-Fee-Structure-effective-1-Aug-2026.pdf" },
-      { label: "MoRTH Central Motor Vehicles Rules fee table", href: "https://morth.gov.in/sites/default/files/CMVR-chapter3.pdf" },
-      { label: "RBI Co-Lending Arrangements Directions, 2025", href: "https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12888&Mode=0" },
+      {
+        heading: "Core pricing reflects the countable population and the successful outcome",
+        paragraphs: [
+          "On the execution-committed route, the fixed stages are ₹500 per primary unit plus ₹250 per linked-party unit, subject to one ₹8 lakh minimum for the formed cohort. The standalone route uses ₹650 and ₹325 respectively with one ₹10.4 lakh cohort minimum. The Initial Assessment invoice is 30% of the complete standalone fixed-stage quote and is credited once to the route the seller selects; the accepted seller quote gives the actual staged amounts.",
+          "For the execution illustration, assume the final seller-specific closings produce ₹30 crore of aggregate purchase consideration successfully settled. Every seller's settled share is below ₹25 crore, so 40 basis points produces ₹12 lakh in aggregate. The one ₹5 lakh cohort execution-floor backstop does not bind. A seller that does not close owes no execution success fee.",
+        ],
+        table: {
+          caption: "Standard committed-route core fees before GST, selected services and pass-through costs",
+          columns: ["Average outstanding", "Fixed stages", "Execution on ₹30cr settled", "Core total", "Share of ₹30cr"],
+          rows: [
+            ["₹1.5L", "₹24.40L", "₹12.00L", "₹36.40L", "1.21%"],
+            ["₹3L", "₹12.20L", "₹12.00L", "₹24.20L", "0.81%"],
+            ["₹5L", "₹8.00L cohort floor", "₹12.00L", "₹20.00L", "0.67%"],
+            ["₹8L", "₹8.00L cohort floor", "₹12.00L", "₹20.00L", "0.67%"],
+          ],
+        },
+      },
+      {
+        heading: "Allocate the cohort once, then freeze each seller's amount",
+        paragraphs: [
+          "AssureRail calculates the cohort minimum once before the sellers accept their separate orders. If the fixed-stage floor binds, it is allocated pro rata by each seller's declared primary-unit and linked-party charges. If the execution floor were to bind, it would be allocated by expected settled share. Unit charges govern whenever their aggregate is higher than the applicable floor.",
+          "The seller amounts are frozen at cohort formation. A later withdrawal, scope reduction or failed closing by another member does not increase a signed seller's allocation; AssureRail bears that cohort under-fill risk. Any approved design-partner discount is applied to that seller's allocation only after allocation and is not redistributed to the other sellers.",
+        ],
+      },
+      {
+        heading: "One analytical cohort still means separate seller closings",
+        paragraphs: [
+          "The cohort is an analytical, preparation and buyer-presentation structure. It does not commingle ownership. Each NBFC retains its seller identity, source records, representations, mandate, invoice, assignment documents, settlement instruction and closing record.",
+          "The parties may reuse a common data dictionary, eligibility vocabulary, evidence index, buyer format and timetable. The buyer and counsel determine whether the three or four seller closings run sequentially, conditionally or concurrently. A common presentation must never hide seller-level exceptions or create a cross-seller closing promise.",
+        ],
+      },
+      {
+        heading: "Additional services and external charges stay visible",
+        paragraphs: [
+          "The ₹20.0–36.4 lakh range covers standard committed-route fixed stages and the illustrated execution success fee only. It excludes GST, additional AssureRail services and third-party or statutory amounts. The accepted quote should show any arrangement, secure file connection, escrow coordination, buyer counsel, registry action, field work or monitoring separately and only when the case requires it.",
+          "A shared supplier scope should use a disclosed allocation basis, while seller-specific work stays with the seller that creates it. This keeps the economics comparable and prevents an unpriced external assumption from being presented as part of the core fee.",
+        ],
+      },
+      {
+        heading: "Take a credible case to the right buyer classes",
+        paragraphs: [
+          "An approximately ₹30 crore transferable opportunity may be relevant to small finance banks, old private-sector banks, appropriate public-sector-bank desks and larger NBFC acquirers. These are buyer classes to validate against the asset, policy, timing and actual transferable size; they are not commitments, rankings or statements that any institution will buy.",
+          "Large private-bank outreach is most credible after demonstrated execution or evidenced interest in the specific opportunity. No institution should be named in seller material without permission and current, opportunity-specific evidence of interest.",
+        ],
+      },
+      {
+        heading: "What the CFO should compare",
+        paragraphs: [
+          "The seller should compare its own gross consideration, debt release, AssureRail fees, external charges, tax, retained exposure, servicing obligations and net cash. The final price matters: a one-point price change on ₹30 crore changes gross consideration by ₹30 lakh, which can outweigh small differences in workflow cost.",
+          "The operating gain is also material even when it cannot be expressed as a guaranteed saving. The sellers receive population-wide rule testing, seller-specific remediation, common buyer formatting, a traceable evidence and question record, and a governed route from automated assessment to expert preparation. The buyer still completes its diligence and decides whether, what and on which terms to purchase.",
+        ],
+        bullets: [
+          "Declared principal is not the eligible range",
+          "The eligible range is not the transferable amount",
+          "Transferable principal is not gross consideration unless the agreed price is ₹100 per ₹100",
+          "Gross consideration is not net cash until seller-specific deductions are applied",
+          "The illustration is not a quote, buyer commitment or guaranteed saving",
+        ],
+      },
     ],
   },
 ] as const;

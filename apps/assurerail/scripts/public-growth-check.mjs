@@ -48,10 +48,16 @@ const allPublic = [
 for (const claim of ["VAPT complete", "production-ready", "atomic settlement", "token transfer equals title", "RBI approved", "SEBI approved", "guaranteed return"]) {
   if (allPublic.toLowerCase().includes(claim.toLowerCase())) failures.push(`unsafe public claim present: ${claim}`);
 }
-for (const pricingControl of ["actual purchase consideration successfully settled", "before tax and external charges", "not a claimed market benchmark or guaranteed saving"]) {
+for (const pricingControl of ["actual purchase consideration successfully settled", "before GST, selected services and pass-through costs", "not a quote, buyer commitment or guaranteed saving"]) {
   if (!content.includes(pricingControl)) failures.push(`public pricing explanation is missing control: ${pricingControl}`);
 }
-if (!/Live transfer,\s+funds movement and settlement services remain subject to separate institutional activation/.test(allPublic)) failures.push("current public availability boundary is absent");
+for (const availabilityControl of [
+  "Initial Assessment applications are open",
+  "Execution is activated under an accepted seller mandate with the buyer and appointed providers",
+  "The buyer retains its purchase decision",
+]) {
+  if (!allPublic.includes(availabilityControl)) failures.push(`current public availability boundary is missing: ${availabilityControl}`);
+}
 
 if (failures.length) {
   console.error("GTM-01/PUB-01/INBOUND-01/PUB-02/CONTENT-01 check FAILED");

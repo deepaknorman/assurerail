@@ -1,4 +1,6 @@
 .site { --ink:#0b2430; --muted:#51646d; --line:rgba(14,57,68,.14); --paper:#f4f1e9; --cream:#fbfaf6; --green:#116753; --amber:#c98520; min-height:100vh; background:var(--cream); color:var(--ink); }
+.skipLink { position:fixed; top:10px; left:10px; z-index:100; padding:10px 14px; border-radius:7px; color:#08252e; background:#fff; font-weight:700; transform:translateY(-150%); }
+.skipLink:focus { transform:translateY(0); outline:3px solid #d9932d; outline-offset:2px; }
 .container { width:min(1120px,calc(100% - 48px)); margin:0 auto; }
 .header { position:sticky; top:0; z-index:40; border-bottom:1px solid rgba(255,255,255,.12); background:rgba(9,35,45,.96); backdrop-filter:blur(15px); }
 .header .container { min-height:70px; display:flex; align-items:center; justify-content:space-between; gap:28px; }
@@ -11,6 +13,13 @@
 .nav a:hover { color:#fff; }
 .navCta { padding:9px 12px; border-radius:7px; color:#102d35!important; background:#d9932d; }
 .signIn { padding:8px 11px; border:1px solid rgba(255,255,255,.26); border-radius:7px; color:#fff; }
+.mobileNav { display:none; position:relative; color:#fff; }
+.mobileNav summary { cursor:pointer; list-style:none; padding:8px 11px; border:1px solid rgba(255,255,255,.26); border-radius:7px; font-size:12px; font-weight:700; }
+.mobileNav summary::-webkit-details-marker { display:none; }
+.mobileNav nav { position:absolute; top:44px; right:0; width:min(290px,calc(100vw - 30px)); padding:10px; border:1px solid rgba(255,255,255,.16); border-radius:10px; background:#08252e; box-shadow:0 18px 42px rgba(0,0,0,.28); }
+.mobileNav nav a { display:block; padding:10px 11px; border-radius:6px; color:#dce9e5; font-size:13px; }
+.mobileNav nav a:hover,.mobileNav nav a:focus { color:#fff; background:rgba(255,255,255,.08); }
+.mobileNav nav .navCta { margin-top:7px; color:#102d35; }
 .hero { padding:94px 0 76px; color:#f5faf8; background:linear-gradient(120deg,#082934,#10414a); }
 .hero h1 { max-width:900px; margin:0; font-size:clamp(42px,6vw,70px); line-height:1; letter-spacing:-.052em; text-wrap:balance; }
 .eyebrow { margin:0 0 16px; color:#dfa449; font-family:var(--arail-font-mono); font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
@@ -51,6 +60,7 @@
 .article ul { padding-left:22px; }
 .article a { color:var(--green); font-weight:700; text-decoration:underline; text-underline-offset:3px; }
 .resourceLink { display:block; height:100%; }
+.resourceLink:focus-visible { outline:3px solid rgba(17,103,83,.35); outline-offset:4px; }
 .resourceLink small { display:block; margin-top:17px; color:var(--green); font-family:var(--arail-font-mono); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
 .form { max-width:760px; margin-top:30px; padding:26px; border:1px solid var(--line); border-radius:12px; background:#fffefa; }
 .formGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
@@ -72,8 +82,8 @@
 .footer a { display:block; margin:7px 0; font-size:11px; }
 .small { font-size:10px; line-height:1.5; }
 .disclaimer { margin-top:34px; padding-top:20px; border-top:1px solid rgba(255,255,255,.12); font-size:10px; line-height:1.65; }
-@media(max-width:920px){.nav>a:not(.navCta):not(.signIn){display:none}.grid3{grid-template-columns:1fr 1fr}.footerGrid{grid-template-columns:1fr 1fr}.footerGrid>div:first-child{width:170px}}
-@media(max-width:680px){.container{width:min(100% - 30px,1120px)}.hero{padding:68px 0 58px}.hero h1{font-size:clamp(38px,12vw,54px)}.grid2,.grid3,.formGrid{grid-template-columns:1fr}.fieldFull,.consent,.submit,.formMessage{grid-column:1}.footerGrid{grid-template-columns:1fr;gap:24px}.navCta{display:none!important}.section,.sectionAlt,.sectionDark{padding:58px 0}}
+@media(max-width:920px){.nav{display:none}.mobileNav{display:block}.grid3{grid-template-columns:1fr 1fr}.footerGrid{grid-template-columns:1fr 1fr}.footerGrid>div:first-child{width:170px}}
+@media(max-width:680px){.container{width:min(100% - 30px,1120px)}.hero{padding:68px 0 58px}.hero h1{font-size:clamp(38px,12vw,54px)}.grid2,.grid3,.formGrid{grid-template-columns:1fr}.fieldFull,.consent,.submit,.formMessage{grid-column:1}.footerGrid{grid-template-columns:1fr;gap:24px}.section,.sectionAlt,.sectionDark{padding:58px 0}}
 @media(prefers-reduced-motion:reduce){.header{backdrop-filter:none}}
 
 /* ============================================================

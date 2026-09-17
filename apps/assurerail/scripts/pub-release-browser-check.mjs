@@ -16,6 +16,7 @@ const paths = [
   "/replay",
   "/trust",
   "/status",
+  "/downloads",
   "/resources",
   "/resources/completed-deal-replay-before-platform-replacement",
   "/resources/direct-assignment-and-ptc-need-different-control-maps",
@@ -112,7 +113,7 @@ for (const engine of engines) {
         });
 
         if (!audit.title.trim()) fail(engine.label, viewport.label, path, "missing document title");
-        if (audit.lang !== "en") fail(engine.label, viewport.label, path, `unexpected html lang ${JSON.stringify(audit.lang)}`);
+        if (audit.lang !== "en-IN") fail(engine.label, viewport.label, path, `unexpected html lang ${JSON.stringify(audit.lang)}`);
         if (audit.headings.length !== 1 || !audit.headings[0]) fail(engine.label, viewport.label, path, "requires exactly one non-empty h1");
         if (audit.overflow > 1) fail(engine.label, viewport.label, path, `horizontal overflow ${audit.overflow}px`);
         if (audit.duplicateIds.length) fail(engine.label, viewport.label, path, `duplicate IDs ${[...new Set(audit.duplicateIds)].join(", ")}`);

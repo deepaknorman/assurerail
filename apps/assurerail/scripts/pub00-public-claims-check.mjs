@@ -33,9 +33,14 @@ requireText(railLanding, "Applications open for approved NBFC portfolios", "Assu
 requireText(railLanding, "Conventional DA · Phase 1", "AssureRail landing");
 requireText(availability, "Initial Assessment applications are open", "Availability page");
 requireText(publicCapability, "Applications open", "Public capability registry");
-requireText(publicCapability, "does not currently offer public matching, execution, custody, funds handling or settlement services", "Public capability registry");
-requireText(publicContent, "seller minimum applies", "EV cohort article");
-requireText(publicContent, "₹65 lakh", "EV cohort article");
+requireText(publicCapability, "Execution requires an accepted seller mandate and activation with the buyer and appointed providers", "Public capability registry");
+requireText(publicCapability, "does not act as custodian or hold client funds", "Public capability registry");
+requireText(publicContent, "₹48 crore declared is the starting point, not the sale amount", "EV cohort article");
+requireText(publicContent, "about ₹30 crore", "EV cohort article");
+requireText(publicContent, "₹36.40L", "EV cohort article");
+requireText(publicContent, "one ₹8 lakh minimum for the formed cohort", "EV cohort article");
+requireText(publicContent, "AssureRail bears that cohort under-fill risk", "EV cohort article");
+requireText(publicContent, "does not commingle ownership", "EV cohort article");
 requireText(assessment, "40 bps on the first ₹25 crore", "Assessment workspace");
 requireText(assessment, "₹8 lakh seller minimum", "Assessment workspace");
 
@@ -53,14 +58,16 @@ for (const [label, value] of [
   rejectText(value, "50 basis points on the first ₹10 crore", label);
   rejectText(value, "50 bps on the first ₹10 crore", label);
   rejectText(value, "35 bps from ₹50–100 crore", label);
-  rejectText(value, "One cohort fee", label);
-  rejectText(value, "cohort execution fee", label);
   rejectText(value, "₹6.5 lakh minimum", label);
   rejectText(value, "60 bps", label);
   rejectText(value, "60 basis points", label);
   rejectText(value, "internalAssureRailRevenueBenchmarkBps", label);
   rejectText(value, "contractorDayCostMinor", label);
   rejectText(value, "basePercent", label);
+}
+
+for (const obsolete of ["₹55 crore", "₹65 lakh", "seller minimum applies", "₹5 lakh seller minimum"]) {
+  rejectText(publicContent, obsolete, "EV cohort article");
 }
 
 console.log(

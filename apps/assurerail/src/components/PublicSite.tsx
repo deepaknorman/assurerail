@@ -5,22 +5,25 @@ import { Logo } from "@/components/Logo";
 import styles from "@/app/public-site.module.css";
 
 export function PublicHeader() {
+  const links = () => <>
+    <Link href="/for/originators">For sellers</Link>
+    <Link href="/for/transferees-investors">For buyers</Link>
+    <Link href="/#journey">How it works</Link>
+    <Link href="/resources">Resources</Link>
+    <Link href="/login?mode=register" className={styles.navCta}>Start assessment</Link>
+    <Link href="/login" className={styles.signIn}>Sign in</Link>
+  </>;
   return (
-    <header className={styles.header}>
+    <><a className={styles.skipLink} href="#main-content">Skip to main content</a><header className={styles.header}>
       <div className={styles.container}>
         <Link href="/" aria-label="AssureRail home" className={styles.brand}><Logo /></Link>
-        <nav className={styles.nav} aria-label="Public navigation">
-          <Link href="/routes/direct-assignment">Direct assignment</Link>
-          <Link href="/routes/ptc">PTC</Link>
-          <Link href="/trust">How we work</Link>
-          <Link href="/resources">Resources</Link>
-          <Link href="/downloads">Downloads</Link>
-          <Link href="/status">Availability</Link>
-          <Link href="/login" className={styles.navCta}>Apply for assessment</Link>
-          <Link href="/login" className={styles.signIn}>Sign in</Link>
-        </nav>
+        <nav className={styles.nav} aria-label="Public navigation">{links()}</nav>
+        <details className={styles.mobileNav}>
+          <summary>Menu</summary>
+          <nav aria-label="Mobile navigation">{links()}</nav>
+        </details>
       </div>
-    </header>
+    </header></>
   );
 }
 
@@ -28,12 +31,12 @@ export function PublicFooter() {
   return (
     <footer className={styles.footer}>
       <div className={styles.footerGrid}>
-        <div><Logo /><p className={styles.small}>Institutional transaction infrastructure for DA and PTC.</p></div>
+        <div><Logo /><p className={styles.small}>Loan portfolio assessment, preparation and execution for institutional direct assignment.</p></div>
         <div>
-          <strong>Routes</strong>
+          <strong>Services</strong>
+          <Link href="/status">Initial Assessment</Link>
+          <Link href="/status">Portfolio Preparation</Link>
           <Link href="/routes/direct-assignment">Direct assignment</Link>
-          <Link href="/routes/ptc">PTC</Link>
-          <Link href="/status">Current availability</Link>
         </div>
         <div>
           <strong>Participants</strong>
@@ -43,15 +46,16 @@ export function PublicFooter() {
         </div>
         <div>
           <strong>Explore</strong>
+          <Link href="/trust">How we work</Link>
           <Link href="/resources">Resources</Link>
           <Link href="/downloads">Downloads</Link>
           <Link href="/replay">Completed-deal replay</Link>
         </div>
       </div>
       <div className={styles.disclaimer}>
-        Initial Assessment applications are open for approved NBFC portfolios. Live transfer,
-        funds movement and settlement services remain subject to separate institutional activation. Institutional counterparties
-        only; not investment, legal, tax or financial advice.
+        The buyer makes the acquisition decision. Execution starts under an accepted seller mandate and counterparty activation.
+        AssureRail coordinates the workflow and exact fee instruction; it does not hold client money or act as custodian.
+        Institutional counterparties only.
       </div>
     </footer>
   );
@@ -61,7 +65,7 @@ export function PublicPage(props: { children: ReactNode; eyebrow: string; title:
   return (
     <div className={styles.site}>
       <PublicHeader />
-      <main>
+      <main id="main-content">
         <section className={styles.hero}>
           <div className={styles.container}>
             <p className={styles.eyebrow}>{props.eyebrow}</p>
@@ -79,6 +83,10 @@ export function PublicPage(props: { children: ReactNode; eyebrow: string; title:
 
 export function ReplayAction({ label = "Propose a completed-deal replay" }: { label?: string }) {
   return <Link href="/replay" className={styles.primaryAction}>{label}<ArrowRight size={17} /></Link>;
+}
+
+export function AssessmentAction({ label = "Start Initial Assessment" }: { label?: string }) {
+  return <Link href="/login?mode=register" className={styles.primaryAction}>{label}<ArrowRight size={17} /></Link>;
 }
 
 export function StatusStamp({ children = "Private institutional evaluation" }: { children?: ReactNode }) {

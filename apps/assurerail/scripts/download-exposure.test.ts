@@ -28,10 +28,13 @@ test("artifact packaging rejects unknown classifications and duplicate identifie
   assert.match(packager, /duplicates an artifact id/);
 });
 
-test("authenticated and internal documents are described without file routes", () => {
-  assert.match(page, /Authenticated workspace/);
-  assert.match(page, /Internal only/);
-  assert.match(page, /not served by the shared-password gate/);
+test("authenticated and internal documents remain behind the engagement workspace", () => {
+  assert.match(page, /Engagement workspace/);
+  assert.match(page, /approved workspace for that institution and engagement/);
+  assert.match(page, /Sign in to your workspace/);
+  for (const protectedTitle of ["Seller document suite", "Pre-incorporation seller commitment letter", "Phase 1 operating pack index", "Buyer onboarding and MSA schedule"]) {
+    assert.equal(page.includes(protectedTitle), false, protectedTitle);
+  }
   for (const path of [
     "src/app/downloads/assurerail/phase1-da/seller-document-suite",
     "src/app/downloads/assurerail/phase1-da/buyer-onboarding-schedule",

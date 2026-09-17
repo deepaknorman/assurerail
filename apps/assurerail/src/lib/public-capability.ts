@@ -17,59 +17,33 @@ export const PUBLIC_CAPABILITY_NEXT_REVIEW_AT = "2026-10-16";
 /**
  * Publication-safe view of the AssureRail capability register.
  *
- * This is deliberately static and conservative. Runtime flags, a deployed route,
- * or an internal readiness assessment must never promote a public claim. A
- * promotion needs an evidence-backed edit and review of this register.
+ * This register is the reviewed source for anonymous service descriptions.
+ * Changes require supporting evidence and public-claims review.
  */
 export const PUBLIC_CAPABILITIES: readonly PublicCapability[] = [
   {
     id: "initial-assessment",
-    label: "Automated Initial Assessment",
+    label: "Initial Assessment",
     state: "BY_ARRANGEMENT",
-    publicLabel: "Applications open",
+    publicLabel: "Start here",
     summary:
-      "Approved NBFC portfolios can apply for a paid, automated and unsigned Initial Assessment.",
-  },
-  {
-    id: "completed-deal-review",
-    label: "Completed-deal review",
-    state: "BY_ARRANGEMENT",
-    publicLabel: "By arrangement",
-    summary:
-      "A completed conventional DA can be examined without changing the original transaction or its records.",
+      "Applications open for a paid, automated assessment of the admitted loan population, evidence coverage, remediation priorities and indicative seller economics.",
   },
   {
     id: "portfolio-preparation",
     label: "Expert-reviewed Portfolio Preparation",
     state: "BY_ARRANGEMENT",
-    publicLabel: "By accepted scope",
+    publicLabel: "Progress after assessment",
     summary:
-      "Sellers that proceed can commission qualified review, remediation closure and buyer-ready preparation under a separate paid scope.",
+      "Resolve priority gaps, align evidence to the intended buyer route and obtain qualified review of the financial, legal and technical sections in scope.",
   },
   {
     id: "live-transaction-services",
-    label: "Live transaction services",
-    state: "NOT_AVAILABLE",
-    publicLabel: "Not currently offered",
+    label: "Execution and settlement orchestration",
+    state: "BY_ARRANGEMENT",
+    publicLabel: "By accepted mandate",
     summary:
-      "AssureRail does not currently offer public matching, execution, custody, funds handling or settlement services.",
-  },
-] as const;
-
-export const PUBLIC_ROUTE_MODES = [
-  {
-    route: "Direct assignment",
-    conventional:
-      "Phase 1: prepare a bilateral transfer while each institution keeps its own decision and records.",
-    tokenised:
-      "A future representation option only where the transaction structure and applicable permissions support it.",
-  },
-  {
-    route: "PTC",
-    conventional:
-      "Later phase: conventional PTC discovery continues while production resources focus on direct assignment.",
-    tokenised:
-      "A separately evaluated future option; it is not implied by conventional PTC support.",
+      "Execution requires an accepted seller mandate and activation with the buyer and appointed providers. AssureRail coordinates the process; it does not act as custodian or hold client funds.",
   },
 ] as const;
 
@@ -78,18 +52,18 @@ export const PUBLIC_PROOF_LADDER = [
     step: "01",
     label: "Initial Assessment",
     summary:
-      "Upload the loan tape and evidence for automated, unsigned review, reconciliation and remediation.",
+      "Accept the case-specific quote, pay the initial amount and upload the loan tape and evidence. Receive an automated view of population quality, gaps, indicative eligibility and economics.",
   },
   {
     step: "02",
     label: "Portfolio Preparation",
     summary:
-      "Fix gaps, align the portfolio to buyer requirements and obtain qualified expert review of the prepared output.",
+      "Close priority gaps, assemble the buyer-ready evidence structure and obtain qualified review of the sections included in the accepted scope.",
   },
   {
     step: "03",
     label: "Execution",
     summary:
-      "Run buyer diligence and closing through a separately activated mandate, with selectable integration and settlement services.",
+      "Appoint AssureRail under a separate seller mandate to coordinate buyer diligence, conditions, integrations and the agreed closing workflow.",
   },
 ] as const;

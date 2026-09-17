@@ -14,7 +14,7 @@ export const ASSURERAIL_ORGANIZATION_JSON_LD = {
     url: `${PUBLIC_SITE_URL}/logo.svg`,
   },
   description:
-    "Provider-neutral institutional transaction infrastructure for direct assignment and PTC transactions.",
+    "Institutional loan-portfolio assessment, preparation and direct-assignment execution for sellers and buyers in India.",
   areaServed: { "@type": "Country", name: "India" },
 } as const;
 

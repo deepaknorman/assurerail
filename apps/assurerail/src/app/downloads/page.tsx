@@ -26,8 +26,6 @@ export default async function DownloadsPage({ searchParams }: { searchParams: Pr
   const accessState = Array.isArray(query.access) ? query.access[0] : query.access;
   const publicArtifacts = DOWNLOAD_CATALOG.filter((item) => item.classification === "PUBLIC");
   const sharedArtifacts = DOWNLOAD_CATALOG.filter((item) => item.classification === "SHARED_PASSWORD");
-  const authenticatedArtifacts = DOWNLOAD_CATALOG.filter((item) => item.classification === "AUTHENTICATED");
-  const internalArtifacts = DOWNLOAD_CATALOG.filter((item) => item.classification === "INTERNAL");
   const sharedEnabled = sharedDownloadsConfigured(
     process.env.ASSURERAIL_DOWNLOADS_SHARED_ENABLED,
     process.env.ASSURERAIL_DOWNLOADS_SHARED_PASSWORD,
@@ -75,16 +73,9 @@ export default async function DownloadsPage({ searchParams }: { searchParams: Pr
 
       <section className={publicStyles.section}>
         <div className={publicStyles.container}>
-          <h2>Workspace and internal material</h2>
-          <p className={publicStyles.intro}>These titles are shown for transparency about the operating pack. Their files are not served by the shared-password gate.</p>
-          <div className={styles.catalog}>
-            {authenticatedArtifacts.map((item) => <article className={styles.artifact} key={item.id}>
-              <span className={`${styles.classification} ${styles.classificationRestricted}`}>Authenticated workspace</span><h3>{item.title}</h3><p>{descriptions[item.id] ?? item.releaseGate ?? "Available only in an approved counterparty workspace."}</p>
-            </article>)}
-            {internalArtifacts.map((item) => <article className={styles.artifact} key={item.id}>
-              <span className={`${styles.classification} ${styles.classificationRestricted}`}>Internal only</span><h3>{item.title}</h3><p>{item.releaseGate ?? "AssureRail operations and specifically authorised advisers only."}</p>
-            </article>)}
-          </div>
+          <h2>Engagement workspace</h2>
+          <p className={publicStyles.intro}>Seller, buyer, diligence and operating materials appear only inside the approved workspace for that institution and engagement. Access follows the user’s role and assigned portfolio scope.</p>
+          <Link className={styles.artifactAction} href="/login">Sign in to your workspace</Link>
         </div>
       </section>
     </PublicPage>

@@ -18,11 +18,11 @@ import {
 export const metadata: Metadata = {
   metadataBase: new URL("https://assurerail.com"),
   title: {
-    default: "AssureRail | Institutional infrastructure for DA and PTC",
+    default: "AssureRail | Prepare and execute institutional loan-book sales",
     template: "%s | AssureRail",
   },
   description:
-    "Provider-neutral transaction infrastructure for direct assignment and PTC securitisation, designed to work beside existing lender, trustee, recordkeeper and payment systems.",
+    "Assess, prepare and execute institutional direct-assignment loan-book sales with full-population review, traceable evidence and coordinated closing.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://assurerail.com",
     siteName: "AssureRail",
-    title: "One governed rail for loan transfers and securitisation",
+    title: "Prepare a loan book for a controlled direct-assignment sale",
     description:
-      "Direct assignment and PTC transaction infrastructure—conventional first, with tokenised representations only where separately approved.",
+      "Full-population Initial Assessment, expert-reviewed Portfolio Preparation and coordinated direct-assignment execution for institutional sellers and buyers.",
     // WhatsApp/LinkedIn/Slack render a preview image ONLY from an explicit og:image (no favicon
     // fallback). FIRST image is a deliberately small square tile (<300px): WhatsApp's layout rule
     // renders sub-300px images as the compact logo-icon card rather than the big banner (founder's
@@ -54,15 +54,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "AssureRail — one governed rail for loan transfers and securitisation",
+        alt: "AssureRail — assess, prepare and execute institutional loan-book sales",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "One governed rail for loan transfers and securitisation",
+    title: "Prepare a loan book for a controlled direct-assignment sale",
     description:
-      "Direct assignment and PTC transaction infrastructure—conventional first, with tokenised representations only where separately approved.",
+      "Full-population Initial Assessment, expert-reviewed Portfolio Preparation and coordinated direct-assignment execution.",
     images: ["/og-image.png"],
   },
   robots: { index: true, follow: true },
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en-IN">
       <head>
         {/* Apply the persisted theme before paint (no flash); "system" leaves data-theme unset. */}
         <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('arail-theme');if(t&&t!=='system')document.documentElement.setAttribute('data-theme',t);}catch(e){}" }} />

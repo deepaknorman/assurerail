@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { JsonLd, PublicPage, ReplayAction, StatusStamp, publicStyles as styles } from "@/components/PublicSite";
+import { AssessmentAction, JsonLd, PublicPage, StatusStamp, publicStyles as styles } from "@/components/PublicSite";
 import { ASSURERAIL_WEBSITE_ID } from "@/lib/public-structured-data";
 
 export const metadata: Metadata = {
@@ -28,11 +28,11 @@ const PLATFORM_CONTROLS = [
 
 export default function TrustPage() {
   return (
-    <PublicPage eyebrow="Institutional principles" title="Coordinate the transaction without displacing institutional responsibility." lead="AssureRail is designed to work across existing participants and systems while keeping decisions, records and accountability with the appropriate parties." actions={<><ReplayAction /><StatusStamp /></>}>
+    <PublicPage eyebrow="Trust and operating controls" title="A controlled process for institutional loan-book transactions." lead="AssureRail brings portfolio evidence, participant actions and closing progress into one governed workflow while each institution retains its proper decisions and responsibilities." actions={<><AssessmentAction /><StatusStamp>Institutional access</StatusStamp></>}>
       <JsonLd value={{ "@context": "https://schema.org", "@type": "WebPage", name: "How AssureRail works", url: "https://assurerail.com/trust", dateModified: "2026-09-17", isPartOf: { "@id": ASSURERAIL_WEBSITE_ID } }} />
       <section className={styles.section}><div className={styles.container}><h2>Principles for institutional use.</h2><div className={styles.grid3}>{BOUNDARIES.map(([title, body]) => <article className={styles.card} key={title}><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
-      <section className={styles.sectionAlt}><div className={styles.container}><h2>Controls built into the operating model.</h2><p className={styles.intro}>These controls describe the platform design. Their production use still depends on the activated service, counterparty configuration and current release evidence.</p><div className={styles.grid3}>{PLATFORM_CONTROLS.map(([title, body]) => <article className={styles.card} key={title}><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
-      <section className={styles.section}><div className={styles.container}><h2>Security information is shared through controlled diligence.</h2><p className={styles.intro}>Authorised counterparties can review the relevant architecture, security testing, resilience and operating evidence under the appropriate confidentiality and access arrangements.</p><div className={styles.boundary}>Public descriptions are intentionally high-level. They should not be used as a security certification or production-readiness statement.</div></div></section>
+      <section className={styles.sectionAlt}><div className={styles.container}><h2>Controls built into the operating model.</h2><p className={styles.intro}>The active service, institution and transaction scope determine which controls apply and what evidence each participant can access.</p><div className={styles.grid3}>{PLATFORM_CONTROLS.map(([title, body]) => <article className={styles.card} key={title}><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
+      <section className={styles.section}><div className={styles.container}><h2>Security evidence for authorised diligence.</h2><p className={styles.intro}>Approved counterparties can review the relevant architecture, security testing, resilience and operating evidence under the appropriate confidentiality and access arrangements.</p></div></section>
     </PublicPage>
   );
 }
