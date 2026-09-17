@@ -134,6 +134,14 @@
       "status": "CURRENT"
     },
     {
+      "id": "DA-SETTLEMENT-PROVIDER-SELECTION",
+      "title": "DA settlement-provider selection",
+      "source": "docs/operations/phase1-da/AssureRail_DA_Settlement_Provider_Selection.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_DA_Settlement_Provider_Selection.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
       "id": "DA-IA-REMEDIATION",
       "title": "Initial Assessment remediation and reassessment",
       "source": "docs/design/AssureRail_Initial_Assessment_Remediation_And_Reassessment.md",

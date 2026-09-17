@@ -132,6 +132,14 @@ export const DOWNLOAD_CATALOG = [
     "releaseGate": null
   },
   {
+    "id": "DA-SETTLEMENT-PROVIDER-SELECTION",
+    "title": "DA settlement-provider selection",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": null
+  },
+  {
     "id": "DA-IA-REMEDIATION",
     "title": "Initial Assessment remediation and reassessment",
     "classification": "INTERNAL",

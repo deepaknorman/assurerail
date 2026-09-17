@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>DA settlement-provider selection | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail Phase 1 DA settlement-provider selection</h1>
+<p><strong>Version:</strong> 1.0 — 17 September 2026</p>
+<p><strong>Classification:</strong> <code>INTERNAL</code></p>
+<p><strong>Status:</strong> provider discovery and selection baseline. No provider is appointed or production-live.</p>
+<h2>Decision</h2>
+<p>Castler is no longer the assumed settlement provider. Its public material still describes an Escrow Banking product and a Digital Escrow ID API, but its current primary product positioning emphasises software, data and recoverability escrow. AssureRail will not design the Phase 1 DA closing around Castler unless it supplies a written, bank-backed solution that passes every gate in this document.</p>
+<p>Run these routes in parallel:</p>
+<ol>
+<li><strong>Axis Bank directly</strong> — request a transaction-banking and escrow design session alongside buyer alignment.</li>
+<li><strong>HDFC Bank directly</strong> — ask the buyer and transaction-banking teams whether HDFC can operate the closing account and controlled payout workflow.</li>
+<li><strong>TBX, formerly TransBnk</strong> — assess it as a provider-neutral orchestration and bank-integration layer, with the account bank and legal responsibilities named explicitly.</li>
+</ol>
+<p>Do not select a payment aggregator, marketplace split-payment product or virtual-account vendor merely because it can produce a VAN. A VAN identifies and reconciles money; it does not by itself create an escrow, impose closing conditions or authorise the distribution waterfall.</p>
+<h2>Required operating model</h2>
+<p>For a successful DA closing, the accepted solution must support this result:</p>
+<pre><code>buyer-approved purchase consideration
+  -&gt; bank-held deal account or other counsel-approved settlement route
+  -&gt; verified receipt and exact amount reconciliation
+  -&gt; locked, seller-authorised distribution schedule
+       -&gt; existing lender payoff / release amount, if applicable
+       -&gt; each seller's net proceeds
+       -&gt; earned AssureRail execution fee and tax
+       -&gt; approved professional, registry or settlement amounts
+  -&gt; leg-by-leg bank acknowledgement and final reconciliation</code></pre>
+<p>The account bank or appointed settlement provider moves the money. AssureRail prepares and verifies the agreed schedule, obtains the required approvals, sends or facilitates the accepted instruction and reconciles evidence. Gross purchase consideration must not pass through AssureRail's operating account. A technology provider does not become the account bank, trustee or regulated payment intermediary merely by supplying APIs.</p>
+<h2>Non-negotiable qualification gates</h2>
+<div class="table-wrap"><table><thead><tr><th>Gate</th><th>Required evidence</th></tr></thead><tbody>
+<tr><td>Legal capacity</td><td>Named scheduled commercial bank, account title, contracting parties, trustee/escrow agent if any, and counsel-confirmed permitted purpose</td></tr>
+<tr><td>DA use-case acceptance</td><td>Written confirmation that purchase consideration for assignment of loan receivables is accepted, including a multi-seller pool where applicable</td></tr>
+<tr><td>Transaction scale</td><td>Confirmed ability to receive and distribute ₹50–300 crore closing amounts through the agreed RTGS/account route without consumer-payment or per-transaction limits</td></tr>
+<tr><td>Deal and seller segregation</td><td>Deal-specific account or identifier and seller-level sub-ledger/VAN/reconciliation without commingling with AssureRail funds</td></tr>
+<tr><td>Conditional release</td><td>Versioned closing conditions, maker-checker controls and a frozen distribution schedule that cannot be changed by AssureRail alone</td></tr>
+<tr><td>Multi-leg payout</td><td>Existing lender payoff, seller net proceeds, AssureRail fee/tax and approved third-party legs, with beneficiary validation and bank acknowledgements</td></tr>
+<tr><td>Failure safety</td><td>Idempotent instruction, status inquiry, ambiguous-outcome hold, repair/reversal process and no blind retry</td></tr>
+<tr><td>Connectivity</td><td>Portal/file route for the pilot plus API or H2H option; signed callbacks or bank-authenticated status and statement retrieval</td></tr>
+<tr><td>Audit and retention</td><td>Actor, approval, instruction, bank reference, time, amount, beneficiary and final status evidence with agreed retention and export</td></tr>
+<tr><td>Security</td><td>Institution-scoped identities, MFA, service credential custody, encryption, IP/network policy, rotation, incident and access-recertification process</td></tr>
+<tr><td>Operations</td><td>Named implementation and closing owners, cut-offs, support/escalation, first-event supervision and disaster/recovery procedure</td></tr>
+<tr><td>Commercial</td><td>Account opening, annual, VAN, API/H2H, transaction, trustee, amendment, exception and closure charges itemised before appointment</td></tr>
+</tbody></table></div>
+<p>A provider failing any legal-capacity, DA-use-case, scale, conditional-release, failure-safety or audit gate is unsuitable regardless of API quality.</p>
+<h2>Evidence-based shortlist</h2>
+<div class="table-wrap"><table><thead><tr><th>Route</th><th>Evidence of fit</th><th>Open proof required</th><th>Current position</th></tr></thead><tbody>
+<tr><td>Axis Bank direct</td><td>Axis publicly offers escrow for sale and purchase transactions, fintech and payout businesses, centralised operations, Paypro/Power Access and API-based ePower escrow payments. Its NBFC coverage includes escrow, security trustee and API/H2H integration.</td><td>DA purchase-consideration acceptance; five-seller structure; VAN/sub-ledger; exact multi-beneficiary payout; buyer/seller contracting; limits, SLA and price</td><td><strong>Priority 1.</strong> Best public match and already part of buyer outreach</td></tr>
+<tr><td>HDFC Bank direct</td><td>HDFC's developer portal exposes corporate RTGS/NEFT/IMPS/A2A initiation, transaction status and reconciliation capabilities.</td><td>A bank-owned DA closing/escrow product is not established by the public API material; obtain confirmation from the financial-institutions and transaction-banking teams</td><td><strong>Priority 1 in parallel.</strong> Strongest if HDFC is the buyer and can own the closing rail</td></tr>
+<tr><td>TBX / TransBnk plus named bank</td><td>TBX describes institutional transaction banking, escrow and regulated accounts, a digital ledger with virtual accounts and fund allocation, multi-bank integration, and co-lending escrow/reconciliation.</td><td>Name the account bank and contracting entity; establish that TBX never holds the funds; confirm DA use case, ₹300 crore scale, waterfall controls, production references, liability and exit</td><td><strong>Priority 2.</strong> Strong neutral integration candidate</td></tr>
+<tr><td>Castler</td><td>Castler separately advertises enterprise escrow banking, partner banks, APIs and Digital Escrow IDs/VANs.</td><td>Current product ownership and roadmap; bank-backed DA acceptance; scale; waterfall and acknowledgement capability; contractual and operational fit</td><td><strong>Hold / fallback.</strong> Do not assume fit from legacy escrow claims</td></tr>
+<tr><td>ICICI or another transaction bank direct</td><td>Corporate API suites can support payments, accounts and reconciliation.</td><td>Named escrow/settlement product and full DA operating acceptance</td><td><strong>Contingency.</strong> Approach if the buyer's bank cannot support the closing</td></tr>
+</tbody></table></div>
+<p>Public product pages are discovery evidence only. They are not provider acceptance, legal advice or proof of a production connection.</p>
+<h2>Provider RFI</h2>
+<p>Send the same questions to every shortlisted provider so responses are comparable.</p>
+<ol>
+<li>Which regulated bank holds the funds, and in whose name is the account opened?</li>
+<li>Who are the contracting parties and who acts as escrow agent or trustee, if anyone?</li>
+<li>Will the bank accept purchase consideration for a direct assignment of loan receivables from one buyer and distribute it across five sellers?</li>
+<li>Can a ₹50 crore pilot and later ₹125–300 crore closings be processed through RTGS without payment-aggregator or consumer-payment limits?</li>
+<li>Can each deal and seller receive a unique VAN, sub-ledger or equivalent reconciliation identifier while money remains in the bank-held account?</li>
+<li>Can the same closing pay an existing lender directly, then seller net proceeds, AssureRail's earned fee/tax and approved third-party amounts?</li>
+<li>What signed agreement and approvals freeze the distribution schedule? Who can amend, approve, suspend and release it?</li>
+<li>Can AssureRail submit a schedule without possessing unilateral authority to release or redirect funds?</li>
+<li>Which maker-checker, beneficiary validation, sanctions/fraud and high-value transaction controls apply?</li>
+<li>What API, H2H, SFTP, portal and webhook/status interfaces are available? Supply sandbox documentation and sample acknowledgements.</li>
+<li>How are duplicate, timeout, unknown, partial, returned and failed payout states reconciled? Is every instruction idempotent?</li>
+<li>What bank references, signed statements and closing evidence are available for every leg?</li>
+<li>What are the onboarding/KYC, account-opening, agreement, UAT and production-approval steps?</li>
+<li>Itemise setup, account, VAN, transaction, API/H2H, trustee, amendment, exception, statement and closure charges plus tax.</li>
+<li>Provide the named implementation owner, closing-day escalation route, cut-offs, support coverage and two comparable institutional references.</li>
+</ol>
+<h2>Pilot proof required</h2>
+<p>The selected provider must first complete a synthetic or provider-approved sandbox rehearsal using AssureRail's five-seller structure. Test exact funding, overfunding, underfunding, seller-specific allocation, lender payoff, fee/tax deduction, invalid beneficiary, duplicate instruction, partial payout, timeout after submission, status inquiry, returned funds, schedule suspension, amended schedule and final evidence export.</p>
+<p>The sandbox result does not authorise live money. Production begins only after the executed agreements, corporate/KYC readiness, bank account, security acceptance, UAT, maker-checker assignments, support route and controlled first-event plan are approved.</p>
+<h2>Integration boundary</h2>
+<p>AssureRail retains one provider-neutral settlement contract and implements a provider adapter only after selection. The canonical objects are:</p>
+<ul>
+<li>closing pack and immutable digest;</li>
+<li>buyer funding requirement and observed receipt;</li>
+<li>seller-specific settled consideration;</li>
+<li>seller-authorised distribution schedule and version;</li>
+<li>payout leg, beneficiary reference, purpose, amount and tax treatment;</li>
+<li>provider instruction and idempotency reference;</li>
+<li>provider observation, acknowledgement and bank reference;</li>
+<li>exception, repair and final reconciliation state.</li>
+</ul>
+<p>Provider-specific account numbers, credentials, callback secrets and bank instructions remain in approved secret/configuration stores. They do not enter source control, general planning documents, browser configuration or sales material.</p>
+<h2>Contact routes</h2>
+<div class="table-wrap"><table><thead><tr><th>Organisation</th><th>Contact route</th><th>Discussion request</th></tr></thead><tbody>
+<tr><td>Axis Bank</td><td><code>escrow_rera.products@axis.bank.in</code>; use the existing Axis relationship to request the Financial Institutions, Transaction Banking, Escrow/ePower and CMS teams</td><td>DA sale/purchase closing account, VAN/reconciliation, multi-beneficiary RTGS and API/H2H sandbox</td></tr>
+<tr><td>TBX / TransBnk</td><td><code>partnership@transbnk.co.in</code></td><td>Bank-backed Escrow &amp; Regulated Accounts and Digital Ledger design for a ₹50 crore five-seller DA pilot</td></tr>
+<tr><td>HDFC Bank</td><td>Existing buyer contact; request Financial Institutions and Transaction Banking/Cash Management participation</td><td>Bank-operated closing route plus corporate payment/status/reconciliation APIs</td></tr>
+<tr><td>Castler</td><td><code>money@castler.com</code> only if retained as fallback</td><td>Written confirmation of current fund-escrow product, bank, DA acceptance, scale and API ownership</td></tr>
+</tbody></table></div>
+<h2>Current sources</h2>
+<ul>
+<li><a href="https://www.axis.bank.in/corporate/custodial-capital-account/escrow-services">Axis Bank escrow services</a></li>
+<li><a href="https://www.axis.bank.in/corporate/financial-institutions/nbfcs">Axis Bank services for NBFCs</a></li>
+<li><a href="https://apiportal.axis.bank.in/portal/">Axis Bank API developer portal</a></li>
+<li><a href="https://developer.hdfc.bank.in/payments">HDFC Bank corporate payment APIs</a></li>
+<li><a href="https://www.tbx.co.in/about-us">TBX institutional transaction-banking profile</a></li>
+<li><a href="https://www.tbx.co.in/products/digital-ledger-code">TBX digital-ledger and virtual-account product</a></li>
+<li><a href="https://www.tbx.co.in/products/co-lending-platform">TBX co-lending escrow platform</a></li>
+<li><a href="https://www.tbx.co.in/contact-us">TBX contact page</a></li>
+<li><a href="https://castler.com/escrow-account">Castler enterprise escrow-banking page</a></li>
+<li><a href="https://developer.ncome.in/reference/create-escrow">Castler Digital Escrow ID API</a></li>
+</ul></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

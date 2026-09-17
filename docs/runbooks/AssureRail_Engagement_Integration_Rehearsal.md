@@ -85,7 +85,7 @@ These are implemented authenticated APIs. The new bank-file and escrow helpers b
 
 The caller must still be integrated with a durable dispatch/outbox and attempt state before using this transport. There is no supplied live buyer template, endpoint, acknowledgment channel or real SFTP roundtrip evidence. FTPS transport is not implemented by this increment. ₹50K covers the previously agreed standard scoped setup; a second product or reused interface is not another automatic setup fee.
 
-`escrow-settlement-contract.ts` validates balanced INR instructions, invoiced deduction references and individual settlement-leg observations. It does not validate legal mandates by itself, hold money, create a VAN, dispatch to Castler or prove provider settlement. Multi-seller authority, signed instructions, beneficial ownership, bank/Castler authentication and durable reconciliation must be implemented against the eventual provider contract.
+`escrow-settlement-contract.ts` validates balanced INR instructions, invoiced deduction references and individual settlement-leg observations. It does not validate legal mandates by itself, hold money, create a VAN, dispatch to a bank/provider or prove provider settlement. Multi-seller authority, signed instructions, beneficial ownership, bank/provider authentication and durable reconciliation must be implemented against the eventual provider contract.
 
 ## Verification and demonstration
 
@@ -102,7 +102,7 @@ ASSURERAIL_EXTRACTOR_PYTHON=/absolute/path/to/python bash scripts/assurerail-bil
 
 Install `scripts/assurerail-document-requirements.txt` in that Python environment. The PostgreSQL script uses a disposable local cluster and must never be pointed at a shared/live database. It builds the API itself. The new service rehearsal separately requires an explicit disposable-rehearsal flag and localhost database.
 
-Evidence from this increment is revalidated after each pricing/workflow revision. The database test exercises the actual engagement, invoice, checkout, upload, extraction, automated initial release and rerun services, while identity/MFA, provider HTTP and clean scanner are **synthetic stubs**. Portfolio Preparation reviewer acceptance still needs its own complete database scenario. The existing invoice/receipt backup-restore checks precede the new engagement scenarios; new engagement records were not separately backup-restored. No real provider charges, AI inference, authenticated browser journey, bank SFTP roundtrip or Castler settlement have been performed.
+Evidence from this increment is revalidated after each pricing/workflow revision. The database test exercises the actual engagement, invoice, checkout, upload, extraction, automated initial release and rerun services, while identity/MFA, provider HTTP and clean scanner are **synthetic stubs**. Portfolio Preparation reviewer acceptance still needs its own complete database scenario. The existing invoice/receipt backup-restore checks precede the new engagement scenarios; new engagement records were not separately backup-restored. No real provider charges, AI inference, authenticated browser journey, bank SFTP roundtrip or bank/provider settlement have been performed.
 
 For a technical demonstration, run the disposable rehearsal and show its explicit synthetic status. For the authenticated UI demo, provision approved test identities/contracts/roles and certified storage/scanning first, then follow the eight delivered steps above. Do not claim that the complete authenticated demo has passed based solely on a web build.
 
@@ -114,10 +114,10 @@ For a technical demonstration, run the disposable rehearsal and show its explici
 | Full preparation | AssurePool signed seller launch with accepted Rail billing authority, full credit/legal/risk modelling and approved tape mappings; representative document/model accuracy evaluation, customer correction UX and qualified Portfolio Preparation reviewer capacity. |
 | Buyer onboarding integration | Approved buyer-profile synchronisation, seller/staff identity acceptance and cross-product scoped handoff tests. |
 | Buyer file delivery | Durable dispatch/outbox, buyer-specific mapping, credentials, approved template, acknowledgment integration, duplicate/partial/ambiguous-outcome and rotation acceptance. |
-| Settlement | Bank/Castler specification, per-seller mandate verification, actual provider dispatch, authenticated events, fee allocation from actual settled consideration and complete leg reconciliation. |
+| Settlement | Selected transaction-bank/provider specification, per-seller mandate verification, actual provider dispatch, authenticated events, fee allocation from actual settled consideration and complete leg reconciliation. |
 | Full demo / production readiness | Authenticated browser walkthrough, adversarial/cross-tenant tests, real provider test-mode end-to-end run, real-document evaluation, bank sandbox acceptance and operational recovery rehearsal. |
 
-Inputs to request: Razorpay test merchant/account/webhook configuration; authorised OpenAI and Gemini accounts; reviewer qualification evidence and scoped access; buyer SFTP template/sandbox/owner; Castler settlement specification and test credentials. Missing external inputs do not make the remaining internal work complete. No production deployment was performed by this change.
+Inputs to request: Razorpay test merchant/account/webhook configuration; authorised OpenAI and Gemini accounts; reviewer qualification evidence and scoped access; buyer SFTP template/sandbox/owner; and a selected transaction bank/provider's settlement specification and test credentials. Axis Bank direct, HDFC Bank direct and TBX/TransBnk are being assessed in parallel; Castler is not assumed. Missing external inputs do not make the remaining internal work complete. No production deployment was performed by this change.
 
 ## Provider references
 

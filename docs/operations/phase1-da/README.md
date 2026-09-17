@@ -44,6 +44,7 @@ Initial Assessment applications are open for approved NBFC portfolios. Until Ass
 | [Uninterrupted execution chain](./AssureRail_Uninterrupted_DA_Execution_Chain.md) | Build, evidence and activation gates in dependency order | `INTERNAL` |
 | [Founder Initial Assessment demonstration](./AssureRail_Founder_Initial_Assessment_Demo.md) | Account-driven synthetic seller rehearsal | `INTERNAL` |
 | [Coordinated closing rehearsal](./AssureRail_DA_Coordinated_Closing_Rehearsal.md) | Seller-specific closing, authorisation and ambiguity repair | `INTERNAL` |
+| [Settlement-provider selection](./AssureRail_DA_Settlement_Provider_Selection.md) | Transaction-bank/TBX shortlist, non-negotiable gates, common RFI and pilot proof | `INTERNAL` |
 | [Initial Assessment remediation design](../../design/AssureRail_Initial_Assessment_Remediation_And_Reassessment.md) | Gap ownership, corrected evidence and comparable reassessment | `INTERNAL` |
 | [Buyer policy compiler implementation](../../design/AssureRail_Buyer_Policy_Compiler_v0_Implementation.md) | MSA-bound record checks and traceability | `INTERNAL` |
 | [Buyer profile screening model](../../design/AssureRail_Buyer_Profile_Screen_v0.md) | Structured cohort-level preparation screen | `INTERNAL` |
