@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AssureRail UX Operating System</title>
+  <style>
+    :root{--ink:#102c3a;--muted:#536772;--line:#d8e3e8;--paper:#fff;--wash:#f3f7f8;--brand:#087f8c;--good:#18734a;--warn:#a96000;--bad:#a93434}*{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:15px/1.55 Inter,Arial,sans-serif}main{max-width:1120px;margin:auto;background:var(--paper);min-height:100vh;padding:52px clamp(24px,6vw,76px)}h1,h2,h3{line-height:1.15}h1{font-size:clamp(34px,5vw,58px);margin:.15em 0}.eyebrow{color:var(--brand);font-weight:700;letter-spacing:.1em;text-transform:uppercase}.lede{font-size:20px;max-width:780px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.card{border:1px solid var(--line);border-radius:14px;padding:20px;background:#fff}.card strong{display:block;font-size:28px}.flow{display:flex;gap:8px;align-items:center;overflow:auto;padding:8px 0 18px}.flow span{white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:9px 13px;background:var(--wash)}.flow b{color:var(--brand)}table{width:100%;border-collapse:collapse}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}th{font-size:13px;text-transform:uppercase;letter-spacing:.04em}.pill{display:inline-block;border-radius:999px;padding:3px 9px;background:#dff3ed;color:var(--good);font-weight:700}.pending{background:#fff0d7;color:var(--warn)}code{background:var(--wash);padding:2px 5px;border-radius:4px}section{margin-top:42px}li{margin:7px 0}.fine{font-size:13px;color:var(--muted)}@media(max-width:650px){main{padding:30px 18px}th:nth-child(3),td:nth-child(3){display:none}}
+  </style>
+</head>
+<body><main>
+  <p class="eyebrow">Product and release standard · 18 September 2026</p>
+  <h1>AssureRail UX Operating System</h1>
+  <p class="lede">A functional, intuitive product comes from one set of interaction rules enforced in code and tested through complete user journeys. Every release must prove the customer can understand where they are, complete the next task, recover from errors and trust what the system saved.</p>
+
+  <section>
+    <h2>The operating model</h2>
+    <div class="flow"><span><b>1</b> Define the golden journey</span><span>→</span><span><b>2</b> Build from shared primitives</span><span>→</span><span><b>3</b> Test desktop and mobile</span><span>→</span><span><b>4</b> Observe pilot friction</span><span>→</span><span><b>5</b> Block regressions</span></div>
+    <div class="grid">
+      <div class="card"><strong>5 states</strong>Every data screen explicitly handles idle, loading, ready, empty and error.</div>
+      <div class="card"><strong>1 scope</strong>Customer data and pending actions are bound to the active institution and cleared on a scope change.</div>
+      <div class="card"><strong>1 next step</strong>Each page explains the task, prerequisite and outcome beside the action that needs it.</div>
+      <div class="card"><strong>0 raw errors</strong>Technical details remain in controlled logs; customers receive safe, actionable language.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Golden journeys</h2>
+    <table><thead><tr><th>Journey</th><th>Successful outcome</th><th>Required regression proof</th></tr></thead><tbody>
+      <tr><td>Account and onboarding</td><td>Create or access an institutional account, complete identity and enter the correct workspace.</td><td>Keyboard submission, clean sign-in/register switching, safe errors, redirect and session persistence.</td></tr>
+      <tr><td>Initial Assessment</td><td>Define a book, see a complete quote, accept terms, pay, upload evidence, receive insights, fix gaps and reassess.</td><td>Quote invalidation after edits, exact stage pricing, payment state, upload validation, current evidence selection and three included reassessments.</td></tr>
+      <tr><td>Portfolio Preparation</td><td>Choose committed or standalone preparation, upload improvements and receive qualified expert review and sign-off.</td><td>Route and mandate reset, stage boundaries, reviewer status, exception ownership and release controls.</td></tr>
+      <tr><td>Buyer onboarding</td><td>Join after an MSA, configure structured requirements and review only authorised portfolios.</td><td>RBAC, institution isolation, structured settings, invitation lifecycle and audit evidence.</td></tr>
+      <tr><td>Execution</td><td>Move an approved portfolio through conditions, integrations, settlement evidence and completion.</td><td>Authority checks, connector states, reconciliation, fee allocation, exception recovery and immutable evidence.</td></tr>
+    </tbody></table>
+  </section>
+
+  <section>
+    <h2>Components that replace one-off fixes</h2>
+    <table><thead><tr><th>Primitive</th><th>Rule</th><th>Status</th></tr></thead><tbody>
+      <tr><td><code>useScopedResource</code></td><td>Tags every request to its institution, hides prior-scope data immediately and ignores late responses.</td><td><span class="pill">Implemented</span></td></tr>
+      <tr><td><code>FeedbackBanner</code></td><td>Announces errors assertively and success politely with one visual treatment.</td><td><span class="pill">Implemented</span></td></tr>
+      <tr><td>Action state</td><td>Uses action-specific progress, clears obsolete feedback on edit and clears step-up codes after use or scope change.</td><td><span class="pill">Implemented in critical paths</span></td></tr>
+      <tr><td>Validated action</td><td>Explains why an action is unavailable beside the control; editing accepted scope invalidates the old action.</td><td><span class="pill">Implemented in assessment</span></td></tr>
+      <tr><td>Journey harness</td><td>Runs the same accessibility, responsive, safe-error and state-transition checks in Chromium and mobile WebKit.</td><td><span class="pill pending">Configured; controlled run required</span></td></tr>
+    </tbody></table>
+  </section>
+
+  <section>
+    <h2>Release gate</h2>
+    <ol>
+      <li><strong>Source gate:</strong> no raw technical errors, direct exception messages or inaccessible shared feedback.</li>
+      <li><strong>Build gate:</strong> TypeScript and production build pass for the touched workspace.</li>
+      <li><strong>Golden-path gate:</strong> authorised synthetic accounts complete critical journeys on desktop Chromium and mobile WebKit.</li>
+      <li><strong>Interaction audit:</strong> one visible page heading, labelled controls, named actions, no duplicate IDs and no horizontal overflow.</li>
+      <li><strong>State-transition audit:</strong> institution, engagement, document-version and sign-in mode changes cannot expose or act on stale state.</li>
+      <li><strong>Security gate:</strong> daily offline security harness passes and authenticated browser evidence excludes credentials, traces and screenshots.</li>
+    </ol>
+    <p>Release commands: <code>npm run ux:source</code>, <code>npm run ux:e2e:list</code>, and—only against an authorised synthetic environment—<code>npm run ux:e2e</code>.</p>
+  </section>
+
+  <section>
+    <h2>Definition of done for every customer screen</h2>
+    <div class="grid">
+      <div class="card"><h3>Comprehension</h3><ul><li>One clear page purpose and primary action.</li><li>Plain labels; complex terms have contextual help.</li><li>Commercial consequences appear before acceptance.</li></ul></div>
+      <div class="card"><h3>Control</h3><ul><li>Edits clear obsolete success, error and selection state.</li><li>Destructive or governed actions state prerequisites.</li><li>Retry does not duplicate a saved request.</li></ul></div>
+      <div class="card"><h3>Accessibility</h3><ul><li>Keyboard-complete journey and visible focus.</li><li>Semantic form, heading and disclosure structure.</li><li>Errors are announced and connected to recovery.</li></ul></div>
+      <div class="card"><h3>Trust</h3><ul><li>Loading, empty and failure states are distinct.</li><li>Institution data never survives a scope switch.</li><li>Saved outcome and next step are explicit.</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Pilot feedback without repeated founder review</h2>
+    <p>Run five observed seller sessions against the synthetic EV cohort. Record task completion, time, backtracks, validation failures and support requests by journey step. Review the aggregate after every session and fix any blocker before the next participant. Product analytics must use event names and opaque record identifiers only; document contents, loan data, authentication secrets and personal data stay out of telemetry.</p>
+    <p class="fine">Release owner: engineering proves the automated gate; product signs off the journey copy and commercial consequences; security signs off scope isolation and evidence handling. A screen that fails a golden journey does not ship.</p>
+  </section>
+</main></body></html>
