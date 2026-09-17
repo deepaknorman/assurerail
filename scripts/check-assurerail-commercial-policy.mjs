@@ -42,6 +42,12 @@ required(policy.referral.basis === "COLLECTED_DISCOUNTED_ASSURERAIL_FEES_ACROSS_
 required(policy.designPartnerProgramme.maximumSellerInstitutionsEver === 2 && policy.designPartnerProgramme.discountPercent === 30, "Design-partner lifetime cap or discount drifted");
 required(policy.designPartnerProgramme.application === "MAKER_CHECKER_APPROVED_INVOICE_CREDIT_BEFORE_GST", "Design-partner discount must remain independently approved and pre-tax");
 required(policy.designPartnerProgramme.standardRateCardRemainsUnchanged === true, "Design-partner offer cannot rewrite the standard rate card");
+required(policy.cohortMinimumTreatment.cohortMinimums.fixedStageMinimumApplication === "ONCE_PER_COHORT_FOR_THE_ACCEPTED_ROUTE", "A formed analytical cohort must apply the fixed-stage floor once");
+required(policy.cohortMinimumTreatment.cohortMinimums.executionMinimumApplication === "ALLOCATED_ONCE_AT_COHORT_FORMATION_ACROSS_EXPECTED_MEMBER_CLOSINGS", "A formed analytical cohort must allocate the execution floor once");
+required(policy.cohortMinimumTreatment.allocation.reallocationAfterFormation === false, "A signed seller cannot inherit another cohort member's allocation");
+required(policy.cohortMinimumTreatment.allocation.membershipOrScopeUnderfillRisk === "ASSURERAIL", "AssureRail must retain formed-cohort under-fill risk");
+required(policy.cohortMinimumTreatment.allocation.designPartnerDiscountOrder === "AFTER_COHORT_ALLOCATION", "Design-partner credit must follow seller allocation");
+required(policy.cohortMinimumTreatment.legalAndOperationalSeparation.legalCommingling === false, "Analytical cohort formation cannot imply legal commingling");
 required(policy.additionalServices.routineThirdPartyServices.supplierCostBufferPercent === 25, "Third-party service buffer drifted");
 required(policy.fixedStages.scopeReconciliation.customerCreditValidityMonths === 12, "Customer credit must remain valid for 12 months after formal closure");
 required(policy.fixedStages.scopeReconciliation.workspaceInactivityRefreshDays === 90, "Workspace evidence refresh must remain at 90 inactive days");

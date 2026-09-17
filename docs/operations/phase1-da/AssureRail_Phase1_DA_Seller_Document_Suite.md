@@ -1,6 +1,6 @@
 # AssureRail Phase 1 DA seller document suite
 
-**Version:** 1.0 — 16 September 2026
+**Version:** 1.1 — 17 September 2026
 **Classification:** `AUTHENTICATED`
 **Status:** drafting structure for Indian counsel review; this is not an executed agreement or legal opinion.
 
@@ -10,6 +10,7 @@ The seller signs a durable master agreement and short, versioned orders for each
 
 | Document | Commercial function | Required schedules | Signature trigger |
 |---|---|---|---|
+| [Seller Commitment Letter (pre-incorporation)](./AssureRail_Phase1_DA_Seller_Commitment_Letter.md) | Records the Seller's present intention and grants a narrow, free Tier-A tape pre-screen authority; it is not a paid order or mandate | Seller and declared book; Tier-A eligible range; indicative transferable and cash ranges; analytical-cohort allocation; dual-role conflict disclosure; conditional design-partner drafting control | Seller signs the limited-authority gate before the pre-screen and the separate commercial acknowledgement only after results; both are pre-incorporation and grant no paid-service, buyer-facing or settlement authority |
 | Seller Master Services Agreement (MSA) | Common legal, data, security, liability, IP, audit, dispute and order rules | Definitions; security/data schedule; acceptable use; support; provider/pass-through framework | After AssureRail incorporation and before the first paid order |
 | Initial Assessment Order | Binding declared scope, automated service, quote and payment | Seller/entity; asset class; corpus; unique-pair counts; linked-party counts; required uploads; run allowance; exclusions; quote validity | Before Initial Assessment payment and data admission |
 | Portfolio Preparation Statement of Work (SOW) | Preparation deliverables, professional sections, assumptions, limits and fixed-stage balance | Admitted pool; remediation baseline; reviewer assignments; buyer profile; timetable; dependencies; additional-service lines | Before Portfolio Preparation starts |

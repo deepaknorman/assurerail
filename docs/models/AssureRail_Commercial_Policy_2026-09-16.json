@@ -3,9 +3,18 @@
   "effectiveDate": "2026-09-17",
   "currency": "INR",
   "currencyScale": 2,
+  "provenance": {
+    "status": "Founder-approved pilot commercial policy snapshot for company models, quotes and generated commercial artifacts",
+    "runtimeReference": "config/assurerail-da-commercial-policy.json",
+    "decisionRecord": "docs/operations/phase1-da/AssureRail_Design_Partner_Pricing_Control.md",
+    "control": "This snapshot is the commercial-artifact source of truth. Forecast demand, attachment, delivery-effort and valuation assumptions remain in AssureRail_Commercial_Inputs_2026-09-15.json.",
+    "changeNote": "PILOT-3 records the founder-approved minimum treatment for formed multi-seller analytical cohorts; it does not change standard unit rates or variable execution slabs."
+  },
   "phase": {
     "productionPriority": "CONVENTIONAL_DA",
-    "deferred": ["PTC"]
+    "deferred": [
+      "PTC"
+    ]
   },
   "fixedStages": {
     "counting": {
@@ -85,7 +94,11 @@
     "secureFileConnection": {
       "feeMinor": "5000000",
       "unit": "ACCEPTED_POINT_TO_POINT_CONNECTION",
-      "includes": ["SETUP", "TESTING", "VALIDATION"]
+      "includes": [
+        "SETUP",
+        "TESTING",
+        "VALIDATION"
+      ]
     },
     "apiIntegration": "QUOTE_ON_REQUEST",
     "ongoingMonitoring": "OPTIONAL",
@@ -110,21 +123,58 @@
     "eligibility": "FIRST_TWO_NBFC_SELLER_ENTITIES_TO_SIGN_AN_ASSESSMENT_SCOPE_AND_RECEIVE_INDEPENDENT_APPROVAL",
     "term": "ENTITY_BOUND_LIFETIME_NON_EXPIRING",
     "application": "MAKER_CHECKER_APPROVED_INVOICE_CREDIT_BEFORE_GST",
-    "eligibleFeeClasses": ["INITIAL_ASSESSMENT", "PORTFOLIO_PREPARATION", "CORE_EXECUTION_SUCCESS_FEE", "LARGE_PROGRAMME_SUPPLEMENT"],
-    "excludedFeeClasses": ["ADDITIONAL_SERVICES", "THIRD_PARTY_PASS_THROUGHS", "SECURE_FILE_CONNECTION", "API_INTEGRATION", "ONGOING_MONITORING", "CONTRACTOR_DAY_RATES"],
+    "eligibleFeeClasses": [
+      "INITIAL_ASSESSMENT",
+      "PORTFOLIO_PREPARATION",
+      "CORE_EXECUTION_SUCCESS_FEE",
+      "LARGE_PROGRAMME_SUPPLEMENT"
+    ],
+    "excludedFeeClasses": [
+      "ADDITIONAL_SERVICES",
+      "THIRD_PARTY_PASS_THROUGHS",
+      "SECURE_FILE_CONNECTION",
+      "API_INTEGRATION",
+      "ONGOING_MONITORING",
+      "CONTRACTOR_DAY_RATES"
+    ],
     "exclusionSetStatus": "PILOT_DEFAULT_PENDING_FOUNDER_CONFIRMATION",
     "standardRateCardRemainsUnchanged": true
   },
   "referral": {
     "basePercent": 8.5,
     "basis": "COLLECTED_DISCOUNTED_ASSURERAIL_FEES_ACROSS_THREE_CORE_STAGES_ONLY",
-    "eligible": ["INITIAL_ASSESSMENT", "PORTFOLIO_PREPARATION", "CORE_EXECUTION"],
-    "excludes": ["ADDITIONAL_SERVICES", "ARRANGEMENT", "INTEGRATION", "LARGE_PROGRAMME_SUPPLEMENT", "MONITORING", "THIRD_PARTY_PASS_THROUGHS", "GST", "REFUNDS", "CREDITS"],
-    "largeProgrammeSupplementExclusionStatus": "PILOT_DEFAULT_EXCLUDED_PENDING_FOUNDER_CONFIRMATION",
+    "eligible": [
+      "INITIAL_ASSESSMENT",
+      "PORTFOLIO_PREPARATION",
+      "CORE_EXECUTION"
+    ],
+    "excludes": [
+      "ADDITIONAL_SERVICES",
+      "ARRANGEMENT",
+      "INTEGRATION",
+      "LARGE_PROGRAMME_SUPPLEMENT",
+      "MONITORING",
+      "THIRD_PARTY_PASS_THROUGHS",
+      "GST",
+      "REFUNDS",
+      "CREDITS"
+    ],
     "paymentTiming": "QUARTERLY_IN_ARREARS",
     "acceptedRegistrationWindowMonths": 6,
     "lapseWithoutEvidencedIntroductionDays": 60,
-    "ingestFormattingPaidBySeller": true
+    "ingestFormattingPaidBySeller": true,
+    "largeProgrammeSupplementExclusionStatus": "PILOT_DEFAULT_EXCLUDED_PENDING_FOUNDER_CONFIRMATION"
+  },
+  "payments": {
+    "checkoutPrimary": "RAZORPAY",
+    "checkoutSecondary": "MAXIMUS_SUBJECT_TO_TECHNICAL_AND_COMMERCIAL_ACCEPTANCE",
+    "successFeeCollection": "ACCEPTED_ESCROW_DISTRIBUTION_AT_SETTLEMENT"
+  },
+  "documentAutomation": {
+    "primary": "gpt-5.6-luna",
+    "fallback": "gemini-3-flash-preview",
+    "humanReviewAtInitialAssessment": false,
+    "humanExpertSignoffAtPortfolioPreparation": true
   },
   "cohortMinimumTreatment": {
     "version": "1.0",
@@ -146,7 +196,11 @@
       "primaryUnit": "UNIQUE_SELLER_LOAN_BORROWER_PAIR",
       "coBorrowerTreatment": "EACH_COBORROWER_IS_A_SEPARATE_PRIMARY_UNIT",
       "linkedPartyUnit": "UNIQUE_LOAN_LINKED_PARTY_PAIR",
-      "linkedPartyExamples": ["GUARANTOR", "SECURITY_PROVIDER", "OTHER_SEPARATELY_LINKED_PARTY"],
+      "linkedPartyExamples": [
+        "GUARANTOR",
+        "SECURITY_PROVIDER",
+        "OTHER_SEPARATELY_LINKED_PARTY"
+      ],
       "crossSellerBorrowerTreatment": "COUNT_SEPARATELY_PER_SELLER_AND_FLAG_AS_COHORT_CONCENTRATION",
       "crossSellerDeduplicationForBilling": false
     },
@@ -170,20 +224,18 @@
     "legalAndOperationalSeparation": {
       "cohortPurpose": "ANALYTICAL_PREPARATION_AND_BUYER_PRESENTATION",
       "legalCommingling": false,
-      "sellerSpecific": ["OWNERSHIP", "MANDATE", "REPRESENTATIONS", "ORDER", "INVOICE", "PURCHASE_CONSIDERATION", "SETTLEMENT_WATERFALL", "CLOSING"],
+      "sellerSpecific": [
+        "OWNERSHIP",
+        "MANDATE",
+        "REPRESENTATIONS",
+        "ORDER",
+        "INVOICE",
+        "PURCHASE_CONSIDERATION",
+        "SETTLEMENT_WATERFALL",
+        "CLOSING"
+      ],
       "buyerRunsSeparateSellerClosings": true,
       "closingMayBeSequenced": true
     }
-  },
-  "payments": {
-    "checkoutPrimary": "RAZORPAY",
-    "checkoutSecondary": "MAXIMUS_SUBJECT_TO_TECHNICAL_AND_COMMERCIAL_ACCEPTANCE",
-    "successFeeCollection": "ACCEPTED_ESCROW_DISTRIBUTION_AT_SETTLEMENT"
-  },
-  "documentAutomation": {
-    "primary": "gpt-5.6-luna",
-    "fallback": "gemini-3-flash-preview",
-    "humanReviewAtInitialAssessment": false,
-    "humanExpertSignoffAtPortfolioPreparation": true
   }
 }

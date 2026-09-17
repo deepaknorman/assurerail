@@ -1,6 +1,6 @@
 /* Generated from config/assurerail-da-commercial-policy.json. Do not edit. */
 export const commercialPolicy = {
-  "policyVersion": "DA-2026-09-17-PILOT-2",
+  "policyVersion": "DA-2026-09-17-PILOT-3",
   "effectiveDate": "2026-09-17",
   "currency": "INR",
   "currencyScale": 2,
@@ -95,7 +95,11 @@ export const commercialPolicy = {
       ]
     },
     "apiIntegration": "QUOTE_ON_REQUEST",
-    "ongoingMonitoring": "OPTIONAL"
+    "ongoingMonitoring": "OPTIONAL",
+    "monitoringPayer": {
+      "DA": "SELLER_FIRST_12_MONTHS_THEN_BUYER_UNLESS_SELLER_REMAINS_SERVICER_OR_DOCUMENTS_OVERRIDE",
+      "PTC": "BUYER_ORIGINATOR_50_50_UNLESS_DOCUMENTS_OVERRIDE"
+    }
   },
   "commercialGovernance": {
     "internalAssureRailRevenueBenchmarkBps": 60,
@@ -154,6 +158,68 @@ export const commercialPolicy = {
     "acceptedRegistrationWindowMonths": 6,
     "lapseWithoutEvidencedIntroductionDays": 60,
     "ingestFormattingPaidBySeller": true
+  },
+  "cohortMinimumTreatment": {
+    "version": "1.0",
+    "status": "FOUNDER_APPROVED_PILOT_POLICY",
+    "appliesTo": "FORMED_MULTI_SELLER_ANALYTICAL_DA_COHORT",
+    "standardUnitRatesAndExecutionSlabsRemainUnchanged": true,
+    "cohortMinimums": {
+      "fixedStageMinimumApplication": "ONCE_PER_COHORT_FOR_THE_ACCEPTED_ROUTE",
+      "executionMinimumApplication": "ALLOCATED_ONCE_AT_COHORT_FORMATION_ACROSS_EXPECTED_MEMBER_CLOSINGS",
+      "fixedStageMinimumMinorByRoute": {
+        "COMMITTED": "80000000",
+        "STANDALONE": "104000000"
+      },
+      "executionMinimumMinor": "50000000",
+      "minimumIsBackstop": true,
+      "aggregateVariableChargesGovernWhenHigher": true
+    },
+    "counting": {
+      "primaryUnit": "UNIQUE_SELLER_LOAN_BORROWER_PAIR",
+      "coBorrowerTreatment": "EACH_COBORROWER_IS_A_SEPARATE_PRIMARY_UNIT",
+      "linkedPartyUnit": "UNIQUE_LOAN_LINKED_PARTY_PAIR",
+      "linkedPartyExamples": [
+        "GUARANTOR",
+        "SECURITY_PROVIDER",
+        "OTHER_SEPARATELY_LINKED_PARTY"
+      ],
+      "crossSellerBorrowerTreatment": "COUNT_SEPARATELY_PER_SELLER_AND_FLAG_AS_COHORT_CONCENTRATION",
+      "crossSellerDeduplicationForBilling": false
+    },
+    "allocation": {
+      "fixedStageMinimumBasis": "PRO_RATA_BY_EACH_SELLERS_DECLARED_UNIQUE_PRIMARY_AND_LINKED_PARTY_PAIR_CHARGES_AT_THE_ACCEPTED_ROUTE_RATES",
+      "executionMinimumBasis": "PRO_RATA_BY_EACH_SELLERS_EXPECTED_SHARE_OF_SETTLED_PURCHASE_CONSIDERATION",
+      "formationPoint": "BEFORE_MEMBER_ORDER_ACCEPTANCE_USING_RECONCILED_DECLARED_SCOPE_AND_EXPECTED_SETTLED_SHARES",
+      "sellerOrderTreatment": "FREEZE_EACH_SELLERS_ALLOCATED_AMOUNT_IN_ITS_OWN_ORDER",
+      "reallocationAfterFormation": false,
+      "membershipOrScopeUnderfillRisk": "ASSURERAIL",
+      "designPartnerDiscountOrder": "AFTER_COHORT_ALLOCATION",
+      "collectedTotalMayFallBelowCohortMinimumAfterApprovedDiscount": true,
+      "declaredScopeVarianceBeforeFormation": "RECALCULATE_COUNTS_CORPUS_EXPECTED_SETTLED_SHARES_AND_ALLOCATIONS",
+      "memberChangeAfterFormation": "NO_REALLOCATION_TO_OTHER_SELLERS"
+    },
+    "executionTreatment": {
+      "variableFeeBasis": "EACH_SELLERS_ACTUAL_PURCHASE_CONSIDERATION_SETTLED",
+      "noSuccessfulCloseNoSuccessFee": true,
+      "minimumAllocationDoesNotCombineSettlements": true
+    },
+    "legalAndOperationalSeparation": {
+      "cohortPurpose": "ANALYTICAL_PREPARATION_AND_BUYER_PRESENTATION",
+      "legalCommingling": false,
+      "sellerSpecific": [
+        "OWNERSHIP",
+        "MANDATE",
+        "REPRESENTATIONS",
+        "ORDER",
+        "INVOICE",
+        "PURCHASE_CONSIDERATION",
+        "SETTLEMENT_WATERFALL",
+        "CLOSING"
+      ],
+      "buyerRunsSeparateSellerClosings": true,
+      "closingMayBeSequenced": true
+    }
   },
   "payments": {
     "checkoutPrimary": "RAZORPAY",

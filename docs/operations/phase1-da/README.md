@@ -36,6 +36,9 @@ Initial Assessment applications are open for approved NBFC portfolios. Until Ass
 | [Stage gates and service levels](./AssureRail_Phase1_DA_Stage_Gates_And_SLAs.md) | Operating acceptance criteria and clock rules | `INTERNAL` |
 | [Provider onboarding and work order](./AssureRail_Phase1_DA_Provider_Onboarding_And_Work_Order.md) | Supplier admission and engagement | `INTERNAL` |
 | [Seller document suite](./AssureRail_Phase1_DA_Seller_Document_Suite.md) | Contracting map and schedules | `AUTHENTICATED` |
+| [Seller commitment letter](./AssureRail_Phase1_DA_Seller_Commitment_Letter.md) | Two-gate pre-incorporation Tier-A authority and post-screen commercial acknowledgement | `AUTHENTICATED` |
+| [Tier A eligibility pre-screen](./AssureRail_DA_Tier_A_Eligibility_Prescreen.md) | Tape-only seller and cohort screen before paid assessment | `INTERNAL` |
+| [Seller-partner field brief](../../gtm/AssureRail_Seller_Partner_Field_Brief.md) | Controlled room script, role boundaries and cohort economics | `INTERNAL` |
 | [Buyer onboarding and MSA schedule](./AssureRail_Phase1_DA_Buyer_Onboarding_And_MSA_Schedule.md) | Post-MSA buyer workspace, requirements and RBAC | `AUTHENTICATED` |
 | [Referral partner addendum](./AssureRail_Phase1_DA_Referral_Partner_Addendum.md) | Accepted referral economics and controls | `AUTHENTICATED` |
 | [Quote reconciliation, credit and refund terms](./AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.md) | Quote and billing rules | `SHARED_PASSWORD` |

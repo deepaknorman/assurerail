@@ -70,6 +70,33 @@
       "releaseGate": "Seller workspace approval and counsel-reviewed executed form"
     },
     {
+      "id": "DA-SELLER-COMMITMENT",
+      "title": "Pre-incorporation seller commitment letter",
+      "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Seller_Commitment_Letter.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Seller_Commitment_Letter.html",
+      "classification": "AUTHENTICATED",
+      "status": "CURRENT",
+      "releaseGate": "Seller-specific counsel review, completed Tier-A fields and authorised two-gate signatures"
+    },
+    {
+      "id": "DA-TIER-A-PRESCREEN",
+      "title": "Tier A tape-only eligibility pre-screen",
+      "source": "docs/operations/phase1-da/AssureRail_DA_Tier_A_Eligibility_Prescreen.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_DA_Tier_A_Eligibility_Prescreen.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT",
+      "releaseGate": "Approved partner or AssureRail operator; minimised pseudonymous tape only"
+    },
+    {
+      "id": "DA-SELLER-PARTNER-FIELD-BRIEF",
+      "title": "Seller-partner field brief",
+      "source": "docs/gtm/AssureRail_Seller_Partner_Field_Brief.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Seller_Partner_Field_Brief.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT",
+      "releaseGate": "Approved referral partner or separately appointed Data Preparer"
+    },
+    {
       "id": "DA-REFERRAL",
       "title": "Referral partner addendum",
       "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Referral_Partner_Addendum.md",

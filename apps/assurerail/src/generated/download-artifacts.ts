@@ -76,6 +76,30 @@ export const DOWNLOAD_CATALOG = [
     "releaseGate": "Seller workspace approval and counsel-reviewed executed form"
   },
   {
+    "id": "DA-SELLER-COMMITMENT",
+    "title": "Pre-incorporation seller commitment letter",
+    "classification": "AUTHENTICATED",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": "Seller-specific counsel review, completed Tier-A fields and authorised two-gate signatures"
+  },
+  {
+    "id": "DA-TIER-A-PRESCREEN",
+    "title": "Tier A tape-only eligibility pre-screen",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": "Approved partner or AssureRail operator; minimised pseudonymous tape only"
+  },
+  {
+    "id": "DA-SELLER-PARTNER-FIELD-BRIEF",
+    "title": "Seller-partner field brief",
+    "classification": "INTERNAL",
+    "status": "CURRENT",
+    "route": null,
+    "releaseGate": "Approved referral partner or separately appointed Data Preparer"
+  },
+  {
     "id": "DA-REFERRAL",
     "title": "Referral partner addendum",
     "classification": "AUTHENTICATED",

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Tier A tape-only eligibility pre-screen | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail DA Tier A eligibility pre-screen</h1>
+<p><strong>Room worksheet · v1.0 · 17 September 2026 · <code>PARTNER_CONTROLLED</code></strong> <strong>Free and tape-only:</strong> no evidence files, portal account, payment, buyer submission, human diligence or professional opinion. Use borrower tokens, not names, PAN, Aadhaar, phone numbers or addresses. Every regulatory threshold is <strong>CONFIRM WITH COUNSEL</strong> before reliance.</p>
+<h2>1 · Define the proposed cohort</h2>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Entry</th></tr></thead><tbody>
+<tr><td>Cohort reference / screen date / tape cut-off</td><td></td></tr>
+<tr><td>Proposed asset or loan type and intended buyer class</td><td></td></tr>
+<tr><td>Seller legal names (3–4 expected)</td><td></td></tr>
+<tr><td>Proposed current-closing sequence</td><td>1. ___ 2. ___ 3. ___ 4. ___</td></tr>
+</tbody></table></div>
+<p><strong>Required tape columns:</strong> <code>seller_id</code>, <code>loan_id</code>, a cohort-consistent pseudonymous <code>borrower_token</code>, <code>party_role</code> (<code>BORROWER</code> / <code>CO_BORROWER</code>), <code>linked_party_token</code> and role where applicable, outstanding principal, origination date, original tenor or contractual maturity date, repayment frequency / instalments paid where required, residual tenor at cut-off, asset/loan type, current DPD, maximum DPD in the agreed history window, restructuring flag, and the agreed concentration fields. For vehicle/EV books request manufacturer, model, dealer, geography and borrower/employer or occupation segment where held.</p>
+<blockquote><strong>Counting face rule:</strong> one primary unit is each unique <strong>seller × loan × borrower or co-borrower</strong> combination. A co-borrower is another primary unit. One linked-party unit is each unique <strong>loan × linked party</strong> combination. The same borrower at two sellers is two billable primary units and a cross-seller overlap signal; do not deduplicate it from either seller.</blockquote>
+<h2>2 · Record each seller before applying rules</h2>
+<div class="table-wrap"><table><thead><tr><th>Seller</th><th>Declared principal ₹Cr</th><th>Loans</th><th>Borrower units</th><th>Co-borrower units</th><th><strong>Primary units</strong></th><th>Linked-party units</th><th>Original-tenor band</th><th>Residual-tenor band</th><th>Asset / loan type</th><th>Current / max DPD</th><th>Restructured ₹Cr</th><th>Top concentration + %</th></tr></thead><tbody>
+<tr><td>A</td><td></td><td></td><td></td><td></td><td>borrower + co-borrower</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>B</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>C</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>D</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><strong>Cohort</strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td>—</td><td>—</td><td>—</td><td>—</td><td></td><td></td></tr>
+</tbody></table></div>
+<h2>3 · Apply the agreed Tier A rules loan by loan</h2>
+<p>Insert buyer/counsel-confirmed values before running. Do not invent a regulatory or buyer threshold.</p>
+<div class="table-wrap"><table><thead><tr><th>Test</th><th>Confirmed input</th><th>Result and provisional exclusion bucket</th></tr></thead><tbody>
+<tr><td>Minimum holding period / holding duration (MHP/MHD), derived from origination date, original tenor and any required instalment history</td><td>Rule: ___; source/date: ___ · <strong>CONFIRM WITH COUNSEL</strong></td><td>Not met today → <strong>time-cured</strong>; record projected cure date. Missing/inconsistent field → <strong>remediable</strong>.</td></tr>
+<tr><td>Residual tenor at expected transfer</td><td>Minimum / permitted band: ___ · source/date: ___ · <strong>CONFIRM WITH COUNSEL</strong></td><td>Outside accepted band → <strong>structural for this cohort</strong>.</td></tr>
+<tr><td>Asset / loan type and permitted transferee</td><td>Accepted taxonomy / transferee class: ___ · source/date: ___ · <strong>CONFIRM WITH COUNSEL</strong></td><td>Unmapped field → <strong>remediable</strong>; confirmed outside policy → <strong>structural</strong>.</td></tr>
+<tr><td>DPD history</td><td>Current/max/history rule: ___ · source/date: ___</td><td>Missing field → <strong>remediable</strong>; confirmed breach → <strong>structural for this cohort</strong>.</td></tr>
+<tr><td>Restructuring</td><td>Treatment: ___ · source/date: ___ · <strong>CONFIRM WITH COUNSEL</strong></td><td>Missing flag → <strong>remediable</strong>; disallowed restructuring → <strong>structural</strong>.</td></tr>
+<tr><td>Concentrations</td><td>Borrower/group/manufacturer/dealer/geography/product caps: ___ · source/date: ___</td><td>Cap overflow → <strong>structural for this cohort construction</strong>; retain outside the proposed pool.</td></tr>
+</tbody></table></div>
+<p><strong>Bucket discipline:</strong> <strong>time-cured</strong> means no repair is claimed and the loan may become eligible only on a later confirmed date; <strong>remediable</strong> means data or Tier B evidence must be corrected and then retested; <strong>structural</strong> means it is outside the present rule set or cohort. Count principal once: structural controls first; otherwise use time-cured where waiting is required, then remediable, while retaining every secondary reason code. Tier A cannot test RC endorsement, insurance, KYC/authority, stamping or executed agreements; those remain Tier B and paid.</p>
+<h2>4 · Output the honest waterfall</h2>
+<div class="table-wrap"><table><thead><tr><th>Seller</th><th>Declared ₹Cr</th><th>Time-cured today ₹Cr</th><th>Remediable / Tier-B-conditional ₹Cr</th><th>Structural / cohort-cap ₹Cr</th><th><strong>Tier-A eligible today: low–high ₹Cr</strong></th><th>Retention input</th><th><strong>Indicative transferable: low–high ₹Cr</strong></th><th>Price / ₹100</th><th>Debt release ₹Cr</th><th><strong>Indicative net cash: low–high ₹Cr</strong></th></tr></thead><tbody>
+<tr><td>A</td><td></td><td></td><td></td><td></td><td></td><td>___ <strong>CONFIRM WITH COUNSEL</strong></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>B</td><td></td><td></td><td></td><td></td><td></td><td>___ <strong>CONFIRM WITH COUNSEL</strong></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>C</td><td></td><td></td><td></td><td></td><td></td><td>___ <strong>CONFIRM WITH COUNSEL</strong></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>D</td><td></td><td></td><td></td><td></td><td></td><td>___ <strong>CONFIRM WITH COUNSEL</strong></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><strong>Cohort roll-up</strong></td><td></td><td></td><td></td><td></td><td></td><td>—</td><td></td><td></td><td></td><td></td></tr>
+</tbody></table></div>
+<p><strong>Low eligible</strong> = declared − time-cured − remediable/Tier-B-conditional − structural/cap exclusions. <strong>High eligible</strong> assumes stated remediable items pass Tier B; it still excludes time-cured and structural items. <strong>Indicative transferable</strong> = eligible × (1 − confirmed retention). <strong>Indicative net cash</strong> = transferable × price/100 − debt release − disclosed fees, tax and expenses. All are ranges, not a quote, buyer decision or proceeds promise.</p>
+<p><strong>Current ₹48Cr working example—not an outcome:</strong> 25–35% assumed attrition produces <strong>₹31.2–36.0Cr</strong> Tier-A eligible. Applying an <strong>illustrative 10% retention solely to show the calculation — CONFIRM WITH COUNSEL</strong> produces <strong>₹28.08–32.40Cr</strong> indicative transferable. At an illustrative ₹100/₹100 price, gross consideration is the same range before debt release, fees, tax and expenses; net cash stays blank until those inputs are supplied.</p>
+<p><strong>Cross-seller overlap:</strong> ___ borrower tokens occur at more than one seller; ₹___Cr exposure; top repeated token share ___%. Treat this as a concentration and possible double-financing/double-pledge <strong>signal for investigation</strong>, never as a conclusion. Each seller remains separately owned, mandated, diligenced, contracted and settled; the cohort does not legally commingle the books.</p>
+<p><strong>Founder decision required — MHD/MHP re-runs:</strong> the included three same-scope automated reassessments expire 30 days after the first Initial Assessment and will not serve exclusions curing over several months. Choose before quoting: ☐ extend only the MHD-cured window ☐ introduce a low-cost tape-only maturity re-screen ☐ retain the current rule and quote a later run separately. <strong>No option is approved by this worksheet.</strong></p></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

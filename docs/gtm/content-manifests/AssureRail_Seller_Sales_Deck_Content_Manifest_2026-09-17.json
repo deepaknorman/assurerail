@@ -1,16 +1,19 @@
 {
-  "manifestVersion": "1.0",
+  "manifestVersion": "1.1",
   "assetId": 13,
   "audience": "NBFC seller CFO, treasurer, business head and operations lead",
   "route": "CONVENTIONAL_DA_PHASE_1",
   "formatTarget": "HOUSE_STYLE_PPTX_PDF_HTML",
   "classification": "PROSPECT_CONFIDENTIAL",
-  "corePromise": "Test, improve and prepare an admitted loan portfolio before incurring full buyer-diligence and execution cost.",
+  "corePromise": "Test, improve and prepare an admitted loan portfolio or compatible multi-seller analytical cohort before incurring full buyer-diligence and execution cost.",
   "narrativeSpine": [
+    "DECLARED_VS_ELIGIBLE_VS_INDICATIVE_TRANSFERABLE_VS_NET_CASH",
+    "THREE_EXCLUSION_BUCKETS_WITH_REMEDIATION_PATHS",
     "FULL_POPULATION_COMPUTATION_VS_DISCLOSED_PROFESSIONAL_SAMPLING",
     "PORTABLE_PREPARATION_RECORD",
     "CORRECTION_AND_COMPARABLE_REASSESSMENT_LOOP",
-    "BUYER_REQUIREMENTS_BROUGHT_FORWARD_BEFORE_FORMAL_DILIGENCE"
+    "BUYER_REQUIREMENTS_BROUGHT_FORWARD_BEFORE_FORMAL_DILIGENCE",
+    "COHORT_PREPARATION_WITH_SEPARATE_SELLER_CLOSINGS"
   ],
   "slides": [
     {
@@ -19,112 +22,186 @@
       "purpose": "Position AssureRail as staged preparation and controlled execution infrastructure for conventional direct assignment.",
       "proof": "Automated Initial Assessment, expert-reviewed Portfolio Preparation, structured buyer review and coordinated closing.",
       "visual": "Four-stage rail from admitted records to closing",
-      "claims": ["No guaranteed sale, price, timing or buyer approval."]
+      "claims": [
+        "No guaranteed sale, price, timing or buyer approval."
+      ]
     },
     {
       "number": 2,
       "title": "Subscale books lose time before they reach a bank decision",
       "purpose": "Show the CFO problem: fragmented tapes, missing evidence, repeated questions, duplicated advisers and books below many conventional execution thresholds.",
       "visual": "Before-state flow with rework loops",
-      "claims": ["Do not state that every market provider has a ₹150–200 crore legal minimum; describe it as a common practical focus and validate in each sales conversation."]
+      "claims": [
+        "Do not present any market-size threshold as legal, universal or accepted by a buyer class; validate current appetite for the actual opportunity."
+      ]
     },
     {
       "number": 3,
-      "title": "Five compatible sellers can prepare one analytical cohort",
-      "purpose": "Use the 5 × ₹10–12 crore EV example to show common schema, cut-off, remaining-tenor band, evidence standard and buyer pack.",
-      "visual": "Five seller lanes into a ₹50–60 crore analytical cohort, retaining seller-specific ownership, price, representations and settlement.",
-      "claims": ["The cohort is not legal commingling and does not erase seller-specific rights or obligations."]
+      "title": "Declared corpus, transferable corpus and cash are different numbers",
+      "purpose": "Give the CFO an honest funnel for the live-style cohort: approximately ₹48 crore declared across 3–4 sellers, an eligibility range after screening, approximately ₹30 crore indicative transferable under stated assumptions, and seller net cash only after the full closing waterfall.",
+      "visual": "₹48 Cr declared → seller-specific eligibility range → ~₹30 Cr indicative transferable → seller-specific gross consideration → debt release, fees and costs → net cash",
+      "claims": [
+        "The ₹48 crore and ₹30 crore figures are illustrative planning assumptions, not eligibility, price, buyer-demand or cash promises.",
+        "Any minimum-holding, retention, permitted-transferee or other regulatory treatment must be confirmed with transaction counsel for the actual pools before use."
+      ]
     },
     {
       "number": 4,
-      "title": "Every admitted loan receives a recorded rule outcome",
-      "purpose": "Differentiate full-population computation from unexplained sampling.",
-      "visual": "100% computational outcomes beside separately labelled CA, legal, field and technical samples",
-      "claims": ["Full-population does not mean every fact is independently verified or every file receives a separate legal opinion."]
+      "title": "Every exclusion should explain what happens next",
+      "purpose": "Classify screen-outs into time-cured, remediable and structural buckets so attrition becomes an actionable preparation result rather than an unexplained rejection.",
+      "visual": "Three-column exception register: time-cured / remediable / structural, each with affected units, reason, owner, evidence and next eligible review point",
+      "claims": [
+        "Time-cured means the loan may become eligible later without corrective work, subject to the buyer's policy and counsel-confirmed rules.",
+        "Remediable means evidence or documentation can be corrected and reassessed; structural means the loan remains outside the selected transaction criteria unless those criteria change."
+      ]
     },
     {
       "number": 5,
-      "title": "Initial Assessment finds avoidable failure early",
-      "purpose": "Explain the paid, automated, unsigned first stage and what the seller receives.",
-      "visual": "Inputs → reconciliation → evidence gaps → risk/economics → remediation plan",
-      "claims": ["No consultant, qualified expert or human merit reviewer at Initial Assessment.", "Three automated same-scope reassessments within 30 days."]
+      "title": "Three or four sellers can prepare one analytical cohort",
+      "purpose": "Use the approximately ₹48 crore vehicle/EV example to show a common schema, cut-off, remaining-tenor band, evidence standard and buyer pack across roughly ₹12–16 crore seller books.",
+      "visual": "3–4 seller lanes into a ~₹48 Cr analytical cohort and ~₹30 Cr indicative transferable view, followed by 3–4 separately controlled closing lanes",
+      "claims": [
+        "The cohort pools analysis and buyer presentation, not legal ownership or transaction authority.",
+        "Each seller retains separate ownership, mandate, representations, order, invoice, consideration, settlement waterfall and closing.",
+        "Cross-seller borrower overlap is surfaced as concentration and potential double-pledge evidence for review; countable units are not deduplicated across sellers."
+      ]
     },
     {
       "number": 6,
-      "title": "Fix the gaps and compare the next run",
-      "purpose": "Show affected loan–borrower pairs, owners, required evidence, corrected versions and resolved/continuing/new gaps.",
-      "visual": "Before/after remediation receipt",
-      "claims": ["The workspace remains open; changed scope is requoted."]
+      "title": "Every admitted loan receives a recorded rule outcome",
+      "purpose": "Differentiate full-population computation from unexplained sampling.",
+      "visual": "100% computational outcomes beside separately labelled CA, legal, field and technical samples",
+      "claims": [
+        "Full-population does not mean every fact is independently verified or every file receives a separate legal opinion."
+      ]
     },
     {
       "number": 7,
-      "title": "Qualified review begins only when the seller proceeds",
-      "purpose": "Separate automated assessment from Portfolio Preparation with CA/financial and transaction-counsel section review.",
-      "visual": "Stage gate with reviewer signatures by section",
-      "claims": ["Asset, field or technical specialists are added only where the evidence or rule requires them."]
+      "title": "Initial Assessment finds avoidable failure early",
+      "purpose": "Explain the paid, automated, unsigned first stage and what the seller receives.",
+      "visual": "Inputs → reconciliation → evidence gaps → risk/economics → remediation plan",
+      "claims": [
+        "No consultant, qualified expert or human merit reviewer at Initial Assessment.",
+        "Three automated same-scope reassessments within 30 days."
+      ]
     },
     {
       "number": 8,
-      "title": "Buyer requirements shape preparation before formal diligence",
-      "purpose": "Explain post-MSA buyer profiles, record-level checks and traceable questions without implying purchase commitment.",
-      "visual": "Buyer criteria → policy checks → exceptions → buyer pack",
-      "claims": ["The buyer retains credit, legal, compliance, valuation, pricing and purchase decisions."]
+      "title": "Fix the gaps and compare the next run",
+      "purpose": "Show affected loan–borrower pairs, owners, required evidence, corrected versions and resolved/continuing/new gaps.",
+      "visual": "Before/after remediation receipt",
+      "claims": [
+        "The workspace remains open; changed scope is requoted."
+      ]
     },
     {
       "number": 9,
-      "title": "A staged commercial model limits wasted spend",
-      "purpose": "Show the standard fixed-stage mechanics and quote variables.",
-      "visual": "Standard route table: committed ₹500/pair + ₹250/linked, ₹8L minimum; standalone ₹650/pair + ₹325/linked, ₹10.4L minimum; Initial Assessment 30% of standalone quote; applicable GST separate.",
-      "claims": ["Counts use unique seller–loan–borrower/co-borrower pairs and separate unique loan–linked-party pairs.", "Every count or corpus variance is recalculated."]
+      "title": "Qualified review begins only when the seller proceeds",
+      "purpose": "Separate automated assessment from Portfolio Preparation with CA/financial and transaction-counsel section review.",
+      "visual": "Stage gate with reviewer signatures by section",
+      "claims": [
+        "Asset, field or technical specialists are added only where the evidence or rule requires them."
+      ]
     },
     {
       "number": 10,
-      "title": "Execution fees follow successful settled consideration",
-      "purpose": "Explain the seller-specific cumulative marginal schedule.",
-      "visual": "40 bps through ₹25 crore; 30 bps marginal above ₹25 crore; ₹5L per-seller minimum; standalone premium conversion credit where eligible.",
-      "claims": ["No successful close, no execution success fee.", "Actual seller share of purchase consideration settled is the fee base."]
+      "title": "Buyer requirements shape preparation before formal diligence",
+      "purpose": "Explain post-MSA buyer profiles, record-level checks and traceable questions without implying purchase commitment.",
+      "visual": "Buyer criteria → policy checks → exceptions → buyer pack",
+      "claims": [
+        "The buyer retains credit, legal, compliance, valuation, pricing and purchase decisions."
+      ]
     },
     {
       "number": 11,
-      "title": "Limited design-partner economics for the first two NBFC sellers",
-      "purpose": "Present the founder-approved offer without creating a second card.",
-      "visual": "Standard quote → 30% entity-bound lifetime invoice credit → discounted taxable fee",
-      "claims": ["Subject to signed scope, independent approval and written eligible-fee schedule.", "Additional services, pass-throughs, connectivity, monitoring and contractor rates remain outside the current offer unless the quote states otherwise."]
+      "title": "Start with buyer classes that can assess the actual transferable size",
+      "purpose": "Present buyer sourcing as a validation exercise for an approximately ₹30 crore indicative transferable cohort rather than assuming a named bank or a large-private-bank ticket threshold.",
+      "visual": "Validate in parallel: small finance banks, old private-sector banks, relevant PSU-bank desks and larger NBFC acquirers; large private-bank outreach follows demonstrated execution or explicit interest",
+      "claims": [
+        "These are buyer classes to validate for the actual asset, policy, timing and size; they are not commitments, rankings or statements of regulatory eligibility.",
+        "Do not name any institution in seller materials without permission and evidenced current interest in the specific opportunity."
+      ]
     },
     {
       "number": 12,
-      "title": "Additional services are selected and priced separately",
-      "purpose": "Remove Bronze/Silver/Gold coercion and show check-box services.",
-      "visual": "Escrow/VAN coordination, counsel, CA certificate, bureau, registry, RTO/field work, SFTP, API and monitoring selection grid",
-      "claims": ["Routine managed services use published AssureRail customer rates; statutory and exceptional actual-cost items remain visible."]
+      "title": "Cohort pricing follows countable work, with one minimum backstop",
+      "purpose": "Explain corrected countable units and how a formed cohort receives one fixed-stage minimum allocated into ordinary seller-specific quotes.",
+      "visual": "Committed: ₹500 per unique seller–loan–borrower pair plus ₹250 per unique loan–linked-party pair; standalone: ₹650 plus ₹325; compare aggregate unit charges with one ₹8L/₹10.4L cohort minimum, then allocate any binding minimum pro-rata by each seller's declared weighted unit charges.",
+      "claims": [
+        "Each borrower and co-borrower creates a separate primary seller–loan–borrower unit; each guarantor, security provider or other separately linked party creates a separate loan–linked-party unit.",
+        "The seller is part of the primary key, so the same borrower in two sellers' books creates two units and is also flagged as cross-seller concentration.",
+        "The fixed-stage minimum applies once to a formed cohort, is allocated at formation, frozen in each seller's order and never reallocated because another seller changes scope or withdraws.",
+        "Every declared count or corpus variance is recalculated before formation; after formation, AssureRail bears cohort under-fill against the frozen minimum allocation.",
+        "For the illustrative ~₹48 crore cohort and ~₹30 crore settled consideration, combined standard core fees model at approximately ₹20.0–36.4 lakh (~0.67–1.21%), depending on the countable-unit mix; this is not a quote and excludes GST, optional services and pass-through costs."
+      ]
     },
     {
       "number": 13,
-      "title": "Settlement remains with the appointed bank or provider",
-      "purpose": "Show seller-authorised distribution, debt release, service-fee leg, external charges and seller net.",
-      "visual": "Balanced seller-specific waterfall with VAN and acknowledgements",
-      "claims": ["AssureRail does not receive gross purchase consideration or unilaterally release funds."]
+      "title": "Execution fees follow successful seller-specific settlement",
+      "purpose": "Explain the seller-specific cumulative marginal schedule and the one cohort execution-minimum backstop.",
+      "visual": "40 bps through ₹25 crore and 30 bps marginal above ₹25 crore on each seller's actual settled consideration; compare aggregate percentage fees with one ₹5L cohort minimum allocated by expected settled share at formation.",
+      "claims": [
+        "No successful close, no execution success fee.",
+        "Actual seller share of purchase consideration settled remains the variable-fee base.",
+        "Any binding execution-minimum allocation is frozen at cohort formation and not reallocated; the cohort does not combine seller closings."
+      ]
     },
     {
       "number": 14,
-      "title": "Compare DA with the funding alternative using your own inputs",
-      "purpose": "Frame immediate liquidity/risk transfer against retained-spread borrowing economics.",
-      "visual": "Editable CFO table: purchase price, debt release, all fees, external costs, retained exposure, annual funding cost and future spread surrendered",
-      "claims": ["Do not present an assumed all-inclusive 1.5% competitor route as fact.", "Do not claim savings without a line-by-line comparable quote and seller-specific assumptions."]
+      "title": "Limited design-partner economics for the first two NBFC sellers",
+      "purpose": "Present the founder-approved offer and show the discount only after the seller's cohort allocation is fixed.",
+      "visual": "Standard seller allocation → independently approved 30% entity-bound invoice credit → discounted taxable fee; no reallocation to other sellers",
+      "claims": [
+        "Subject to signed scope, independent approval and written eligible-fee schedule.",
+        "The design-partner discount applies after cohort allocation, so AssureRail absorbs any collected-total reduction below the cohort minimum.",
+        "Additional services, pass-throughs, connectivity, monitoring and contractor rates remain outside the current offer unless the quote states otherwise."
+      ]
     },
     {
       "number": 15,
+      "title": "Additional services are selected and priced separately",
+      "purpose": "Remove Bronze/Silver/Gold coercion and show check-box services.",
+      "visual": "Escrow/VAN coordination, counsel, CA certificate, bureau, registry, RTO/field work, SFTP, API and monitoring selection grid",
+      "claims": [
+        "Routine managed services use published AssureRail customer rates; statutory and exceptional actual-cost items remain visible."
+      ]
+    },
+    {
+      "number": 16,
+      "title": "Settlement remains with the appointed bank or provider",
+      "purpose": "Show separate seller-authorised distributions for debt release, service-fee leg, external charges and seller net even when preparation was pooled.",
+      "visual": "One analytical cohort leading to 3–4 balanced seller-specific waterfalls, VANs and acknowledgements",
+      "claims": [
+        "AssureRail does not receive gross purchase consideration or unilaterally release funds.",
+        "A buyer may sequence the separate seller closings; one completed closing does not guarantee the others."
+      ]
+    },
+    {
+      "number": 17,
+      "title": "Compare DA with the funding alternative using your own inputs",
+      "purpose": "Frame immediate liquidity/risk transfer against retained-spread borrowing economics.",
+      "visual": "Editable CFO table: declared corpus, eligible range, indicative transferable amount, seller purchase price, retained share, debt release, all fees, external costs and net cash",
+      "claims": [
+        "Do not present an assumed all-inclusive 1.5% competitor route as fact.",
+        "Do not claim savings without a line-by-line comparable quote and seller-specific assumptions."
+      ]
+    },
+    {
+      "number": 18,
       "title": "Start with a paid scope and an honest data pack",
-      "purpose": "Close with the seller action: declare book, counts, corpus, asset family, remaining tenor and evidence state.",
-      "visual": "Five-item readiness checklist and application CTA",
-      "claims": ["Commercial contracting and paid processing begin only after AssureRail Private Limited and live-readiness gates are complete."]
+      "purpose": "Close with the seller action: declare corpus, loans, borrower/co-borrower pairs, linked-party pairs, asset family, remaining tenor and evidence state.",
+      "visual": "Seller-level readiness checklist plus cohort roll-up and application CTA",
+      "claims": [
+        "Commercial contracting and paid processing begin only after AssureRail Private Limited and live-readiness gates are complete."
+      ]
     }
   ],
   "appendices": [
-    "Worked 5 × ₹10–12 crore EV cohort with seller-specific cost allocation",
+    "Worked ~₹48 crore vehicle/EV analytical cohort across 3–4 sellers with an illustrative ~₹30 crore transferable amount and separate cash waterfalls",
+    "Unique-pair counting and fixed/execution minimum allocation worksheet by seller",
     "Worked ₹125 crore and ₹300 crore seller-specific execution examples",
     "Base/Premium/Full comparison as presentation views only; every service contracted separately",
-    "Detailed responsibility and exclusion table"
+    "Detailed responsibility, exclusion-bucket and evidence table"
   ],
   "mustExclude": [
     "Internal 60 bps revenue benchmark",
@@ -132,7 +209,13 @@
     "PTC, tokenisation or Plaza as current Phase-1 availability",
     "Risk-free, guaranteed sale, guaranteed price or guaranteed savings language",
     "Unqualified '100% diligence' or 'all-inclusive competitor' claims",
-    "Old ₹5L/₹6.5L fixed-stage minima, 20% Initial Assessment or retired 50/40/35/30 schedule"
+    "Old ₹5L/₹6.5L fixed-stage minima, 20% Initial Assessment or retired 50/40/35/30 schedule",
+    "Claim that ₹50–150 crore cohorts are engineered to the engagement thresholds of large private-sector acquiring desks",
+    "Treating declared corpus, eligible corpus, indicative transferable amount, gross consideration or seller net cash as interchangeable",
+    "Named-bank appetite, buyer commitment or buyer-threshold claims without permission and opportunity-specific evidence",
+    "Regulatory holding-period, retention, permitted-transferee or priority-sector numbers not confirmed for the transaction by counsel",
+    "Per-seller fixed-stage or execution minimums for a founder-approved formed multi-seller analytical cohort",
+    "Any suggestion that an analytical cohort legally commingles sellers or converts separate seller closings into one closing"
   ],
   "canonicalSources": [
     "config/assurerail-da-commercial-policy.json",
@@ -140,5 +223,13 @@
     "docs/operations/phase1-da/AssureRail_Design_Partner_Pricing_Control.md",
     "docs/operations/phase1-da/AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.md",
     "docs/operations/phase1-da/AssureRail_DA_Coordinated_Closing_Rehearsal.md"
-  ]
+  ],
+  "workedCohortScenario": {
+    "status": "ILLUSTRATIVE_NOT_A_QUOTE_OR_BUYER_COMMITMENT",
+    "declaredCorpus": "Approximately ₹48 crore pooled across 3–4 sellers",
+    "indicativeTransferableCorpus": "Approximately ₹30 crore after seller-specific eligibility, retention and transaction assumptions",
+    "cashTreatment": "Seller net cash is calculated separately from purchase price, each seller's retained share, debt release, AssureRail fees, tax and external costs",
+    "closingTreatment": "The cohort pools preparation and buyer presentation; ownership, mandates, representations, orders, invoices and closings remain seller-specific",
+    "indicativeCoreFeeRange": "Approximately ₹20.0–36.4 lakh of standard AssureRail fixed-stage and execution fees, about 0.67–1.21% of an illustrative ₹30 crore settled consideration, depending principally on countable-unit mix; before GST, optional services and pass-through costs, and subject to a seller-specific quote"
+  }
 }
