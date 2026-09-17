@@ -75,3 +75,69 @@
 @media(max-width:920px){.nav>a:not(.navCta):not(.signIn){display:none}.grid3{grid-template-columns:1fr 1fr}.footerGrid{grid-template-columns:1fr 1fr}.footerGrid>div:first-child{width:170px}}
 @media(max-width:680px){.container{width:min(100% - 30px,1120px)}.hero{padding:68px 0 58px}.hero h1{font-size:clamp(38px,12vw,54px)}.grid2,.grid3,.formGrid{grid-template-columns:1fr}.fieldFull,.consent,.submit,.formMessage{grid-column:1}.footerGrid{grid-template-columns:1fr;gap:24px}.navCta{display:none!important}.section,.sectionAlt,.sectionDark{padding:58px 0}}
 @media(prefers-reduced-motion:reduce){.header{backdrop-filter:none}}
+
+/* ============================================================
+   Visual polish layer (17 Sep 2026) — inner public pages.
+   Additive overrides only; motion off under prefers-reduced-motion.
+   ============================================================ */
+
+.hero {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(960px 540px at 86% -14%, rgba(42, 163, 132, 0.24), transparent 60%),
+    radial-gradient(720px 420px at -10% 115%, rgba(217, 147, 45, 0.09), transparent 55%),
+    linear-gradient(120deg, #082934, #10414a);
+}
+.hero::before {
+  content: ""; position: absolute; inset: 0; opacity: .14; pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: linear-gradient(to right, transparent, black 42%, black);
+}
+.hero > .container { position: relative; }
+.hero .eyebrow { animation: psRiseIn .65s cubic-bezier(.2, .7, .2, 1) .05s both; }
+.hero h1 { animation: psRiseIn .7s cubic-bezier(.2, .7, .2, 1) .14s both; }
+.lead { animation: psRiseIn .7s cubic-bezier(.2, .7, .2, 1) .24s both; }
+.actions { animation: psRiseIn .7s cubic-bezier(.2, .7, .2, 1) .34s both; }
+
+.primaryAction, .navCta {
+  background: linear-gradient(135deg, #e5a441, #d38a22);
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+.primaryAction { box-shadow: 0 10px 24px rgba(217, 147, 45, 0.24); }
+.primaryAction:hover, .navCta:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(217, 147, 45, 0.32); }
+.statusStamp { animation: psRiseIn .7s cubic-bezier(.2, .7, .2, 1) .42s both; }
+
+.card {
+  position: relative; overflow: hidden;
+  transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+}
+.card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--green), #3aa489);
+  transform: scaleX(0); transform-origin: left; transition: transform .3s ease;
+}
+.card:hover { transform: translateY(-4px); border-color: rgba(17, 103, 83, 0.32); box-shadow: 0 16px 38px rgba(11, 36, 48, 0.10); }
+.card:hover::before { transform: scaleX(1); }
+.sectionDark .card:hover { border-color: rgba(94, 210, 176, 0.4); box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28); }
+
+.sectionDark {
+  background:
+    radial-gradient(880px 460px at 90% -8%, rgba(64, 180, 146, 0.12), transparent 60%),
+    #0d323c;
+}
+
+.resourceLink small { transition: letter-spacing .25s ease; }
+.resourceLink:hover small { letter-spacing: .14em; }
+
+.submit { transition: transform .2s ease, filter .2s ease; }
+.submit:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
+
+.footer { box-shadow: inset 0 1px 0 rgba(58, 164, 137, 0.2); }
+
+@keyframes psRiseIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero .eyebrow, .hero h1, .lead, .actions, .statusStamp { animation: none; }
+  .card:hover, .primaryAction:hover, .navCta:hover, .submit:hover:not(:disabled) { transform: none; }
+}
