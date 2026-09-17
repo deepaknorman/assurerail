@@ -17,6 +17,7 @@ COPY apps/assurerail ./apps/assurerail
 COPY docs/operations/phase1-da/artifact-manifest.json ./docs/operations/phase1-da/artifact-manifest.json
 COPY docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Customer_Service_Guide.html ./docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Customer_Service_Guide.html
 COPY docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.html ./docs/operations/phase1-da/generated/AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.html
+COPY docs/operations/phase1-da/generated/AssureRail_Counterparty_Integration_Implementation_Plan.html ./docs/operations/phase1-da/generated/AssureRail_Counterparty_Integration_Implementation_Plan.html
 
 ARG NEXT_PUBLIC_ASSURERAIL_VENUE_URL="http://localhost:3006"
 ARG NEXT_PUBLIC_FIREBASE_API_KEY=""

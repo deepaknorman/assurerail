@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Counterparty integration implementation plan | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">SHARED_PASSWORD</div></header>
+  <main><h1>AssureRail counterparty integration implementation plan</h1>
+<p><strong>Version:</strong> 1.0 — 17 September 2026</p>
+<p><strong>Classification:</strong> <code>SHARED_PASSWORD</code></p>
+<p><strong>Purpose:</strong> reusable planning and acceptance document for a Phase 1 conventional DA seller, buyer or selected service provider</p>
+<p><strong>Status:</strong> template. Complete one controlled copy for each counterparty and interface. It does not itself activate production access, payment collection, data sharing or settlement.</p>
+<h2>1. Implementation record</h2>
+<p>Complete this table before technical configuration begins. Use <code>Not applicable</code> rather than leaving a decision ambiguous.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Agreed value</th></tr></thead><tbody>
+<tr><td>Plan reference and version</td><td><code>[To complete]</code></td></tr>
+<tr><td>Counterparty legal name and institution ID</td><td><code>[To complete]</code></td></tr>
+<tr><td>Counterparty capacity</td><td><code>Seller / buyer / payment provider / settlement provider / other selected provider</code></td></tr>
+<tr><td>Business owner and authorised approver</td><td><code>[Name, role and approved business contact]</code></td></tr>
+<tr><td>Counterparty technical owner and backup</td><td><code>[Name, role and approved business contact]</code></td></tr>
+<tr><td>AssureRail engagement and case reference</td><td><code>[To complete when applicable]</code></td></tr>
+<tr><td>Asset family and permitted purpose</td><td><code>[To complete]</code></td></tr>
+<tr><td>Data classification</td><td><code>Synthetic / authorised historical / live customer data</code></td></tr>
+<tr><td>Integration pattern</td><td><code>Portal upload / SFTP push / SFTP pull / REST API / provider-hosted checkout / webhook</code></td></tr>
+<tr><td>Environments</td><td><code>Sandbox / UAT / production</code></td></tr>
+<tr><td>Current state</td><td><code>Discovery / specification / sandbox / UAT / approved for production / live / suspended / retired</code></td></tr>
+<tr><td>Target gate</td><td><code>[Name the next evidence gate; do not use a date as a substitute for acceptance]</code></td></tr>
+<tr><td>Commercial document</td><td><code>[MSA, order, SOW or mandate reference and version]</code></td></tr>
+<tr><td>Security and privacy approvers</td><td><code>[To complete]</code></td></tr>
+<tr><td>Production activation authority</td><td><code>[Named counterparty approver and named AssureRail approver]</code></td></tr>
+</tbody></table></div>
+<p>No password, API secret, private key, token, borrower record or bank instruction belongs in this document. Record only an approved vault reference, key fingerprint or evidence reference.</p>
+<h2>2. Outcome and scope</h2>
+<h3>Intended outcome</h3>
+<p>Record the specific operational result in one sentence. Examples are: “the seller submits an admitted EV loan tape and supporting evidence through its AssureRail workspace”; “AssureRail delivers the buyer-approved DA pack through SFTP and receives a digest-bound acknowledgement”; or “Razorpay test checkout records a verified, fully captured stage payment in AssureRail’s shadow environment.”</p>
+<p><strong>Agreed outcome:</strong> <code>[To complete]</code></p>
+<h3>Included interface</h3>
+<div class="table-wrap"><table><thead><tr><th>Decision</th><th>Agreed value</th></tr></thead><tbody>
+<tr><td>Direction</td><td><code>Counterparty to AssureRail / AssureRail to counterparty / bidirectional</code></td></tr>
+<tr><td>Data objects</td><td><code>[Loan tape, documents, findings, Q&amp;A, invoice, payment state, acknowledgement or other approved object]</code></td></tr>
+<tr><td>Frequency or trigger</td><td><code>[User action, case gate, event, scheduled interval]</code></td></tr>
+<tr><td>Maximum file, batch and record volumes</td><td><code>[To complete]</code></td></tr>
+<tr><td>Required acknowledgement</td><td><code>[Receipt, schema validation, business acceptance, rejection or none]</code></td></tr>
+<tr><td>Record of truth</td><td><code>[Name the authoritative system for each material field]</code></td></tr>
+<tr><td>Retention and deletion</td><td><code>[Period, trigger and evidence owner]</code></td></tr>
+<tr><td>Support boundary</td><td><code>[Business hours, incident route and named owner]</code></td></tr>
+</tbody></table></div>
+<h3>Exclusions and dependencies</h3>
+<p>Record exclusions explicitly. A standard integration does not imply buyer approval, successful sale, settlement authority, statutory filing, professional opinion or unrestricted access to another party’s systems. Bespoke APIs, non-standard transformations, a second product, production network changes and additional environments require an approved change unless the commercial document expressly includes them.</p>
+<h2>3. Standard integration choices</h2>
+<p>Choose the least complex mode that satisfies the accepted business need.</p>
+<div class="table-wrap"><table><thead><tr><th>Use case</th><th>Default</th><th>When another mode is justified</th><th>Current AssureRail boundary</th></tr></thead><tbody>
+<tr><td>Seller data and document intake</td><td>Authenticated portal upload</td><td>SFTP for repeatable high-volume export; API only where operational frequency justifies it</td><td>Portal workflow and REST intake exist; each production connection still needs counterparty acceptance</td></tr>
+<tr><td>Buyer delivery</td><td>Point-to-point SFTP with manifest and acknowledgement</td><td>API where the buyer requires near-real-time structured exchange and funds the approved scope</td><td>Governed sandbox SFTP foundation exists; production transport and bank-specific acceptance remain gated</td></tr>
+<tr><td>Upfront assessment payment</td><td>Provider-hosted Razorpay checkout plus signed webhook and server reconciliation</td><td>Approved secondary provider after its verified merchant API passes the same controls</td><td>Razorpay test adapter and webhook exist; test merchant credentials and provider rehearsal remain required</td></tr>
+<tr><td>Closing settlement</td><td>Appointed bank or escrow/VAN provider using a seller-authorised distribution schedule</td><td>Provider API after legal, bank and operating acceptance</td><td>Calculation and provider-neutral adapter foundations exist; no provider is production-live</td></tr>
+<tr><td>Ongoing monitoring</td><td>Accepted file feed or SFTP schedule</td><td>API for high-frequency, mature programmes</td><td>Separately selected service; payer and servicer responsibilities must be stated</td></tr>
+</tbody></table></div>
+<p>The standard point-to-point SFTP setup, testing and validation customer rate is <strong>₹50,000 per accepted connection</strong>, plus applicable tax, for the agreed standard scope. It is a deliberately low-friction setup price. It covers one counterparty, one product, one production connection and its agreed sandbox/UAT path, one approved schema, one authentication method and the agreed test cycle. Buyer-specific transformation, a second source or destination, field remediation, repeated changes after acceptance and APIs are separately quoted.</p>
+<h2>4. Acceptance gates</h2>
+<p>Work proceeds as one dependency-led chain. A calendar target may be recorded, but no elapsed time waives a gate.</p>
+<div class="table-wrap"><table><thead><tr><th>Gate</th><th>Required result</th><th>Minimum acceptance evidence</th><th>Decision owners</th></tr></thead><tbody>
+<tr><td>G0 — Authority and scope</td><td>The parties, purpose, data, payer and commercial boundary are authorised</td><td>Executed or accepted governing document; named owners; permitted-purpose and data-authority record</td><td>Counterparty business owner; AssureRail commercial approver</td></tr>
+<tr><td>G1 — Discovery complete</td><td>Source, destination, volumes, records of truth and exceptions are known</td><td>Completed implementation record; sample schema; dependency and open-item register</td><td>Both technical owners</td></tr>
+<tr><td>G2 — Interface frozen</td><td>Versioned schema, mapping, security profile and acknowledgement contract are accepted</td><td>Interface specification digest; example payloads; rejection codes; retention rule</td><td>Counterparty technical owner; AssureRail integration operator</td></tr>
+<tr><td>G3 — Secure configuration</td><td>Identities, credentials, network controls and audit routes are configured without placing secrets in documents</td><td>Vault references; fingerprints; access approvals; rotation and revocation evidence</td><td>Both security approvers</td></tr>
+<tr><td>G4 — Sandbox passed</td><td>Positive and negative tests produce the expected records without live business effect</td><td>Signed test report; test-data declaration; defect record; evidence digests</td><td>Both technical owners</td></tr>
+<tr><td>G5 — UAT accepted</td><td>Authorised business users accept the end-to-end result and operating procedure</td><td>UAT cases and approval; reconciled counts/totals; support and escalation test</td><td>Counterparty business owner; AssureRail operations</td></tr>
+<tr><td>G6 — Production ready</td><td>Legal entity, MSA/order, privacy, security, support, backup, rollback and production settings are approved</td><td>Production-readiness checklist; independent maker-checker approvals; cutover and rollback record</td><td>Named production activation authorities</td></tr>
+<tr><td>G7 — First production event reconciled</td><td>The first controlled event is acknowledged and matched end to end</td><td>Source, transport, destination and acknowledgement digests; business control totals; incident-free or resolved-exception record</td><td>Both operations owners</td></tr>
+<tr><td>G8 — Steady state or closure</td><td>Monitoring, access review and change control operate, or the interface is cleanly retired</td><td>Service review; access recertification; deletion/export evidence where applicable</td><td>Both business owners</td></tr>
+</tbody></table></div>
+<h2>5. Workstream plan</h2>
+<div class="table-wrap"><table><thead><tr><th>Workstream</th><th>Activities</th><th>AssureRail responsibility</th><th>Counterparty responsibility</th><th>Completion evidence</th></tr></thead><tbody>
+<tr><td>Commercial and authority</td><td>Confirm party role, scope, payer, data authority, liability boundary and selected service lines</td><td>State the platform/service boundary and issue the applicable plan/SOW</td><td>Evidence authority, permitted purpose and authorised approvers</td><td>G0 record</td></tr>
+<tr><td>Data and schema</td><td>Inventory objects, fields, formats, control totals, allowed values and rejection treatment</td><td>Supply or agree the canonical contract and validation rules</td><td>Supply representative, authorised samples and source definitions</td><td>Versioned mapping and fixtures</td></tr>
+<tr><td>Identity and RBAC</td><td>Name administrators/operators, create scoped access and test joiner/mover/leaver actions</td><td>Enforce institution, workspace, case, document and action scopes</td><td>Nominate users and promptly remove or update access</td><td>Access approval and recertification record</td></tr>
+<tr><td>Security and privacy</td><td>Threat review, encryption, host or TLS identity, credential custody, retention and incident route</td><td>Configure AssureRail controls and evidence</td><td>Approve network/provider controls and protect its endpoint and users</td><td>Security acceptance pack</td></tr>
+<tr><td>Build and configuration</td><td>Configure profile, mapping, endpoint, webhook, folders or checkout</td><td>Build only the agreed adapter/configuration</td><td>Configure its source/destination and provide sandbox access</td><td>Configuration digest and maker-checker approval</td></tr>
+<tr><td>Test and reconciliation</td><td>Execute positive, failure, replay, ambiguity and recovery tests</td><td>Operate the AssureRail side and retain technical evidence</td><td>Operate the counterparty side and confirm business control totals</td><td>Joint test report</td></tr>
+<tr><td>UAT and operating procedure</td><td>Rehearse ordinary processing, rejection, support and incident escalation</td><td>Train the scoped AssureRail operators</td><td>Provide authorised UAT users and accept the process</td><td>Signed UAT and runbook</td></tr>
+<tr><td>Cutover and first event</td><td>Freeze changes, activate, constrain the first event and reconcile it</td><td>Run activation and AssureRail-side reconciliation</td><td>Approve production activation and destination/source result</td><td>G6 and G7 evidence</td></tr>
+<tr><td>Service and change</td><td>Monitor health, access, incidents, versions and exit</td><td>Report the agreed evidence and coordinate changes</td><td>Notify source/schema/endpoint changes before implementation</td><td>Review and change records</td></tr>
+</tbody></table></div>
+<h2>6. Interface specification schedule</h2>
+<div class="table-wrap"><table><thead><tr><th>Topic</th><th>Required decision</th></tr></thead><tbody>
+<tr><td>Object identity</td><td>Stable institution, engagement/case, seller, loan, borrower or co-borrower and batch identifiers as applicable</td></tr>
+<tr><td>Versioning</td><td>Schema version, effective date, compatibility rule and retirement notice</td></tr>
+<tr><td>Control totals</td><td>Record count, unique-loan/borrower count, principal or payment total, file count and digest as applicable</td></tr>
+<tr><td>Encoding and format</td><td>CSV/XLSX/PDF/JSON rules, UTF-8, date/decimal conventions, units and null handling</td></tr>
+<tr><td>Validation</td><td>Required fields, field bounds, duplicate handling, referential checks and complete rejection taxonomy</td></tr>
+<tr><td>Transport identity</td><td>HTTPS certificate or pinned SSH host-key fingerprint verified out of band</td></tr>
+<tr><td>Client identity</td><td>Institution-owned user, service identity, API credential or dedicated SSH key; no shared personal account</td></tr>
+<tr><td>Encryption</td><td>TLS/SFTP in transit and approved encryption at rest; private keys and secrets stay in the approved secret store</td></tr>
+<tr><td>Idempotency</td><td>Stable request or batch key; same key and same content returns the existing result; changed content fails</td></tr>
+<tr><td>Publication</td><td>For SFTP, payloads are staged and the final manifest is published last under agreed atomicity rules</td></tr>
+<tr><td>Acknowledgement</td><td>Receipt and business acceptance are distinct; acknowledgement binds object/batch identity, version and digest</td></tr>
+<tr><td>Ambiguity</td><td>Timeout or unknown outcome is inspected/reconciled before retry; never repeat a potentially completed financial or delivery act blindly</td></tr>
+<tr><td>Audit</td><td>Actor/service identity, time, institution scope, action, outcome and bounded digests; no secrets or unrestricted payload logging</td></tr>
+<tr><td>Retention and exit</td><td>Staged-copy deletion, authoritative-record retention, customer export and credential revocation</td></tr>
+</tbody></table></div>
+<h2>7. Minimum test and evidence pack</h2>
+<p>Use synthetic data in sandbox unless authorised historical data is specifically approved. Live borrower data is prohibited in a test environment.</p>
+<div class="table-wrap"><table><thead><tr><th>Test family</th><th>Required cases</th><th>Acceptance result</th></tr></thead><tbody>
+<tr><td>Happy path</td><td>Valid file/request, expected count/amount and valid acknowledgement</td><td>One accepted result with matching control totals and digests</td></tr>
+<tr><td>Authentication</td><td>Valid identity, expired/revoked identity, wrong environment and unauthorised method</td><td>Only the valid scoped identity succeeds</td></tr>
+<tr><td>Authorisation and tenancy</td><td>Wrong institution, case, seller, buyer, role and document scope</td><td>Cross-scope attempts are denied and audited without data disclosure</td></tr>
+<tr><td>Input safety</td><td>Missing fields, invalid encoding, oversized object, duplicate IDs, malicious filename and malware/quarantine path</td><td>Deterministic rejection; nothing unsafe proceeds</td></tr>
+<tr><td>Replay and idempotency</td><td>Exact replay and same key with changed bytes</td><td>Exact replay returns the existing outcome; changed content fails</td></tr>
+<tr><td>Failure and ambiguity</td><td>Pre-send failure, timeout, connection loss after send and unavailable acknowledgement</td><td>Safe retry only when absence is proven; unknown outcomes remain held for reconciliation</td></tr>
+<tr><td>Business reconciliation</td><td>Record count, unique pair count, corpus/payment amount, exclusions and rounding</td><td>Source, AssureRail and destination totals reconcile or carry an approved exception</td></tr>
+<tr><td>Rejection and repair</td><td>Partial rejection, corrected payload and resubmission</td><td>Every rejection has an owner/reason and the corrected version remains traceable</td></tr>
+<tr><td>Credential lifecycle</td><td>Rotation, previous-key overlap where approved, revocation and emergency suspension</td><td>No outage or unauthorised fallback; old credential ceases at the recorded point</td></tr>
+<tr><td>Recovery and exit</td><td>Rollback, backup/recovery evidence, export and deletion/revocation</td><td>Agreed recovery objective and clean closure are evidenced</td></tr>
+</tbody></table></div>
+<h2>8. Production cutover and rollback</h2>
+<p>Production activation requires two independently recorded approvals. At cutover, record the exact schema/profile digest, endpoint identity, credential version, environment, feature flag, allowed institution/case scope and first-event limit. Freeze unrelated changes until the first event is reconciled.</p>
+<p>Rollback means suspending the connector or checkout path, preserving the audit record and authoritative evidence, revoking or disabling affected credentials when required, and returning to the agreed manual or portal process. Do not delete an indeterminate event or retry it merely to make the dashboard look complete. Payments, settlement and buyer delivery remain held until their true provider/destination state is established.</p>
+<h2>9. Operating and change control</h2>
+<div class="table-wrap"><table><thead><tr><th>Event</th><th>Required action</th></tr></thead><tbody>
+<tr><td>Schema or mapping change</td><td>New version, regression fixtures, maker-checker approval and counterparty acceptance before activation</td></tr>
+<tr><td>Endpoint, certificate or host-key change</td><td>Independently verify the new identity; suspend on an unexpected change</td></tr>
+<tr><td>Credential compromise or suspected misuse</td><td>Suspend, revoke/rotate, investigate and record incident evidence before resuming</td></tr>
+<tr><td>Repeated rejection or reconciliation difference</td><td>Open a problem record; do not normalise unexplained variances</td></tr>
+<tr><td>Material volume/frequency increase</td><td>Reassess limits, performance, support and commercial scope</td></tr>
+<tr><td>Provider or subprocessor change</td><td>Complete legal, privacy, security and operating review before data transfer</td></tr>
+<tr><td>Exit</td><td>Stop new events, reconcile pending events, export authorised records, revoke access and evidence deletion/retention decisions</td></tr>
+</tbody></table></div>
+<p>All changes record requester, business reason, affected objects, risk, test evidence, approvers, effective time, rollback plan and superseded configuration digest.</p>
+<h2>10. Buyer-specific schedule</h2>
+<p>Complete this section when the counterparty is a direct assignee.</p>
+<div class="table-wrap"><table><thead><tr><th>Decision</th><th>Buyer-agreed value</th></tr></thead><tbody>
+<tr><td>MSA and approved requirement-profile version</td><td><code>[To complete]</code></td></tr>
+<tr><td>Buyer administrators and operational roles</td><td><code>[To complete]</code></td></tr>
+<tr><td>Eligible asset, corpus, seasoning, tenor and performance ranges</td><td><code>[Structured profile reference]</code></td></tr>
+<tr><td>Required evidence and professional review</td><td><code>[Structured profile reference]</code></td></tr>
+<tr><td>Delivery mode, folder/API resource and schema</td><td><code>[To complete]</code></td></tr>
+<tr><td>Receipt, validation and business-acceptance acknowledgements</td><td><code>[To complete]</code></td></tr>
+<tr><td>Diligence/Q&amp;A contacts and clocks</td><td><code>[To complete]</code></td></tr>
+<tr><td>Purchase decision and conditions record</td><td><code>[Buyer-owned process/reference]</code></td></tr>
+<tr><td>Funding, VAN/escrow and settlement dependencies</td><td><code>[To complete; no bank instruction secret]</code></td></tr>
+<tr><td>Post-close servicing and optional monitoring</td><td><code>[Payer, servicer, frequency and term]</code></td></tr>
+</tbody></table></div>
+<p>The buyer retains credit, legal, compliance, valuation, pricing and purchase decisions. Successful technical delivery does not mean buyer acceptance or settlement.</p>
+<h2>11. Seller-specific schedule</h2>
+<p>Complete this section when the counterparty is an originator or seller.</p>
+<div class="table-wrap"><table><thead><tr><th>Decision</th><th>Seller-agreed value</th></tr></thead><tbody>
+<tr><td>Seller authority, order/mandate and data-purpose reference</td><td><code>[To complete]</code></td></tr>
+<tr><td>Source LMS/ERP and authoritative owners</td><td><code>[To complete]</code></td></tr>
+<tr><td>Declared and admitted counts/corpus control totals</td><td><code>[To complete]</code></td></tr>
+<tr><td>Unique seller × loan × borrower/co-borrower identity rule</td><td><code>[Mapping reference]</code></td></tr>
+<tr><td>Linked-party records and ₹250 quantity treatment</td><td><code>[Mapping/reference]</code></td></tr>
+<tr><td>Upload/export method and frequency</td><td><code>[Portal / SFTP / API if separately approved]</code></td></tr>
+<tr><td>Data Preparer or formatting facilitator</td><td><code>[Named seller-appointed role; seller-funded]</code></td></tr>
+<tr><td>Exception/remediation owner and reassessment route</td><td><code>[To complete]</code></td></tr>
+<tr><td>Existing lender, payoff/release and registry dependencies</td><td><code>[To complete]</code></td></tr>
+<tr><td>Seller-authorised settlement distribution approvers</td><td><code>[To complete; no bank instruction secret]</code></td></tr>
+</tbody></table></div>
+<p>The seller remains responsible for source facts, authority, attestations, remediation decisions and approved settlement instructions. AssureRail records and processes the submitted evidence within the accepted scope.</p>
+<h2>12. Razorpay test implementation annex</h2>
+<p>Use this annex for AssureRail’s upfront Initial Assessment and Portfolio Preparation checkout rehearsal. It does not authorise live collection.</p>
+<h3>Inputs to obtain and custody</h3>
+<div class="table-wrap"><table><thead><tr><th>Input</th><th>Where it belongs</th><th>Acceptance check</th></tr></thead><tbody>
+<tr><td>Razorpay dashboard test-mode access</td><td>Named account administrators with MFA</td><td>Two authorised administrators can access test mode; no shared login</td></tr>
+<tr><td>Stable merchant account identity</td><td>Secret/configuration inventory as <code>ASSURERAIL_RAZORPAY_ACCOUNT_ID</code>; record only a masked value or vault evidence here</td><td>Matches the webhook payload <code>account_id</code> and approved merchant account</td></tr>
+<tr><td>Test key ID</td><td>Server-side secret configuration as <code>ASSURERAIL_RAZORPAY_KEY_ID</code></td><td>Begins with the approved test prefix; live-mode credentials are rejected by AssureRail</td></tr>
+<tr><td>Test key secret</td><td>Approved server-side secret store as <code>ASSURERAIL_RAZORPAY_KEY_SECRET</code></td><td>Retrievable by the runtime identity only; never pasted in this plan, source control, chat or browser variables</td></tr>
+<tr><td>Webhook secret</td><td>Generate a separate random value of at least 32 characters and store server-side as <code>ASSURERAIL_RAZORPAY_WEBHOOK_SECRET</code></td><td>Test delivery signature validates over the exact raw body</td></tr>
+<tr><td>Previous webhook secret</td><td>Temporary rotation-only secret reference</td><td>Removed after the bounded rotation overlap</td></tr>
+<tr><td>Test webhook URL</td><td>Exact externally reachable AssureRail test URL ending <code>/v1/rail/payment-webhooks/razorpay</code></td><td>HTTPS, correct environment and provider test delivery received</td></tr>
+<tr><td>Selected events</td><td><code>payment_link.paid</code> plus applicable refund and payment-dispute events available for the test account</td><td>Paid state is reconciled; refund/dispute places processing on hold</td></tr>
+</tbody></table></div>
+<p>The person obtaining the Razorpay credentials should hand them directly to the authorised secret custodian through the approved secret channel. The implementation-plan owner records the vault reference, credential version, fingerprint or last four characters and custody evidence—never the secret value.</p>
+<p>Razorpay’s current test-key path is Dashboard → Test mode → Account &amp; Settings → API Keys under Website and app settings → Generate Key. Only an Owner or Admin can generate it, and the Key Secret is shown only at generation time. Configure the webhook separately under Account &amp; Settings → Webhooks; its secret is not the API Key Secret.</p>
+<h3>Razorpay rehearsal sequence</h3>
+<ol>
+<li>Confirm the AssureRail environment is <code>SHADOW</code>, checkout mode is <code>razorpay_test</code>, the merchant identity is correct and live credentials fail closed.</li>
+<li>Configure the test key, separate webhook secret and exact callback URL through server-side secret injection.</li>
+<li>Create one stage invoice through the AssureRail maker-checker process.</li>
+<li>Create the provider-hosted payment link. Confirm the expected INR amount, AssureRail reference, no partial payment, provider notifications disabled and seven-day expiry.</li>
+<li>Complete the provider’s test payment and receive the signed <code>payment_link.paid</code> event.</li>
+<li>Reconcile the link and captured payment from the server. Browser return or webhook receipt alone does not mark the stage paid.</li>
+<li>Replay the same webhook event and prove it does not create a second receipt or unlock.</li>
+<li>Test invalid signature, wrong merchant account and mismatched link/payment/amount; each must fail closed.</li>
+<li>Exercise a test refund and applicable dispute event; the stage must move to hold and its paid readiness must be revoked pending reconciliation.</li>
+<li>Rotate the webhook secret through the approved overlap, prove both bounded versions behave as expected, then remove the previous secret.</li>
+<li>Retain the signed test report, masked provider references, AssureRail audit evidence and defect closure. Do not retain card or payer-sensitive test data beyond the accepted need.</li>
+</ol>
+<h3>Razorpay acceptance record</h3>
+<div class="table-wrap"><table><thead><tr><th>Check</th><th>Evidence reference</th><th>Counterparty/provider owner</th><th>AssureRail checker</th><th>Result</th></tr></thead><tbody>
+<tr><td>Test account and merchant identity verified</td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>Pending / pass / fail</code></td></tr>
+<tr><td>Credential custody and rotation verified</td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>Pending / pass / fail</code></td></tr>
+<tr><td>Link creation and server retrieval reconciled</td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>Pending / pass / fail</code></td></tr>
+<tr><td>Signed webhook, duplicate and negative tests passed</td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>Pending / pass / fail</code></td></tr>
+<tr><td>Refund/dispute hold passed</td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>Pending / pass / fail</code></td></tr>
+<tr><td>UAT and production-readiness decision recorded</td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>Pending / pass / fail</code></td></tr>
+</tbody></table></div>
+<h2>13. Open items, decisions and sign-off</h2>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>Item or decision</th><th>Owner</th><th>Dependency</th><th>Required evidence</th><th>State</th></tr></thead><tbody>
+<tr><td><code>INT-001</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>Open / blocked / accepted / closed</code></td></tr>
+</tbody></table></div>
+<h3>Gate approval</h3>
+<div class="table-wrap"><table><thead><tr><th>Party</th><th>Name and role</th><th>Gate approved</th><th>Evidence/signature reference</th><th>Date and time</th></tr></thead><tbody>
+<tr><td>Counterparty</td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td></tr>
+<tr><td>AssureRail</td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td><td><code>[To complete]</code></td></tr>
+</tbody></table></div>
+<p>An approval applies only to the named version, environment, institution, purpose and scope. A later material change reopens the affected gate.</p>
+<h2>14. Current provider references</h2>
+<ul>
+<li><a href="https://razorpay.com/docs/payments/quickstart/">Razorpay quickstart and dashboard setup</a></li>
+<li><a href="https://razorpay.com/docs/api/authentication/">Razorpay API authentication and test keys</a></li>
+<li><a href="https://razorpay.com/docs/payments/payment-links/subscribe-to-webhooks/">Razorpay Payment Link webhook subscription</a></li>
+<li><a href="https://razorpay.com/docs/webhooks/faqs/">Razorpay webhook replay and signature guidance</a></li>
+<li><a href="https://razorpay.com/docs/webhooks/refunds/">Razorpay refund webhook events</a></li>
+<li><a href="https://razorpay.com/docs/webhooks/disputes/">Razorpay dispute webhook events</a></li>
+</ul></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>

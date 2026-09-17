@@ -39,6 +39,7 @@ Initial Assessment applications are open for approved NBFC portfolios. Until Ass
 | [Buyer onboarding and MSA schedule](./AssureRail_Phase1_DA_Buyer_Onboarding_And_MSA_Schedule.md) | Post-MSA buyer workspace, requirements and RBAC | `AUTHENTICATED` |
 | [Referral partner addendum](./AssureRail_Phase1_DA_Referral_Partner_Addendum.md) | Accepted referral economics and controls | `AUTHENTICATED` |
 | [Quote reconciliation, credit and refund terms](./AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms.md) | Quote and billing rules | `SHARED_PASSWORD` |
+| [Counterparty integration implementation plan](./AssureRail_Counterparty_Integration_Implementation_Plan.md) | Reusable buyer, seller and provider discovery, test, acceptance, cutover and Razorpay plan | `SHARED_PASSWORD` |
 | [Design-partner pricing control](./AssureRail_Design_Partner_Pricing_Control.md) | Two-entity lifetime discount, approval and invoice controls | `INTERNAL` |
 | [Uninterrupted execution chain](./AssureRail_Uninterrupted_DA_Execution_Chain.md) | Build, evidence and activation gates in dependency order | `INTERNAL` |
 | [Founder Initial Assessment demonstration](./AssureRail_Founder_Initial_Assessment_Demo.md) | Account-driven synthetic seller rehearsal | `INTERNAL` |

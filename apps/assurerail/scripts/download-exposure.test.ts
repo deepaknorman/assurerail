@@ -8,6 +8,7 @@ const packaged = readFileSync(resolve(root, "src/generated/download-artifacts.ts
 const page = readFileSync(resolve(root, "src/app/downloads/page.tsx"), "utf8");
 const access = readFileSync(resolve(root, "src/app/downloads/access/route.ts"), "utf8");
 const shared = readFileSync(resolve(root, "src/app/downloads/assurerail/phase1-da/commercial-terms/route.ts"), "utf8");
+const integrationPlan = readFileSync(resolve(root, "src/app/downloads/assurerail/phase1-da/integration-implementation-plan/route.ts"), "utf8");
 const env = readFileSync(resolve(root, ".env.example"), "utf8");
 const dockerfile = readFileSync(resolve(root, "Dockerfile"), "utf8");
 const packager = readFileSync(resolve(root, "scripts/package-download-artifacts.mjs"), "utf8");
@@ -15,6 +16,7 @@ const packager = readFileSync(resolve(root, "scripts/package-download-artifacts.
 test("web package contains only public and shared-password document bodies", () => {
   assert.match(packaged, /DA-CUSTOMER-GUIDE/);
   assert.match(packaged, /DA-COMMERCIAL-TERMS/);
+  assert.match(packaged, /DA-INTEGRATION-PLAN/);
   for (const protectedBodyMarker of ["Sevenfincorp", "8.5%", "Provider work order", "Buyer Primary Administrator", "Seller MSA minimum clauses"]) {
     assert.equal(packaged.includes(protectedBodyMarker), false, protectedBodyMarker);
   }
@@ -40,6 +42,7 @@ test("authenticated and internal documents are described without file routes", (
 test("shared material is unlocked server-side with a signed HttpOnly cookie", () => {
   for (const marker of ["sharedDownloadsConfigured", "verifySharedDownloadPassword", "createSharedDownloadSession", "httpOnly: true", 'sameSite: "strict"', 'path: "/downloads"']) assert.ok(access.includes(marker), marker);
   for (const marker of ["verifySharedDownloadSession", "noindex, nofollow, noarchive", "no-store, private"]) assert.ok(shared.includes(marker), marker);
+  for (const marker of ["DA-INTEGRATION-PLAN", "verifySharedDownloadSession", "noindex, nofollow, noarchive", "no-store, private"]) assert.ok(integrationPlan.includes(marker), marker);
   assert.match(access, /Retry-After/);
   assert.match(access, /application\/x-www-form-urlencoded/);
 });
@@ -59,5 +62,6 @@ test("production image packages served artifacts without copying protected docum
   assert.match(dockerfile, /artifact-manifest\.json/);
   assert.match(dockerfile, /AssureRail_Phase1_DA_Customer_Service_Guide\.html/);
   assert.match(dockerfile, /AssureRail_Phase1_DA_Quote_Reconciliation_Credit_And_Refund_Terms\.html/);
+  assert.match(dockerfile, /AssureRail_Counterparty_Integration_Implementation_Plan\.html/);
   for (const forbidden of ["Referral_Partner_Addendum.html", "Seller_Document_Suite.html", "Buyer_Onboarding_And_MSA_Schedule.html", "Provider_Onboarding_And_Work_Order.html"]) assert.equal(dockerfile.includes(forbidden), false, forbidden);
 });

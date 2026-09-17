@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 const descriptions: Record<string, string> = {
   "DA-CUSTOMER-GUIDE": "The current public guide to Initial Assessment, Portfolio Preparation, execution and itemised service choices.",
   "DA-COMMERCIAL-TERMS": "Controlled commercial terms for quote validity, exact scope reconciliation, customer credit and eligible refunds.",
+  "DA-INTEGRATION-PLAN": "Reusable buyer, seller and provider plan for discovery, interfaces, security, testing, acceptance, cutover and Razorpay test activation.",
   "DA-SELLER-SUITE": "Seller MSA, Initial Assessment order, preparation SOW, execution mandate and settlement-schedule structure.",
   "DA-BUYER-ONBOARDING": "Post-MSA buyer onboarding, structured requirement settings and case-scoped RBAC.",
   "DA-REFERRAL": "Counterparty-specific referral controls and commercial terms.",

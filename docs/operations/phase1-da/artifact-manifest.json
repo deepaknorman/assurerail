@@ -92,6 +92,16 @@
       "releaseGate": "Controlled-download password, recipient and version log"
     },
     {
+      "id": "DA-INTEGRATION-PLAN",
+      "title": "Counterparty integration implementation plan",
+      "source": "docs/operations/phase1-da/AssureRail_Counterparty_Integration_Implementation_Plan.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Counterparty_Integration_Implementation_Plan.html",
+      "plannedDownloadRoute": "/downloads/assurerail/phase1-da/integration-implementation-plan",
+      "classification": "SHARED_PASSWORD",
+      "status": "CURRENT",
+      "releaseGate": "Controlled-download password, named counterparty, recipient and version log"
+    },
+    {
       "id": "DA-EXECUTION-CHAIN",
       "title": "Uninterrupted conventional DA execution chain",
       "source": "docs/operations/phase1-da/AssureRail_Uninterrupted_DA_Execution_Chain.md",
