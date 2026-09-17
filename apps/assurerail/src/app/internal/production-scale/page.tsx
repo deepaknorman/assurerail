@@ -7,6 +7,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { productionScaleEnabled } from "@/lib/customer-workspace";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type GateRow = {
   code: string;
@@ -115,7 +116,7 @@ export default function ProductionScalePage() {
       setError("");
     } catch (cause) {
       setBoard(null);
-      setError((cause as Error).message);
+      setError(userFacingError(cause));
     }
   }, [activeInstitutionId, enabled, target]);
 
@@ -149,7 +150,7 @@ export default function ProductionScalePage() {
       );
       await load();
     } catch (cause) {
-      setError((cause as Error).message);
+      setError(userFacingError(cause));
     } finally {
       setBusy("");
     }
@@ -183,7 +184,7 @@ export default function ProductionScalePage() {
       );
       await load();
     } catch (cause) {
-      setError((cause as Error).message);
+      setError(userFacingError(cause));
     } finally {
       setBusy("");
     }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import {useAuth} from "@/lib/auth-context";
 import {vget,vpost} from "@/lib/venue";
 import {requestTotpStepUp} from "@/lib/institutions";
+import {userFacingError} from "@/lib/user-facing-error";
 import {VenueHeader} from "@/components/VenueHeader";
 import "./buyer-onboarding.css";
 type Criteria=Record<string,string|string[]|number|number[]|boolean>;
@@ -24,7 +25,7 @@ export default function BuyerOnboarding(){
  const ready=process.env.NEXT_PUBLIC_ASSURERAIL_BUYER_ONBOARDING_ENABLED==="true"&&!loading&&!!firebaseUser&&!!venueUser&&!needsOnboarding&&activeInstitutionId===institutionId;
  const base=`/v1/rail/institutions/${encodeURIComponent(institutionId)}/buyer-onboarding`;
  const load=useCallback(async()=>{const ticket=epoch.current;const next=await vget<Overview>(base,{institutionId});if(ticket===epoch.current){setData(next);setDraft(next.profiles[0]?.criteria??{});}},[base,institutionId]);
- useEffect(()=>{epoch.current++;setBusy(false);setData(null);setDraft({});setTotp("");setError("");if(ready)void load().catch(e=>setError(e.message));return()=>{epoch.current++;};},[identity,ready,load]);
+ useEffect(()=>{epoch.current++;setBusy(false);setData(null);setDraft({});setTotp("");setError("");if(ready)void load().catch(e=>setError(userFacingError(e,"We couldn’t load your buyer requirements. Refresh the page or try again.")));return()=>{epoch.current++;};},[identity,ready,load]);
  const p=data?.profiles[0],editable=!!data?.capabilities.EDIT_BUYER_PROFILE&&p?.status==="DRAFT";
  function field(key:string,value:Criteria[string]){setDraft(old=>{const next={...old,[key]:value};if(key==="assets")next.subtypes=(old.subtypes as string[]??[]).filter(s=>(value as string[]).includes(s.split("_")[0]));if(key==="geography"&&value==="ALL_INDIA")next.states=[];return next;});}
  async function act(action:string,reviewRole?:string){
@@ -34,7 +35,7 @@ export default function BuyerOnboarding(){
    if(ticket!==epoch.current)throw new Error("Session changed. Reload before continuing.");
    await vpost(action==="CREATE"?`${base}/profiles`:`${base}/profiles/${encodeURIComponent(p!.id)}`,{stepUpEvidenceId,...(action==="CREATE"?{}:{action,expectedRevision:p!.revision,...(action==="SAVE"?{criteria:draft}:{}),...(reviewRole?{reviewRole,digest:p!.digest}:{})})},{institutionId});
    if(ticket===epoch.current){await load();setMessage("Action recorded. The approved version remains the authority for matching.");}
-  }catch(e){if(ticket===epoch.current)setError((e as Error).message);}finally{if(ticket===epoch.current){setBusy(false);setTotp("");}}
+  }catch(e){if(ticket===epoch.current)setError(userFacingError(e,"We couldn’t save this buyer requirement. Check the selections and authenticator code, then try again."));}finally{if(ticket===epoch.current){setBusy(false);setTotp("");}}
  }
  if(process.env.NEXT_PUBLIC_ASSURERAIL_BUYER_ONBOARDING_ENABLED!=="true")return <><VenueHeader/><main className="buyer-journey"><h1>Buyer onboarding</h1><p>This workspace is not enabled in this release.</p></main></>;
  return <><VenueHeader/><main className="buyer-journey"><Link href={`/institutions/${encodeURIComponent(institutionId)}`}>← Institution workspace</Link><h1>Your purchase requirements</h1><p>Set the portfolios you want to review and the evidence your team needs to make a decision.</p>
@@ -49,7 +50,7 @@ export default function BuyerOnboarding(){
     if(ticket!==epoch.current)throw new Error("Session changed. Restart the handoff.");
     const form=document.createElement("form");form.method="POST";form.action=r.postUrl;
     const input=document.createElement("input");input.type="hidden";input.name="ticket";input.value=r.ticket;form.appendChild(input);document.body.appendChild(form);form.submit();form.remove();
-   }catch(e){if(ticket===epoch.current)setError((e as Error).message);}finally{if(ticket===epoch.current){setBusy(false);setTotp("");}}
+   }catch(e){if(ticket===epoch.current)setError(userFacingError(e,"We couldn’t open the authorised portfolio workspace. Check the authenticator code and try again."));}finally{if(ticket===epoch.current){setBusy(false);setTotp("");}}
  }}>Open your authorised AssurePool workspace</button><p>Enter an authenticator code below to start a secure, one-time handoff. AssurePool checks your mapped account and current portfolio permissions.</p>
  <ol className="buyer-steps"><li>MSA verified</li><li>Workspace access approved</li><li>Set requirements</li><li>Independent approvals</li></ol>
  <div className="buyer-summary">MSA valid until {new Date(data.workspace.expiresAt).toLocaleDateString("en-IN")} · {p?`Version ${p.version} / ${words(p.status)}`:"Requirements not started"}<br/>{data.activeProfileId?"An approved profile is available for preparation matching.":"No current approved profile is available for matching."}</div>

@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { primaryVenueProductEnabled } from "@/lib/customer-workspace";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type CaseRow = { id: string; caseReference: string; ownerInstitutionId: string; transactionRoute: string; representation: string; lifecycleLeg: string; assetClass: string; operatingMode: string; status: string };
 type Opportunity = { id: string; transactionCaseId: string; ownerInstitutionId: string; opportunityReference: string; status: string; currentTermVersion: number | null; opensAt: string | null; closesAt: string | null; transactionCase: CaseRow; terms: Array<{ currency: string; amountUnits: string; amountScale: number; pricingType: string; pricingValue: string }> };
@@ -41,7 +42,7 @@ export default function PrimaryVenuePage() {
       setOpportunities(opportunityRows);
       setCaseId((current) => current || caseRows.find((item) => item.ownerInstitutionId === activeInstitutionId && ["DRAFT", "INTAKE_OPEN"].includes(item.status))?.id || "");
       setError("");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t load the opportunity workspace. Refresh the page or try again.")); }
   }, [activeInstitutionId, enabled]);
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function PrimaryVenuePage() {
       const created = await vpost<{ id: string }>(`/v1/rail/cases/${encodeURIComponent(caseId)}/commercial/opportunities`, { idempotencyKey: key.current, opportunityReference: reference.trim(), opensAt: new Date(opensAt).toISOString(), closesAt: new Date(closesAt).toISOString(), stepUpEvidenceId });
       key.current = "";
       router.push(`/workspace/opportunities/${encodeURIComponent(created.id)}?caseId=${encodeURIComponent(caseId)}`);
-    } catch (cause) { setError((cause as Error).message); } finally { setBusy(false); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t create this opportunity. Check the dates, reference and authenticator code, then try again.")); } finally { setBusy(false); }
   }
 
   return <><VenueHeader/><main className="wrap institutional-page customer-workspace">

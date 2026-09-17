@@ -46,7 +46,7 @@ export default function Login() {
         <div className="auth-card">
           <h1>{register ? "Create your institutional account" : "Sign in"}</h1>
           <p className="auth-sub">{register ? "Create the account that will hold your organisation's assessment application and onboarding record." : "Access your institution's assessments, preparation work and transaction cases."}</p>
-          {error && <div className="msg err">{error}</div>}
+          {error && <div className="msg err" role="alert" aria-live="polite">{error}</div>}
 
           <button className="btn btn-google" disabled={busy} onClick={() => go(loginGoogle)}>Continue with Google</button>
           <div className="auth-or"><span>or</span></div>

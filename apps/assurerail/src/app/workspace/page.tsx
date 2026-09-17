@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { type InstitutionWorkspace } from "@/lib/institutions";
 import { activeMandateActions, availability, customerWorkspaceEnabled, enterpriseIntegrationEnabled, guidedJourneyEnabled, hostedAlphaEnabled, hostedAlphaTaskTone, institutionalProductEnabled, primaryVenueProductEnabled, secondaryProductEnabled, tokenisedProductEnabled, type Availability, type HostedAlphaTaskResponse } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type CaseRow = { id: string; caseReference: string; transactionRoute: string; representation: string; assetClass: string; operatingMode: string; status: string; aggregateVersion: number; updatedAt: string };
 type Opportunity = { id: string; transactionCaseId: string; opportunityReference: string; ownerInstitutionId: string; status: string; currentTermVersion: number; closesAt: string | null; transactionCase: { transactionRoute: string; representation: string; assetClass: string; operatingMode: string } };
@@ -35,7 +36,7 @@ export default function CustomerWorkspacePage() {
           : Promise.resolve<Availability<HostedAlphaTaskResponse>>({ status: "UNAVAILABLE", reason: "Hosted alpha disabled" }),
       ]);
       setInstitution(workspace); setCases(caseResult); setOpportunities(opportunityResult); setTasks(taskResult);
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t load your workspace. Refresh the page or try again.")); }
   }, [activeInstitutionId]);
 
   useEffect(() => {

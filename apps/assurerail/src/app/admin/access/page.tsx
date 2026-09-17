@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type StaffUser = { id: string; email: string; displayName: string | null; status: string };
 type Assignment = {
@@ -57,7 +58,7 @@ export default function InternalAccessPage() {
       ]);
       setAssignments(roleAssignments); setUsers(staff); setVocabulary(terms);
       setForm((current) => ({ ...current, userId: current.userId || staff[0]?.id || "", role: current.role || terms.roles[0] || "" }));
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
   }, []);
 
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); }, [loading, firebaseUser, router]);
@@ -67,7 +68,7 @@ export default function InternalAccessPage() {
   async function run(key: string, work: () => Promise<void>, success: string) {
     setBusy(key); setError(""); setMessage("");
     try { await work(); await refresh(); setMessage(success); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause)); }
     finally { setBusy(""); }
   }
 

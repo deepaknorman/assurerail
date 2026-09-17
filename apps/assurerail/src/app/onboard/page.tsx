@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { userFacingError } from "@/lib/user-facing-error";
 
 export default function Onboard() {
   const { firebaseUser, venueUser, needsOnboarding, loading, error, onboard, logout } = useAuth();
@@ -25,7 +26,7 @@ export default function Onboard() {
       await onboard(did.trim() || undefined);
       router.replace("/institutions");
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e, "We could not complete identity setup. Review the details and try again."));
     } finally {
       setBusy(false);
     }

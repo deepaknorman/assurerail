@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { guidedJourneyEnabled, sandboxEnabled } from "@/lib/customer-workspace";
 import type { InstitutionWorkspace } from "@/lib/institutions";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Route = "DA" | "PTC";
 type Mode = "REPLAY" | "SHADOW";
@@ -30,7 +31,7 @@ export default function GuidedJourneyPage() {
     if (!guidedJourneyEnabled() || !activeInstitutionId) return;
     vget<InstitutionWorkspace>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}`)
       .then(setWorkspace)
-      .catch((cause) => setError((cause as Error).message));
+      .catch((cause) => setError(userFacingError(cause, "We couldn’t load the available engagement routes. Refresh the page or try again.")));
   }, [activeInstitutionId]);
 
   const member = workspace?.institution.members.find(

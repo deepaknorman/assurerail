@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Source = {
   source: "ASSIGNMENT" | "ELEVATION";
@@ -61,7 +62,7 @@ export default function InternalWorkspacePage() {
       );
     } catch (cause) {
       setModel(null);
-      setError((cause as Error).message);
+      setError(userFacingError(cause));
     }
   }, []);
 

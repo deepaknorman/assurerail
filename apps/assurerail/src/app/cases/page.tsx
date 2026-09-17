@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type CaseRow = {
   id: string; caseReference: string; transactionRoute: string; representation: string; assetClass: string;
@@ -20,7 +21,7 @@ export default function CasesPage() {
   const load = useCallback(async () => {
     setError("");
     try { setRows(await vget<CaseRow[]>("/v1/rail/cases")); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause, "We couldn’t load the case register. Refresh the page or try again.")); }
   }, []);
   useEffect(() => {
     if (loading) return;

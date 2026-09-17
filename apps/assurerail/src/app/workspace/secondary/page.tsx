@@ -7,6 +7,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { secondaryProductEnabled } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type SecondaryRow = {
   id: string; transactionCaseId: string; transactionRoute: string; transferReference: string;
@@ -34,7 +35,7 @@ export default function SecondaryRegisterPage() {
     try {
       const [secondary, caseRows] = await Promise.all([vget<SecondaryRow[]>("/v1/rail/secondary-transfers"), vget<CaseRow[]>("/v1/rail/cases")]);
       setRows(secondary); setCases(caseRows); setError("");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
   }, [activeInstitutionId, enabled]);
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
   useEffect(() => { if (firebaseUser && activeInstitutionId && enabled) void load(); }, [firebaseUser, activeInstitutionId, enabled, load]);

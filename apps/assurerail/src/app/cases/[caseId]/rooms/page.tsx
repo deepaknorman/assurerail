@@ -6,6 +6,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Room = {
   id: string; purpose: string; status: string; policyVersion: string; legacyRoomId: string | null;
@@ -42,7 +43,7 @@ export default function CaseRoomsPage() {
         vget<ParityBreak[]>(`/v1/rail/cases/${encodeURIComponent(caseId)}/rooms/parity-breaks`),
       ]);
       setRooms(roomRows); setBreaks(openBreaks);
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
   }, [caseId]);
   useEffect(() => {
     if (loading) return;
@@ -62,7 +63,7 @@ export default function CaseRoomsPage() {
         bundle: parseJson(form.bundle, "Legacy export bundle"), stepUpEvidenceId,
       });
       setForm(emptyImport); await load(); setMessage("Legacy room imported as dark evidence. Legacy remains the only write authority.");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
     finally { setBusy(""); }
   }
 
@@ -76,14 +77,14 @@ export default function CaseRoomsPage() {
         currentBundle: parseJson(values.bundle, "Current legacy export bundle"), stepUpEvidenceId,
       });
       await load(); setMessage("Parity result recorded. A mismatch remains a blocking repair item; a match does not switch read or write authority.");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
     finally { setBusy(""); }
   }
 
   async function viewSource(roomId: string, view: string) {
     setBusy(`source:${roomId}:${view}`); setError("");
     try { setSource(await vget(`/v1/rail/cases/${encodeURIComponent(caseId)}/rooms/${encodeURIComponent(roomId)}/source-views/${view}`)); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause)); }
     finally { setBusy(""); }
   }
 
@@ -97,7 +98,7 @@ export default function CaseRoomsPage() {
         ownerReference: values.ownerReference, resolutionEvidence: parseJson(values.evidence, "Resolution evidence"), stepUpEvidenceId,
       });
       await load(); setMessage("Independent repair closure recorded. The room remains dark and requires a clean latest parity run before any later cutover decision.");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
     finally { setBusy(""); }
   }
 

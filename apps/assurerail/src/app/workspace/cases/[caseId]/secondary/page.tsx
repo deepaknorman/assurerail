@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { secondaryProductEnabled } from "@/lib/customer-workspace";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vdownload, vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Stage = { code: string; state: string; summary: string };
 type Repair = { id: string; replacementEvidenceType: string; providerInstitutionId: string; evidenceObjectId: string; assertionDigest: string; authorityEvidenceRef: string; status: string; proposedByUserId: string; reviewedByUserId: string | null; reviewReason: string | null };
@@ -35,7 +36,7 @@ export default function SecondaryJourneyPage() {
       const party = (role: string) => detail.parties.find((item) => item.partyRole === role && item.status === "ACTIVE")?.institutionId ?? "";
       setCreate((current) => ({ ...current, buyerInstitutionId: current.buyerInstitutionId || party("SECONDARY_BUYER"), trusteeInstitutionId: current.trusteeInstitutionId || party("TRUSTEE"), recordkeeperInstitutionId: current.recordkeeperInstitutionId || party("RECORDKEEPER") }));
       setError("");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
   }, [activeInstitutionId, enabled, caseId, root]);
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
   useEffect(() => { if (firebaseUser && activeInstitutionId && enabled) void load(); }, [firebaseUser, activeInstitutionId, enabled, load]);
@@ -43,7 +44,7 @@ export default function SecondaryJourneyPage() {
   async function governed(scope: string, purpose: string, path: string, body: Record<string, unknown>, message: string) {
     if (!activeInstitutionId) return; setBusy(scope); setError(""); setNotice("");
     try { const stepUpEvidenceId = await requestTotpStepUp({ code: totp, purpose, institutionId: activeInstitutionId }); await vpost(path, { ...body, idempotencyKey: key(scope), stepUpEvidenceId }); delete keys.current[scope]; setNotice(message); await load(); }
-    catch (cause) { setError((cause as Error).message); } finally { setBusy(""); }
+    catch (cause) { setError(userFacingError(cause)); } finally { setBusy(""); }
   }
   async function createDossier() { await governed("create", "SECONDARY_TRANSFER_CREATE", root, { transferReference: create.transferReference, instrumentReference: create.instrumentReference, instrumentDigest: create.instrumentDigest, sellerInstitutionId: activeInstitutionId, buyerInstitutionId: create.buyerInstitutionId, trusteeInstitutionId: data?.case.transactionRoute === "PTC" ? create.trusteeInstitutionId : null, recordkeeperInstitutionId: create.recordkeeperInstitutionId, quantity: { unitCode: create.quantityUnitCode, units: create.quantityUnits, scale: create.quantityScale }, consideration: { currency: create.considerationCurrency, units: create.considerationUnits, scale: create.considerationScale } }, "Observe-only secondary dossier created. No external action was dispatched."); }
   async function addEvidence() { await governed(`evidence:${evidenceType}`, "SECONDARY_TRANSFER_EVIDENCE_RECORD", `${root}/evidence`, { evidenceType, providerInstitutionId: providerId, evidenceObjectId, assertionDigest }, "Verified retained evidence was linked. No external fact was created by Rail."); }
@@ -51,7 +52,7 @@ export default function SecondaryJourneyPage() {
   async function review(approved: boolean) { await governed(`review:${approved}`, "SECONDARY_TRANSFER_REVIEW", `${root}/review`, { approved, reason: approved ? "Independently reviewed against the retained secondary evidence" : "Secondary dossier rejected; evidence remains retained" }, approved ? "Review recorded; the route comparison remains observe-only." : "Review rejection recorded."); }
   async function proposeRepair(item: BreakItem) { const draft = repairDrafts[item.id]; if (!draft) return; await governed(`repair:${item.id}`, "SECONDARY_TRANSFER_REPAIR_PROPOSE", `${root}/breaks/${encodeURIComponent(item.id)}/repairs`, { replacementEvidenceType: draft.evidenceType, providerInstitutionId: draft.providerId, evidenceObjectId: draft.evidenceObjectId, assertionDigest: draft.digest, authorityEvidenceRef: draft.authorityRef }, "Append-only repair proposed. The original break and evidence remain unchanged."); }
   async function reviewRepair(item: BreakItem, repair: Repair, approved: boolean) { await governed(`repair-review:${repair.id}:${approved}`, "SECONDARY_TRANSFER_REPAIR_REVIEW", `${root}/breaks/${encodeURIComponent(item.id)}/repairs/${encodeURIComponent(repair.id)}/review`, { approved, reason: approved ? "Independently approved the current signed replacement evidence" : "Replacement evidence rejected" }, "Repair review recorded; external systems were not changed."); }
-  async function downloadPack() { setBusy("pack"); try { const pack = await vget<unknown>(`${root}/evidence-pack`); const url = URL.createObjectURL(new Blob([JSON.stringify(pack, null, 2)], { type: "application/json" })); const anchor = document.createElement("a"); anchor.href = url; anchor.download = `assurerail-secondary-${caseId}-evidence-pack.json`; anchor.click(); URL.revokeObjectURL(url); } catch (cause) { setError((cause as Error).message); } finally { setBusy(""); } }
+  async function downloadPack() { setBusy("pack"); try { const pack = await vget<unknown>(`${root}/evidence-pack`); const url = URL.createObjectURL(new Blob([JSON.stringify(pack, null, 2)], { type: "application/json" })); const anchor = document.createElement("a"); anchor.href = url; anchor.download = `assurerail-secondary-${caseId}-evidence-pack.json`; anchor.click(); URL.revokeObjectURL(url); } catch (cause) { setError(userFacingError(cause)); } finally { setBusy(""); } }
   return <><VenueHeader/><main className="wrap institutional-page customer-workspace"><Link className="back-link" href="/workspace/secondary">← Secondary register</Link>
     <div className="console-head"><p className="eyebrow">AR-27 · {data?.case.transactionRoute ?? "secondary"} · {data?.case.operatingMode ?? "shadow"}</p><h1>{data?.case.caseReference ?? "Secondary transfer journey"}</h1><p>Title chain, restrictions, consent, authority, documents, cash observation, review, register reconciliation and evidence export.</p></div>
     <div className="boundary-note">{data?.authorityNotice ?? "Observe-only: Rail cannot execute or make ownership legally effective."}</div>

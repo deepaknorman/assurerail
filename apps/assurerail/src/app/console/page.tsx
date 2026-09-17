@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { vget, vpost, vdownload, inr, shortDid, grp, shortIN } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
 import { VenueHeader } from "@/components/VenueHeader";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Note = {
   id: string;
@@ -60,7 +61,7 @@ export default function Console() {
     try {
       setNotes(await vget<Note[]>("/venue/notes"));
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     }
   }, []);
 
@@ -94,7 +95,7 @@ export default function Console() {
       setUnderlying(u);
       setDocs(dc);
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     }
   }, [notes]);
 
@@ -119,7 +120,7 @@ export default function Console() {
       await fn();
       if (okMsg) setOk(okMsg);
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     } finally {
       setBusy("");
     }

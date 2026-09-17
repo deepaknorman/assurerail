@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { daProductEnabled } from "@/lib/customer-workspace";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vdownload, vget, vpost } from "@/lib/venue";
+import { UserFacingError, userFacingError } from "@/lib/user-facing-error";
 
 type Stage = { code: string; state: string; summary: string };
 type Evidence = { id: string; institutionId: string; evidenceType: string; status: string; versions: Array<{ payloadDigest: string; result: string; validationStatus: string; signatureStatus: string }> };
@@ -43,8 +44,14 @@ const EMPTY_PLAN = JSON.stringify({
 }, null, 2);
 
 function parseObject(value: string, label: string): Record<string, unknown> {
-  const parsed = JSON.parse(value) as unknown;
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error(`${label} must be a JSON object.`);
+  let parsed: unknown;
+  try { parsed = JSON.parse(value) as unknown; }
+  catch {
+    throw new UserFacingError(`${label} must be valid JSON.`);
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new UserFacingError(`${label} must be a JSON object.`);
+  }
   return parsed as Record<string, unknown>;
 }
 
@@ -65,7 +72,7 @@ export default function ConventionalDaJourneyPage() {
   const load = useCallback(async () => {
     if (!activeInstitutionId || !enabled) return;
     try { setData(await vget<Overview>(`${root}/product-overview`)); setError(""); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause, "We couldn’t load this DA journey. Refresh the page or try again.")); }
   }, [activeInstitutionId, enabled, root]);
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
   useEffect(() => { if (firebaseUser && activeInstitutionId && enabled) void load(); }, [firebaseUser, activeInstitutionId, enabled, load]);
@@ -80,7 +87,7 @@ export default function ConventionalDaJourneyPage() {
       delete keys.current[scope];
       setNotice("Governed DA replay record saved. No funds, title, notice or register action was dispatched.");
       await load();
-    } catch (cause) { setError((cause as Error).message); } finally { setBusy(""); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t save this DA action. Check the entries and authenticator code, then try again.")); } finally { setBusy(""); }
   }
   async function proposeAuthorisation() {
     await governed("authorisation-propose", "DA_REPLAY_AUTHORISATION_PROPOSE", `${root}/authorisation`, { authorityEvidenceRef: authorityRef, reason: "Authorise an observe-only historic/shadow DA replay" });
@@ -91,13 +98,13 @@ export default function ConventionalDaJourneyPage() {
   }
   async function createSaga() {
     try { await governed("saga-create", "DA_REPLAY_SAGA_CREATE", `${root}/sagas`, { ...parseObject(plan, "Completion plan"), expectedCaseAggregateVersion: data?.case.aggregateVersion }); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause, "We couldn’t prepare the completion plan. Check the plan details and try again.")); }
   }
   async function recordObservation(saga: Saga, leg: Leg) {
     try {
       const observed = parseObject(observationDrafts[leg.id] ?? "{}", "Observed fact");
       await governed(`observe:${leg.id}`, "DA_REPLAY_OBSERVATION_RECORD", `${root}/sagas/${encodeURIComponent(saga.id)}/legs/${encodeURIComponent(leg.id)}/observations`, { observed, externalReference: observationRefs[leg.id], finalityClass: "FINAL", signatureStatus: "VERIFIED", evidenceObjectId: observationEvidence[leg.id], observedAt: new Date().toISOString(), reason: "Partner-performed DA leg observed from retained evidence" });
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t record this observation. Check the retained evidence and try again.")); }
   }
   async function reconcile(saga: Saga, leg: Leg) {
     await governed(`reconcile:${leg.id}`, "DA_REPLAY_LEG_RECONCILE", `${root}/sagas/${encodeURIComponent(saga.id)}/legs/${encodeURIComponent(leg.id)}/reconcile`, { reason: "Current final signed observation independently reconciled to the retained expectation" });
@@ -106,7 +113,7 @@ export default function ConventionalDaJourneyPage() {
     try {
       const replacementObservation = parseObject(repairDrafts[item.id] ?? "{}", "Replacement observation");
       await governed(`repair:${item.id}`, "DA_REPLAY_REPAIR_PROPOSE", `${root}/breaks/${encodeURIComponent(item.id)}/repairs`, { replacementObservation, authorityEvidenceRef: repairEvidence[item.id], reason: "Append corrected external observation without rewriting history" });
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t propose this repair. Check the replacement observation and evidence reference, then try again.")); }
   }
   async function reviewRepair(item: BreakItem, repair: Repair, approve: boolean) {
     await governed(`repair-review:${repair.id}`, "DA_REPLAY_REPAIR_REVIEW", `${root}/breaks/${encodeURIComponent(item.id)}/repairs/${encodeURIComponent(repair.id)}/review`, { approve, reason: approve ? "Corrected evidence independently matched" : "Repair evidence rejected" });
@@ -117,7 +124,7 @@ export default function ConventionalDaJourneyPage() {
       const result = await vget<unknown>(`${root}/sagas/${encodeURIComponent(saga.id)}/evidence-pack`);
       const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: "application/json" }));
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = `assurerail-da-${caseId}-evidence-pack.json`; anchor.click(); URL.revokeObjectURL(url);
-    } catch (cause) { setError((cause as Error).message); } finally { setBusy(""); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t prepare the DA evidence pack. Try again.")); } finally { setBusy(""); }
   }
 
   return <><VenueHeader/><main className="wrap institutional-page customer-workspace">

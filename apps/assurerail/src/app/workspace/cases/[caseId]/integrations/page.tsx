@@ -6,6 +6,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { enterpriseIntegrationEnabled } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 type Binding = {
   id: string;
   materialFunction: string;
@@ -37,7 +38,7 @@ export default function CaseIntegrationsPage() {
         )
       );
     } catch (cause) {
-      setError((cause as Error).message);
+      setError(userFacingError(cause, "We couldn’t load this case’s integration status. Refresh the page or try again."));
     }
   }, [caseId, enabled]);
   useEffect(() => {

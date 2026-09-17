@@ -14,6 +14,7 @@ import {
 } from "./firebase";
 import { recaptchaToken } from "./recaptcha";
 import { currentInstitutionContext, rememberInstitutionContext, vpost } from "./venue";
+import { authenticationError } from "./user-facing-error";
 
 export interface VenueUser {
   id: string;
@@ -129,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setActiveInstitutionId(null);
         }
       } catch (e) {
-        setError((e as Error).message);
+        setError(authenticationError(e, "SESSION"));
       } finally {
         setLoading(false);
       }
@@ -143,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!firebaseConfigured) throw new Error("AssureRail authentication is not configured in this environment");
       await signInWithPopup(auth, new GoogleAuthProvider());
     } catch (e) {
-      setError((e as Error).message);
+      setError(authenticationError(e, "SIGN_IN"));
       throw e;
     }
   }, []);
@@ -155,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (register) await createUserWithEmailAndPassword(auth, email, password);
       else await signInWithEmailAndPassword(auth, email, password);
     } catch (e) {
-      setError((e as Error).message);
+      setError(authenticationError(e, register ? "REGISTER" : "SIGN_IN"));
       throw e;
     }
   }, []);

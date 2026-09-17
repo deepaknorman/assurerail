@@ -7,6 +7,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { vget, vpost, vdelete } from "@/lib/venue";
 import { listPasskeys, registerPasskey, deletePasskey, type Passkey } from "@/lib/webauthn";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Theme = "system" | "light" | "dark";
 type MfaStatus = { methods: string[]; pending: string[]; enrolled: boolean };
@@ -72,7 +73,7 @@ export default function Settings() {
       await fn();
       if (okMsg) setOk(okMsg);
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e, "The security settings could not be updated. Please try again."));
     } finally {
       setBusy("");
     }

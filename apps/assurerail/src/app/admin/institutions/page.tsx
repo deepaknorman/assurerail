@@ -14,6 +14,7 @@ import {
   type RouteEntitlement,
 } from "@/lib/institutions";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 const emptyEvidence = {
   providerReferenceId: "", providerInstitutionRef: "", evidenceType: "KYB",
@@ -50,12 +51,12 @@ export default function InstitutionApprovalsPage() {
   const loadQueue = useCallback(async () => {
     setError("");
     try { setQueue(await vget<AdminQueue>("/v1/rail/admin/institutions", { institutionId: null })); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause)); }
   }, []);
   const loadWorkspace = useCallback(async (institutionId: string) => {
     setError("");
     try { setWorkspace(await vget<AdminInstitutionWorkspace>(`/v1/rail/admin/institutions/${encodeURIComponent(institutionId)}`, { institutionId: null })); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause)); }
   }, []);
 
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); }, [loading, firebaseUser, router]);
@@ -86,7 +87,7 @@ export default function InstitutionApprovalsPage() {
       }, { institutionId: null });
       setEvidence(emptyEvidence); await refresh();
       setMessage("Immutable evidence metadata recorded. This did not admit the institution.");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
     finally { setBusy(""); }
   }
 
@@ -97,7 +98,7 @@ export default function InstitutionApprovalsPage() {
       const stepUpEvidenceId = await requestTotpStepUp({ code: totp, purpose, institutionId: selectedId, withoutInstitutionHeader: true });
       await vpost(path, { ...payload, stepUpEvidenceId }, { institutionId: null });
       await refresh(); setMessage("Independent platform action recorded. The participant status below is authoritative for Rail admission only.");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
     finally { setBusy(""); }
   }
 

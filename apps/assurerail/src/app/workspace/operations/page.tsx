@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { customerOperationsEnabled } from "@/lib/customer-workspace";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type FeeRule = { id: string; transactionRoute: string; representation: string; lifecycleLeg: string; metric: string; feeBasis: string; rateValue: string; minimumFeeMinor: string | null; maximumFeeMinor: string | null };
 type RateCard = { id: string; version: number; status: string; effectiveAt: string; expiresAt: string; feeRules: FeeRule[] };
@@ -47,7 +48,7 @@ export default function CustomerOperationsPage() {
   const load = useCallback(async () => {
     if (!activeInstitutionId || !enabled) return;
     try { setOverview(await vget<Overview>(`${root}/overview`)); setError(""); }
-    catch (cause) { setOverview(null); setError((cause as Error).message); }
+    catch (cause) { setOverview(null); setError(userFacingError(cause, "We couldn’t load service operations. Refresh the page or try again.")); }
   }, [activeInstitutionId, enabled, root]);
 
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
@@ -61,7 +62,7 @@ export default function CustomerOperationsPage() {
       await vpost(path, { ...body, stepUpEvidenceId });
       setNotice("The governed shadow record was saved. No transaction authority, legal record or completion state changed.");
       await load();
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t save this operations action. Check the details and authenticator code, then try again.")); }
     finally { setBusy(""); }
   }
 
@@ -74,7 +75,7 @@ export default function CustomerOperationsPage() {
       const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: "application/json" }));
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = `assurerail-customer-exit-${activeInstitutionId}.json`; anchor.click(); URL.revokeObjectURL(url);
       setNotice("A digest-bound customer exit package was generated. Secrets and document bytes are excluded."); await load();
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t prepare the export. Try again.")); }
     finally { setBusy(""); }
   }
 

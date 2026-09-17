@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
+import { userFacingError } from "@/lib/user-facing-error";
 import { vpost } from "@/lib/venue";
 import "./assessment.css";
 import {EngagementJourney} from "./EngagementJourney";
@@ -60,7 +61,7 @@ export default function AssessmentCommercialPage() {
     if(!activeInstitutionId||!validScope)return;
     const version=++requestVersion.current;setBusy(true);setError("");setQuote(null);
     try {const result=await vpost<Quote>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}/engagement-billing/quote-preview`,scope);if(version===requestVersion.current)setQuote(result);}
-    catch(e){if(version===requestVersion.current)setError((e as Error).message);}
+    catch(e){if(version===requestVersion.current)setError(userFacingError(e,"We couldn’t calculate this quote. Check the book size and loan counts, then try again."));}
     finally{if(version===requestVersion.current)setBusy(false);}
   }
   if(loading||!firebaseUser||needsOnboarding)return <><VenueHeader/><main className="assessment-plan"><p>Loading your workspace…</p></main></>;

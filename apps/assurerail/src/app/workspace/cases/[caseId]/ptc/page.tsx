@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ptcProductEnabled } from "@/lib/customer-workspace";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Stage = { code: string; state: string; summary: string };
 type Evidence = { id: string; institutionId: string; evidenceType: string; status: string; versions: Array<{ payloadDigest: string; result: string; validationStatus: string; signatureStatus: string }> };
@@ -86,7 +87,7 @@ export default function ConventionalPtcJourneyPage() {
   const load = useCallback(async () => {
     if (!activeInstitutionId || !enabled) return;
     try { setData(await vget<Overview>(`${root}/product-overview`)); setError(""); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause)); }
   }, [activeInstitutionId, enabled, root]);
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
   useEffect(() => { if (firebaseUser && activeInstitutionId && enabled) void load(); }, [firebaseUser, activeInstitutionId, enabled, load]);
@@ -101,24 +102,24 @@ export default function ConventionalPtcJourneyPage() {
       delete keys.current[scope];
       setNotice("Governed PTC replay record saved. No funds, issue, allotment, notice or register action was dispatched.");
       await load();
-    } catch (cause) { setError((cause as Error).message); } finally { setBusy(""); }
+    } catch (cause) { setError(userFacingError(cause)); } finally { setBusy(""); }
   }
   async function proposeAuthorisation() { await governed("authorisation-propose", "PTC_REPLAY_AUTHORISATION_PROPOSE", `${root}/authorisation`, { authorityEvidenceRef: authorityRef, reason: "Authorise an observe-only historic/shadow PTC replay" }); }
   async function reviewAuthorisation(approve: boolean) { if (data?.authorisation) await governed("authorisation-review", "PTC_REPLAY_AUTHORISATION_REVIEW", `${root}/authorisation/${encodeURIComponent(data.authorisation.id)}/review`, { approve, reason: approve ? "Independently approved for observe-only replay" : "Replay authorisation rejected" }); }
-  async function createSaga() { try { await governed("saga-create", "PTC_REPLAY_SAGA_CREATE", `${root}/sagas`, { ...parseObject(plan, "PTC completion plan"), expectedCaseAggregateVersion: data?.case.aggregateVersion }); } catch (cause) { setError((cause as Error).message); } }
+  async function createSaga() { try { await governed("saga-create", "PTC_REPLAY_SAGA_CREATE", `${root}/sagas`, { ...parseObject(plan, "PTC completion plan"), expectedCaseAggregateVersion: data?.case.aggregateVersion }); } catch (cause) { setError(userFacingError(cause)); } }
   async function recordObservation(saga: Saga, leg: Leg) {
     try { await governed(`observe:${leg.id}`, "PTC_REPLAY_OBSERVATION_RECORD", `${root}/sagas/${encodeURIComponent(saga.id)}/legs/${encodeURIComponent(leg.id)}/observations`, { observed: parseObject(observationDrafts[leg.id] ?? "{}", "Observed fact"), externalReference: observationRefs[leg.id], finalityClass: "FINAL", signatureStatus: "VERIFIED", evidenceObjectId: observationEvidence[leg.id], observedAt: new Date().toISOString(), reason: "Assigned performer PTC leg observed from retained evidence" }); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause)); }
   }
   async function reconcile(saga: Saga, leg: Leg) { await governed(`reconcile:${leg.id}`, "PTC_REPLAY_LEG_RECONCILE", `${root}/sagas/${encodeURIComponent(saga.id)}/legs/${encodeURIComponent(leg.id)}/reconcile`, { reason: "Current final signed observation independently reconciled to the retained expectation" }); }
   async function proposeRepair(item: BreakItem) {
     try {
       const replacementObservation = { idempotencyKey: keyFor(`repair-observation:${item.id}`), observed: parseObject(repairDrafts[item.id] ?? "{}", "Replacement observation"), externalReference: observationRefs[item.id], finalityClass: "FINAL", signatureStatus: "VERIFIED", evidenceObjectId: repairEvidence[item.id], observedAt: new Date().toISOString(), reason: "Append corrected external observation" };
       await governed(`repair:${item.id}`, "PTC_REPLAY_REPAIR_PROPOSE", `${root}/breaks/${encodeURIComponent(item.id)}/repairs`, { replacementObservation, authorityEvidenceRef: repairAuthority[item.id], reason: "Append corrected external observation without rewriting history" });
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause)); }
   }
   async function reviewRepair(item: BreakItem, repair: Repair, approve: boolean) { await governed(`repair-review:${repair.id}`, "PTC_REPLAY_REPAIR_REVIEW", `${root}/breaks/${encodeURIComponent(item.id)}/repairs/${encodeURIComponent(repair.id)}/review`, { approve, reason: approve ? "Corrected evidence independently matched" : "Repair evidence rejected" }); }
-  async function download(path: string, filename: string) { setBusy(filename); try { saveJson(await vget<unknown>(path), filename); } catch (cause) { setError((cause as Error).message); } finally { setBusy(""); } }
+  async function download(path: string, filename: string) { setBusy(filename); try { saveJson(await vget<unknown>(path), filename); } catch (cause) { setError(userFacingError(cause)); } finally { setBusy(""); } }
 
   return <><VenueHeader/><main className="wrap institutional-page customer-workspace">
     <Link className="back-link" href={`/workspace/cases/${encodeURIComponent(caseId)}`}>← Case cockpit</Link>

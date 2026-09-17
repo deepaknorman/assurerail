@@ -13,6 +13,7 @@ import {
   type StatusChangeProposal,
 } from "@/lib/institutions";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 const initialInvite = { email: "", membershipRole: "MEMBER", expiresAt: "" };
 const initialMandate = {
@@ -78,7 +79,7 @@ export default function InstitutionWorkspacePage() {
     setError("");
     try {
       setWorkspace(await vget<InstitutionWorkspace>(`/v1/rail/institutions/${encodeURIComponent(institutionId)}`, participantOptions));
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t load this institution workspace. Refresh the page or try again.")); }
   }, [institutionId, participantOptions]);
 
   useEffect(() => {
@@ -95,7 +96,7 @@ export default function InstitutionWorkspacePage() {
       await vpost(path, { ...payload, stepUpEvidenceId }, { institutionId });
       await load();
       setMessage("Governed action recorded. Its effective status is shown below.");
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t record this institution action. Check the entries and authenticator code, then try again.")); }
     finally { setBusy(""); }
   }
 
@@ -105,7 +106,7 @@ export default function InstitutionWorkspacePage() {
       await selectInstitution(institutionId);
       setWorkspace(await vget<InstitutionWorkspace>(`/v1/rail/institutions/${encodeURIComponent(institutionId)}`, { institutionId }));
     }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause, "We couldn’t activate this institution workspace. Try again.")); }
     finally { setBusy(""); }
   }
 
@@ -234,7 +235,7 @@ export default function InstitutionWorkspacePage() {
             <label className="lbl">Expires at <span className="opt">optional</span><input className="field" type="datetime-local" value={appointment.expiresAt} onChange={(event) => setAppointment({ ...appointment, expiresAt: event.target.value })} /></label>
           </div><button className="btn btn-primary" disabled={!!busy || !totp || !appointment.appointeeInstitutionId} onClick={() => {
             try { void act("appointment", "APPOINTMENT_PROPOSE", `/v1/rail/institutions/${encodeURIComponent(institutionId)}/appointments`, { appointmentRole: appointment.appointmentRole, appointeeInstitutionId: appointment.appointeeInstitutionId, scope: parseObject(appointment.scope, "Scope"), conflictDisclosure: parseObject(appointment.conflictDisclosure, "Conflict disclosure"), expiresAt: optionalIso(appointment.expiresAt) }); }
-            catch (cause) { setError((cause as Error).message); }
+            catch (cause) { setError(userFacingError(cause, "We couldn’t prepare this appointment. Check the scope and conflict disclosure, then try again.")); }
           }}>{busy === "appointment" ? "Recording…" : "Record appointment proposal"}</button></details>}
         </section>
 

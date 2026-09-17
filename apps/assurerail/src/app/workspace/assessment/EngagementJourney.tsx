@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from "react";
 import {vget,vpost} from "@/lib/venue";
 import {requestTotpStepUp} from "@/lib/institutions";
+import {userFacingError} from "@/lib/user-facing-error";
 import type {AssessmentQuoteScope} from "./page";
 type Price={baseMinor:string;taxMinor:string;totalMinor:string};
 type Engagement={id:string;status:string;quoteDigest:string;termsDigest:string;route:string|null;billingProfile:{legalName:string;billingEmail:string;address:string};quote:{initial:Price;committedPreparation:Price;standalonePreparation:Price};scope:{bookRef:string;assetFamily:string;primaryPairCount:number;linkedPartyCount:number;sellerProposedConsiderationMinor:string;aggregateProgrammeConsiderationMinor:string};stages:{stage:string;invoiceId:string|null;invoice:{status:string}|null}[]};
@@ -21,9 +22,9 @@ export function EngagementJourney({institutionId,quoteScope,optionalServices}:{i
   const current=engagements.find(e=>e.id===selected);
   const field=(key:keyof typeof form,value:string)=>{requestRef.current=crypto.randomUUID();setForm(f=>({...f,[key]:value}));};
   async function load(){const [overview,list]=await Promise.all([vget<{contracts:Contract[]}>(`${base}/customer-operations/overview`),vget<Engagement[]>(`${base}/engagements`)]);setContracts(overview.contracts.filter(c=>c.status==="ACTIVE_SHADOW"));setEngagements(list);}
-  useEffect(()=>{let alive=true;Promise.all([vget<{contracts:Contract[]}>(`${base}/customer-operations/overview`),vget<Engagement[]>(`${base}/engagements`)]).then(([overview,list])=>{if(alive){setContracts(overview.contracts.filter(c=>c.status==="ACTIVE_SHADOW"));setEngagements(list);}}).catch(e=>{if(alive)setError(e.message);});return()=>{alive=false;};},[base]);
-  useEffect(()=>{setRuns([]);setCheckout(null);setAccepted(false);setAuthority(false);if(!selected)return;let alive=true;vget<Run[]>(`${base}/engagements/${selected}/runs`).then(r=>{if(alive)setRuns(r);}).catch(e=>{if(alive)setError(e.message);});return()=>{alive=false;};},[base,selected]);
-  async function act(fn:()=>Promise<void>){setBusy(true);setError("");setMessage("");try{await fn();await load();}catch(e){setError((e as Error).message);}finally{setBusy(false);setCode("");}}
+  useEffect(()=>{let alive=true;Promise.all([vget<{contracts:Contract[]}>(`${base}/customer-operations/overview`),vget<Engagement[]>(`${base}/engagements`)]).then(([overview,list])=>{if(alive){setContracts(overview.contracts.filter(c=>c.status==="ACTIVE_SHADOW"));setEngagements(list);}}).catch(e=>{if(alive)setError(userFacingError(e,"We couldn’t load your engagements. Refresh the page or try again."));});return()=>{alive=false;};},[base]);
+  useEffect(()=>{setRuns([]);setCheckout(null);setAccepted(false);setAuthority(false);if(!selected)return;let alive=true;vget<Run[]>(`${base}/engagements/${selected}/runs`).then(r=>{if(alive)setRuns(r);}).catch(e=>{if(alive)setError(userFacingError(e,"We couldn’t load this engagement’s progress. Try again."));});return()=>{alive=false;};},[base,selected]);
+  async function act(fn:()=>Promise<void>){setBusy(true);setError("");setMessage("");try{await fn();await load();}catch(e){setError(userFacingError(e,"We couldn’t complete this step. Your saved engagement is unchanged; review the details and try again."));}finally{setBusy(false);setCode("");}}
   async function proof(purpose:string){return requestTotpStepUp({code,purpose,institutionId});}
   const stage=current?.route?"PREPARATION":"INITIAL";
   return <section className="engagement-journey"><h2>Start an engagement</h2><p>Save your billing details and book scope, review the complete quote, then accept with your authorised login.</p>

@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { primaryVenueProductEnabled } from "@/lib/customer-workspace";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vget, vpost } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Term = { id: string; version: number; currency: string; amountUnits: string; amountScale: number; minimumParticipationUnits: string; maximumParticipationUnits: string | null; pricingType: string; pricingValue: string; commercialTerms: unknown; termSheetEvidenceObjectId: string | null; validFrom: string; expiresAt: string; termDigest: string };
 type Change = { id: string; action: string; expectedVersion: number; fromStatus: string; toStatus: string; reason: string; status: string; proposedByUserId: string; reviewedByUserId: string | null };
@@ -50,7 +51,7 @@ export default function OpportunityPage() {
   const load = useCallback(async () => {
     if (!caseId || !enabled || !activeInstitutionId) return;
     try { setDetail(await vget<Detail>(root)); setError(""); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause)); }
   }, [caseId, enabled, activeInstitutionId, root]);
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
   useEffect(() => { if (firebaseUser && activeInstitutionId && enabled) void load(); }, [firebaseUser, activeInstitutionId, enabled, load]);
@@ -72,17 +73,17 @@ export default function OpportunityPage() {
       const stepUpEvidenceId = await requestTotpStepUp({ code: totp, purpose, institutionId: activeInstitutionId });
       await vpost(path, { ...body, idempotencyKey: body.idempotencyKey ?? key(scope), stepUpEvidenceId });
       delete keys.current[scope]; setNotice("Governed commercial record saved. No trade, payment, issuance or ownership change was executed."); await load();
-    } catch (cause) { setError((cause as Error).message); } finally { setBusy(""); }
+    } catch (cause) { setError(userFacingError(cause)); } finally { setBusy(""); }
   }
-  async function createTerm() { try { await governed("term", "COMMERCIAL_TERM_CREATE", `${root}/terms`, object(termJson)); } catch (cause) { setError((cause as Error).message); } }
+  async function createTerm() { try { await governed("term", "COMMERCIAL_TERM_CREATE", `${root}/terms`, object(termJson)); } catch (cause) { setError(userFacingError(cause)); } }
   async function invite() { await governed("invite", "COMMERCIAL_AUDIENCE_INVITE", `${root}/audience`, { institutionId: inviteInstitution, purpose: "TERM_DISPLAY_AND_RFQ", conflictDisclosure: { reviewed: true, detail: "Replace with approved disclosure" }, effectiveAt: new Date().toISOString(), expiresAt: detail?.closesAt ?? future(30) }); }
   async function revokeAudience(institutionId: string) { await governed(`revoke-audience:${institutionId}`, "COMMERCIAL_AUDIENCE_REVOKE", `${root}/audience/${encodeURIComponent(institutionId)}/revoke`, { reason: "Revoke named access under the approved audience process" }); }
   async function proposeChange() { await governed(`change:${changeAction}`, "COMMERCIAL_CHANGE_PROPOSE", `${root}/changes`, { action: changeAction, expectedVersion: detail?.aggregateVersion, reason: `${changeAction} under named-audience operating controls` }); }
   async function reviewChange(item: Change, approve: boolean) { await governed(`review-change:${item.id}`, "COMMERCIAL_CHANGE_REVIEW", `${root}/changes/${encodeURIComponent(item.id)}/review`, { approve, reason: `${approve ? "Approve" : "Reject"} independently after control review` }); }
   async function submitInterest() { if (!currentTerm) return; await governed("interest", "COMMERCIAL_INTEREST_SUBMIT", `${root}/interests`, { termVersionId: currentTerm.id, currency: currentTerm.currency, amountUnits, amountScale: currentTerm.amountScale, qualifications: { nonBinding: true, subjectToCredit: true }, expiresAt: currentTerm.expiresAt }); }
   async function withdrawInterest(item: Interest) { await governed(`withdraw-interest:${item.id}`, "COMMERCIAL_INTEREST_WITHDRAW", `${root}/interests/${encodeURIComponent(item.id)}/withdraw`, { reason: "Withdraw the non-binding indication" }); }
-  async function submitRfq() { if (!currentTerm) return; try { await governed("rfq", "COMMERCIAL_RFQ_SUBMIT", `${root}/rfqs`, { termVersionId: currentTerm.id, currency: currentTerm.currency, amountUnits, amountScale: currentTerm.amountScale, requestedTerms: object(responseJson), expiresAt: currentTerm.expiresAt }); } catch (cause) { setError((cause as Error).message); } }
-  async function respondRfq(item: Rfq, outcome: "RESPOND" | "DECLINE") { try { await governed(`rfq-response:${item.id}`, "COMMERCIAL_RFQ_RESPOND", `${root}/rfqs/${encodeURIComponent(item.id)}/respond`, { outcome, responseTerms: outcome === "RESPOND" ? object(responseJson) : undefined, reason: `${outcome} after owner review` }); } catch (cause) { setError((cause as Error).message); } }
+  async function submitRfq() { if (!currentTerm) return; try { await governed("rfq", "COMMERCIAL_RFQ_SUBMIT", `${root}/rfqs`, { termVersionId: currentTerm.id, currency: currentTerm.currency, amountUnits, amountScale: currentTerm.amountScale, requestedTerms: object(responseJson), expiresAt: currentTerm.expiresAt }); } catch (cause) { setError(userFacingError(cause)); } }
+  async function respondRfq(item: Rfq, outcome: "RESPOND" | "DECLINE") { try { await governed(`rfq-response:${item.id}`, "COMMERCIAL_RFQ_RESPOND", `${root}/rfqs/${encodeURIComponent(item.id)}/respond`, { outcome, responseTerms: outcome === "RESPOND" ? object(responseJson) : undefined, reason: `${outcome} after owner review` }); } catch (cause) { setError(userFacingError(cause)); } }
   async function postMessage(thread: Thread) { await governed(`message:${thread.id}`, "COMMERCIAL_MESSAGE_POST", `${root}/threads/${encodeURIComponent(thread.id)}/messages`, { messageKind: "COMMENT", message: message[thread.id], previousMessageId: thread.messages.at(-1)?.id }); }
   async function proposeAllocation() { if (!currentTerm || !allocationBasis) return; const [basisType, basisId, offereeInstitutionId] = allocationBasis.split("|"); await governed("allocation", "COMMERCIAL_ALLOCATION_PROPOSE", `${root}/allocations`, { allocationReference: `${detail?.opportunityReference}-A-${Date.now()}`, offereeInstitutionId, termVersionId: currentTerm.id, basisType, basisId, currency: currentTerm.currency, amountUnits, amountScale: currentTerm.amountScale, expiresAt: currentTerm.expiresAt }); }
   async function reviewAllocation(item: Allocation, approve: boolean) { await governed(`review-allocation:${item.id}`, "COMMERCIAL_ALLOCATION_REVIEW", `${root}/allocations/${encodeURIComponent(item.id)}/review`, { approve, reason: `${approve ? "Approve" : "Reject"} allocation after independent capacity and fairness review` }); }

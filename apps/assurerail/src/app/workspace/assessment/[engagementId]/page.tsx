@@ -5,6 +5,7 @@ import {VenueHeader} from "@/components/VenueHeader";
 import {useAuth} from "@/lib/auth-context";
 import {vget,vpost,vpostRaw} from "@/lib/venue";
 import {requestTotpStepUp} from "@/lib/institutions";
+import {userFacingError} from "@/lib/user-facing-error";
 import "../assessment.css";
 type Evidence={id:string;purpose:string;status:string;evidenceType:string;documentFamily?:{title:string};versions:{id:string;version:number;validationStatus:string}[]};
 type ChangeSummary={previousGapCount:number;currentGapCount:number;resolvedGapKeys:string[];newGapKeys:string[];continuingGapKeys:string[];dataQualityBefore:{status:string}|null;dataQualityAfter:{status:string}|null};
@@ -25,8 +26,8 @@ function EvidenceWorkspace({institutionId,engagementId}:{institutionId:string;en
  const [selected,setSelected]=useState<string[]>([]),[file,setFile]=useState<File|null>(null),[code,setCode]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[message,setMessage]=useState("");
  const [ownerByItem,setOwnerByItem]=useState<Record<string,string>>({}),[rerunItems,setRerunItems]=useState<string[]>([]);
  async function load(){const [docs,nextReports,items,nextPolicy]=await Promise.all([vget<Evidence[]>(`${base}/evidence`),vget<Report[]>(runsPath),vget<RemediationItem[]>(`${runsPath}/remediation`),vget<ReassessmentPolicy>(`${runsPath}/policy`)]);setEvidence(docs.filter(e=>e.purpose===`ASSESSMENT:${engagementId}`));setReports(nextReports);setRemediation(items);setPolicy(nextPolicy);setRerunItems(items.filter(item=>item.status==="EVIDENCE_ATTACHED"&&item.sourceRunId===nextReports.find(r=>r.stage==="INITIAL"&&r.status==="AUTO_RELEASED")?.id).map(item=>item.id));}
- useEffect(()=>{let alive=true;Promise.all([vget<Evidence[]>(`${base}/evidence`),vget<Report[]>(runsPath),vget<RemediationItem[]>(`${runsPath}/remediation`),vget<ReassessmentPolicy>(`${runsPath}/policy`)]).then(([docs,nextReports,items,nextPolicy])=>{if(alive){setEvidence(docs.filter(e=>e.purpose===`ASSESSMENT:${engagementId}`));setReports(nextReports);setRemediation(items);setPolicy(nextPolicy);}}).catch(e=>{if(alive)setError(e.message);});return()=>{alive=false;};},[base,runsPath,engagementId]);
- async function act(fn:()=>Promise<void>){setBusy(true);setError("");setMessage("");try{await fn();await load();}catch(e){setError((e as Error).message);}finally{setBusy(false);setCode("");}}
+ useEffect(()=>{let alive=true;Promise.all([vget<Evidence[]>(`${base}/evidence`),vget<Report[]>(runsPath),vget<RemediationItem[]>(`${runsPath}/remediation`),vget<ReassessmentPolicy>(`${runsPath}/policy`)]).then(([docs,nextReports,items,nextPolicy])=>{if(alive){setEvidence(docs.filter(e=>e.purpose===`ASSESSMENT:${engagementId}`));setReports(nextReports);setRemediation(items);setPolicy(nextPolicy);}}).catch(e=>{if(alive)setError(userFacingError(e,"We couldn’t load this assessment. Refresh the page or try again."));});return()=>{alive=false;};},[base,runsPath,engagementId]);
+ async function act(fn:()=>Promise<void>){setBusy(true);setError("");setMessage("");try{await fn();await load();}catch(e){setError(userFacingError(e,"We couldn’t complete this assessment step. Your saved files and answers are unchanged; try again."));}finally{setBusy(false);setCode("");}}
  const latestInitial=reports.find(r=>r.stage==="INITIAL"&&r.status==="AUTO_RELEASED");
  const latestRemediation=remediation.filter(item=>item.sourceRunId===latestInitial?.id);
  const isReassessment=stage==="INITIAL"&&Boolean(latestInitial);

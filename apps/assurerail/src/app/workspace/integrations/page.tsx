@@ -6,6 +6,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { enterpriseIntegrationEnabled } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Gate = {
   gateCode: string;
@@ -66,7 +67,7 @@ export default function EnterpriseIntegrationsPage() {
       ]);
       setData({ profiles, catalogue });
     } catch (cause) {
-      setError((cause as Error).message);
+      setError(userFacingError(cause, "We couldn’t load the integration workspace. Refresh the page or try again."));
     }
   }, [activeInstitutionId, enabled]);
   useEffect(() => {

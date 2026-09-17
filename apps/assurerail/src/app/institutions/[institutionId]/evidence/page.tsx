@@ -7,6 +7,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vdownload, vget, vpost, vpostRaw } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Certification = { id: string; profileRef: string; schemaId: string; schemaVersion: string; operatingMode: string; status: string; expiresAt: string | null };
 type Connector = { id: string; connectorKey: string; connectorType: string; displayName: string; transport: string; status: string; certifications: Certification[] };
@@ -49,7 +50,7 @@ export default function InstitutionEvidencePage() {
         vget<Evidence[]>(`/v1/rail/institutions/${encodeURIComponent(institutionId)}/evidence`, options),
       ]);
       setConnectors(connectorRows); setEvidence(evidenceRows);
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t load the evidence workspace. Refresh the page or try again.")); }
   }, [institutionId]); // active institution is fixed by this route
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function InstitutionEvidencePage() {
   async function run(key: string, action: () => Promise<unknown>, done: string) {
     setBusy(key); setError(""); setMessage("");
     try { await action(); await load(); setMessage(done); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause, "We couldn’t complete this evidence action. Your existing records are unchanged; check the details and try again.")); }
     finally { setBusy(""); }
   }
 

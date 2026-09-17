@@ -12,6 +12,7 @@ import {
   type HostedAlphaTaskResponse,
 } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 const CATEGORIES: Array<{ value: "ALL" | HostedAlphaTaskCategory; label: string }> = [
   { value: "ALL", label: "All actions" },
@@ -42,7 +43,7 @@ export default function HostedAlphaTasksPage() {
       setError("");
     } catch (cause) {
       setResponse(null);
-      setError((cause as Error).message);
+      setError(userFacingError(cause));
     }
   }, [activeInstitutionId, enabled]);
 

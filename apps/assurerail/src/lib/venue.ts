@@ -2,6 +2,7 @@
 // the current Firebase ID token as a Bearer; the venue API verifies it (P2). Public endpoints (health,
 // /venue/auth/session) accept it opportunistically.
 import { auth } from "./firebase";
+import { UserFacingError, userFacingError } from "./user-facing-error";
 
 export const VENUE_BASE = (process.env.NEXT_PUBLIC_ASSURERAIL_VENUE_URL || "http://localhost:3006").replace(/\/$/, "");
 
@@ -10,6 +11,37 @@ const ACTIVE_INSTITUTION_KEY = "arail-active-institution";
 export interface VenueRequestOptions {
   /** undefined = current participant context; null = explicitly no participant context. */
   institutionId?: string | null;
+}
+
+export class VenueRequestError extends UserFacingError {
+  constructor(message: string, readonly status: number | null) {
+    super(message);
+    this.name = "VenueRequestError";
+  }
+}
+
+function responseMessage(status: number, path: string): string {
+  if (status === 400) return "We could not process that request. Review the information and try again.";
+  if (status === 401) return "Your session has expired. Sign in again to continue.";
+  if (status === 403) return "Your account does not have permission to complete that action.";
+  if (status === 404) return "The requested record is no longer available in this workspace.";
+  if (status === 409) return "This record changed while you were working. Refresh it before trying again.";
+  if (status === 413) return "The selected file is too large for this upload.";
+  if (status === 415) return "This file format is not supported for the selected document type.";
+  if (status === 422) return "Some information could not be validated. Review the entries and try again.";
+  if (status === 429) return "Too many requests were received. Wait a moment and try again.";
+  if (status >= 500) return "AssureRail is temporarily unable to complete this action. Please try again shortly.";
+  return path.includes("upload")
+    ? "The file could not be uploaded. Check the file and try again."
+    : "We could not complete that action. Please try again.";
+}
+
+async function venueFetch(path: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(`${VENUE_BASE}${path}`, init);
+  } catch (cause) {
+    throw new VenueRequestError(userFacingError(cause, "We could not reach AssureRail. Check your connection and try again."), null);
+  }
 }
 
 export function currentInstitutionContext(): string | null {
@@ -40,22 +72,21 @@ async function authHeaders(options: VenueRequestOptions = {}): Promise<Record<st
 }
 
 export async function vget<T>(path: string, options: VenueRequestOptions = {}): Promise<T> {
-  const r = await fetch(`${VENUE_BASE}${path}`, { headers: { ...(await authHeaders(options)) } });
+  const r = await venueFetch(path, { headers: { ...(await authHeaders(options)) } });
   if (!r.ok) {
-    const j = (await r.json().catch(() => ({}))) as { message?: string };
-    throw new Error(j.message || `${path} → ${r.status}`);
+    throw new VenueRequestError(responseMessage(r.status, path), r.status);
   }
   return r.json() as Promise<T>;
 }
 
 export async function vpost<T>(path: string, body?: unknown, options: VenueRequestOptions = {}): Promise<T> {
-  const r = await fetch(`${VENUE_BASE}${path}`, {
+  const r = await venueFetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(await authHeaders(options)) },
     body: JSON.stringify(body ?? {}),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error((j as { message?: string }).message || `${path} → ${r.status}`);
+  if (!r.ok) throw new VenueRequestError(responseMessage(r.status, path), r.status);
   return j as T;
 }
 
@@ -67,7 +98,7 @@ export async function vpostRaw<T>(
 ): Promise<T> {
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(metadata))))
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const r = await fetch(`${VENUE_BASE}${path}`, {
+  const r = await venueFetch(path, {
     method: "POST",
     headers: {
       "Content-Type": "application/octet-stream",
@@ -77,7 +108,7 @@ export async function vpostRaw<T>(
     body,
   });
   const result = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error((result as { message?: string }).message || `${path} → ${r.status}`);
+  if (!r.ok) throw new VenueRequestError(responseMessage(r.status, path), r.status);
   return result as T;
 }
 
@@ -110,13 +141,13 @@ export const shortIN = (v?: string | number) => {
 
 /** Display amount: comma-grouped ₹ (Indian), full number. "5000000000" → "₹5,00,00,00,000". */
 export async function vpatch<T>(path: string, body?: unknown, options: VenueRequestOptions = {}): Promise<T> {
-  const r = await fetch(`${VENUE_BASE}${path}`, {
+  const r = await venueFetch(path, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...(await authHeaders(options)) },
     body: JSON.stringify(body ?? {}),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error((j as { message?: string }).message || `${path} → ${r.status}`);
+  if (!r.ok) throw new VenueRequestError(responseMessage(r.status, path), r.status);
   return j as T;
 }
 
@@ -128,16 +159,16 @@ export const inr = (v?: string | number) => {
 export const shortDid = (d: string) => (d && d.length > 20 ? `…${d.slice(-16)}` : d || "—");
 
 export async function vdelete<T>(path: string, options: VenueRequestOptions = {}): Promise<T> {
-  const r = await fetch(`${VENUE_BASE}${path}`, { method: "DELETE", headers: { ...(await authHeaders(options)) } });
+  const r = await venueFetch(path, { method: "DELETE", headers: { ...(await authHeaders(options)) } });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error((j as { message?: string }).message || `${path} → ${r.status}`);
+  if (!r.ok) throw new VenueRequestError(responseMessage(r.status, path), r.status);
   return j as T;
 }
 
 /** Authenticated file download (CSV/report/document) — attaches the Bearer, then saves the blob. */
 export async function vdownload(path: string, filename: string, options: VenueRequestOptions = {}): Promise<void> {
-  const r = await fetch(`${VENUE_BASE}${path}`, { headers: { ...(await authHeaders(options)) } });
-  if (!r.ok) throw new Error(`${path} → ${r.status}`);
+  const r = await venueFetch(path, { headers: { ...(await authHeaders(options)) } });
+  if (!r.ok) throw new VenueRequestError(responseMessage(r.status, path), r.status);
   const blob = await r.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

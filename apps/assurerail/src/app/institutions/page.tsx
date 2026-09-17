@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { requestTotpStepUp, type InstitutionListItem } from "@/lib/institutions";
+import { userFacingError } from "@/lib/user-facing-error";
 import { vget, vpost } from "@/lib/venue";
 
 const initialApplication = {
@@ -35,7 +36,7 @@ export default function InstitutionsPage() {
     try {
       setRows(await vget<InstitutionListItem[]>("/v1/rail/institutions", { institutionId: null }));
     } catch (cause) {
-      setError((cause as Error).message);
+      setError(userFacingError(cause, "We couldn’t load your institutions. Refresh the page or try again."));
     }
   }, []);
 
@@ -67,7 +68,7 @@ export default function InstitutionsPage() {
       await load();
       setMessage("Application recorded. Identity binding did not admit the institution; platform evidence review and two-person approval are still required.");
     } catch (cause) {
-      setError((cause as Error).message);
+      setError(userFacingError(cause, "We couldn’t submit this institution application. Review the details and try again."));
     } finally {
       setBusy("");
     }
@@ -80,7 +81,7 @@ export default function InstitutionsPage() {
       await selectInstitution(institutionId);
       router.push(`/institutions/${encodeURIComponent(institutionId)}`);
     } catch (cause) {
-      setError((cause as Error).message);
+      setError(userFacingError(cause, "We couldn’t open this institution workspace. Try again."));
     } finally {
       setBusy("");
     }
@@ -105,7 +106,7 @@ export default function InstitutionsPage() {
       await load();
       setMessage(`Membership accepted for ${row.institution.legalName}. Select it to establish the institution-bound session.`);
     } catch (cause) {
-      setError((cause as Error).message);
+      setError(userFacingError(cause, "We couldn’t accept this membership. Check the invitation and authenticator code, then try again."));
     } finally {
       setBusy("");
     }

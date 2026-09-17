@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Row = { id: string; seq: number; actor: string; event: string; detail: Record<string, unknown>; noteId: string | null; governed: boolean; createdAt: string; fingerprint: string };
 type Resp = { total: number; windowVerified: boolean; rows: Row[] };
@@ -20,7 +21,7 @@ export default function Activity() {
     try {
       setData(await vget<Resp>("/venue/activity?limit=100"));
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e, "The activity history could not be loaded. Please try again."));
     }
   }, []);
 

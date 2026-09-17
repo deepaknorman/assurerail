@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { vget, vpost, vpatch, vdelete, inr, shortDid } from "@/lib/venue";
 import { useAuth } from "@/lib/auth-context";
 import { VenueHeader } from "@/components/VenueHeader";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type User = { id: string; email: string; displayName: string | null; did: string | null; role: string; isAdmin: boolean; platformRole: string | null; entityRole: string | null; entityDid: string | null; allowlisted: boolean; status: string };
 type Status = {
@@ -73,7 +74,7 @@ export default function Admin() {
       setOpsHealth(oh);
       setOpsFindings(of);
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     }
   }, []);
 
@@ -86,7 +87,7 @@ export default function Admin() {
       await load();
       setOk(`Sweep done — ${r.open} open (${r.created} new, ${r.resolved} resolved)`);
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     } finally {
       setBusy("");
     }
@@ -98,7 +99,7 @@ export default function Admin() {
       await vpatch("/venue/ops/control", { killSwitch: !opsHealth?.killSwitch });
       await load();
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     } finally {
       setBusy("");
     }
@@ -116,7 +117,7 @@ export default function Admin() {
       await load();
       setOk("Webhook added — copy the signing secret now (shown once)");
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     } finally {
       setBusy("");
     }
@@ -129,7 +130,7 @@ export default function Admin() {
       await load();
       setOk("Webhook removed");
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     } finally {
       setBusy("");
     }
@@ -154,7 +155,7 @@ export default function Admin() {
       await load();
       setOk("Saved");
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     } finally {
       setBusy("");
     }
@@ -170,7 +171,7 @@ export default function Admin() {
       await load();
       setOk("Platform role updated");
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     } finally {
       setBusy("");
     }
@@ -185,7 +186,7 @@ export default function Admin() {
       await load();
       setOk("Invited");
     } catch (e) {
-      setErr((e as Error).message);
+      setErr(userFacingError(e));
     } finally {
       setBusy("");
     }

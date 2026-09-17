@@ -7,6 +7,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { tokenisedProductEnabled } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type Row = { id: string; caseReference: string; transactionRoute: "DA" | "PTC"; assetClass: string;
   operatingMode: string; status: string; updatedAt: string; representationRecord: null | { id: string;
@@ -21,7 +22,7 @@ export default function TokenisedRouteRegisterPage() {
   const load = useCallback(async () => {
     if (!enabled || !activeInstitutionId) return;
     try { setRows(await vget<Row[]>("/v1/rail/tokenised-routes")); setError(""); }
-    catch (cause) { setError((cause as Error).message); }
+    catch (cause) { setError(userFacingError(cause)); }
   }, [activeInstitutionId, enabled]);
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
   useEffect(() => { if (firebaseUser && activeInstitutionId && enabled) void load(); }, [firebaseUser, activeInstitutionId, enabled, load]);

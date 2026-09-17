@@ -7,6 +7,7 @@ import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { availability, customerWorkspaceEnabled, daProductEnabled, enterpriseIntegrationEnabled, evidenceDisplayState, lifecycleProductEnabled, ptcProductEnabled, qualificationText, secondaryProductEnabled, stateTone, tokenisedProductEnabled, type Availability } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
+import { userFacingError } from "@/lib/user-facing-error";
 
 type CaseDetail = { id: string; caseReference: string; ownerInstitutionId: string; transactionRoute: string; representation: string; assetClass: string; lifecycleLeg: string; operatingMode: string; status: string; routeState: string; routePackRef: string; routePackVersion: string; aggregateVersion: number; evidenceLockedAt: string | null; parties: Array<{ id: string; institutionId: string; partyRole: string; status: string; appointmentId: string | null }>; functionAssignments: Array<{ id: string; materialFunction: string; performer: string; performerInstitutionId: string | null; status: string }>; conditions: Array<{ id: string; code: string; conditionType: string; status: string; ownerInstitutionId: string; dueAt: string | null; evidenceObjectId: string | null }>; decisions: Array<{ id: string; decisionType: string; status: string; reason: string; createdAt: string; approvals: Array<{ id: string; decision: string; createdAt: string }> }>; transitions: Array<{ id: string; command: string; fromStatus: string; toStatus: string; resultingVersion: number; createdAt: string }> };
 type Evidence = { id: string; transactionCaseId: string | null; evidenceType: string; purpose: string; status: string; sourceAsOfAt: string; expiresAt: string | null; qualifications: unknown; versions: Array<{ result: string; validationStatus: string; createdAt: string }> };
@@ -43,7 +44,7 @@ export default function CustomerCasePage() {
       ]);
       const ev = availability(e); setEvidence(ev.status === "AVAILABLE" ? { status: "AVAILABLE", data: ev.data.filter((entry) => entry.transactionCaseId === caseId) } : ev);
       setRooms(availability(r)); setCompletions(availability(c)); setSagas(availability(s)); setBreaks(availability(b));
-    } catch (cause) { setError((cause as Error).message); }
+    } catch (cause) { setError(userFacingError(cause, "We couldn’t load this case. Refresh the page or try again.")); }
   }, [activeInstitutionId, caseId]);
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
   useEffect(() => { if (customerWorkspaceEnabled() && firebaseUser && activeInstitutionId) void load(); }, [firebaseUser, activeInstitutionId, load]);
