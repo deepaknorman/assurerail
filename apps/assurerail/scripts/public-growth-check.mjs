@@ -24,7 +24,7 @@ const required = [
 for (const path of required) if (!existsSync(resolve(root, path))) failures.push(`missing ${path}`);
 
 const content = readFileSync(resolve(root, "src/lib/public-content.ts"), "utf8");
-for (const token of ["direct-assignment", "ptc", "originators", "transferees-investors", "trustees", "completed-deal-replay-before-platform-replacement", "authoritative-records-reconciliation-and-digital-representations", "signed-evidence-packages-still-require-institutional-review", "from-completed-deal-replay-to-a-controlled-shadow", "five-ev-loan-books-one-buyer-transaction"]) {
+for (const token of ["direct-assignment", "ptc", "originators", "transferees-investors", "trustees", "completed-deal-replay-before-platform-replacement", "authoritative-records-reconciliation-and-digital-representations", "signed-evidence-packages-still-require-institutional-review", "from-completed-deal-replay-to-a-controlled-shadow", "how-assurerail-reviews-a-loan-book", "five-ev-loan-books-one-buyer-transaction"]) {
   if (!content.includes(token)) failures.push(`public content is missing ${token}`);
 }
 

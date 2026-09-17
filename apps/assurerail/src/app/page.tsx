@@ -42,6 +42,25 @@ const PROBLEMS = [
 
 const SYSTEMS = ["Originator systems", "Investor systems", "Trustee and service providers", "Payment and record systems"];
 
+const DELIVERY_CONTROLS = [
+  {
+    title: "Automated evidence review",
+    body: "Native document libraries read supported files first. AI is used only where extraction or validation needs it, and every finding retains a source locator and evidence version.",
+  },
+  {
+    title: "Every admitted loan accounted for",
+    body: "Loan-tape records, loan documents and principal are reconciled across the full admitted population. Missing, contradictory and unmatched evidence becomes a remediation task.",
+  },
+  {
+    title: "Correct and reassess",
+    body: "The seller can repair source data and evidence, then run the automated assessment again within the allowance stated in its accepted quote.",
+  },
+  {
+    title: "Human judgement at the right stage",
+    body: "Initial Assessment is automated and unsigned. Qualified legal, financial or technical reviewers enter during Portfolio Preparation for the scope they are appointed to review.",
+  },
+] as const;
+
 export default function Home() {
   return (
     <div className={styles.site}>
@@ -56,6 +75,7 @@ export default function Home() {
             <a href="#proof">How it works</a>
             <Link href="/trust">How we work</Link>
             <Link href="/resources">Resources</Link>
+            <Link href="/downloads">Downloads</Link>
             <Link href="/status">Availability</Link>
             <Link href="/login" className={styles.signIn}>Institution sign in</Link>
           </nav>
@@ -153,9 +173,9 @@ export default function Home() {
         <section className={`${styles.section} ${styles.proofSection}`} id="proof">
           <div className={styles.container}>
             <div className={styles.sectionHeading}>
-              <p className={styles.eyebrow}>Evaluate before changing systems</p>
-              <h2>Start small and progress by agreement.</h2>
-              <p>Begin with a completed transaction and decide together whether a further evaluation is worthwhile.</p>
+              <p className={styles.eyebrow}>One gated seller journey</p>
+              <h2>Assess, repair, prepare and then execute.</h2>
+              <p>Each paid stage has its own outcome and gate. Work progresses only after the seller accepts the scope and the responsible institutions are ready.</p>
             </div>
             <ol className={styles.proofGrid}>
               {PUBLIC_PROOF_LADDER.map((item) => (
@@ -166,6 +186,23 @@ export default function Home() {
                 </li>
               ))}
             </ol>
+          </div>
+        </section>
+
+        <section className={`${styles.section} ${styles.problemSection}`} id="document-review">
+          <div className={styles.container}>
+            <div className={styles.sectionHeading}>
+              <p className={styles.eyebrow}>What the assessment actually does</p>
+              <h2>Convert a loan book into traceable findings and a repair plan.</h2>
+              <p>The workflow separates machine extraction, deterministic reconciliation and professional judgement so that an AI response is never treated as a transaction decision.</p>
+            </div>
+            <div className={styles.problemGrid}>
+              {DELIVERY_CONTROLS.map(({ title, body }) => <article className={styles.problemCard} key={title}><h3>{title}</h3><p>{body}</p></article>)}
+            </div>
+            <div className={styles.actions}>
+              <Link className={styles.secondaryAction} href="/routes/direct-assignment">See the full DA workflow</Link>
+              <Link className={styles.secondaryAction} href="/downloads">Open customer guides</Link>
+            </div>
           </div>
         </section>
 
