@@ -52,8 +52,8 @@ handling and repair. It does not test or claim atomic legal transfer.
 
 The current implementation is a deterministic dry-rehearsal library with local tests. Live bank
 or escrow submission remains disabled until a named provider has supplied its contract, sandbox,
-authentication, callback-signing, idempotency and reconciliation specification and both sides
-have accepted the operating procedure.
+authentication, callback-signing, idempotency and reconciliation specification and both the
+provider and AssureRail have accepted the operating procedure.
 
 ## Future Plaza signature adapter
 
