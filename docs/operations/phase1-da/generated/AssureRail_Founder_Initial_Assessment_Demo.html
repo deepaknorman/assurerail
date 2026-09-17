@@ -23,6 +23,7 @@
 <tr><td>AssureRail invoice checker</td><td>Independent invoice issue authority</td><td>Review and issue the invoice</td></tr>
 </tbody></table></div>
 <p>Provision identities in the approved Firebase test project and assign institution-scoped memberships and mandates through the normal administration path. Store credentials in the approved secret manager or private test-account file. Never commit a password, TOTP seed, bearer token or Firebase key.</p>
+<p>The repository now includes a guarded, idempotent bootstrap for these exact four identities and their synthetic NBFC, memberships, mandates, independent internal roles, active shadow contract and rate card. Copy <code>demo/assurerail/founder-initial-assessment/accounts.example.json</code> outside the repository, replace the passwords and base32 TOTP secrets, add those secrets to the presenter's authenticator, restrict the file to mode <code>600</code>, and run <code>npm --prefix apps/assurerail-api run demo:bootstrap:founder</code> under the explicit shadow/synthetic gates documented in the kit. The bootstrap accepts only reserved <code>@example.test</code> addresses, refuses conflicting or non-demo identities and never prints passwords or authenticator secrets.</p>
 <h2>Demo deployment controls</h2>
 <p>The two commercial flags do not enable this journey by themselves. The API must run with the following dependency-complete shadow profile:</p>
 <div class="table-wrap"><table><thead><tr><th>Control</th><th>Demo value</th></tr></thead><tbody>
@@ -47,6 +48,13 @@
 <li>Expected standard minimum-route Initial Assessment invoice before GST: ₹3.12 lakh. For an</li>
 <p>approved design-partner seller, the same frozen quote shows a 30% credit and ₹2.184 lakh taxable service fee; the system calculates GST on that discounted fee.</p>
 </ul>
+<p>Use the packaged files under <code>demo/assurerail/founder-initial-assessment/</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Demonstration purpose</th></tr></thead><tbody>
+<tr><td><code>demo-manifest.json</code></td><td>Exact book, count, corpus, billing and expected-result inputs</td></tr>
+<tr><td><code>loan-tape-v1-with-gap.csv</code></td><td>Twelve unique loan–borrower pairs plus one repeated pair; expected <code>RECORD_EXCEPTIONS</code></td></tr>
+<tr><td><code>loan-tape-v2-corrected.csv</code></td><td>Same corpus with the duplicate removed; expected <code>MATCHED</code></td></tr>
+</tbody></table></div>
+<p>The two tape versions preserve the same underlying principal. The correction demonstrates an attributable gap and reassessment without improving the economics by changing the book.</p>
 <h2>Presenter sequence</h2>
 <ol>
 <li>Sign in as the seller commercial administrator and open <strong>Assessment</strong>.</li>

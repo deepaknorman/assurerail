@@ -24,6 +24,16 @@ memberships and mandates through the normal administration path. Store credentia
 secret manager or private test-account file. Never commit a password, TOTP seed, bearer token or
 Firebase key.
 
+The repository now includes a guarded, idempotent bootstrap for these exact four identities and
+their synthetic NBFC, memberships, mandates, independent internal roles, active shadow contract and
+rate card. Copy
+`demo/assurerail/founder-initial-assessment/accounts.example.json` outside the repository, replace
+the passwords and base32 TOTP secrets, add those secrets to the presenter's authenticator, restrict
+the file to mode `600`, and run `npm --prefix apps/assurerail-api run
+demo:bootstrap:founder` under the explicit shadow/synthetic gates documented in the kit. The
+bootstrap accepts only reserved `@example.test` addresses, refuses conflicting or non-demo
+identities and never prints passwords or authenticator secrets.
+
 ## Demo deployment controls
 
 The two commercial flags do not enable this journey by themselves. The API must run with the
@@ -56,6 +66,17 @@ adapter flag is required for this journey.
 - Expected standard minimum-route Initial Assessment invoice before GST: ₹3.12 lakh. For an
   approved design-partner seller, the same frozen quote shows a 30% credit and ₹2.184 lakh taxable
   service fee; the system calculates GST on that discounted fee.
+
+Use the packaged files under `demo/assurerail/founder-initial-assessment/`:
+
+| File | Demonstration purpose |
+|---|---|
+| `demo-manifest.json` | Exact book, count, corpus, billing and expected-result inputs |
+| `loan-tape-v1-with-gap.csv` | Twelve unique loan–borrower pairs plus one repeated pair; expected `RECORD_EXCEPTIONS` |
+| `loan-tape-v2-corrected.csv` | Same corpus with the duplicate removed; expected `MATCHED` |
+
+The two tape versions preserve the same underlying principal. The correction demonstrates an
+attributable gap and reassessment without improving the economics by changing the book.
 
 ## Presenter sequence
 
