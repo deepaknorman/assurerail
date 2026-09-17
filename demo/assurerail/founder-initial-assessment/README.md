@@ -28,8 +28,9 @@ claim, then seeds:
 - independent AssureRail invoice checker.
 
 It also seeds the synthetic admitted NBFC, scoped seller memberships and mandates, separate internal
-roles, an active shadow contract, and the approved demonstration rate card. It is idempotent and
-refuses a conflicting institution, email, Firebase project, role or non-demo identity.
+roles, an active shadow contract, the approved demonstration rate card, and a certified synthetic
+file-upload connector. It is idempotent and refuses a conflicting institution, email, Firebase
+project, role, connector or non-demo identity.
 
 ```bash
 export ASSURERAIL_OPERATING_MODE=SHADOW
@@ -39,6 +40,17 @@ export ASSURERAIL_FOUNDER_DEMO_ACCOUNTS_FILE=/secure/absolute/path/founder-demo-
 export ASSURERAIL_FOUNDER_DEMO_TARGET='<firebase-project-id>:demo-nbfc-ev-001'
 npm --prefix apps/assurerail-api run demo:bootstrap:founder
 ```
+
+The successful bootstrap prints the non-secret profile to copy into
+`ASSURERAIL_ASSESSMENT_UPLOAD_PROFILES_JSON`. For the packaged institution it is:
+
+```json
+{"demo-nbfc-ev-001":{"connectorRegistrationId":"demo-connector-assessment-upload-demo-nbfc-ev-001","schemaId":"assurerail.neutral-intake","schemaVersion":"1.0.0","retentionDays":365}}
+```
+
+The connector and its approval are synthetic SHADOW records. They grant no production provider,
+network or transaction authority. Rerun the bootstrap after deploying this revision, set the exact
+JSON above in the API environment, and restart the API before the founder walkthrough.
 
 `FIREBASE_ADMIN_CONFIG` and `DATABASE_URL` must come from the approved demo-box secret path. The
 bootstrap never prints passwords or TOTP secrets. Use `rotateExistingDemoPasswords: true` only for

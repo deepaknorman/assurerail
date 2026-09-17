@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PrismaService } from "../store/prisma.service";
-import { FOUNDER_DEMO_ACCOUNT_KEYS, seedFounderDemoDatabase, validateFounderDemoConfig } from "./founder-demo-bootstrap";
+import { FOUNDER_DEMO_ACCOUNT_KEYS, founderDemoUploadProfile, seedFounderDemoDatabase, validateFounderDemoConfig } from "./founder-demo-bootstrap";
 
 async function main() {
   if (process.env.ASSURERAIL_DISPOSABLE_FOUNDER_DEMO_REHEARSAL !== "true" || !process.env.DATABASE_URL?.includes("127.0.0.1")) throw new Error("disposable local founder-demo rehearsal required");
@@ -12,7 +12,8 @@ async function main() {
   const db = new PrismaService();
   await db.$connect();
   try {
-    const [institution, venueUsers, mfa, members, activeMandates, assignments, contract, card] = await Promise.all([
+    const uploadProfile = founderDemoUploadProfile(config.institutionId);
+    const [institution, venueUsers, mfa, members, activeMandates, assignments, contract, card, connector] = await Promise.all([
       db.institution.findUnique({ where: { id: config.institutionId }, include: { admission: true } }),
       db.venueUser.findMany({ where: { id: { startsWith: "demo-user-" } } }),
       db.mfaEnrollment.findMany({ where: { firebaseUid: { startsWith: "firebase-" }, method: "TOTP", verified: true } }),
@@ -21,6 +22,7 @@ async function main() {
       db.internalRoleAssignment.findMany({ where: { id: { startsWith: "demo-internal-" }, status: "ACTIVE" } }),
       db.customerContract.findUnique({ where: { id: `demo-contract-${config.institutionId}` } }),
       db.customerRateCard.findUnique({ where: { id: `demo-rate-${config.institutionId}` }, include: { feeRules: true } }),
+      db.connectorRegistration.findUnique({ where: { id: uploadProfile.connectorRegistrationId }, include: { certifications: true } }),
     ]);
     assert.equal(institution?.status, "ACTIVE");
     assert.equal(institution?.admission?.status, "ADMITTED");
@@ -32,7 +34,13 @@ async function main() {
     assert.equal(contract?.status, "ACTIVE_SHADOW");
     assert.equal(card?.status, "APPROVED_SHADOW");
     assert.deepEqual(card?.feeRules.map(rule => rule.metric).sort(), ["ENGAGEMENT_STAGE_FEE", "ENGAGEMENT_TAX"]);
-    console.log("[FOUNDER-DEMO-DB] PASS four identities, two participant memberships, eight mandates, independent invoice roles, active contract and rate card; second run idempotent");
+    assert.equal(connector?.status, "CERTIFIED_SHADOW");
+    assert.equal(connector?.providerReferenceId, `demo-provider-assessment-upload-${config.institutionId}`);
+    assert.deepEqual(connector?.schemaProfiles, [{ profileRef: "assurerail.neutral-intake.v1", schemaId: uploadProfile.schemaId, schemaVersion: uploadProfile.schemaVersion }]);
+    assert.equal(connector?.certifications.length, 1);
+    assert.equal(connector?.certifications[0]?.status, "APPROVED");
+    assert.equal(connector?.certifications[0]?.operatingMode, "SHADOW");
+    console.log("[FOUNDER-DEMO-DB] PASS identities, mandates, invoice roles, active contract/rate card and certified synthetic upload profile; second run idempotent");
   } finally { await db.$disconnect(); }
 }
 

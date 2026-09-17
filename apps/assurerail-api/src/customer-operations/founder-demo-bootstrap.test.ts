@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { validateFounderDemoConfig } from "./founder-demo-bootstrap";
+import { founderDemoUploadProfile, validateFounderDemoConfig } from "./founder-demo-bootstrap";
 import { loanTapeMetrics } from "./loan-tape-metrics";
 
 const demoRoot = resolve(__dirname, "../../../../demo/assurerail/founder-initial-assessment");
@@ -16,6 +16,15 @@ test("founder demo account config rejects placeholders and non-synthetic identit
   assert.equal(validateFounderDemoConfig(valid).institutionId, "demo-nbfc-ev-001");
   valid.accounts.invoiceChecker.email = "person@real-company.example";
   assert.throws(() => validateFounderDemoConfig(valid), /example\.test/);
+});
+
+test("founder demo publishes the exact non-secret assessment upload profile", () => {
+  assert.deepEqual(founderDemoUploadProfile("demo-nbfc-ev-001"), {
+    connectorRegistrationId: "demo-connector-assessment-upload-demo-nbfc-ev-001",
+    schemaId: "assurerail.neutral-intake",
+    schemaVersion: "1.0.0",
+    retentionDays: 365,
+  });
 });
 
 test("packaged EV tapes demonstrate one attributable gap and a corrected reassessment", async () => {

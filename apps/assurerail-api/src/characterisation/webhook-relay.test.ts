@@ -5,6 +5,9 @@ import { EventSinkService } from "../platform/event-sink.service";
 import { WebhooksService } from "../platform/webhooks.service";
 
 test("[TRANSITIONAL_LEGACY][AR-H09] legacy mode starts webhook dispatch after the durable lifecycle commit", async () => {
+  const previousMode = process.env.ARAIL_DURABLE_RELAY_MODE;
+  process.env.ARAIL_DURABLE_RELAY_MODE = "legacy";
+  try {
   let subscriber: ((event: VenueEvent) => void) | undefined;
   let dispatchStarted = false;
   let releaseDispatch: (() => void) | undefined;
@@ -29,6 +32,25 @@ test("[TRANSITIONAL_LEGACY][AR-H09] legacy mode starts webhook dispatch after th
   assert.equal(dispatchStarted, true);
   releaseDispatch?.();
   await pendingDispatch;
+  } finally {
+    if (previousMode === undefined) delete process.env.ARAIL_DURABLE_RELAY_MODE;
+    else process.env.ARAIL_DURABLE_RELAY_MODE = previousMode;
+  }
+});
+
+test("[AR-H09] shadow mode leaves webhook fanout to the durable relay", () => {
+  const previousMode = process.env.ARAIL_DURABLE_RELAY_MODE;
+  process.env.ARAIL_DURABLE_RELAY_MODE = "shadow";
+  try {
+    let subscribed = false;
+    const bus = { on: () => { subscribed = true; } } as unknown as VenueEventBus;
+    const webhooks = { dispatch: async () => undefined } as unknown as WebhooksService;
+    new EventSinkService(bus, webhooks).onModuleInit();
+    assert.equal(subscribed, false);
+  } finally {
+    if (previousMode === undefined) delete process.env.ARAIL_DURABLE_RELAY_MODE;
+    else process.env.ARAIL_DURABLE_RELAY_MODE = previousMode;
+  }
 });
 
 test("[PR02][AR-H09] legacy relay refuses egress when it cannot create a delivery receipt first", async () => {

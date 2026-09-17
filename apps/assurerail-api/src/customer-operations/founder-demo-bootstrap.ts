@@ -26,7 +26,20 @@ export type FounderDemoConfig = {
 
 const DEMO_LEGAL_NAME = "AssureRail Synthetic EV Finance NBFC";
 const SYNTHETIC_MARKER = "ASSURERAIL_FOUNDER_DEMO_V1";
+const DEMO_UPLOAD_PROFILE_REF = "assurerail.neutral-intake.v1";
+const DEMO_UPLOAD_SCHEMA_ID = "assurerail.neutral-intake";
+const DEMO_UPLOAD_SCHEMA_VERSION = "1.0.0";
+const DEMO_UPLOAD_RETENTION_DAYS = 365;
 const digest = (value: unknown) => sha256Digest({ marker: SYNTHETIC_MARKER, value });
+
+export function founderDemoUploadProfile(institutionId: string) {
+  return {
+    connectorRegistrationId: `demo-connector-assessment-upload-${institutionId}`,
+    schemaId: DEMO_UPLOAD_SCHEMA_ID,
+    schemaVersion: DEMO_UPLOAD_SCHEMA_VERSION,
+    retentionDays: DEMO_UPLOAD_RETENTION_DAYS,
+  } as const;
+}
 
 function required(value: unknown, name: string, max = 300): string {
   if (typeof value !== "string" || !value.trim() || value.trim().length > max) throw new Error(`${name} is invalid`);
@@ -164,6 +177,78 @@ export async function seedFounderDemoDatabase(config: FounderDemoConfig, users: 
       await ensureInternalAssignment(tx, "demo-user-invoicePreparer", "MANAGER");
       await ensureInternalAssignment(tx, "demo-user-invoiceChecker", "RISK_COMPLIANCE_OFFICER");
 
+      const uploadProfile = founderDemoUploadProfile(config.institutionId);
+      const providerId = `demo-provider-assessment-upload-${config.institutionId}`;
+      const providerKey = `founder-demo-assessment-upload-${config.institutionId}`;
+      const provider = await tx.providerReference.findUnique({
+        where: { providerType_providerKey: { providerType: "SYNTHETIC_DOCUMENT_UPLOAD", providerKey } },
+      });
+      if (provider && (provider.id !== providerId || provider.institutionId !== config.institutionId || provider.status !== "ACTIVE")) {
+        throw new Error("existing founder-demo upload provider conflicts with the synthetic profile");
+      }
+      if (!provider) await tx.providerReference.create({ data: {
+        id: providerId, providerKey, providerType: "SYNTHETIC_DOCUMENT_UPLOAD",
+        displayName: "Founder demo assessment upload", status: "ACTIVE", institutionId: config.institutionId,
+        metadata: { syntheticDemo: true, marker: SYNTHETIC_MARKER, networkAuthority: false },
+      } });
+
+      const connectorKey = "founder-demo-assessment-upload";
+      const connector = await tx.connectorRegistration.findUnique({
+        where: { institutionId_connectorKey: { institutionId: config.institutionId, connectorKey } },
+      });
+      const schemaProfiles = [{
+        profileRef: DEMO_UPLOAD_PROFILE_REF,
+        schemaId: uploadProfile.schemaId,
+        schemaVersion: uploadProfile.schemaVersion,
+      }];
+      if (connector && (
+        connector.id !== uploadProfile.connectorRegistrationId
+        || connector.providerReferenceId !== providerId
+        || connector.connectorType !== "ASSESSMENT_DOCUMENT_UPLOAD"
+        || connector.transport !== "FILE"
+        || connector.status !== "CERTIFIED_SHADOW"
+        || digest(connector.schemaProfiles) !== digest(schemaProfiles)
+      )) throw new Error("existing founder-demo upload connector conflicts with the synthetic profile");
+      if (!connector) await tx.connectorRegistration.create({ data: {
+        id: uploadProfile.connectorRegistrationId, institutionId: config.institutionId,
+        providerReferenceId: providerId, connectorKey, connectorType: "ASSESSMENT_DOCUMENT_UPLOAD",
+        displayName: "Founder demo assessment file upload", transport: "FILE", endpoint: null,
+        schemaProfiles, credentialVaultRef: null, status: "CERTIFIED_SHADOW",
+        createdByUserId: "demo-user-sellerDataPreparer",
+      } });
+
+      const certificationId = `demo-cert-assessment-upload-${config.institutionId}`;
+      const certification = await tx.connectorCertification.findUnique({ where: { id: certificationId } });
+      const certificationDigest = digest({
+        connectorRegistrationId: uploadProfile.connectorRegistrationId,
+        profileRef: DEMO_UPLOAD_PROFILE_REF,
+        schemaId: uploadProfile.schemaId,
+        schemaVersion: uploadProfile.schemaVersion,
+        checks: ["synthetic-only", "file-transport", "object-store", "malware-scan"],
+      });
+      if (certification && (
+        certification.connectorRegistrationId !== uploadProfile.connectorRegistrationId
+        || certification.profileRef !== DEMO_UPLOAD_PROFILE_REF
+        || certification.schemaId !== uploadProfile.schemaId
+        || certification.schemaVersion !== uploadProfile.schemaVersion
+        || certification.operatingMode !== "SHADOW"
+        || certification.status !== "APPROVED"
+        || certification.conformanceEvidenceDigest !== certificationDigest
+      )) throw new Error("existing founder-demo upload certification conflicts with the synthetic profile");
+      if (!certification) await tx.connectorCertification.create({ data: {
+        id: certificationId, connectorRegistrationId: uploadProfile.connectorRegistrationId,
+        profileRef: DEMO_UPLOAD_PROFILE_REF, schemaId: uploadProfile.schemaId,
+        schemaVersion: uploadProfile.schemaVersion, operatingMode: "SHADOW", status: "APPROVED",
+        conformanceEvidenceDigest: certificationDigest,
+        conformanceResult: { passed: true, syntheticOnly: true, networkRoundTripPerformed: false },
+        qualifications: [{ code: "SYNTHETIC_FOUNDER_DEMO_ONLY", severity: "LIMITATION" }],
+        reason: "Bounded synthetic upload profile for the founder Initial Assessment demonstration",
+        proposedByUserId: "demo-user-sellerDataPreparer", proposalStepUpId: "demo-upload-cert-propose",
+        reviewedByUserId: "demo-user-invoiceChecker", reviewStepUpId: "demo-upload-cert-review",
+        reviewReason: "Independent synthetic-demo profile review", effectiveAt: new Date(Date.now() - 60_000),
+        expiresAt: new Date(Date.now() + 90 * 86_400_000),
+      } });
+
       const contractId = `demo-contract-${config.institutionId}`, rateCardId = `demo-rate-${config.institutionId}`;
       const contract = await tx.customerContract.findUnique({ where: { id: contractId } });
       if (!contract) await tx.customerContract.create({ data: {
@@ -206,7 +291,7 @@ export async function bootstrapFounderDemo() {
   const auth = getAuth(app), users = {} as Record<AccountKey, UserRecord>;
   for (const key of FOUNDER_DEMO_ACCOUNT_KEYS) users[key] = await firebaseUser(auth, key, config.accounts[key], config.rotateExistingDemoPasswords);
   await seedFounderDemoDatabase(config, users);
-  return { status: "READY", classification: "SYNTHETIC_ONLY", firebaseProjectId: config.firebaseProjectId, institutionId: config.institutionId, accounts: FOUNDER_DEMO_ACCOUNT_KEYS.map(key => ({ role: key, email: config.accounts[key].email, firebaseUid: users[key].uid })), passwordsPrinted: false, liveAuthorityGranted: false };
+  return { status: "READY", classification: "SYNTHETIC_ONLY", firebaseProjectId: config.firebaseProjectId, institutionId: config.institutionId, assessmentUploadProfile: { [config.institutionId]: founderDemoUploadProfile(config.institutionId) }, accounts: FOUNDER_DEMO_ACCOUNT_KEYS.map(key => ({ role: key, email: config.accounts[key].email, firebaseUid: users[key].uid })), passwordsPrinted: false, liveAuthorityGranted: false };
 }
 
 if (require.main === module) void bootstrapFounderDemo().then(result => console.log(JSON.stringify(result, null, 2))).catch(error => { console.error(`[FOUNDER-DEMO-BOOTSTRAP] FAILED: ${(error as Error).message}`); process.exitCode = 1; });
