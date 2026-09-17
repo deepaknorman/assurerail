@@ -14,22 +14,22 @@ export const PUBLIC_ROUTE_PAGES: readonly PublicRoutePage[] = [
   {
     slug: "direct-assignment",
     shortLabel: "Direct assignment",
-    title: "A governed transaction case for conventional direct assignment",
+    title: "Prepare a loan portfolio for buyer diligence and direct assignment",
     summary:
-      "Bring the participating institutions and their transaction information into one coordinated process without requiring immediate system replacement.",
+      "Start with automated portfolio assessment, repair evidence gaps, obtain expert-reviewed preparation and activate execution only when the seller and buyer are ready.",
     whoDecides:
       "The transferee retains its credit, eligibility and purchase decision. Each institution remains accountable for the acts assigned to it.",
     authoritativeRecord:
       "The institutions continue to rely on the records applicable to their transaction. AssureRail does not become the ownership record merely because it coordinates the process.",
     replayInputs: [
-      "One representative completed transaction",
-      "The accountable business and operations owners",
-      "An agreed, minimised information scope",
+      "Declared corpus, unique loan–borrower count and asset family",
+      "Loan tape, performance history and required evidence families",
+      "Named seller owners and an accepted, case-specific quote",
     ],
     railCoordinates: [
-      "A shared view of progress and responsibility",
-      "Transaction evidence and open exceptions",
-      "A reproducible review output",
+      "Automated assessment with evidence-linked findings and indicative economics",
+      "Loan-count, document-coverage and principal reconciliation across the admitted population",
+      "Seller remediation tasks, reassessment and a clear proceed decision",
     ],
     unavailable: [
       "No live matching, funds movement or title transfer is currently offered",
@@ -78,22 +78,22 @@ export const PERSONA_PAGES: readonly PersonaPage[] = [
   {
     slug: "originators",
     label: "Originators and transferors",
-    title: "Reuse the transaction evidence you already produce",
+    title: "Find and fix portfolio gaps before buyer diligence begins",
     lead:
-      "Start with one completed transaction, identify every hand-off and return a reusable evidence map without replacing the LMS or source ledger.",
+      "Declare the portfolio, upload the loan tape and supporting evidence, and receive an automated assessment before committing to expert preparation or execution.",
     retains: ["Asset selection and source records", "Commercial decision and counterparty choice", "Execution by its appointed and authorised teams"],
-    gains: ["One versioned case and request register", "Explicit evidence gaps and completion breaks", "A portable dossier for the next proof stage"],
-    firstProof: "A completed conventional DA with a named transaction-file owner. PTC is a separate later-phase evaluation.",
+    gains: ["Full-population tape and document coverage measures", "Explicit evidence gaps, economics and remediation tasks", "A reassessable case that can progress to expert-reviewed preparation"],
+    firstProof: "A bounded, paid and automated Initial Assessment for a declared conventional-DA portfolio. PTC is a separate later-phase evaluation.",
   },
   {
     slug: "transferees-investors",
     label: "Transferees and investors",
-    title: "Keep the decision; improve the evidence around it",
+    title: "Set buyer requirements once; review prepared portfolios against them",
     lead:
-      "AssureRail is designed to present scoped, attributable evidence and exceptions while leaving credit and investment judgement with the institution making it.",
+      "After an MSA, a buyer receives an institution-scoped workspace for structured eligibility, evidence, diligence and delivery requirements while retaining every credit and purchase decision.",
     retains: ["Credit or investment decision", "Risk policy, limits and approvals", "Reliance position and conditions"],
-    gains: ["Controlled transaction access", "Clear evidence status", "Visibility of unresolved exceptions"],
-    firstProof: "Review the reconstructed evidence pack from a transaction in which your institution already participated.",
+    gains: ["Structured requirement profiles with versioned acceptance", "Case-scoped access to evidence status and unresolved exceptions", "Controlled file delivery and acknowledgement records when separately activated"],
+    firstProof: "Review one prepared seller case or reconstruct a transaction in which your institution already participated.",
   },
   {
     slug: "trustees",
@@ -294,6 +294,65 @@ export const RESOURCE_ARTICLES: readonly ResourceArticle[] = [
           "Keep money, title and authoritative records with approved parties",
           "Define the evidence that closes each leg",
           "Record open gates instead of replacing them with synthetic evidence",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "how-assurerail-reviews-a-loan-book",
+    title: "How AssureRail reviews a loan book before buyer diligence",
+    description:
+      "The evidence ladder, full-population controls, remediation cycle and boundary between automated assessment and qualified review.",
+    publishedAt: "2026-09-17",
+    reviewedAt: "2026-09-17",
+    readingMinutes: 7,
+    sections: [
+      {
+        heading: "A portfolio needs more than an uploaded spreadsheet",
+        paragraphs: [
+          "The Initial Assessment brings the declared loan population, supporting documents and portfolio history into one versioned engagement. It checks whether every admitted loan can be traced to the expected evidence and whether the tape, documents and principal agree. An uploaded file is an input, not proof that the portfolio is complete or transferable.",
+          "The assessment is automated and unsigned. It is designed to tell the seller what is present, what conflicts, what remains missing and what the stated economics may look like before qualified experts or a buyer spend time on the case.",
+        ],
+      },
+      {
+        heading: "Use the least complex extraction method that works",
+        paragraphs: [
+          "AssureRail first uses bounded native libraries for supported spreadsheet, delimited-text and digitally readable document content. AI-assisted extraction is used where native parsing is inadequate or a separate validation pass is required. Provider fallback is an availability control, not a way to turn an uncertain answer into an accepted fact.",
+          "Each extracted field keeps an evidence state and source locator. Observed, inferred, absent, unreadable and contradictory values remain different. Inferred values may help direct remediation, but deterministic totals and eligibility checks use observed source values unless the accepted rule says otherwise.",
+        ],
+      },
+      {
+        heading: "Measure coverage across the admitted population",
+        paragraphs: [
+          "The review accounts for every admitted unique loan–borrower unit, not merely a sample. It reports matched and unmatched loan files, missing evidence families, unresolved principal, records found outside the tape and contradictions that need attention. A coverage percentage does not itself establish legal enforceability, eligibility or buyer acceptance.",
+        ],
+        bullets: [
+          "Loan-tape and source-total reconciliation",
+          "Required document-family inventory",
+          "Loan-file matching and unresolved principal",
+          "Repayment, arrears, security and authority evidence status",
+          "Portfolio concentrations, exceptions and stated-economics scenarios",
+        ],
+      },
+      {
+        heading: "Repair the source and reassess",
+        paragraphs: [
+          "A material gap becomes a task with an owner, requested evidence and status. The seller can correct its source data or upload better evidence and run the assessment again. Pilot terms ordinarily allow three automated reassessments within 30 days; the accepted quote controls the engagement-specific allowance.",
+          "The platform remains open if the seller pauses. Time-sensitive evidence, buyer requirements and third-party quotes must be refreshed before later reliance.",
+        ],
+      },
+      {
+        heading: "Qualified review begins in Portfolio Preparation",
+        paragraphs: [
+          "If the seller proceeds, Portfolio Preparation brings qualified legal, financial or technical reviewers into the scope for which they are appointed. They review the evidence, assumptions and exceptions, record qualifications and approve the prepared output. Automation organises the population and evidence; it does not impersonate professional judgement or sign an opinion.",
+          "A buyer still performs its own diligence and decides whether to purchase, at what price and subject to which conditions. AssureRail's prepared output is intended to make that review more consistent and less wasteful, not to bind the buyer.",
+        ],
+      },
+      {
+        heading: "Execution is a separate mandate",
+        paragraphs: [
+          "Execution begins only after the relevant parties and providers are activated. Buyer questions, conditions, document versions, delivery acknowledgements and settlement instructions remain attributable to their owners. AssureRail may coordinate an appointed bank or provider, but it does not receive gross consideration or unilaterally deduct fees.",
+          "The fixed preparation quote depends on the declared portfolio and selected work. The execution fee is seller-specific and tied to actual purchase consideration successfully settled. Buyer arrangement, file integration, escrow coordination, counsel, registry work, field checks and monitoring are selected and priced for the work actually required.",
         ],
       },
     ],

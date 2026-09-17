@@ -11,7 +11,7 @@ export type PublicCapability = {
   summary: string;
 };
 
-export const PUBLIC_CAPABILITY_REVIEWED_AT = "2026-09-16";
+export const PUBLIC_CAPABILITY_REVIEWED_AT = "2026-09-17";
 export const PUBLIC_CAPABILITY_NEXT_REVIEW_AT = "2026-10-16";
 
 /**
@@ -37,6 +37,14 @@ export const PUBLIC_CAPABILITIES: readonly PublicCapability[] = [
     publicLabel: "By arrangement",
     summary:
       "A completed conventional DA can be examined without changing the original transaction or its records.",
+  },
+  {
+    id: "portfolio-preparation",
+    label: "Expert-reviewed Portfolio Preparation",
+    state: "BY_ARRANGEMENT",
+    publicLabel: "By accepted scope",
+    summary:
+      "Sellers that proceed can commission qualified review, remediation closure and buyer-ready preparation under a separate paid scope.",
   },
   {
     id: "live-transaction-services",
@@ -68,20 +76,20 @@ export const PUBLIC_ROUTE_MODES = [
 export const PUBLIC_PROOF_LADDER = [
   {
     step: "01",
-    label: "Review",
+    label: "Initial Assessment",
     summary:
-      "Begin with a transaction that has already completed.",
+      "Upload the loan tape and evidence for automated, unsigned review, reconciliation and remediation.",
   },
   {
     step: "02",
-    label: "Evaluate",
+    label: "Portfolio Preparation",
     summary:
-      "Agree what evidence, effort and outcomes should be compared.",
+      "Fix gaps, align the portfolio to buyer requirements and obtain qualified expert review of the prepared output.",
   },
   {
     step: "03",
-    label: "Pilot",
+    label: "Execution",
     summary:
-      "Progress only through a separately agreed scope with the responsible institutions.",
+      "Run buyer diligence and closing through a separately activated mandate, with selectable integration and settlement services.",
   },
 ] as const;

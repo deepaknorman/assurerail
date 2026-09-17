@@ -14,8 +14,9 @@ export function PublicHeader() {
           <Link href="/routes/ptc">PTC</Link>
           <Link href="/trust">How we work</Link>
           <Link href="/resources">Resources</Link>
+          <Link href="/downloads">Downloads</Link>
           <Link href="/status">Availability</Link>
-          <Link href="/replay" className={styles.navCta}>Propose a replay</Link>
+          <Link href="/login" className={styles.navCta}>Apply for assessment</Link>
           <Link href="/login" className={styles.signIn}>Sign in</Link>
         </nav>
       </div>
@@ -43,6 +44,7 @@ export function PublicFooter() {
         <div>
           <strong>Explore</strong>
           <Link href="/resources">Resources</Link>
+          <Link href="/downloads">Downloads</Link>
           <Link href="/replay">Completed-deal replay</Link>
         </div>
       </div>

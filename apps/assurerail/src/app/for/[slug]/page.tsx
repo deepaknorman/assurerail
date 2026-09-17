@@ -46,7 +46,7 @@ export default async function PersonaPage({ params }: { params: Promise<{ slug: 
         <div className={styles.container}>
           <p className={styles.eyebrow}>First useful proof</p>
           <h2>{page.firstProof}</h2>
-          <p className={styles.intro}>The replay is observe-only. It returns a scoped evidence and gap record; it does not change the completed transaction or certify it.</p>
+          <p className={styles.intro}>{page.slug === "originators" ? "The automated report supports a seller decision and repair plan. It is unsigned, does not certify the portfolio and does not bind a buyer." : "The replay is observe-only. It returns a scoped evidence and gap record; it does not change the completed transaction or certify it."}</p>
         </div>
       </section>
     </PublicPage>
