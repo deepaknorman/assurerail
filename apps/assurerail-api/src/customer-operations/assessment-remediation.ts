@@ -18,6 +18,7 @@ type DataQuality={
 type ExtractionException={evidenceVersionId:string;locator:string;code:string};
 type Finding={category:string;severity:string;description:string;evidenceVersionId:string;locator:string};
 type ManifestEntry={versionId:string;evidenceObjectId?:string;evidenceType?:string};
+type DocumentReview={inventory?:{missing?:string[]};loanReconciliation?:{tapeLoanCount:number;documentedLoanCount:number;principalReconciledLoanCount:number;unallocatedEvidenceVersionIds?:string[];extraDocumentLoanIds?:string[]}};
 
 const evidenceForCategory:Record<string,string[]>={
   DOCUMENTATION:["OTHER_EVIDENCE"],DATA_QUALITY:["LOAN_TAPE"],CREDIT:["REPAYMENT_HISTORY"],LEGAL:["LOAN_AGREEMENT","SECURITY_DOCUMENT"],OPERATIONS:["REPAYMENT_HISTORY","OTHER_EVIDENCE"],
@@ -36,7 +37,7 @@ function affectedPairs(sellerInstitutionId:string,issues:DataQuality["recordIssu
   return [...pairs.values()].sort((a,b)=>`${a.loanId}\u0000${a.partyId}`.localeCompare(`${b.loanId}\u0000${b.partyId}`));
 }
 
-export function deriveRemediationGaps(input:{sellerInstitutionId:string;dataQuality:DataQuality;extraction:{exceptions:ExtractionException[]};analysis:{findings?:Finding[]};manifest:ManifestEntry[]}):RemediationGap[] {
+export function deriveRemediationGaps(input:{sellerInstitutionId:string;dataQuality:DataQuality;extraction:{exceptions:ExtractionException[]};analysis:{findings?:Finding[]};manifest:ManifestEntry[];documentReview?:DocumentReview}):RemediationGap[] {
   const gaps:RemediationGap[]=[];
   const grouped=new Map<string,NonNullable<DataQuality["recordIssues"]>>();
   for(const issue of input.dataQuality.recordIssues??[]){const list=grouped.get(issue.code)??[];list.push(issue);grouped.set(issue.code,list);}
@@ -59,6 +60,15 @@ export function deriveRemediationGaps(input:{sellerInstitutionId:string;dataQual
     const category=evidenceForCategory[finding.category]?finding.category:"DOCUMENTATION";
     gaps.push({gapKey:key(["FINDING",category,finding.description.trim().toLowerCase()]),category,severity:finding.severity,summary:finding.description.trim(),affectedScope:"PORTFOLIO",affectedPairs:[],unresolvedRecordCount:0,defaultOwnerRole:ownerForCategory[category],requiredEvidenceTypes:evidenceForCategory[category]});
   }
+  for(const evidenceType of input.documentReview?.inventory?.missing??[]){
+    if(evidenceType==="LOAN_TAPE")continue; // The data-quality gap already owns the tape correction.
+    const legal=["LOAN_AGREEMENT","SECURITY_DOCUMENT"].includes(evidenceType),compliance=evidenceType==="KYC_AUTHORITY";
+    gaps.push({gapKey:key(["DOCUMENT_INVENTORY",evidenceType]),category:legal?"LEGAL":"DOCUMENTATION",severity:"HIGH",summary:`Upload the missing ${evidenceType.replaceAll("_"," ").toLowerCase()} evidence.`,affectedScope:"PORTFOLIO",affectedPairs:[],unresolvedRecordCount:1,defaultOwnerRole:legal?"SELLER_LEGAL":compliance?"SELLER_COMPLIANCE":"SELLER_OPERATIONS",requiredEvidenceTypes:[evidenceType]});
+  }
+  const reconciliation=input.documentReview?.loanReconciliation;
+  if(reconciliation&&reconciliation.documentedLoanCount<reconciliation.tapeLoanCount)gaps.push({gapKey:key(["LOAN_DOCUMENT_COVERAGE"]),category:"DOCUMENTATION",severity:"HIGH",summary:"Link document evidence to every admitted tape loan using an observed loan identifier.",affectedScope:"PORTFOLIO",affectedPairs:[],unresolvedRecordCount:reconciliation.tapeLoanCount-reconciliation.documentedLoanCount,defaultOwnerRole:"SELLER_OPERATIONS",requiredEvidenceTypes:["LOAN_AGREEMENT"]});
+  if(reconciliation&&reconciliation.principalReconciledLoanCount<reconciliation.tapeLoanCount)gaps.push({gapKey:key(["LOAN_PRINCIPAL_RECONCILIATION"]),category:"DATA_QUALITY",severity:"HIGH",summary:"Reconcile each documented principal outstanding with the admitted tape at the agreed cut-off date.",affectedScope:"PORTFOLIO",affectedPairs:[],unresolvedRecordCount:reconciliation.tapeLoanCount-reconciliation.principalReconciledLoanCount,defaultOwnerRole:"SELLER_DATA",requiredEvidenceTypes:["LOAN_TAPE","REPAYMENT_HISTORY"]});
+  if(reconciliation&&(reconciliation.unallocatedEvidenceVersionIds?.length||reconciliation.extraDocumentLoanIds?.length))gaps.push({gapKey:key(["UNALLOCATED_OR_EXTRA_LOAN_DOCUMENTS"]),category:"DATA_QUALITY",severity:"HIGH",summary:"Resolve documents that lack an observed tape loan identifier or refer to a loan outside the admitted tape.",affectedScope:"PORTFOLIO",affectedPairs:[],unresolvedRecordCount:(reconciliation.unallocatedEvidenceVersionIds?.length??0)+(reconciliation.extraDocumentLoanIds?.length??0),defaultOwnerRole:"SELLER_DATA",requiredEvidenceTypes:["LOAN_TAPE","LOAN_AGREEMENT"]});
   const consolidated=new Map<string,RemediationGap>();
   const rank:Record<string,number>={CRITICAL:4,HIGH:3,MEDIUM:2,LOW:1};
   for(const gap of gaps){

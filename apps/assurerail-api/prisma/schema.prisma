@@ -1498,9 +1498,60 @@ model AssessmentProcessingJob {
   completedAt        DateTime?
   createdAt          DateTime @default(now())
   remediationItems   AssessmentRemediationItem[]
+  documentReviews    AssessmentDocumentReview[]
   @@unique([engagementId, requestRef])
   @@index([status, createdAt])
   @@index([baselineRunId])
+}
+
+/// Immutable, safe projection of one evidence version's document-processing result.
+/// Original bytes remain in the evidence store; extracted borrower text is not duplicated here.
+model AssessmentDocumentReview {
+  id                String @id
+  processingJobId   String
+  processingJob     AssessmentProcessingJob @relation(fields: [processingJobId], references: [id], onDelete: Restrict)
+  evidenceVersionId String
+  evidenceVersion   EvidenceVersion @relation(fields: [evidenceVersionId], references: [id], onDelete: Restrict)
+  evidenceObjectId  String
+  documentType      String
+  sourceDigest      String
+  policyVersion     String
+  schemaVersion     String
+  route             String
+  routingReasons    Json
+  status            String
+  envelope          Json
+  envelopeDigest    String
+  createdAt         DateTime @default(now())
+  attempts          AssessmentDocumentExtractionAttempt[]
+
+  @@unique([processingJobId, evidenceVersionId], map: "AssessmentDocumentReview_job_evidence_key")
+  @@index([processingJobId, status])
+  @@index([evidenceVersionId])
+}
+
+/// Append-only extraction-attempt provenance. It stores safe metadata and digests, never raw document text.
+model AssessmentDocumentExtractionAttempt {
+  id                  String @id
+  documentReviewId    String
+  documentReview      AssessmentDocumentReview @relation(fields: [documentReviewId], references: [id], onDelete: Restrict)
+  ordinal             Int
+  method              String
+  status              String
+  provider            String?
+  model               String?
+  modelTier           String?
+  extractorVersion    String?
+  promptVersion       String?
+  preprocessingVersion String
+  requestedLocators   Json
+  usage               Json?
+  failureCode         String?
+  resultDigest        String?
+  createdAt           DateTime @default(now())
+
+  @@unique([documentReviewId, ordinal], map: "AssessmentDocumentExtractionAttempt_review_ordinal_key")
+  @@index([provider, model, status])
 }
 
 model AssessmentRemediationItem {
@@ -1797,6 +1848,7 @@ model EvidenceVersion {
   institutionSnapshot InstitutionEvidenceSnapshot?
   documentVersion     RailDocumentVersion?
   accessReceipts      EvidenceAccessReceipt[]
+  assessmentDocumentReviews AssessmentDocumentReview[]
 
   @@unique([evidenceObjectId, version])
   @@unique([evidenceObjectId, payloadDigest])

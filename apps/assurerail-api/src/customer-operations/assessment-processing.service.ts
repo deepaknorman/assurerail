@@ -14,11 +14,12 @@ import { extractAndValidateOcr, type AiDocument } from "./ocr.adapter";
 import { loanTapeMetrics } from "./loan-tape-metrics";
 import { createInitialAssessmentReceipt } from "../ai-assurance/assessment-ai-receipt";
 import { deriveRemediationGaps, initialReassessmentAllowance, isOwnerRole, remediationChangeSummary, type RemediationGap } from "./assessment-remediation";
+import { documentEvidenceEnvelope, documentInventory, mergeHybridSegments, reconcileLoanDocuments, routeDocument, SUPPORTED_ASSESSMENT_DOCUMENT_TYPES } from "./document-review";
 type Manifest = {versionId:string;evidenceObjectId:string;digest:string;contentType:string;sizeBytes:number;evidenceType:string}[];
-export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{status:string};exceptions:{code:string}[];analysis:{provider:string;findings?:{severity:string}[]}}) {
+export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{status:string};exceptions:{code:string}[];analysis:{provider:string;findings?:{severity:string}[]};documentInventory?:{status:string};loanReconciliation?:{status:string}}) {
   if(input.assetFamily==="OTHER")return "OUTSIDE_CURRENT_SCOPE" as const;
   if(!["openai","gemini"].includes(input.analysis.provider))return "AUTOMATED_ANALYSIS_INCOMPLETE" as const;
-  if(input.dataQuality.status!=="MATCHED"||input.exceptions.length||input.analysis.findings?.some(f=>f.severity==="CRITICAL"))return "FIX_AND_REASSESS" as const;
+  if(input.dataQuality.status!=="MATCHED"||input.exceptions.length||input.documentInventory&&input.documentInventory.status!=="COMPLETE"||input.loanReconciliation&&input.loanReconciliation.status!=="RECONCILED"||input.analysis.findings?.some(f=>f.severity==="CRITICAL"))return "FIX_AND_REASSESS" as const;
   return "READY_FOR_PORTFOLIO_PREPARATION" as const;
 }
 
@@ -30,7 +31,7 @@ export class AssessmentProcessingService {
     await this.engagements.evidenceAuthority(actor,true);
     const {engagement}=await this.engagements.requirePaid(this.db,actor.actingInstitutionId,id,stage);
     const documentType=bounded(metadata.documentType,"documentType");
-    if(!["LOAN_TAPE","LOAN_AGREEMENT","SECURITY_DOCUMENT","REPAYMENT_HISTORY","OTHER_EVIDENCE"].includes(documentType))throw new ConflictException("supported document category required");
+    if(!SUPPORTED_ASSESSMENT_DOCUMENT_TYPES.includes(documentType as never))throw new ConflictException("supported document category required");
     const profiles=JSON.parse(process.env.ASSURERAIL_ASSESSMENT_UPLOAD_PROFILES_JSON??"{}") as Record<string,{connectorRegistrationId:string;schemaId:string;schemaVersion:string;retentionDays:number}>;
     const profile=profiles[actor.actingInstitutionId];
     if(!profile||!Number.isInteger(profile.retentionDays)||profile.retentionDays<1||profile.retentionDays>3650)throw new ConflictException("approved document intake profile and retention period must be configured for this institution");
@@ -123,7 +124,7 @@ export class AssessmentProcessingService {
   async list(actor:ParticipantOpsActor,id:string) {await this.engagements.participant(actor);await this.engagements.evidenceAuthority(actor);await this.engagements.scoped(this.db,actor.actingInstitutionId,id);return (await this.db.assessmentProcessingJob.findMany({where:{engagementId:id},orderBy:{createdAt:"desc"}})).map(j=>this.publicJob(j));}
   async internalReport(actor:InternalOpsActor,institutionId:string,id:string,jobId:string) {
     engagementEnabled();await this.staff.require({userId:actor.actorUserId,permission:"CASE_TASK_PREPARE",scopeType:"INSTITUTION",scopeRef:institutionId});
-    await this.engagements.scoped(this.db,institutionId,id);const job=await this.db.assessmentProcessingJob.findUnique({where:{id:jobId}});if(!job||job.engagementId!==id)throw new NotFoundException("run not found");return job;
+    await this.engagements.scoped(this.db,institutionId,id);const job=await this.db.assessmentProcessingJob.findUnique({where:{id:jobId},include:{documentReviews:{include:{attempts:{orderBy:{ordinal:"asc"}}}}}});if(!job||job.engagementId!==id)throw new NotFoundException("run not found");return job;
   }
   async runNext() {
     if(process.env.ASSURERAIL_DOCUMENT_PROCESSING_MODE!=="shadow")return;
@@ -135,7 +136,7 @@ export class AssessmentProcessingService {
     const claimed=await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"QUEUED"},data:{status:"RUNNING",startedAt:new Date()}});if(claimed.count!==1)return;
     try{
       await this.engagements.requirePaid(this.db,job.engagement.customerContract.institutionId,job.engagementId,job.stage);
-      const sources:SourceSegment[]=[],exceptions:{evidenceVersionId:string;locator:string;code:string}[]=[],ocrProvenance:unknown[]=[];
+      const sources:SourceSegment[]=[],exceptions:{evidenceVersionId:string;locator:string;code:string}[]=[],ocrProvenance:unknown[]=[],documentEnvelopes:unknown[]=[];
       let extractedCharacters=0;
       const tapes:{contentType:string;segments:{text:string}[]}[]=[];
       const manifest=job.sourceManifest as unknown as Manifest;
@@ -148,36 +149,58 @@ export class AssessmentProcessingService {
         const bytes=Buffer.concat(chunks);
         if(size!==entry.sizeBytes||`sha256:${createHash("sha256").update(bytes).digest("hex")}`!==entry.digest)throw new Error("DOCUMENT_DIGEST_MISMATCH");
         let extracted=["image/png","image/jpeg"].includes(entry.contentType)?{segments:[{locator:"page:1",text:""}],exceptions:[{locator:"page:1",code:"OCR_REQUIRED"}],extractorVersion:"image-ocr"}:await extractDocument(bytes,entry.contentType);
-        if(extracted.exceptions.some(x=>x.code==="OCR_REQUIRED")&&process.env.ASSURERAIL_AI_ENABLED==="true"){
-          const ocr=await extractAndValidateOcr({bytes,contentType:entry.contentType as AiDocument["contentType"]},extracted.segments.length);
-          ocrProvenance.push({evidenceVersionId:entry.versionId,...ocr});
-          extracted={...extracted,segments:ocr.pages.map(p=>({locator:`page:${p.page}`,text:p.text})),exceptions:ocr.pages.filter(p=>p.uncertain||!p.text.trim()).map(p=>({locator:`page:${p.page}`,code:"OCR_UNCERTAIN_REVIEW_REQUIRED"}))};
+        const attemptRows:{method:string;status:string;provider?:string;model?:string;modelTier?:string;extractorVersion?:string;promptVersion?:string;requestedLocators:string[];usage?:unknown;failureCode?:string;resultDigest?:string}[]=[{method:"NATIVE_LIBRARY",status:"COMPLETED",extractorVersion:extracted.extractorVersion,requestedLocators:extracted.segments.map(segment=>segment.locator),resultDigest:sha256Digest(extracted.segments.map(segment=>({locator:segment.locator,textDigest:sha256Digest(segment.text)})))}];
+        const routing=routeDocument({contentType:entry.contentType,evidenceType:entry.evidenceType,segments:extracted.segments,exceptions:extracted.exceptions});
+        let visualProvenance:unknown=null;
+        if(routing.visualRequiredLocators.length&&process.env.ASSURERAIL_AI_ENABLED==="true"){
+          const pageNumbers=routing.visualRequiredLocators.map(locator=>Number(locator.split(":")[1]));
+          const ocr=await extractAndValidateOcr({bytes,contentType:entry.contentType as AiDocument["contentType"]},pageNumbers);
+          const visualSegments=ocr.pages.map(page=>({locator:`page:${page.page}`,text:page.text}));
+          const unresolved=ocr.pages.filter(page=>page.uncertain||!page.text.trim()).map(page=>({locator:`page:${page.page}`,code:"OCR_UNCERTAIN_REVIEW_REQUIRED"}));
+          extracted={...extracted,segments:mergeHybridSegments(extracted.segments,visualSegments,routing.visualRequiredLocators),exceptions:[...extracted.exceptions.filter(exception=>!routing.visualRequiredLocators.includes(exception.locator)),...unresolved]};
+          const provenance={extraction:ocr.extraction,validation:ocr.validation,qualification:ocr.qualification,changedOnValidation:ocr.changedOnValidation,pageNumbers};
+          visualProvenance=provenance;
+          ocrProvenance.push({evidenceVersionId:entry.versionId,...provenance});
+          for(const [method,pass] of [["VISUAL_MODEL",ocr.extraction],["VISUAL_VALIDATION",ocr.validation]] as const){
+            if(pass.fallbackUsed)attemptRows.push({method,status:"FAILED_AVAILABILITY",provider:"openai",model:pass.primaryModel,modelTier:pass.primaryTier,promptVersion:"rail-ocr-1",requestedLocators:routing.visualRequiredLocators,failureCode:pass.primaryFailure});
+            attemptRows.push({method,status:"COMPLETED",provider:pass.provider,model:pass.model,modelTier:pass.modelTier,promptVersion:"rail-ocr-1",requestedLocators:routing.visualRequiredLocators,usage:pass.usage,resultDigest:method==="VISUAL_VALIDATION"?sha256Digest(ocr.pages):undefined});
+          }
+        }else if(routing.visualRequiredLocators.length){
+          const existing=new Set(extracted.exceptions.map(exception=>`${exception.locator}:${exception.code}`));
+          extracted={...extracted,exceptions:[...extracted.exceptions,...routing.visualRequiredLocators.filter(locator=>!existing.has(`${locator}:OCR_REQUIRED`)).map(locator=>({locator,code:"VISUAL_EXTRACTION_REQUIRED_AI_DISABLED"}))]};
         }
+        const envelope=documentEvidenceEnvelope({evidenceVersionId:entry.versionId,evidenceObjectId:entry.evidenceObjectId,documentType:entry.evidenceType,sourceDigest:entry.digest,contentType:entry.contentType,routing,extractorVersion:extracted.extractorVersion,segments:extracted.segments,exceptions:extracted.exceptions,visualProvenance});
+        documentEnvelopes.push(envelope);
+        const reviewId=`adreview_${randomUUID()}`;
+        await this.db.assessmentDocumentReview.create({data:{id:reviewId,processingJobId:job.id,evidenceVersionId:entry.versionId,evidenceObjectId:entry.evidenceObjectId,documentType:entry.evidenceType,sourceDigest:entry.digest,policyVersion:routing.policyVersion,schemaVersion:envelope.schemaVersion,route:routing.route,routingReasons:asJson(routing.reasons),status:envelope.status==="accepted"?"ACCEPTED":"EXCEPTION",envelope:asJson(envelope),envelopeDigest:envelope.envelopeDigest,attempts:{create:attemptRows.map((attempt,index)=>({id:`adattempt_${randomUUID()}`,ordinal:index+1,method:attempt.method,status:attempt.status,provider:attempt.provider,model:attempt.model,modelTier:attempt.modelTier,extractorVersion:attempt.extractorVersion,promptVersion:attempt.promptVersion,preprocessingVersion:"rail-preprocess-1",requestedLocators:asJson(attempt.requestedLocators),usage:attempt.usage===undefined?undefined:asJson(attempt.usage),failureCode:attempt.failureCode,resultDigest:attempt.resultDigest}))}}});
         extractedCharacters+=extracted.segments.reduce((sum,s)=>sum+s.text.length,0);
         if(extractedCharacters>4000000)throw new Error("EXTRACTION_RUN_BUDGET_EXCEEDED");
         if(v.evidenceObject.evidenceType==="LOAN_TAPE")tapes.push({contentType:entry.contentType,segments:extracted.segments});
-        for(const s of extracted.segments)sources.push({...s,evidenceVersionId:entry.versionId,digest:entry.digest});
+        for(const s of extracted.segments)sources.push({...s,evidenceVersionId:entry.versionId,digest:entry.digest,evidenceType:entry.evidenceType});
         exceptions.push(...extracted.exceptions.map(x=>({...x,evidenceVersionId:entry.versionId})));
       }
       // Bounded AI input; extraction covers all supplied files. A budget skip is explicit in the report.
-      const analysis=JSON.stringify(sources).length<=120000?await analyseSources(sources):{provider:"NOT_RUN",model:null,findings:[],qualification:"AI_INPUT_BUDGET_EXCEEDED"};
+      const analysis=JSON.stringify(sources).length<=120000?await analyseSources(sources):{provider:"NOT_RUN",model:null,findings:[],documentExtractions:[],qualification:"AI_INPUT_BUDGET_EXCEEDED"};
       const scope=job.engagement.scope as {primaryPairCount?:number;linkedPartyCount?:number;uniqueLoanCount?:number};
       const quotedPrimaryPairs=scope.primaryPairCount ?? scope.uniqueLoanCount;
       if (!quotedPrimaryPairs) throw new Error("ENGAGEMENT_PRIMARY_PAIR_COUNT_MISSING");
       const dataQuality=loanTapeMetrics(tapes,quotedPrimaryPairs,scope.linkedPartyCount ?? 0);
       const extraction={segmentCount:sources.length,sourceCount:manifest.length,exceptions,ocrProvenance};
-      const outcome=job.stage==="INITIAL"?automatedInitialOutcome({assetFamily:(job.engagement.scope as {assetFamily:string}).assetFamily,dataQuality,exceptions,analysis}):null;
+      const inventory=documentInventory((job.engagement.scope as {assetFamily:string}).assetFamily,manifest.map(entry=>entry.evidenceType));
+      const loanReconciliation=reconcileLoanDocuments(dataQuality.loanRecords,analysis.documentExtractions);
+      const documentReview={policyVersion:inventory.policyVersion,routingOrder:["BOUNDED_NATIVE_LIBRARY","OPENAI_CONFIGURED_MODEL_TIER","GEMINI_AVAILABILITY_FALLBACK"],inventory,documents:documentEnvelopes,documentExtractions:analysis.documentExtractions,loanReconciliation,outputLevels:{document:"TRACEABLE_FIELDS_AND_EXCEPTIONS",loan:"TAPE_RECONCILIATION",pool:"COVERAGE_AND_UNRESOLVED_PRINCIPAL"},decisionBoundary:"EVIDENCE_QUALITY_AND_RECONCILIATION_ONLY"};
+      const outcome=job.stage==="INITIAL"?automatedInitialOutcome({assetFamily:(job.engagement.scope as {assetFamily:string}).assetFamily,dataQuality,exceptions,analysis,documentInventory:inventory,loanReconciliation}):null;
       const release=job.stage==="INITIAL"?{method:"AUTOMATED_UNSIGNED",outcome,expertReviewed:false,professionalSignoff:false}:{method:"QUALIFIED_EXPERT_REVIEW_REQUIRED",outcome:null,expertReviewed:false,professionalSignoff:false};
       const completedAt=new Date();
       const aiRunReceipt=job.stage==="INITIAL"?createInitialAssessmentReceipt({runId:job.id,completedAt,sources,analysis,exceptions,ocrProvenance,dataQuality}):null;
       const previousItems=job.stage==="INITIAL"&&job.baselineRunId?await this.db.assessmentRemediationItem.findMany({where:{sourceRunId:job.baselineRunId}}):[];
       const previousGaps:RemediationGap[]=previousItems.map(item=>({gapKey:item.gapKey,category:item.category,severity:item.severity,summary:item.summary,affectedScope:item.affectedScope as "PAIRS"|"PORTFOLIO",affectedPairs:item.affectedPairs as never,unresolvedRecordCount:item.unresolvedRecordCount,defaultOwnerRole:item.defaultOwnerRole as RemediationGap["defaultOwnerRole"],requiredEvidenceTypes:item.requiredEvidenceTypes as string[]}));
-      const remediationGaps=job.stage==="INITIAL"?deriveRemediationGaps({sellerInstitutionId:job.engagement.customerContract.institutionId,dataQuality,extraction,analysis,manifest}):[];
+      const remediationGaps=job.stage==="INITIAL"?deriveRemediationGaps({sellerInstitutionId:job.engagement.customerContract.institutionId,dataQuality,extraction,analysis,manifest,documentReview:{inventory,loanReconciliation}}):[];
       const baseline=job.baselineRunId?await this.db.assessmentProcessingJob.findUnique({where:{id:job.baselineRunId}}):null;
       const previousDataQuality=(baseline?.result as {dataQuality?:Parameters<typeof remediationChangeSummary>[2]}|null)?.dataQuality;
       const changeSummary=job.stage==="INITIAL"?remediationChangeSummary(previousGaps,remediationGaps,previousDataQuality,dataQuality):null;
       const remediation=job.stage==="INITIAL"?{scopeDigest:job.scopeDigest,reassessmentOrdinal:job.reassessmentOrdinal,gaps:remediationGaps,changeSummary}:null;
-      const result={manifest,dataQuality,extraction,analysis,release,aiRunReceipt,remediation,qualifications:["PRELIMINARY_PREPARATION_INSIGHTS_ONLY","NOT_BUYER_APPROVAL","NOT_AN_ASSURANCE_OR_PROFESSIONAL_OPINION","NO_AUTOMATIC_LEGAL_OR_CREDIT_OPINION"],sources};
+      const result={manifest,dataQuality,documentReview,extraction,analysis,release,aiRunReceipt,remediation,qualifications:["PRELIMINARY_PREPARATION_INSIGHTS_ONLY","NOT_BUYER_APPROVAL","NOT_AN_ASSURANCE_OR_PROFESSIONAL_OPINION","NO_AUTOMATIC_LEGAL_OR_CREDIT_OPINION"],sources};
       const resultDigest=sha256Digest(result);
       if(job.stage==="INITIAL"){
         await this.db.$transaction(async tx=>{

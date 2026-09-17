@@ -5,6 +5,7 @@ import { evaluateAiCandidate } from "./ai-evaluation";
 import { createAiRunReceipt, verifyAiRunReceipt } from "./ai-run-receipt";
 import { createInitialAssessmentReceipt } from "./assessment-ai-receipt";
 import { PASSING_SYNTHETIC_EV_CANDIDATE_V1, SYNTHETIC_REDACTED_EV_LOAN_PACK_V1 } from "./fixtures/synthetic-redacted-ev-loan-pack-v1";
+import { sha256Digest } from "../contracts/v1";
 
 const digest = (text: string) => `sha256:${createHash("sha256").update(text).digest("hex")}`;
 
@@ -117,4 +118,10 @@ test("[RAIL-AA-0] automated Initial Assessment emits an explicit receipt even wh
   assert.deepEqual(receipt.abstentions, [{ code: "AI_INPUT_BUDGET_EXCEEDED", evidenceVersionId: null, locator: null }]);
   assert.equal(receipt.deterministicChecks.find((check) => check.code === "AI_EXECUTED")?.status, "NOT_RUN");
   assert.equal(verifyAiRunReceipt(receipt), true);
+});
+
+test("[RAIL-AA-0] structured document-field citations are digest-bound without retaining quote text",()=>{
+  const quote="Principal outstanding INR 100,000";
+  const receipt=createInitialAssessmentReceipt({runId:"aprocess_fields",completedAt:new Date("2026-09-17T00:00:00.000Z"),sources:[{evidenceVersionId:"v1",digest:digest("source"),evidenceType:"REPAYMENT_HISTORY",locator:"page:2",text:quote}],analysis:{provider:"openai",model:"gpt-5.6-luna",qualification:"REVIEW_REQUIRED",findings:[],documentExtractions:[{fields:[{citations:[{evidenceVersionId:"v1",locator:"page:2",quote}]}]}]},exceptions:[],ocrProvenance:[],dataQuality:{status:"MATCHED"},env:{}});
+  assert.equal(receipt.citations.length,1);assert.equal(receipt.citations[0].quoteDigest,sha256Digest(quote));assert.equal(JSON.stringify(receipt).includes(quote),false);assert.equal(verifyAiRunReceipt(receipt),true);
 });
