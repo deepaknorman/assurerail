@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Loan-document review architecture and operations | AssureRail</title>
+  <style>
+    :root{--ink:#122431;--body:#405260;--muted:#6a7882;--line:#d8e2e7;--panel:#f7fafb;--brand:#0b6477;--accent:#c6812a}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--body);font:16px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}header{border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fbfc,#eef6f7);padding:34px max(24px,calc((100vw - 1080px)/2)) 28px}.brand{color:var(--brand);font-weight:850;letter-spacing:.12em;text-transform:uppercase}.class{display:inline-block;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;font-weight:750}main{max-width:1080px;margin:auto;padding:34px 24px 72px}h1,h2,h3,h4{color:var(--ink);line-height:1.22}h1{font-size:clamp(30px,4vw,46px);margin:.4em 0}h2{margin-top:2.2em;padding-top:.45em;border-top:1px solid var(--line)}h3{margin-top:1.8em}p,li{max-width:88ch}.table-wrap{overflow-x:auto;margin:20px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:var(--panel);color:var(--ink)}blockquote{margin:20px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#fff8ef;color:var(--ink)}code{background:var(--panel);padding:2px 5px;border-radius:4px}pre{overflow:auto;background:#122431;color:#eef7f8;padding:16px;border-radius:8px}a{color:var(--brand)}footer{max-width:1080px;margin:auto;padding:18px 24px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media print{header{background:#fff}a{color:inherit;text-decoration:none}.class{border:0;padding:0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">AssureRail</div><div class="class">INTERNAL</div></header>
+  <main><h1>AssureRail loan-document review architecture and operations</h1>
+<p><strong>Version:</strong> 1.0 — 17 September 2026 <strong>Classification:</strong> INTERNAL <strong>Applies to:</strong> Phase 1 conventional DA; EV and vehicle secured term-loan policy <strong>Decision owner:</strong> AssureRail product and risk</p>
+<h2>Decision</h2>
+<p>AssureRail uses one evidence-processing ladder:</p>
+<ol>
+<li>immutable, malware-cleared evidence intake;</li>
+<li>bounded deterministic libraries for CSV, XLSX and native PDF text;</li>
+<li>configured OpenAI model tiers only for unresolved visual pages or structured document review; and</li>
+<li>Gemini Flash only as an approved availability fallback.</li>
+</ol>
+<p>AI reads and structures evidence. Versioned deterministic rules produce tape, inventory, coverage and principal-reconciliation outcomes. No model may produce a legal-validity, credit, pricing, acquisition or true-sale decision.</p>
+<p>The service remains under the authenticated engagement API at <code>/v1/rail/institutions/:institutionId/engagements/:engagementId/runs</code>. A second global <code>/v1/documents</code> surface is not introduced because it would duplicate the current tenant, payment, evidence and retention controls.</p>
+<h2>First policy</h2>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>Controlled decision</th></tr></thead><tbody>
+<tr><td>Transaction route</td><td>Conventional direct assignment</td></tr>
+<tr><td>Asset family</td><td>EV and vehicle secured term loans</td></tr>
+<tr><td>Policy version</td><td><code>ev-secured-term-da-1.0.0</code></td></tr>
+<tr><td>Evidence schema</td><td><code>rail-document-evidence-1.0.0</code></td></tr>
+<tr><td>Initial Assessment</td><td>Automated, unsigned and without human content review</td></tr>
+<tr><td>Portfolio Preparation</td><td>Qualified, independent section review and sign-off</td></tr>
+<tr><td>Coverage</td><td>Every admitted tape loan receives a document-coverage and principal-reconciliation result</td></tr>
+<tr><td>AI primary</td><td>Configured OpenAI tier; GPT-5.6 Luna default</td></tr>
+<tr><td>Availability fallback</td><td>Configured Gemini tier; Gemini Flash default</td></tr>
+</tbody></table></div>
+<h2>Evidence and result levels</h2>
+<p>The original evidence object and version remain immutable. A document review stores source and envelope digests, routing reasons, locators and safe provenance. It does not duplicate extracted borrower text.</p>
+<div class="table-wrap"><table><thead><tr><th>Level</th><th>Current output</th></tr></thead><tbody>
+<tr><td>Document</td><td>Route, document family, source locator, field state, exact citation, readability exceptions and extraction provenance</td></tr>
+<tr><td>Loan</td><td>Tape loan ID, linked document versions, file-coverage rule and principal-reconciliation rule</td></tr>
+<tr><td>Pool</td><td>Required document inventory, tape-loan coverage, reconciled-loan count, unresolved principal and unallocated or extra loan IDs</td></tr>
+</tbody></table></div>
+<p>Allowed field states are <code>observed</code>, <code>inferred</code>, <code>absent</code>, <code>unreadable</code> and <code>contradictory</code>. The model cannot label a value <code>derived</code>; only deterministic code can derive a value. Reconciliation accepts observed values. Inferred values remain exceptions.</p>
+<h2>Routing controls</h2>
+<p>CSV and XLSX stay on the deterministic-parser rung. PDF pages are tested for usable text length, printable-character ratio, encoding corruption and expected document anchors. A blank page is not the only OCR trigger. Good native pages remain authoritative in a hybrid document; visual text replaces only the locators routed for visual extraction.</p>
+<p>Image and unresolved PDF routes require approved processor terms and credentials. The worker sends no arbitrary URL, enables no model tools or browsing, and instructs the model to treat document text as untrusted evidence. Gemini is used only after an OpenAI network, throttling or service-availability failure. A refusal or invalid model result fails closed and does not trigger provider shopping.</p>
+<h2>Deterministic reconciliation</h2>
+<p>The admitted CSV defines seller-scoped unique loan and party pairs and principal in INR paise. Structured document review may extract an observed loan ID and principal outstanding with exact citations. AssureRail normalises a cited INR amount deterministically, then compares it with the tape value.</p>
+<p>Each tape loan receives:</p>
+<ul>
+<li><code>LOAN-FILE-COVERAGE-001</code>: pass only when a supplied document is linked through an observed loan ID; and</li>
+<li><code>LOAN-TAPE-PRINCIPAL-001</code>: pass, fail or indeterminate against the admitted tape principal.</li>
+</ul>
+<p>The pool is <code>RECONCILED</code> only when every tape loan has linked document evidence, every principal passes and no document loan ID sits outside the tape. This is an evidence-quality state, not buyer approval.</p>
+<h2>Persistence and audit</h2>
+<p><code>AssessmentDocumentReview</code> is the immutable safe projection for one processing job and evidence version. <code>AssessmentDocumentExtractionAttempt</code> records each completed native or visual pass and any primary-provider availability failure before fallback. Attempt records contain model tier, provider, model, prompt/preprocessing versions, requested locators, usage and result digest. They contain no raw document text.</p>
+<p>The internal run report returns review and attempt provenance. The customer run result returns its own evidence envelope and reconciliation output. Released Initial Assessment results remain automated and unsigned. Preparation cannot be released without the existing qualified-reviewer, independence, evidence and step-up controls.</p>
+<h2>Configuration</h2>
+<p><code>ASSURERAIL_AI_MODEL_TIERS_JSON</code> may substitute approved deployment names while preserving fixed provider roles. <code>language_default</code>, <code>visual_default</code>, <code>visual_retry</code> and <code>visual_advanced</code> must use OpenAI. <code>availability_fallback</code> must use Gemini. Invalid JSON, a swapped provider or an unsafe model name stops processing.</p>
+<p>Provider calls additionally require the relevant data-processing approval flag and a server-side API key. Production model and fallback activation require approved retention, training and data-residency terms; configuration alone is not approval.</p>
+<h2>Operational checks</h2>
+<p>Before activating a tenant:</p>
+<ol>
+<li>approve its retention and upload profile;</li>
+<li>approve processor and data-residency terms;</li>
+<li>rehearse only with synthetic or formally approved redacted evidence;</li>
+<li>run the API tests, document-extractor tests, migration validation and daily offline security harness;</li>
+<li>inspect route distribution, unsupported citations, unresolved principal and fallback use; and</li>
+<li>activate Portfolio Preparation reviewers separately from Initial Assessment automation.</li>
+</ol>
+<h2>Improvements over the input design</h2>
+<ul>
+<li>The current engagement API is reused instead of creating a conflicting document tenant boundary.</li>
+<li>Native text quality is measured beyond a single character threshold.</li>
+<li>Hybrid processing preserves good native pages.</li>
+<li>Model-generated <code>derived</code> values are structurally prohibited.</li>
+<li>Full-population coverage is measured by loan count and unresolved principal.</li>
+<li>Provenance avoids copying borrower text into an additional database table.</li>
+<li>Provider fallback is restricted to availability failures.</li>
+</ul>
+<h2>Remaining production gates</h2>
+<p>The following remain controlled work, not current production claims:</p>
+<ul>
+<li>render and crop only the requested PDF pages before visual submission; the current first slice requests targeted page outputs but supplies the bounded source document;</li>
+<li>batch orchestration above the current per-run evidence and AI-input budgets;</li>
+<li>asset-specific authoritative-source precedence beyond loan ID and principal;</li>
+<li>repayment-schedule arithmetic, security, insurance, mandate, KYC and registry validators;</li>
+<li>versioned event publication and exception exports;</li>
+<li>a labelled multilingual and degraded-scan golden corpus with approval thresholds; and</li>
+<li>production processor, region, retention, recovery and service-level approval.</li>
+</ul>
+<p>No gate may be described as live until its test evidence and activation decision are recorded.</p></main>
+  <footer>Generated from the controlled Markdown source. Verify the version and distribution classification before use.</footer>
+</body>
+</html>
