@@ -42,6 +42,7 @@ interface AuthState {
   needsOnboarding: boolean;
   activeInstitutionId: string | null;
   error: string;
+  clearError: () => void;
   loginGoogle: () => Promise<void>;
   loginEmail: (email: string, password: string, register?: boolean) => Promise<void>;
   onboard: (did?: string) => Promise<void>;
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [activeInstitutionId, setActiveInstitutionId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const clearError = useCallback(() => setError(""), []);
 
   // Exchange the Firebase ID token for the venue session (reCAPTCHA Enterprise-defended).
   const establish = useCallback(async (requestedInstitutionId?: string | null) => {
@@ -189,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       needsOnboarding,
       activeInstitutionId,
       error,
+      clearError,
       loginGoogle,
       loginEmail,
       onboard,
@@ -196,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       refresh: () => establish(),
     }),
-    [loading, firebaseUser, venueUser, needsOnboarding, activeInstitutionId, error, loginGoogle, loginEmail, onboard, selectInstitution, logout, establish],
+    [loading, firebaseUser, venueUser, needsOnboarding, activeInstitutionId, error, clearError, loginGoogle, loginEmail, onboard, selectInstitution, logout, establish],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

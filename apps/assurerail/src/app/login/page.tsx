@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 
 export default function Login() {
-  const { firebaseUser, venueUser, needsOnboarding, loading, error, loginGoogle, loginEmail } = useAuth();
+  const { firebaseUser, venueUser, needsOnboarding, loading, error, clearError, loginGoogle, loginEmail } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +33,12 @@ export default function Login() {
     }
   }
 
+  function changeMode() {
+    clearError();
+    setPassword("");
+    setRegister((current) => !current);
+  }
+
   return (
     <>
       <header className="topbar">
@@ -51,12 +57,12 @@ export default function Login() {
           <button className="btn btn-google" disabled={busy} onClick={() => go(loginGoogle)}>Continue with Google</button>
           <div className="auth-or"><span>or</span></div>
 
-          <label className="lbl">Email<input className="field" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-          <label className="lbl">Password<input className="field" type="password" autoComplete={register ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+          <label className="lbl">Email<input className="field" type="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); clearError(); }} /></label>
+          <label className="lbl">Password<input className="field" type="password" autoComplete={register ? "new-password" : "current-password"} value={password} onChange={(e) => { setPassword(e.target.value); clearError(); }} /></label>
           <button className="btn btn-primary" disabled={busy || !email || !password} onClick={() => go(() => loginEmail(email, password, register))}>
             {busy ? "…" : register ? "Create account" : "Sign in"}
           </button>
-          <button className="linkish" onClick={() => setRegister(!register)}>{register ? "Have an account? Sign in" : "New here? Create an account"}</button>
+          <button className="linkish" disabled={busy} onClick={changeMode}>{register ? "Have an account? Sign in" : "New here? Create an account"}</button>
 
           <p className="auth-fine">Protected by reCAPTCHA Enterprise. Sandbox / design stage — institutional &amp; professional counterparties only.</p>
         </div>

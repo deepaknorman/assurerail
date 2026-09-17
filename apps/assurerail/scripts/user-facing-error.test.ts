@@ -46,3 +46,9 @@ test("client screens do not render caught Error.message values directly", () => 
   }
   assert.deepEqual(unsafe, [], `Route errors must pass through userFacingError():\n${unsafe.join("\n")}`);
 });
+
+test("switching between sign-in and registration clears the previous authentication error", () => {
+  const login = readFileSync(new URL("../src/app/login/page.tsx", import.meta.url), "utf8");
+  assert.match(login, /function changeMode\(\)[\s\S]*?clearError\(\)[\s\S]*?setRegister/);
+  assert.match(login, /onClick=\{changeMode\}/);
+});
