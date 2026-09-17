@@ -52,3 +52,19 @@ test("switching between sign-in and registration clears the previous authenticat
   assert.match(login, /function changeMode\(\)[\s\S]*?clearError\(\)[\s\S]*?setRegister/);
   assert.match(login, /onClick=\{changeMode\}/);
 });
+
+test("authentication supports keyboard submission and action-specific progress", () => {
+  const login = readFileSync(new URL("../src/app/login/page.tsx", import.meta.url), "utf8");
+  assert.match(login, /<form[^>]*onSubmit=\{submitEmail\}/);
+  assert.match(login, /type="submit"/);
+  assert.match(login, /Connecting to Google…/);
+  assert.match(login, /Creating account…/);
+  assert.match(login, /Signing in…/);
+});
+
+test("shared feedback distinguishes errors from successful status updates", () => {
+  const feedback = readFileSync(new URL("../src/components/FeedbackBanner.tsx", import.meta.url), "utf8");
+  assert.match(feedback, /role="alert"/);
+  assert.match(feedback, /role="status"/);
+  assert.match(feedback, /aria-atomic="true"/);
+});
