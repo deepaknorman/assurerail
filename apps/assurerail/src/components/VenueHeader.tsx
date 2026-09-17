@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { guidedJourneyEnabled, hostedAlphaEnabled, institutionalProductEnabled, type HostedAlphaTask, type HostedAlphaTaskResponse } from "@/lib/customer-workspace";
 import { vget, shortDid } from "@/lib/venue";
+import { useScopedResource } from "@/lib/use-scoped-resource";
 import { Logo } from "./Logo";
 
 type ActivityRow = { id: string; event: string; actor: string; createdAt: string };
+type NotificationData = {
+  mode: "TASKS" | "ACTIVITY";
+  tasks: HostedAlphaTask[];
+  activity: ActivityRow[];
+};
 
 const Bell = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" strokeLinecap="round" strokeLinejoin="round" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" strokeLinecap="round" /></svg>);
 const Hamburger = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" /></svg>);
@@ -22,41 +28,49 @@ export function VenueHeader() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
-  const [notifs, setNotifs] = useState<ActivityRow[]>([]);
-  const [tasks, setTasks] = useState<HostedAlphaTask[]>([]);
-  const [notificationMode, setNotificationMode] = useState<"TASKS" | "ACTIVITY" | "NONE">("NONE");
-  const [hasStaffWorkspace, setHasStaffWorkspace] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
   const isAdmin = !!venueUser?.isAdmin;
-
-  useEffect(() => {
-    if (!notifOpen) return;
-    if (activeInstitutionId && hostedAlphaEnabled()) {
-      setNotificationMode("TASKS");
-      setNotifs([]);
-      vget<HostedAlphaTaskResponse>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}/hosted-alpha/tasks`)
-        .then((result) => setTasks(result.tasks.filter((task) => task.dueState !== "WATCH").slice(0, 6)))
-        .catch(() => setTasks([]));
-    } else if (isAdmin && !activeInstitutionId) {
-      setNotificationMode("ACTIVITY");
-      setTasks([]);
-      vget<{ rows: ActivityRow[] }>("/venue/activity?limit=6").then((r) => setNotifs(r.rows)).catch(() => {});
-    } else {
-      setNotificationMode("NONE");
-      setTasks([]);
-      setNotifs([]);
+  const requestedNotificationMode = activeInstitutionId && hostedAlphaEnabled()
+    ? "TASKS" as const
+    : isAdmin && !activeInstitutionId
+      ? "ACTIVITY" as const
+      : "NONE" as const;
+  const notificationScope = requestedNotificationMode === "TASKS"
+    ? `TASKS:${activeInstitutionId}`
+    : requestedNotificationMode === "ACTIVITY"
+      ? `ACTIVITY:${venueUser?.id ?? firebaseUser?.uid ?? ""}`
+      : null;
+  const loadNotifications = useCallback(async (): Promise<NotificationData> => {
+    if (requestedNotificationMode === "TASKS" && activeInstitutionId) {
+      const result = await vget<HostedAlphaTaskResponse>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}/hosted-alpha/tasks`);
+      return { mode: "TASKS", tasks: result.tasks.filter((task) => task.dueState !== "WATCH").slice(0, 6), activity: [] };
     }
-  }, [notifOpen, activeInstitutionId, isAdmin]);
-
-  useEffect(() => {
-    if (!venueUser || activeInstitutionId) {
-      setHasStaffWorkspace(false);
-      return;
+    if (requestedNotificationMode === "ACTIVITY") {
+      const result = await vget<{ rows: ActivityRow[] }>("/venue/activity?limit=6");
+      return { mode: "ACTIVITY", tasks: [], activity: result.rows };
     }
-    vget<{ workspaces: unknown[] }>("/v1/rail/internal-access/workspaces", { institutionId: null })
-      .then((result) => setHasStaffWorkspace(result.workspaces.length > 0))
-      .catch(() => setHasStaffWorkspace(false));
-  }, [venueUser, activeInstitutionId]);
+    throw new Error("Notification scope is unavailable");
+  }, [activeInstitutionId, requestedNotificationMode]);
+  const notificationResource = useScopedResource({
+    scopeKey: notificationScope,
+    enabled: notifOpen && requestedNotificationMode !== "NONE",
+    loader: loadNotifications,
+    errorFallback: "We couldn’t load notifications. Close this panel and try again.",
+  });
+  const notificationMode = notificationResource.data?.mode ?? requestedNotificationMode;
+  const tasks = notificationResource.data?.tasks ?? [];
+  const notifs = notificationResource.data?.activity ?? [];
+
+  const staffScope = venueUser && !activeInstitutionId ? `STAFF:${venueUser.id}` : null;
+  const loadStaffWorkspace = useCallback(async () => {
+    return vget<{ workspaces: unknown[] }>("/v1/rail/internal-access/workspaces", { institutionId: null });
+  }, []);
+  const staffResource = useScopedResource({
+    scopeKey: staffScope,
+    enabled: !!staffScope,
+    loader: loadStaffWorkspace,
+  });
+  const hasStaffWorkspace = Boolean(staffResource.data?.workspaces.length);
 
   useEffect(() => {
     if (!notifOpen && !menuOpen) return;
@@ -91,22 +105,24 @@ export function VenueHeader() {
   return (
     <header className="appbar">
       <div className="wrap appbar-row">
-        <button className="icon-btn hamburger" aria-label="Menu" onClick={() => setNavOpen(!navOpen)}><Hamburger /></button>
-        <Link href="/console" className="appbar-brand" onClick={closeAll} aria-label="AssureRail home"><Logo /></Link>
-        <nav className={`appbar-nav ${navOpen ? "mobile-open" : ""}`}>
+        <button className="icon-btn hamburger" aria-label="Menu" aria-expanded={navOpen} aria-controls="primary-navigation" onClick={() => setNavOpen(!navOpen)}><Hamburger /></button>
+        <Link href={activeInstitutionId ? "/workspace" : "/institutions"} className="appbar-brand" onClick={closeAll} aria-label="AssureRail home"><Logo /></Link>
+        <nav id="primary-navigation" aria-label="Primary" className={`appbar-nav ${navOpen ? "mobile-open" : ""}`}>
           {nav.map((n) => (
             <Link key={n.href} href={n.href} className={pathname === n.href || pathname.startsWith(`${n.href}/`) ? "active" : ""} onClick={closeAll}>{n.label}</Link>
           ))}
         </nav>
         <div className="appbar-spacer" />
         <div className="appbar-actions" ref={actionsRef}>
-          <button className="icon-btn" aria-label="Notifications" onClick={() => { setNotifOpen(!notifOpen); setMenuOpen(false); }}>
+          <button className="icon-btn" aria-label="Notifications" aria-expanded={notifOpen} aria-controls="notification-panel" onClick={() => { setNotifOpen(!notifOpen); setMenuOpen(false); }}>
             <Bell />
             {(tasks.length > 0 || notifs.length > 0) && <span className="badge-dot" />}
           </button>
           {notifOpen && (
-            <div className="notif">
+            <div className="notif" id="notification-panel">
               <h4>{notificationMode === "TASKS" ? "Action centre" : notificationMode === "ACTIVITY" ? "Recent platform activity" : "Notifications"}</h4>
+              {notificationResource.status === "loading" && <div className="n-empty" role="status">Loading notifications…</div>}
+              {notificationResource.error && <div className="n-empty" role="alert">{notificationResource.error}</div>}
               {notificationMode === "TASKS" && tasks.map((task) => (
                 <Link className="n-item notification-task" href={task.href} key={task.id} onClick={closeAll}>
                   <div className="n-ev">{task.title}</div>
@@ -119,17 +135,17 @@ export function VenueHeader() {
                     <div className="n-t">{new Date(n.createdAt).toLocaleString("en-IN")}</div>
                   </div>
                 ))}
-              {((notificationMode === "TASKS" && tasks.length === 0) || (notificationMode === "ACTIVITY" && notifs.length === 0) || notificationMode === "NONE") && <div className="n-empty">{notificationMode === "NONE" ? "Select an institution to see scoped actions." : "Nothing requires attention in this view."}</div>}
+              {notificationResource.status !== "loading" && !notificationResource.error && ((notificationMode === "TASKS" && tasks.length === 0) || (notificationMode === "ACTIVITY" && notifs.length === 0) || notificationMode === "NONE") && <div className="n-empty">{notificationMode === "NONE" ? "Select an institution to see scoped actions." : "Nothing requires attention in this view."}</div>}
               {notificationMode === "TASKS" && <Link href="/workspace/tasks" className="menu-item" style={{ borderTop: "1px solid var(--arail-border-subtle)", justifyContent: "center", color: "var(--arail-accent-text)" }} onClick={closeAll}>View all actions →</Link>}
               {notificationMode === "ACTIVITY" && <Link href="/activity" className="menu-item" style={{ borderTop: "1px solid var(--arail-border-subtle)", justifyContent: "center", color: "var(--arail-accent-text)" }} onClick={closeAll}>View all activity →</Link>}
             </div>
           )}
-          <button className="profile-btn" aria-label="Profile" onClick={() => { setMenuOpen(!menuOpen); setNotifOpen(false); }}>
+          <button className="profile-btn" aria-label="Profile" aria-expanded={menuOpen} aria-controls="profile-menu" onClick={() => { setMenuOpen(!menuOpen); setNotifOpen(false); }}>
             <span className="avatar">{initial}</span>
             <span className="who">{email}</span>
           </button>
           {menuOpen && (
-            <div className="menu">
+            <div className="menu" id="profile-menu">
               <div className="menu-head">
                 <div className="m-email">{email}</div>
                 <div className="m-meta">{venueUser?.role ?? "—"}{venueUser?.isAdmin ? " · admin" : ""}</div>

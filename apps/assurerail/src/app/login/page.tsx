@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { FeedbackBanner } from "@/components/FeedbackBanner";
+
+type LoginAction = "" | "google" | "email";
 
 export default function Login() {
   const { firebaseUser, venueUser, needsOnboarding, loading, error, clearError, loginGoogle, loginEmail } = useAuth();
@@ -11,7 +14,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [register, setRegister] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<LoginAction>("");
+  const busy = busyAction !== "";
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("mode") === "register") setRegister(true);
@@ -22,21 +26,30 @@ export default function Login() {
     if (firebaseUser && venueUser) router.replace(needsOnboarding ? "/onboard" : "/console");
   }, [loading, firebaseUser, venueUser, needsOnboarding, router]);
 
-  async function go(fn: () => Promise<void>) {
-    setBusy(true);
+  async function go(action: Exclude<LoginAction, "">, fn: () => Promise<void>) {
+    clearError();
+    setBusyAction(action);
     try {
       await fn();
     } catch {
       /* error is surfaced via context */
     } finally {
-      setBusy(false);
+      setBusyAction("");
     }
+  }
+
+  function submitEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || !email || !password) return;
+    void go("email", () => loginEmail(email, password, register));
   }
 
   function changeMode() {
     clearError();
     setPassword("");
-    setRegister((current) => !current);
+    const next = !register;
+    setRegister(next);
+    router.replace(next ? "/login?mode=register" : "/login", { scroll: false });
   }
 
   return (
@@ -52,17 +65,22 @@ export default function Login() {
         <div className="auth-card">
           <h1>{register ? "Create your institutional account" : "Sign in"}</h1>
           <p className="auth-sub">{register ? "Create the account that will hold your organisation's assessment application and onboarding record." : "Access your institution's assessments, preparation work and transaction cases."}</p>
-          {error && <div className="msg err" role="alert" aria-live="polite">{error}</div>}
+          <FeedbackBanner error={error} id="auth-feedback" />
 
-          <button className="btn btn-google" disabled={busy} onClick={() => go(loginGoogle)}>Continue with Google</button>
+          <button className="btn btn-google" type="button" disabled={busy} aria-busy={busyAction === "google"} onClick={() => void go("google", loginGoogle)}>
+            {busyAction === "google" ? "Connecting to Google…" : "Continue with Google"}
+          </button>
           <div className="auth-or"><span>or</span></div>
 
-          <label className="lbl">Email<input className="field" type="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); clearError(); }} /></label>
-          <label className="lbl">Password<input className="field" type="password" autoComplete={register ? "new-password" : "current-password"} value={password} onChange={(e) => { setPassword(e.target.value); clearError(); }} /></label>
-          <button className="btn btn-primary" disabled={busy || !email || !password} onClick={() => go(() => loginEmail(email, password, register))}>
-            {busy ? "…" : register ? "Create account" : "Sign in"}
-          </button>
-          <button className="linkish" disabled={busy} onClick={changeMode}>{register ? "Have an account? Sign in" : "New here? Create an account"}</button>
+          <form className="auth-form" onSubmit={submitEmail} aria-busy={busyAction === "email"}>
+            <label className="lbl">Email<input className="field" type="email" autoComplete="email" required value={email} onChange={(e) => { setEmail(e.target.value); clearError(); }} /></label>
+            <label className="lbl">Password<input className="field" type="password" autoComplete={register ? "new-password" : "current-password"} required minLength={6} aria-describedby={register ? "password-guidance" : undefined} value={password} onChange={(e) => { setPassword(e.target.value); clearError(); }} /></label>
+            {register && <p className="auth-guidance" id="password-guidance">Use at least 6 characters. A longer, unique password is safer.</p>}
+            <button className="btn btn-primary" type="submit" disabled={busy || !email || !password} aria-busy={busyAction === "email"}>
+              {busyAction === "email" ? (register ? "Creating account…" : "Signing in…") : register ? "Create account" : "Sign in"}
+            </button>
+          </form>
+          <button className="linkish" type="button" disabled={busy} onClick={changeMode}>{register ? "Have an account? Sign in" : "New here? Create an account"}</button>
 
           <p className="auth-fine">Protected by reCAPTCHA Enterprise. Sandbox / design stage — institutional &amp; professional counterparties only.</p>
         </div>

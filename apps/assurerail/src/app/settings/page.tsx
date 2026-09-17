@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { vget, vpost, vdelete } from "@/lib/venue";
 import { listPasskeys, registerPasskey, deletePasskey, type Passkey } from "@/lib/webauthn";
 import { userFacingError } from "@/lib/user-facing-error";
+import { FeedbackBanner } from "@/components/FeedbackBanner";
 
 type Theme = "system" | "light" | "dark";
 type MfaStatus = { methods: string[]; pending: string[]; enrolled: boolean };
@@ -33,14 +34,20 @@ export default function Settings() {
   const [totp, setTotp] = useState<TotpSetup | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState("");
+  const [securityLoading, setSecurityLoading] = useState(true);
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
   const ready = !loading && !!firebaseUser && !!venueUser && !needsOnboarding;
 
   const loadSecurity = useCallback(async () => {
-    const [pk, m] = await Promise.all([listPasskeys().catch(() => []), vget<MfaStatus>("/venue/auth/mfa/status").catch(() => null)]);
-    setPasskeys(pk);
-    setMfa(m);
+    setSecurityLoading(true);
+    try {
+      const [pk, m] = await Promise.all([listPasskeys(), vget<MfaStatus>("/venue/auth/mfa/status")]);
+      setPasskeys(pk);
+      setMfa(m);
+    } finally {
+      setSecurityLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -56,7 +63,7 @@ export default function Settings() {
     else if (needsOnboarding) router.replace("/onboard");
   }, [loading, firebaseUser, needsOnboarding, router]);
   useEffect(() => {
-    if (ready) void loadSecurity();
+    if (ready) void loadSecurity().catch((cause) => setErr(userFacingError(cause, "We couldn’t load your security settings. Refresh the page or try again.")));
   }, [ready, loadSecurity]);
 
   if (!ready || !venueUser) return <main className="wrap" style={{ padding: "96px 0", textAlign: "center" }}><p className="meta">Loading…</p></main>;
@@ -82,16 +89,15 @@ export default function Settings() {
   return (
     <>
       <VenueHeader />
-      <main className="wrap">
+      <main className="wrap" aria-busy={busy !== "" || securityLoading}>
         <div className="console-head">
           <h1>Settings</h1>
           <p>Your profile, appearance and account security.</p>
         </div>
-        {err && <div className="msg err">{err}</div>}
-        {ok && <div className="msg ok">{ok}</div>}
+        <FeedbackBanner error={err} success={ok} />
 
         <div className="set-section">
-          <h3>Profile</h3>
+          <h2>Profile</h2>
           <p>Your venue identity. The DID is your AssureLocker DigiKYC identity — the venue references it, never copies your data.</p>
           <div className="set-row"><div className="set-kv"><span className="k">Email</span><span className="v">{venueUser.email}</span></div></div>
           <div className="set-row"><div className="set-kv"><span className="k">DID</span><span className="v">{venueUser.did || "—"}</span></div></div>
@@ -100,18 +106,19 @@ export default function Settings() {
         </div>
 
         <div className="set-section">
-          <h3>Appearance</h3>
+          <h2>Appearance</h2>
           <p>Theme preference for this device. The AssureRail mark and wordmark track the theme.</p>
           <div className="row" style={{ gap: 8 }}>
             {(["system", "light", "dark"] as Theme[]).map((t) => (
-              <button key={t} className={`btn ${theme === t ? "btn-primary" : ""}`} onClick={() => setT(t)} style={{ textTransform: "capitalize" }}>{t}</button>
+              <button key={t} className={`btn ${theme === t ? "btn-primary" : ""}`} type="button" aria-pressed={theme === t} onClick={() => setT(t)} style={{ textTransform: "capitalize" }}>{t}</button>
             ))}
           </div>
         </div>
 
         <div className="set-section">
-          <h3>Security</h3>
+          <h2>Security</h2>
           <p>Add a passkey and multi-factor authentication — the same protections as AssureLocker.</p>
+          {securityLoading && <p className="meta" role="status">Loading your security methods…</p>}
 
           <div className="set-row">
             <div><div className="sr-label">Passkeys (WebAuthn)</div><div className="sr-sub">Sign in with Face&nbsp;ID / Touch&nbsp;ID / a security key.</div></div>
@@ -123,15 +130,15 @@ export default function Settings() {
               <button className="linkish" disabled={busy !== ""} onClick={() => void run(`rm-${pk.id}`, () => deletePasskey(pk.id).then(loadSecurity), "Passkey removed")}>Remove</button>
             </div>
           ))}
-          {passkeys.length === 0 && <p className="meta" style={{ padding: "6px 0" }}>No passkeys yet.</p>}
+          {!securityLoading && passkeys.length === 0 && <p className="meta" style={{ padding: "6px 0" }}>No passkeys yet.</p>}
 
           <div className="set-row" style={{ marginTop: 12 }}>
-            <div><div className="sr-label">Authenticator app (TOTP)</div><div className="sr-sub">{mfa?.enrolled ? "Enabled — 6-digit codes required." : "6-digit codes from Google Authenticator, 1Password, Authy, etc."}</div></div>
-            {mfa?.enrolled ? (
+            <div><div className="sr-label">Authenticator app (TOTP)</div><div className="sr-sub">{securityLoading ? "Checking enrolment…" : mfa?.enrolled ? "Enabled — 6-digit codes required." : "6-digit codes from Google Authenticator, 1Password, Authy, etc."}</div></div>
+            {!securityLoading && (mfa?.enrolled ? (
               <button className="btn" disabled={busy !== ""} onClick={() => void run("mfa", () => vdelete("/venue/auth/mfa/TOTP").then(loadSecurity), "MFA disabled")}>Disable</button>
             ) : !totp ? (
-              <button className="btn btn-primary" disabled={busy !== ""} onClick={() => void run("mfa", async () => setTotp(await vpost<TotpSetup>("/venue/auth/mfa/enroll/totp")))}>{busy === "mfa" ? "…" : "Set up"}</button>
-            ) : null}
+              <button className="btn btn-primary" disabled={busy !== ""} aria-busy={busy === "mfa"} onClick={() => void run("mfa", async () => setTotp(await vpost<TotpSetup>("/venue/auth/mfa/enroll/totp")))}>{busy === "mfa" ? "Setting up…" : "Set up"}</button>
+            ) : null)}
           </div>
           {totp && (
             <div className="totp-setup">
@@ -140,8 +147,8 @@ export default function Settings() {
               <div className="set-kv" style={{ marginTop: 10 }}><span className="k">Secret</span><span className="v">{totp.secret}</span></div>
               <p className="sr-sub" style={{ marginTop: 14 }}><b>2.</b> Enter the current 6-digit code to confirm.</p>
               <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-                <input className="field" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/[^\d]/g, ""))} placeholder="123456" style={{ maxWidth: 150, letterSpacing: "0.3em", textAlign: "center", fontFamily: "var(--arail-font-mono)" }} />
-                <button className="btn btn-primary" disabled={busy !== "" || code.length < 6} onClick={() => void run("mfa", () => vpost("/venue/auth/mfa/verify/totp", { code }).then(() => { setTotp(null); setCode(""); }).then(loadSecurity), "MFA enabled")}>{busy === "mfa" ? "…" : "Confirm"}</button>
+                <input className="field" aria-label="Six-digit authenticator code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/[^\d]/g, ""))} placeholder="123456" style={{ maxWidth: 150, letterSpacing: "0.3em", textAlign: "center", fontFamily: "var(--arail-font-mono)" }} />
+                <button className="btn btn-primary" disabled={busy !== "" || code.length < 6} aria-busy={busy === "mfa"} onClick={() => void run("mfa", () => vpost("/venue/auth/mfa/verify/totp", { code }).then(() => { setTotp(null); setCode(""); }).then(loadSecurity), "MFA enabled")}>{busy === "mfa" ? "Confirming…" : "Confirm"}</button>
                 <button className="linkish" onClick={() => { setTotp(null); setCode(""); }}>Cancel</button>
               </div>
             </div>

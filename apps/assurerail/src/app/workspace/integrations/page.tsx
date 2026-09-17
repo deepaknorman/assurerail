@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { enterpriseIntegrationEnabled } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
-import { userFacingError } from "@/lib/user-facing-error";
+import { useScopedResource } from "@/lib/use-scoped-resource";
 
 type Gate = {
   gateCode: string;
@@ -50,33 +50,28 @@ export default function EnterpriseIntegrationsPage() {
   const { loading, firebaseUser, needsOnboarding, activeInstitutionId } =
     useAuth();
   const enabled = enterpriseIntegrationEnabled();
-  const [data, setData] = useState<{
-    profiles: Profile[];
-    catalogue: Catalogue;
-  } | null>(null);
-  const [error, setError] = useState("");
   const load = useCallback(async () => {
-    if (!activeInstitutionId || !enabled) return;
+    if (!activeInstitutionId || !enabled) throw new Error("Institution context is required");
     const root = `/v1/rail/institutions/${encodeURIComponent(
       activeInstitutionId
     )}/integrations`;
-    try {
-      const [profiles, catalogue] = await Promise.all([
-        vget<Profile[]>(`${root}/profiles`),
-        vget<Catalogue>(`${root}/catalogue/v1`),
-      ]);
-      setData({ profiles, catalogue });
-    } catch (cause) {
-      setError(userFacingError(cause, "We couldn’t load the integration workspace. Refresh the page or try again."));
-    }
+    const [profiles, catalogue] = await Promise.all([
+      vget<Profile[]>(`${root}/profiles`),
+      vget<Catalogue>(`${root}/catalogue/v1`),
+    ]);
+    return { profiles, catalogue };
   }, [activeInstitutionId, enabled]);
+  const resource = useScopedResource({
+    scopeKey: activeInstitutionId,
+    enabled: enabled && !!firebaseUser,
+    loader: load,
+    errorFallback: "We couldn’t load the integration workspace. Refresh the page or try again.",
+  });
+  const data = resource.data;
   useEffect(() => {
     if (!loading && !firebaseUser) router.replace("/login");
     else if (!loading && needsOnboarding) router.replace("/onboard");
   }, [loading, firebaseUser, needsOnboarding, router]);
-  useEffect(() => {
-    if (firebaseUser && activeInstitutionId) void load();
-  }, [firebaseUser, activeInstitutionId, load]);
   if (!enabled)
     return (
       <>
@@ -106,9 +101,14 @@ export default function EnterpriseIntegrationsPage() {
             authority.
           </p>
         </div>
-        {error && (
+        {resource.status === "loading" && activeInstitutionId && (
+          <div className="msg" role="status">
+            Loading this institution’s integration register…
+          </div>
+        )}
+        {resource.error && (
           <div className="msg err" role="alert">
-            {error}
+            {resource.error}
           </div>
         )}
         {data && (

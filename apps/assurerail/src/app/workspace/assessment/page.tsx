@@ -56,7 +56,7 @@ export default function AssessmentCommercialPage() {
     sellerProposedConsiderationMinor:sellerMinor??"0",
     aggregateProgrammeConsiderationMinor:programmeMinor??"0",
   };
-  function changed(setter:(value:string)=>void,value:string){requestVersion.current++;setter(value);setQuote(null);setBusy(false);}
+  function changed(setter:(value:string)=>void,value:string){requestVersion.current++;setter(value);setQuote(null);setError("");setBusy(false);}
   async function calculate() {
     if(!activeInstitutionId||!validScope)return;
     const version=++requestVersion.current;setBusy(true);setError("");setQuote(null);

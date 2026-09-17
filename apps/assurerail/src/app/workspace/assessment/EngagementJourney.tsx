@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import {vget,vpost} from "@/lib/venue";
 import {requestTotpStepUp} from "@/lib/institutions";
 import {userFacingError} from "@/lib/user-facing-error";
+import {FeedbackBanner} from "@/components/FeedbackBanner";
 import type {AssessmentQuoteScope} from "./page";
 type Price={baseMinor:string;taxMinor:string;totalMinor:string};
 type Engagement={id:string;status:string;quoteDigest:string;termsDigest:string;route:string|null;billingProfile:{legalName:string;billingEmail:string;address:string};quote:{initial:Price;committedPreparation:Price;standalonePreparation:Price};scope:{bookRef:string;assetFamily:string;primaryPairCount:number;linkedPartyCount:number;sellerProposedConsiderationMinor:string;aggregateProgrammeConsiderationMinor:string};stages:{stage:string;invoiceId:string|null;invoice:{status:string}|null}[]};
@@ -18,19 +19,22 @@ export function EngagementJourney({institutionId,quoteScope,optionalServices}:{i
   const [selected,setSelected]=useState(""),[runs,setRuns]=useState<Run[]>([]),[checkout,setCheckout]=useState<string|null>(null);
   const requestRef=useRef(crypto.randomUUID());
   const optionalServiceKey=optionalServices.join("|");
-  useEffect(()=>{requestRef.current=crypto.randomUUID();},[contractId,quoteScope.primaryPairCount,quoteScope.linkedPartyCount,quoteScope.sellerProposedConsiderationMinor,quoteScope.aggregateProgrammeConsiderationMinor,optionalServiceKey]);
+  function clearSelectedEngagement(){setSelected("");setRuns([]);setCheckout(null);setAccepted(false);setAuthority(false);setMandate(false);setRoute("COMMITTED");setCode("");setError("");setMessage("");}
+  useEffect(()=>{requestRef.current=crypto.randomUUID();clearSelectedEngagement();},[quoteScope.primaryPairCount,quoteScope.linkedPartyCount,quoteScope.sellerProposedConsiderationMinor,quoteScope.aggregateProgrammeConsiderationMinor,optionalServiceKey]);
   const current=engagements.find(e=>e.id===selected);
-  const field=(key:keyof typeof form,value:string)=>{requestRef.current=crypto.randomUUID();setForm(f=>({...f,[key]:value}));};
+  const field=(key:keyof typeof form,value:string)=>{requestRef.current=crypto.randomUUID();setForm(f=>({...f,[key]:value}));clearSelectedEngagement();};
   async function load(){const [overview,list]=await Promise.all([vget<{contracts:Contract[]}>(`${base}/customer-operations/overview`),vget<Engagement[]>(`${base}/engagements`)]);setContracts(overview.contracts.filter(c=>c.status==="ACTIVE_SHADOW"));setEngagements(list);}
   useEffect(()=>{let alive=true;Promise.all([vget<{contracts:Contract[]}>(`${base}/customer-operations/overview`),vget<Engagement[]>(`${base}/engagements`)]).then(([overview,list])=>{if(alive){setContracts(overview.contracts.filter(c=>c.status==="ACTIVE_SHADOW"));setEngagements(list);}}).catch(e=>{if(alive)setError(userFacingError(e,"We couldn’t load your engagements. Refresh the page or try again."));});return()=>{alive=false;};},[base]);
-  useEffect(()=>{setRuns([]);setCheckout(null);setAccepted(false);setAuthority(false);if(!selected)return;let alive=true;vget<Run[]>(`${base}/engagements/${selected}/runs`).then(r=>{if(alive)setRuns(r);}).catch(e=>{if(alive)setError(userFacingError(e,"We couldn’t load this engagement’s progress. Try again."));});return()=>{alive=false;};},[base,selected]);
+  useEffect(()=>{setRuns([]);setCheckout(null);setAccepted(false);setAuthority(false);setMandate(false);setRoute("COMMITTED");setCode("");setError("");setMessage("");if(!selected)return;let alive=true;vget<Run[]>(`${base}/engagements/${selected}/runs`).then(r=>{if(alive)setRuns(r);}).catch(e=>{if(alive)setError(userFacingError(e,"We couldn’t load this engagement’s progress. Try again."));});return()=>{alive=false;};},[base,selected]);
   async function act(fn:()=>Promise<void>){setBusy(true);setError("");setMessage("");try{await fn();await load();}catch(e){setError(userFacingError(e,"We couldn’t complete this step. Your saved engagement is unchanged; review the details and try again."));}finally{setBusy(false);setCode("");}}
   async function proof(purpose:string){return requestTotpStepUp({code,purpose,institutionId});}
   const stage=current?.route?"PREPARATION":"INITIAL";
+  const formValid=Boolean(contractId&&form.bookRef.trim()&&form.asOfDate&&form.legalName.trim()&&/^\S+@\S+\.\S+$/.test(form.billingEmail)&&form.address.trim()&&/^\d{2}$/.test(form.stateCode)&&/^\d{6}$/.test(form.postalCode)&&(form.gstRegistration!=="REGISTERED"||/^[0-9A-Z]{15}$/i.test(form.gstin)));
   return <section className="engagement-journey"><h2>Start an engagement</h2><p>Save your billing details and book scope, review the complete quote, then accept with your authorised login.</p>
     <p className="assessment-notice">Test workspace: Razorpay test payments and shadow invoices. No live payment is requested here.</p>
+    <FeedbackBanner error={error} success={message}/>
     <fieldset disabled={busy} className="journey-form"><legend>Organisation and book</legend>
-      <label>Accepted agreement<select value={contractId} onChange={e=>setContractId(e.target.value)}><option value="">Select your agreement</option>{contracts.map(c=><option key={c.id} value={c.id}>{c.contractRef}</option>)}</select></label>
+      <label>Accepted agreement<select value={contractId} onChange={e=>{requestRef.current=crypto.randomUUID();setContractId(e.target.value);clearSelectedEngagement();}}><option value="">Select your agreement</option>{contracts.map(c=><option key={c.id} value={c.id}>{c.contractRef}</option>)}</select></label>
       <label>Book reference<input maxLength={160} value={form.bookRef} onChange={e=>field("bookRef",e.target.value)}/></label>
       <label>Asset family<select value={form.assetFamily} onChange={e=>field("assetFamily",e.target.value)}>{[["VEHICLE_EV","EV vehicles"],["VEHICLE_OTHER","Other vehicles"],["HOUSING","Housing"],["GOLD","Gold-backed loans"],["EDUCATION","Education"],["MSME","MSME"],["OTHER","Other—scope review"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
       <label>Book as-of date<input type="date" value={form.asOfDate} onChange={e=>field("asOfDate",e.target.value)}/></label>
@@ -42,7 +46,8 @@ export function EngagementJourney({institutionId,quoteScope,optionalServices}:{i
       <label>GST registration<select value={form.gstRegistration} onChange={e=>field("gstRegistration",e.target.value)}><option value="REGISTERED">Registered</option><option value="UNREGISTERED">Unregistered</option></select></label>
       {form.gstRegistration==="REGISTERED"&&<label>GSTIN<input maxLength={15} value={form.gstin} onChange={e=>field("gstin",e.target.value)}/></label>}
     </fieldset>
-    <button className="btn btn-primary" disabled={busy||!contractId} onClick={()=>void act(async()=>{const result=await vpost<Engagement>(`${base}/engagements`,{contractId,requestRef:requestRef.current,...quoteScope,bookRef:form.bookRef,assetFamily:form.assetFamily,asOfDate:form.asOfDate,billingProfile:form,optionalServices});setSelected(result.id);setMessage("Quote saved. Review the amounts and terms before accepting.");})}>Save scope and obtain quote</button>
+    {!formValid&&<p className="meta">Complete the agreement, book reference, as-of date, billing contact and address. Use a two-digit state code, six-digit postal code and, where registered, a 15-character GSTIN.</p>}
+    <button className="btn btn-primary" disabled={busy||!formValid} onClick={()=>void act(async()=>{const result=await vpost<Engagement>(`${base}/engagements`,{contractId,requestRef:requestRef.current,...quoteScope,bookRef:form.bookRef,assetFamily:form.assetFamily,asOfDate:form.asOfDate,billingProfile:form,optionalServices});setSelected(result.id);setMessage("Quote saved. Review the amounts and terms before accepting.");})}>Save scope and obtain quote</button>
     <h2>Your engagements</h2><label>Choose a book<select value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Choose an engagement</option>{engagements.map(e=><option key={e.id} value={e.id}>{e.scope.bookRef} — {e.status.replaceAll("_"," ")}</option>)}</select></label>
     {current&&<><table><caption>Accepted-scope stage pricing</caption><thead><tr><th>Stage</th><th>Fee</th><th>Tax</th><th>Total</th></tr></thead><tbody>{[["Initial Assessment",current.quote.initial],["Preparation: execute with us",current.quote.committedPreparation],["Preparation: standalone",current.quote.standalonePreparation]].map(([label,p])=>{const price=p as Price;return <tr key={label as string}><th>{label as string}</th><td>{money(price.baseMinor)}</td><td>{money(price.taxMinor)}</td><td>{money(price.totalMinor)}</td></tr>;})}</tbody></table>
       <p>Billing details saved with this quote: <strong>{current.billingProfile.legalName}</strong>, {current.billingProfile.address}; {current.billingProfile.billingEmail}. Editing the form above requires saving a new quote.</p>
@@ -57,6 +62,5 @@ export function EngagementJourney({institutionId,quoteScope,optionalServices}:{i
       {!current.route&&runs.some(r=>r.stage==="INITIAL"&&r.status==="AUTO_RELEASED")&&<><h2>Choose Portfolio Preparation</h2><p>This is the first stage with qualified expert review and sign-off.</p><label>Preparation route<select value={route} onChange={e=>setRoute(e.target.value)}><option value="COMMITTED">Execute with AssureRail</option><option value="STANDALONE">Standalone preparation</option></select></label>{route==="COMMITTED"&&<label><input type="checkbox" checked={mandate} onChange={e=>setMandate(e.target.checked)}/> I accept the execution mandate and the 30% same-scope top-up only for voluntary switch or withdrawal. Failed closing alone does not trigger it.</label>}<button className="btn" disabled={busy||code.length!==6||(route==="COMMITTED"&&!mandate)} onClick={()=>void act(async()=>{await vpost(`${base}/engagements/${current.id}/preparation`,{route,quoteDigest:current.quoteDigest,mandateAndTopUpAccepted:mandate,stepUpEvidenceId:await proof("ENGAGEMENT_PREPARATION_ACCEPT")});})}>Accept preparation quote</button></>}
       </>}
     </>}
-    {error&&<p role="alert">{error}</p>}{message&&<p role="status">{message}</p>}
   </section>;
 }

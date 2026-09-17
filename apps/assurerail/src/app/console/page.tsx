@@ -6,6 +6,7 @@ import { vget, vpost, vdownload, inr, shortDid, grp, shortIN } from "@/lib/venue
 import { useAuth } from "@/lib/auth-context";
 import { VenueHeader } from "@/components/VenueHeader";
 import { userFacingError } from "@/lib/user-facing-error";
+import { FeedbackBanner } from "@/components/FeedbackBanner";
 
 type Note = {
   id: string;
@@ -154,17 +155,16 @@ export default function Console() {
     <>
       <VenueHeader />
 
-      <main className="wrap">
+      <main className="wrap" aria-busy={busy !== ""}>
         <div className="console-head">
           <h1>Venue console</h1>
           <p>Take a verified loan pool through its whole life: mint a compliance-gated Note, run tamper-evident surveillance, trade it with atomic DvP, and redeem it (burning the tokens). DEMO adapters — the flow, gates and records are real; no live ledger or money moves yet.</p>
         </div>
 
-        {err && <div className="msg err">{err}</div>}
-        {ok && <div className="msg ok">{ok}</div>}
+        <FeedbackBanner error={err} success={ok} />
 
         <div className="bar">
-          <input className="field" value={pool} onChange={(e) => setPool(e.target.value)} placeholder="pool id" />
+          <label className="lbl">Pool ID<input className="field" value={pool} onChange={(e) => setPool(e.target.value)} /></label>
           <button className="btn btn-primary" disabled={busy !== ""} onClick={() => void act("demo", async () => { await vpost(`/venue/demo/run/${encodeURIComponent(pool.trim())}`); await load(); }, "Simulated the full lifecycle → mint → surveillance → a sample DvP")}>{busy === "demo" ? "Running…" : "Simulate full lifecycle →"}</button>
           <button className="btn" disabled={busy !== ""} onClick={() => void act("mint", async () => { await vpost(`/venue/mint/${encodeURIComponent(pool.trim())}`); await load(); }, "Minted")}>Mint only</button>
         </div>
@@ -174,7 +174,7 @@ export default function Console() {
             <p className="lbl" style={{ marginBottom: 8 }}>Portfolio ({notes.length})</p>
             <div className="notes">
               {notes.map((n) => (
-                <button key={n.id} className={`note-card ${n.id === sel ? "sel" : ""}`} onClick={() => void open(n.id)}>
+                <button key={n.id} className={`note-card ${n.id === sel ? "sel" : ""}`} aria-pressed={n.id === sel} onClick={() => void open(n.id)}>
                   <div className="tid">{n.tokenId}</div>
                   <div className="meta">{n.poolId} · {inr(n.t1Aggregates?.mintableMinor)}</div>
                   <span className={`pill ${n.state === "ACTIVE" ? "active" : n.state === "REDEEMED" ? "redeemed" : "issued"}`}>{n.state}</span>

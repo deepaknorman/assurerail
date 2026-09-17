@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { userFacingError } from "@/lib/user-facing-error";
+import { FeedbackBanner } from "@/components/FeedbackBanner";
 
 export default function Onboard() {
-  const { firebaseUser, venueUser, needsOnboarding, loading, error, onboard, logout } = useAuth();
+  const { firebaseUser, venueUser, needsOnboarding, loading, error, clearError, onboard, logout } = useAuth();
   const router = useRouter();
   const [did, setDid] = useState("");
   const [busy, setBusy] = useState(false);
@@ -19,7 +20,8 @@ export default function Onboard() {
     else if (venueUser && !needsOnboarding) router.replace("/institutions");
   }, [loading, firebaseUser, venueUser, needsOnboarding, router]);
 
-  async function submit() {
+  async function submit(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
     setBusy(true);
     setErr("");
     try {
@@ -38,7 +40,7 @@ export default function Onboard() {
         <div className="wrap row">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <Link href="/"><img src="/logo.svg" alt="AssureRail" className="brand-logo" /></Link>
-          <nav><button className="linkish" onClick={() => logout()}>Sign out</button></nav>
+          <nav><button className="linkish" type="button" onClick={() => logout()}>Sign out</button></nav>
         </div>
       </header>
 
@@ -46,13 +48,15 @@ export default function Onboard() {
         <div className="auth-card">
           <h1>Verify your identity</h1>
           <p className="auth-sub">Bind a verified identity before applying for or joining an institution. AssureLocker DigiKYC is the first configured provider; identity binding alone grants no participant or route access.</p>
-          {(err || error) && <div className="msg err">{err || error}</div>}
+          <FeedbackBanner error={err || error} id="onboarding-feedback" />
 
-          <label className="lbl">
-            Provider subject / AssureLocker DID <span className="opt">(optional in sandbox)</span>
-            <input className="field" placeholder="Provider subject reference" value={did} onChange={(e) => setDid(e.target.value)} />
-          </label>
-          <button className="btn btn-primary" disabled={busy} onClick={submit}>{busy ? "Binding…" : "Bind identity"}</button>
+          <form className="auth-form" onSubmit={submit} aria-busy={busy}>
+            <label className="lbl">
+              Provider subject / AssureLocker DID <span className="opt">(optional in sandbox)</span>
+              <input className="field" placeholder="Provider subject reference" value={did} onChange={(e) => { setDid(e.target.value); setErr(""); clearError(); }} />
+            </label>
+            <button className="btn btn-primary" type="submit" disabled={busy} aria-busy={busy}>{busy ? "Binding identity…" : "Bind identity"}</button>
+          </form>
 
           <p className="auth-fine">Signed in as {venueUser?.email ?? firebaseUser?.email ?? "…"}.</p>
         </div>

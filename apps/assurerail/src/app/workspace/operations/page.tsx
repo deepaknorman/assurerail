@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
@@ -9,6 +9,7 @@ import { customerOperationsEnabled } from "@/lib/customer-workspace";
 import { requestTotpStepUp } from "@/lib/institutions";
 import { vget, vpost } from "@/lib/venue";
 import { userFacingError } from "@/lib/user-facing-error";
+import { useScopedResource } from "@/lib/use-scoped-resource";
 
 type FeeRule = { id: string; transactionRoute: string; representation: string; lifecycleLeg: string; metric: string; feeBasis: string; rateValue: string; minimumFeeMinor: string | null; maximumFeeMinor: string | null };
 type RateCard = { id: string; version: number; status: string; effectiveAt: string; expiresAt: string; feeRules: FeeRule[] };
@@ -19,6 +20,7 @@ type Message = { id: string; authorType: string; body: string; createdAt: string
 type ServiceRequest = { id: string; requestRef: string; transactionCaseId: string | null; requestType: string; priority: string; subject: string; description: string; status: string; slaDueAt: string; escalationLevel: number; messages: Message[] };
 type Review = { id: string; periodStart: string; periodEnd: string; serviceMetrics: unknown; openItems: unknown; status: string };
 type Overview = { institutionId: string; pricingChangesAuthority: false; transactionAuthorityAffected: false; contracts: Contract[]; cohorts: Cohort[]; serviceRequests: ServiceRequest[]; operationalReviews: Review[]; exitExports: Array<{ id: string; highWaterAt: string; manifestDigest: string }> };
+const emptyRequest = { requestRef: "", requestType: "GENERAL_OPERATIONS", priority: "NORMAL", transactionCaseId: "", subject: "", description: "" };
 
 const dateLabel = (value: string) => new Date(value).toLocaleString("en-IN");
 function money(minor: string, scale: number, currency: string): string {
@@ -36,47 +38,72 @@ function rateLabel(rule: FeeRule): string {
 export default function CustomerOperationsPage() {
   const router = useRouter();
   const { loading, firebaseUser, needsOnboarding, activeInstitutionId } = useAuth();
-  const [overview, setOverview] = useState<Overview | null>(null);
-  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState("");
   const [totp, setTotp] = useState("");
-  const [request, setRequest] = useState({ requestRef: "", requestType: "GENERAL_OPERATIONS", priority: "NORMAL", transactionCaseId: "", subject: "", description: "" });
+  const [request, setRequest] = useState(emptyRequest);
+  const activeScope = useRef(activeInstitutionId);
+  activeScope.current = activeInstitutionId;
   const enabled = customerOperationsEnabled();
   const root = activeInstitutionId ? `/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}/customer-operations` : "";
 
   const load = useCallback(async () => {
-    if (!activeInstitutionId || !enabled) return;
-    try { setOverview(await vget<Overview>(`${root}/overview`)); setError(""); }
-    catch (cause) { setOverview(null); setError(userFacingError(cause, "We couldn’t load service operations. Refresh the page or try again.")); }
+    if (!activeInstitutionId || !enabled) throw new Error("Institution context is required");
+    return vget<Overview>(`${root}/overview`);
   }, [activeInstitutionId, enabled, root]);
+  const resource = useScopedResource({
+    scopeKey: activeInstitutionId,
+    enabled: enabled && !!firebaseUser,
+    loader: load,
+    errorFallback: "We couldn’t load service operations. Refresh the page or try again.",
+  });
+  const overview = resource.data;
 
   useEffect(() => { if (!loading && !firebaseUser) router.replace("/login"); else if (!loading && needsOnboarding) router.replace("/onboard"); }, [loading, firebaseUser, needsOnboarding, router]);
-  useEffect(() => { if (firebaseUser && activeInstitutionId && enabled) void load(); }, [firebaseUser, activeInstitutionId, enabled, load]);
+  useEffect(() => {
+    setActionError("");
+    setNotice("");
+    setBusy("");
+    setTotp("");
+    setRequest(emptyRequest);
+  }, [activeInstitutionId]);
 
   async function governed(key: string, purpose: string, path: string, body: Record<string, unknown>) {
     if (!activeInstitutionId) return;
-    setBusy(key); setError(""); setNotice("");
+    const operationScope = activeInstitutionId;
+    setBusy(key); setActionError(""); setNotice("");
     try {
-      const stepUpEvidenceId = await requestTotpStepUp({ code: totp, purpose, institutionId: activeInstitutionId });
+      const stepUpEvidenceId = await requestTotpStepUp({ code: totp, purpose, institutionId: operationScope });
+      if (activeScope.current !== operationScope) return;
       await vpost(path, { ...body, stepUpEvidenceId });
+      if (activeScope.current !== operationScope) return;
       setNotice("The governed shadow record was saved. No transaction authority, legal record or completion state changed.");
-      await load();
-    } catch (cause) { setError(userFacingError(cause, "We couldn’t save this operations action. Check the details and authenticator code, then try again.")); }
-    finally { setBusy(""); }
+      await resource.refresh();
+    } catch (cause) {
+      if (activeScope.current === operationScope) setActionError(userFacingError(cause, "We couldn’t save this operations action. Check the details and authenticator code, then try again."));
+    } finally {
+      if (activeScope.current === operationScope) { setBusy(""); setTotp(""); }
+    }
   }
 
   async function exportData() {
     if (!activeInstitutionId) return;
-    setBusy("export"); setError(""); setNotice("");
+    const operationScope = activeInstitutionId;
+    setBusy("export"); setActionError(""); setNotice("");
     try {
-      const stepUpEvidenceId = await requestTotpStepUp({ code: totp, purpose: "CUSTOMER_EXIT_EXPORT", institutionId: activeInstitutionId });
+      const stepUpEvidenceId = await requestTotpStepUp({ code: totp, purpose: "CUSTOMER_EXIT_EXPORT", institutionId: operationScope });
+      if (activeScope.current !== operationScope) return;
       const result = await vpost<unknown>(`${root}/exit-exports`, { stepUpEvidenceId });
+      if (activeScope.current !== operationScope) return;
       const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: "application/json" }));
-      const anchor = document.createElement("a"); anchor.href = url; anchor.download = `assurerail-customer-exit-${activeInstitutionId}.json`; anchor.click(); URL.revokeObjectURL(url);
-      setNotice("A digest-bound customer exit package was generated. Secrets and document bytes are excluded."); await load();
-    } catch (cause) { setError(userFacingError(cause, "We couldn’t prepare the export. Try again.")); }
-    finally { setBusy(""); }
+      const anchor = document.createElement("a"); anchor.href = url; anchor.download = `assurerail-customer-exit-${operationScope}.json`; anchor.click(); URL.revokeObjectURL(url);
+      setNotice("A digest-bound customer exit package was generated. Secrets and document bytes are excluded."); await resource.refresh();
+    } catch (cause) {
+      if (activeScope.current === operationScope) setActionError(userFacingError(cause, "We couldn’t prepare the export. Try again."));
+    } finally {
+      if (activeScope.current === operationScope) { setBusy(""); setTotp(""); }
+    }
   }
 
   return <><VenueHeader/><main className="wrap institutional-page customer-workspace">
@@ -85,7 +112,8 @@ export default function CustomerOperationsPage() {
     <div className="boundary-note">Pricing and customer-service records are operational metadata only. They cannot grant route permission, alter evidence truth, establish ownership, close a reconciliation break or complete a transaction.</div>
     {!enabled && <div className="msg err" role="alert">Customer operations are disabled in this build. The backend and UI flags must both be explicitly set to shadow.</div>}
     {!activeInstitutionId && <div className="msg err">Select an admitted institution before opening customer operations.</div>}
-    {error && <div className="msg err" role="alert">{error}</div>}{notice && <div className="msg ok">{notice}</div>}
+    {resource.status === "loading" && activeInstitutionId && !overview && <div className="msg" role="status">Loading this institution’s service operations…</div>}
+    {(resource.error || actionError) && <div className="msg err" role="alert">{actionError || resource.error}</div>}{notice && <div className="msg ok">{notice}</div>}
     {enabled && overview && <>
       <section className="workspace-hero"><div><span className="workspace-label">Contracts</span><strong>{overview.contracts.length}</strong><small>Versioned and effective-dated</small></div><div><span className="workspace-label">Cohorts</span><strong>{overview.cohorts.length}</strong><small>Replay/shadow only</small></div><div><span className="workspace-label">Service requests</span><strong>{overview.serviceRequests.filter((item) => item.status !== "CLOSED").length}</strong><small>Open or active</small></div><div><span className="workspace-label">Transaction authority</span><strong>None</strong><small>Commercial boundary enforced</small></div></section>
       <section className="panel"><h2 className="section-title">Governed customer action</h2><label className="lbl">Authenticator code<input className="field" inputMode="numeric" autoComplete="one-time-code" value={totp} onChange={(event) => setTotp(event.target.value.replace(/\D/g, "").slice(0, 8))}/></label><p className="meta">Every mutation consumes single-use, purpose-bound step-up evidence. The API also checks active membership and the exact mandate.</p></section>

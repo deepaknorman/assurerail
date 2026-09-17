@@ -137,6 +137,8 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
 .auth-sub { color: var(--arail-text-secondary); font-size: 14px; margin: 0 0 4px; }
 .auth-card .field { padding: 10px 12px; font-size: 14px; }
 .auth-card .btn { justify-content: center; padding: 11px 16px; }
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-guidance { margin: -5px 0 0; color: var(--arail-text-secondary); font-size: 12px; line-height: 1.5; }
 .btn-google { background: var(--arail-bg-raised); border: 1px solid var(--arail-border-strong); color: var(--arail-text-primary); }
 .auth-or { display: flex; align-items: center; gap: 12px; color: var(--arail-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; }
 .auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--arail-border-subtle); }
@@ -241,7 +243,7 @@ h1, h2, h3, h4 { font-family: var(--arail-font-display); font-weight: 700; margi
 
 /* ── settings ── */
 .set-section { border: 1px solid var(--arail-border-subtle); border-radius: var(--arail-radius-md, 12px); padding: 22px; background: var(--arail-bg-surface); margin-bottom: 18px; }
-.set-section h3 { font-size: 16px; margin: 0 0 4px; }
+.set-section h2, .set-section h3 { font-size: 16px; margin: 0 0 4px; }
 .set-section > p { font-size: 13px; color: var(--arail-text-secondary); margin: 0 0 16px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 0; border-top: 1px solid var(--arail-border-subtle); flex-wrap: wrap; }
 .set-row .sr-label { font-size: 14px; color: var(--arail-text-primary); }

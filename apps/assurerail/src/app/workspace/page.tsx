@@ -1,50 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { VenueHeader } from "@/components/VenueHeader";
 import { useAuth } from "@/lib/auth-context";
 import { type InstitutionWorkspace } from "@/lib/institutions";
 import { activeMandateActions, availability, customerWorkspaceEnabled, enterpriseIntegrationEnabled, guidedJourneyEnabled, hostedAlphaEnabled, hostedAlphaTaskTone, institutionalProductEnabled, primaryVenueProductEnabled, secondaryProductEnabled, tokenisedProductEnabled, type Availability, type HostedAlphaTaskResponse } from "@/lib/customer-workspace";
 import { vget } from "@/lib/venue";
-import { userFacingError } from "@/lib/user-facing-error";
+import { useScopedResource } from "@/lib/use-scoped-resource";
 
 type CaseRow = { id: string; caseReference: string; transactionRoute: string; representation: string; assetClass: string; operatingMode: string; status: string; aggregateVersion: number; updatedAt: string };
 type Opportunity = { id: string; transactionCaseId: string; opportunityReference: string; ownerInstitutionId: string; status: string; currentTermVersion: number; closesAt: string | null; transactionCase: { transactionRoute: string; representation: string; assetClass: string; operatingMode: string } };
+type WorkspaceData = {
+  institution: InstitutionWorkspace;
+  cases: Availability<CaseRow[]>;
+  opportunities: Availability<Opportunity[]>;
+  tasks: Availability<HostedAlphaTaskResponse>;
+};
 
 export default function CustomerWorkspacePage() {
   const router = useRouter();
   const { loading, firebaseUser, venueUser, needsOnboarding, activeInstitutionId } = useAuth();
-  const [institution, setInstitution] = useState<InstitutionWorkspace | null>(null);
-  const [cases, setCases] = useState<Availability<CaseRow[]>>({ status: "UNAVAILABLE", reason: "Not loaded" });
-  const [opportunities, setOpportunities] = useState<Availability<Opportunity[]>>({ status: "UNAVAILABLE", reason: "Not loaded" });
-  const [tasks, setTasks] = useState<Availability<HostedAlphaTaskResponse>>({ status: "UNAVAILABLE", reason: "Not loaded" });
-  const [error, setError] = useState("");
   const enabled = customerWorkspaceEnabled();
 
-  const load = useCallback(async () => {
-    if (!activeInstitutionId) return;
-    setError("");
-    try {
-      const [workspace, caseResult, opportunityResult, taskResult] = await Promise.all([
-        vget<InstitutionWorkspace>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}`),
-        Promise.allSettled([vget<CaseRow[]>("/v1/rail/cases")]).then(([result]) => availability(result)),
-        Promise.allSettled([vget<Opportunity[]>("/v1/rail/commercial/opportunities")]).then(([result]) => availability(result)),
-        hostedAlphaEnabled()
-          ? Promise.allSettled([vget<HostedAlphaTaskResponse>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}/hosted-alpha/tasks`)]).then(([result]) => availability(result))
-          : Promise.resolve<Availability<HostedAlphaTaskResponse>>({ status: "UNAVAILABLE", reason: "Hosted alpha disabled" }),
-      ]);
-      setInstitution(workspace); setCases(caseResult); setOpportunities(opportunityResult); setTasks(taskResult);
-    } catch (cause) { setError(userFacingError(cause, "We couldn’t load your workspace. Refresh the page or try again.")); }
+  const load = useCallback(async (): Promise<WorkspaceData> => {
+    if (!activeInstitutionId) throw new Error("Institution context is required");
+    const [institution, cases, opportunities, tasks] = await Promise.all([
+      vget<InstitutionWorkspace>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}`),
+      Promise.allSettled([vget<CaseRow[]>("/v1/rail/cases")]).then(([result]) => availability(result)),
+      Promise.allSettled([vget<Opportunity[]>("/v1/rail/commercial/opportunities")]).then(([result]) => availability(result)),
+      hostedAlphaEnabled()
+        ? Promise.allSettled([vget<HostedAlphaTaskResponse>(`/v1/rail/institutions/${encodeURIComponent(activeInstitutionId)}/hosted-alpha/tasks`)]).then(([result]) => availability(result))
+        : Promise.resolve<Availability<HostedAlphaTaskResponse>>({ status: "UNAVAILABLE", reason: "Hosted alpha disabled" }),
+    ]);
+    return { institution, cases, opportunities, tasks };
   }, [activeInstitutionId]);
+
+  const resource = useScopedResource({
+    scopeKey: activeInstitutionId,
+    enabled: enabled && !!firebaseUser,
+    loader: load,
+    errorFallback: "We couldn’t load your workspace. Refresh the page or try again.",
+  });
+  const institution = resource.data?.institution ?? null;
+  const cases = resource.data?.cases ?? { status: "UNAVAILABLE" as const, reason: "Loading" };
+  const opportunities = resource.data?.opportunities ?? { status: "UNAVAILABLE" as const, reason: "Loading" };
+  const tasks = resource.data?.tasks ?? { status: "UNAVAILABLE" as const, reason: "Loading" };
 
   useEffect(() => {
     if (loading) return;
     if (!firebaseUser) router.replace("/login");
     else if (needsOnboarding) router.replace("/onboard");
   }, [loading, firebaseUser, needsOnboarding, router]);
-  useEffect(() => { if (enabled && firebaseUser && activeInstitutionId) void load(); }, [enabled, firebaseUser, activeInstitutionId, load]);
 
   const currentMember = institution?.institution.members.find((item) => item.userId === venueUser?.id && item.status === "ACTIVE");
   const mandateActions = useMemo(() => activeMandateActions(currentMember?.mandates ?? []), [currentMember]);
@@ -54,7 +62,8 @@ export default function CustomerWorkspacePage() {
     <div className="console-head"><p className="eyebrow">Institution workspace · shadow</p><h1>{institution?.institution.legalName ?? "Customer workspace"}</h1><p>One institution-scoped view of onboarding, opportunities, diligence, cases and completion evidence. Visibility never grants authority; the API rechecks active membership, mandate, appointment, case role and route entitlement for every action.</p></div>
     {!enabled && <div className="msg err" role="alert">Customer workspace is disabled. Set NEXT_PUBLIC_ASSURERAIL_CUSTOMER_WORKSPACE_V1=shadow only in an approved replay/shadow build.</div>}
     {!activeInstitutionId && <div className="msg err">Select an admitted institution before opening its workspace.</div>}
-    {error && <div className="msg err" role="alert">{error}</div>}
+    {resource.status === "loading" && activeInstitutionId && <div className="msg" role="status">Loading this institution’s workspace…</div>}
+    {resource.error && <div className="msg err" role="alert">{resource.error}</div>}
     {enabled && institution && <>
       {guidedJourneyEnabled() && <section className="panel hosted-alpha-summary"><div className="workspace-module-head"><div><span className="workspace-step">START</span><h2>Guided replay or shadow setup</h2></div><Link className="btn btn-primary" href="/workspace/start">Choose the route</Link></div><p>Translate your institution, transaction route and proof objective into a visible readiness path. The guide does not create authority or submit a transaction.</p></section>}
       <section className="workspace-hero" aria-label="Institution authority summary">
