@@ -11,6 +11,7 @@ type AssessmentAnalysis = {
   inputDigest?: string;
   usage?: unknown;
   findings?: { evidenceVersionId: string; locator: string; quote: string }[];
+  documentExtractions?: { fields?: { citations?: { evidenceVersionId:string;locator:string;quote:string }[] }[] }[];
 };
 
 type AssessmentException = { evidenceVersionId: string; locator: string; code: string };
@@ -58,11 +59,13 @@ export function createInitialAssessmentReceipt(input: {
   env?: NodeJS.ProcessEnv;
 }) {
   const findings = input.analysis.findings ?? [];
+  const fieldCitations=(input.analysis.documentExtractions??[]).flatMap(document=>document.fields??[]).flatMap(field=>field.citations??[]);
+  const groundedCitations=[...findings.map(finding=>({evidenceVersionId:finding.evidenceVersionId,locator:finding.locator,quote:finding.quote})),...fieldCitations];
   const aiExecuted = ["openai", "gemini"].includes(input.analysis.provider);
   const hasPageEvidence = input.sources.some((source) => /^page:[1-9][0-9]*$/.test(source.locator));
   const checks: AiReceiptCheck[] = [
     { code: "SOURCE_DIGESTS_VERIFIED", status: "PASS", evidenceDigest: sha256Digest(input.sources.map((source) => ({ evidenceVersionId: source.evidenceVersionId, digest: source.digest }))) },
-    { code: "CITATIONS_GROUNDED", status: aiExecuted ? "PASS" : "NOT_RUN", evidenceDigest: aiExecuted ? sha256Digest(findings.map((finding) => ({ evidenceVersionId: finding.evidenceVersionId, locator: finding.locator, quote: finding.quote }))) : null },
+    { code: "CITATIONS_GROUNDED", status: aiExecuted ? "PASS" : "NOT_RUN", evidenceDigest: aiExecuted ? sha256Digest(groundedCitations) : null },
     { code: "LOAN_TAPE_COUNT_RECONCILIATION", status: input.dataQuality.status === "MATCHED" ? "PASS" : "FAIL", evidenceDigest: sha256Digest({ status: input.dataQuality.status }) },
     { code: "PAGE_EXTRACTION_COVERAGE", status: !hasPageEvidence ? "NOT_RUN" : input.exceptions.some((entry) => entry.code === "OCR_REQUIRED") ? "FAIL" : "PASS", evidenceDigest: sha256Digest(input.exceptions.map((entry) => ({ evidenceVersionId: entry.evidenceVersionId, locator: entry.locator, code: entry.code }))) },
     { code: "AI_EXECUTED", status: aiExecuted ? "PASS" : "NOT_RUN", evidenceDigest: null },
@@ -87,7 +90,7 @@ export function createInitialAssessmentReceipt(input: {
     inputDigest: input.analysis.inputDigest,
     analysisOutput: input.analysis,
     sources: input.sources.map((source) => ({ evidenceVersionId: source.evidenceVersionId, digest: source.digest, locator: source.locator, characterCount: source.text.length })),
-    citations: findings.map((finding) => ({ evidenceVersionId: finding.evidenceVersionId, locator: finding.locator, quoteDigest: sha256Digest(finding.quote), quoteCharacterCount: finding.quote.length })),
+    citations: groundedCitations.map((citation) => ({ evidenceVersionId: citation.evidenceVersionId, locator: citation.locator, quoteDigest: sha256Digest(citation.quote), quoteCharacterCount: citation.quote.length })),
     abstentions,
     deterministicChecks: checks,
     corrections: ocrCorrections(input.ocrProvenance),

@@ -8,6 +8,8 @@ dist/
 *.swp
 *.swo
 *.log
+__pycache__/
+*.py[cod]
 
 # Secrets and local configuration
 .env

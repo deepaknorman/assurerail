@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import {createHash,createHmac} from "node:crypto";
 import {acceptedPricing,billingProfile,paidStageReadiness} from "./engagement-workflow";
 import {capturedPaymentAmount,RazorpayAdapter,validatePaymentLink,verifyRazorpayWebhook} from "./razorpay.adapter";
-import {validateFindings} from "./document-analysis";
-import {extractAndValidateOcr,structuredDocumentCall,validateOcrPages} from "./ocr.adapter";
+import {validateDocumentExtractions,validateFindings} from "./document-analysis";
+import {extractAndValidateOcr,modelTierConfiguration,structuredDocumentCall,validateOcrPages} from "./ocr.adapter";
 import {validateBankFile,validateBankAcknowledgement,sftpArgs,type BankFileConfig} from "../integrations/bank-file.adapter";
 import {escrowInstruction,reconcileEscrow} from "../settlement/escrow-settlement-contract";
 import {loanTapeMetrics} from "./loan-tape-metrics";
@@ -22,6 +22,8 @@ test("Initial Assessment outcome is automated, conservative and never an expert 
  assert.equal(automatedInitialOutcome({...good,analysis:{provider:"openai",findings:[{severity:"CRITICAL"}]}}),"FIX_AND_REASSESS");
  assert.equal(automatedInitialOutcome({...good,analysis:{provider:"DISABLED",findings:[]}}),"AUTOMATED_ANALYSIS_INCOMPLETE");
  assert.equal(automatedInitialOutcome({...good,analysis:{provider:"NOT_RUN",findings:[]}}),"AUTOMATED_ANALYSIS_INCOMPLETE");
+ assert.equal(automatedInitialOutcome({...good,documentInventory:{status:"EXCEPTIONS"}}),"FIX_AND_REASSESS");
+ assert.equal(automatedInitialOutcome({...good,loanReconciliation:{status:"EXCEPTIONS"}}),"FIX_AND_REASSESS");
  assert.equal(automatedInitialOutcome({...good,assetFamily:"OTHER"}),"OUTSIDE_CURRENT_SCOPE");
 });
 
@@ -57,8 +59,24 @@ test("AI findings need exact text at the cited document and location",()=>{
  const source={evidenceVersionId:"v1",digest:"sha256:x",locator:"page:1",text:"Insurance expires on 2026-01-01."};const finding={category:"DOCUMENTATION",severity:"HIGH",description:"Check insurance renewal",evidenceVersionId:"v1",locator:"page:1",quote:"Insurance expires"};assert.equal(validateFindings({findings:[finding]},[source]).length,1);
  for(const change of [{quote:"Insurance is valid"},{evidenceVersionId:"other"},{locator:"page:2"}])assert.throws(()=>validateFindings({findings:[{...finding,...change}]},[source]),/CITATION/);
 });
+test("AI document fields preserve evidence states and exact same-document citations",()=>{
+ const source={evidenceVersionId:"v1",evidenceType:"LOAN_AGREEMENT",digest:"sha256:x",locator:"page:2",text:"Loan amount INR 500,000 for account EV-001."};
+ const field={fieldPath:"$.facility.sanctioned_amount",valueState:"observed",values:["INR 500,000"],citations:[{evidenceVersionId:"v1",locator:"page:2",quote:"INR 500,000"}]};
+ const output={documents:[{evidenceVersionId:"v1",documentType:"LOAN_AGREEMENT",fields:[field]}]};assert.equal(validateDocumentExtractions(output,[source]).length,1);
+ assert.throws(()=>validateDocumentExtractions({documents:[{...output.documents[0],fields:[{...field,valueState:"observed",citations:[]}]}]},[source]),/FIELD_STATE/);
+ assert.throws(()=>validateDocumentExtractions({documents:[{...output.documents[0],fields:[{...field,citations:[{...field.citations[0],quote:"invented"}]}]}]},[source]),/CITATION/);
+ assert.throws(()=>validateDocumentExtractions({documents:[{...output.documents[0],documentType:"SECURITY_DOCUMENT"}]},[source]),/UNSCOPED/);
+});
 test("OCR validates every expected page, unique page numbers and uncertainty type",()=>{
  assert.equal(validateOcrPages({pages:[{page:1,text:"Loan A",uncertain:true}]},1).length,1);assert.throws(()=>validateOcrPages({pages:[]},1),/COVERAGE/);assert.throws(()=>validateOcrPages({pages:[{page:1,text:"A",uncertain:false},{page:1,text:"B",uncertain:false}]},2),/INVALID/);
+ assert.deepEqual(validateOcrPages({pages:[{page:2,text:"Loan B",uncertain:false}]},[2]).map(page=>page.page),[2]);assert.throws(()=>validateOcrPages({pages:[{page:1,text:"wrong page",uncertain:false}]},[2]),/INVALID/);
+ assert.throws(()=>validateOcrPages({pages:[{page:1,text:"Loan",uncertain:false}]},1.5),/COVERAGE/);assert.throws(()=>validateOcrPages({pages:[{page:1,text:"Loan",uncertain:false}]},[1,1]),/COVERAGE/);
+});
+test("model ladder is configurable within fixed provider roles and fails closed",()=>{
+ const configured=modelTierConfiguration({ASSURERAIL_AI_MODEL_TIERS_JSON:JSON.stringify({visual_default:{provider:"openai",model:"approved-luna-deployment"},availability_fallback:{provider:"gemini",model:"approved-flash-deployment"}})} as NodeJS.ProcessEnv);
+ assert.equal(configured.visual_default.model,"approved-luna-deployment");assert.equal(configured.availability_fallback.model,"approved-flash-deployment");
+ assert.throws(()=>modelTierConfiguration({ASSURERAIL_AI_MODEL_TIERS_JSON:JSON.stringify({visual_default:{provider:"gemini",model:"wrong-rung"}})} as NodeJS.ProcessEnv),/INVALID/);
+ assert.throws(()=>modelTierConfiguration({ASSURERAIL_AI_MODEL_TIERS_JSON:"{"} as NodeJS.ProcessEnv),/INVALID/);
 });
 test("Luna OCR uses a separate validation pass and records corrections",async()=>{
  const old={...process.env};try{
@@ -71,7 +89,7 @@ test("Gemini fallback occurs for availability failure, never for refusal or inva
  const old={...process.env};try{
  Object.assign(process.env,{ASSURERAIL_OPENAI_DATA_PROCESSING_APPROVED:"true",ASSURERAIL_GEMINI_DATA_PROCESSING_APPROVED:"true",ASSURERAIL_OPENAI_API_KEY:"o".repeat(32),ASSURERAIL_GEMINI_API_KEY:"g".repeat(32),ASSURERAIL_GEMINI_FALLBACK_ENABLED:"true"});let calls=0;
  const http=async(url:unknown)=>{calls++;return String(url).includes("openai")?new Response("",{status:503}):new Response(JSON.stringify({candidates:[{finishReason:"STOP",content:{parts:[{text:'{"findings":[]}'}]}}]}));};
- const r=await structuredDocumentCall("test",{},"test",undefined,http as typeof fetch);assert.equal(r.model,"gemini-3-flash-preview");assert.equal(r.fallbackUsed,true);assert.equal(calls,2);
+ const r=await structuredDocumentCall("test",{},"test",undefined,http as typeof fetch);assert.equal(r.model,"gemini-3-flash-preview");assert.equal(r.modelTier,"availability_fallback");assert.equal(r.fallbackUsed,true);assert.equal(calls,2);
  calls=0;await assert.rejects(()=>structuredDocumentCall("test",{},"test",undefined,(async()=>{calls++;return new Response(JSON.stringify({status:"incomplete"}));}) as typeof fetch),/INCOMPLETE/);assert.equal(calls,1);
  }finally{process.env=old;}
 });

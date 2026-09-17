@@ -21,6 +21,15 @@ test("document and AI gaps remain honest when no affected pair is established",(
   assert.equal(gaps.find(g=>g.summary==="Charge evidence is missing")?.defaultOwnerRole,"SELLER_LEGAL");
 });
 
+test("inventory and full-population reconciliation produce actionable seller remediation",()=>{
+  const gaps=deriveRemediationGaps({sellerInstitutionId:"seller",dataQuality:{status:"MATCHED"},manifest:[],extraction:{exceptions:[]},analysis:{findings:[]},documentReview:{inventory:{missing:["KYC_AUTHORITY","SECURITY_DOCUMENT"]},loanReconciliation:{tapeLoanCount:10,documentedLoanCount:8,principalReconciledLoanCount:7,unallocatedEvidenceVersionIds:["ev-x"],extraDocumentLoanIds:["L99"]}}});
+  assert.equal(gaps.length,5);
+  assert.equal(gaps.find(gap=>gap.summary.includes("kyc authority"))?.defaultOwnerRole,"SELLER_COMPLIANCE");
+  assert.equal(gaps.find(gap=>gap.summary.startsWith("Link document"))?.unresolvedRecordCount,2);
+  assert.equal(gaps.find(gap=>gap.summary.startsWith("Reconcile each"))?.unresolvedRecordCount,3);
+  assert.equal(gaps.find(gap=>gap.summary.startsWith("Resolve documents"))?.unresolvedRecordCount,2);
+});
+
 test("semantic finding keys remain comparable across corrected evidence versions and duplicate citations consolidate",()=>{
   const finding={category:"LEGAL",severity:"HIGH",description:"Charge evidence is missing",evidenceVersionId:"v1",locator:"page:1"};
   const before=deriveRemediationGaps({sellerInstitutionId:"seller",dataQuality:{status:"MATCHED"},manifest:[],extraction:{exceptions:[]},analysis:{findings:[finding,{...finding,locator:"page:2"}]}});

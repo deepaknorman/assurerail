@@ -45,6 +45,7 @@ export function loanTapeMetrics(
     duplicateRecords,
     recordIssues,
     parsedPrincipalMinor:principal.toString(),
+    loanRecords:[...loanBalances.entries()].map(([loanId,principalMinor])=>({loanId,principalMinor:principalMinor.toString()})).sort((a,b)=>a.loanId.localeCompare(b.loanId)),
     currency:"INR",
     currencyScale:2,
     coverageEstablished:status==="MATCHED",
