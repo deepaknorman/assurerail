@@ -55,12 +55,28 @@ test("quote rejects malformed scope and impossible programme allocations", () =>
   assert.throws(() => engagementQuote({...scope(1), sellerProposedConsiderationMinor: crore(11), aggregateProgrammeConsiderationMinor: crore(10)}));
 });
 
-test("seller execution fee is marginal 40/30 bps with a ₹5L per-seller floor", () => {
+test("standard single-seller execution fee is marginal 40/30 bps with a ₹5L floor", () => {
   for (const [cr, lakh] of [[0,0],[1,5],[10,5],[25,10],[50,17.5],[100,32.5],[125,40],[300,92.5]]) {
     assert.equal(cumulativeExecutionFee(crore(cr)), String(lakh * 10_000_000));
   }
   assert.equal(cumulativeExecutionFee("1", "0"), "0");
   assert.equal(cumulativeExecutionFee("0"), "0");
+});
+
+test("formed-cohort execution uses the seller's frozen allocated floor without reallocation", () => {
+  const allocatedFloorMinor = "12500000";
+  assert.equal(cumulativeExecutionFee(crore(1), allocatedFloorMinor), allocatedFloorMinor);
+  assert.equal(cumulativeExecutionFee(crore(10), allocatedFloorMinor), "40000000");
+  const accrual = executionAccrual({
+    sellerId: "seller-cohort-a",
+    previousSettledMinor: "0",
+    cumulativeSettledMinor: crore(1),
+    acceptedMinimumMinor: allocatedFloorMinor,
+    eligiblePaidStandalonePremiumMinor: "0",
+    previousAppliedPremiumMinor: "0",
+  });
+  assert.equal(accrual.cumulativeExecutionEarnedMinor, allocatedFloorMinor);
+  assert.equal(accrual.incrementalExecutionDueMinor, allocatedFloorMinor);
 });
 
 test("four rounds retain one seller's cumulative slabs and premium credit", () => {
