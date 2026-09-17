@@ -1,6 +1,6 @@
 # AssureRail conventional DA: customer service guide
 
-**Version:** 1.0 — 16 September 2026
+**Version:** 1.1 — 17 September 2026
 **Audience:** prospective NBFC sellers and approved buyer-design partners
 **Availability:** Initial Assessment applications are open for approved NBFC portfolios. AssureRail Private Limited is in formation; commercial contracting and paid processing begin only after incorporation and the applicable readiness gates have passed. Live transfer, funds movement and settlement services remain subject to separate institutional activation.
 
@@ -15,6 +15,8 @@ AssureRail gives a seller a staged way to test, improve and prepare a loan portf
 The seller confirms the proposed portfolio, unique loan and party counts, corpus and selected scope, accepts the quote and pays the Initial Assessment amount. The platform then processes the submitted loan tape and documents, records rule outcomes across the admitted population, identifies evidence gaps and returns preliminary economics and a remediation plan.
 
 The Initial Assessment is automated, unsigned and preliminary. It does not include a consultant, qualified expert or human content reviewer. It is designed to reveal avoidable work before the seller commits to professional diligence and execution costs.
+
+AssureRail reads machine-readable files and usable native document text with bounded software libraries first. Configured AI reads only the document fields or pages that need it, and each extracted material field retains its evidence reference and state: observed, inferred, absent, unreadable or contradictory. Deterministic controls then compare the observed evidence with the admitted loan tape. Inferred values do not establish a pass, and AI does not make the buyer's legal, credit or purchase decision.
 
 The pilot quote and accepted order state the included automated reassessment allowance and its time window. Corrected evidence may be uploaded and reassessed without closing the workspace.
 

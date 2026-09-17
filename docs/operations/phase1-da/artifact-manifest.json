@@ -18,6 +18,14 @@
       "status": "CURRENT"
     },
     {
+      "id": "DA-DOCUMENT-REVIEW-DESIGN",
+      "title": "Loan-document review architecture and operations",
+      "source": "docs/operations/phase1-da/AssureRail_Loan_Document_Review_Architecture_And_Operations.md",
+      "output": "docs/operations/phase1-da/generated/AssureRail_Loan_Document_Review_Architecture_And_Operations.html",
+      "classification": "INTERNAL",
+      "status": "CURRENT"
+    },
+    {
       "id": "DA-CUSTOMER-GUIDE",
       "title": "Conventional DA customer service guide",
       "source": "docs/operations/phase1-da/AssureRail_Phase1_DA_Customer_Service_Guide.md",
