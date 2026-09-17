@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "firebaseProjectId": "replace-with-assurerail-demo-project",
+  "institutionId": "demo-nbfc-ev-001",
+  "rotateExistingDemoPasswords": false,
+  "accounts": {
+    "sellerCommercialAdmin": {
+      "email": "rail-demo-seller-admin@example.test",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+      "displayName": "Demo Seller Commercial Admin"
+    },
+    "sellerDataPreparer": {
+      "email": "rail-demo-data-preparer@example.test",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+      "displayName": "Demo Seller Data Preparer"
+    },
+    "invoicePreparer": {
+      "email": "rail-demo-invoice-maker@example.test",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+      "displayName": "Demo AssureRail Invoice Maker"
+    },
+    "invoiceChecker": {
+      "email": "rail-demo-invoice-checker@example.test",
+      "password": "REPLACE_OUTSIDE_REPOSITORY",
+      "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+      "displayName": "Demo AssureRail Invoice Checker"
+    }
+  }
+}

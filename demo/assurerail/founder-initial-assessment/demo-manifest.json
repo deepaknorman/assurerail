@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "classification": "SYNTHETIC_ONLY",
+  "assetFamily": "VEHICLE_EV",
+  "bookRef": "AR-DEMO-EV-001",
+  "asOfDate": "2026-09-15",
+  "primaryPairCount": 12,
+  "linkedPartyCount": 0,
+  "sellerProposedConsiderationMinor": "1085000000",
+  "aggregateProgrammeConsiderationMinor": "1085000000",
+  "firstUpload": {
+    "file": "loan-tape-v1-with-gap.csv",
+    "expectedStatus": "RECORD_EXCEPTIONS",
+    "expectedDuplicateRecords": 1,
+    "expectedOutcome": "FIX_AND_REASSESS"
+  },
+  "correctedUpload": {
+    "file": "loan-tape-v2-corrected.csv",
+    "expectedStatus": "MATCHED",
+    "expectedDuplicateRecords": 0,
+    "expectedOutcome": "READY_FOR_PORTFOLIO_PREPARATION"
+  },
+  "billingProfile": {
+    "legalName": "AssureRail Synthetic EV Finance NBFC",
+    "billingEmail": "billing@example.test",
+    "address": "Synthetic demonstration address, Mumbai",
+    "stateCode": "27",
+    "postalCode": "400001",
+    "gstRegistration": "UNREGISTERED"
+  }
+}
