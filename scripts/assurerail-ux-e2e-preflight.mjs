@@ -52,17 +52,18 @@ if (!accountsPath) {
 
 if (document) {
   if (document.schemaVersion !== 1) failures.push("account file schemaVersion must be 1");
-  const account = document.accounts?.participantOrgAdminA;
-  if (!account) failures.push("account file must include participantOrgAdminA");
+  const account = document.accounts?.participantOrgAdminA ?? document.accounts?.sellerCommercialAdmin;
+  if (!account) failures.push("account file must include participantOrgAdminA or sellerCommercialAdmin");
   if (account) {
     if (typeof account.email !== "string" || !account.email.includes("@") || account.email.endsWith(".invalid")) {
-      failures.push("participantOrgAdminA.email must be a provisioned non-placeholder address");
+      failures.push("participant admin email must be a provisioned non-placeholder address");
     }
     if (typeof account.password !== "string" || account.password.length < 12 || account.password.includes("REPLACE")) {
-      failures.push("participantOrgAdminA.password must be a provisioned secret of at least 12 characters");
+      failures.push("participant admin password must be a provisioned secret of at least 12 characters");
     }
-    if (typeof account.institutionId !== "string" || !account.institutionId || account.institutionId.startsWith("replace-")) {
-      failures.push("participantOrgAdminA.institutionId must be provisioned");
+    const institutionId = account.institutionId ?? document.institutionId;
+    if (typeof institutionId !== "string" || !institutionId || institutionId.startsWith("replace-")) {
+      failures.push("participant admin institutionId must be provisioned on the account or document");
     }
   }
 }

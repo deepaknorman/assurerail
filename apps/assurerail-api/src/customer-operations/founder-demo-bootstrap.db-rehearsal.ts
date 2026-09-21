@@ -29,7 +29,10 @@ async function main() {
     assert.equal(venueUsers.length, 4);
     assert.equal(mfa.length, 4);
     assert.equal(members.length, 2);
-    assert.equal(activeMandates.length, 8);
+    assert.equal(activeMandates.length, 6);
+    const actionsByMember = Object.fromEntries(members.map(member => [member.id, activeMandates.filter(mandate => mandate.memberId === member.id).map(mandate => mandate.action).sort()]));
+    assert.deepEqual(actionsByMember["demo-member-sellerCommercialAdmin"], ["MANAGE_CUSTOMER_OPERATIONS", "VIEW_CUSTOMER_OPERATIONS", "VIEW_EVIDENCE"]);
+    assert.deepEqual(actionsByMember["demo-member-sellerDataPreparer"], ["MANAGE_EVIDENCE", "VIEW_CUSTOMER_OPERATIONS", "VIEW_EVIDENCE"]);
     assert.deepEqual(assignments.map(item => item.role).sort(), ["MANAGER", "RISK_COMPLIANCE_OFFICER"]);
     assert.equal(contract?.status, "ACTIVE_SHADOW");
     assert.equal(card?.status, "APPROVED_SHADOW");
@@ -40,7 +43,7 @@ async function main() {
     assert.equal(connector?.certifications.length, 1);
     assert.equal(connector?.certifications[0]?.status, "APPROVED");
     assert.equal(connector?.certifications[0]?.operatingMode, "SHADOW");
-    console.log("[FOUNDER-DEMO-DB] PASS identities, mandates, invoice roles, active contract/rate card and certified synthetic upload profile; second run idempotent");
+    console.log("[FOUNDER-DEMO-DB] PASS identities, separated commercial/evidence mandates, invoice roles, active contract/rate card and certified synthetic upload profile; second run idempotent");
   } finally { await db.$disconnect(); }
 }
 

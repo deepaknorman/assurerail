@@ -18,7 +18,15 @@
     "file": "loan-tape-v2-corrected.csv",
     "expectedStatus": "MATCHED",
     "expectedDuplicateRecords": 0,
-    "expectedOutcome": "READY_FOR_PORTFOLIO_PREPARATION"
+    "expectedOutcome": "FIX_AND_REASSESS",
+    "expectedResolvedGap": "Duplicate loan–borrower record",
+    "expectedRemainingEvidenceFamilies": [
+      "LOAN_AGREEMENT",
+      "SECURITY_DOCUMENT",
+      "REPAYMENT_HISTORY",
+      "KYC_AUTHORITY",
+      "INSURANCE_COLLATERAL"
+    ]
   },
   "billingProfile": {
     "legalName": "AssureRail Synthetic EV Finance NBFC",

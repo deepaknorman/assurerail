@@ -35,7 +35,13 @@ export async function auditPage(page: Page): Promise<void> {
       duplicateIds: [...document.querySelectorAll("[id]")]
         .map((node) => node.id)
         .filter((id, index, all) => id && all.indexOf(id) !== index),
-      unnamedActions: actions.filter((node) => !(node.textContent?.trim() || node.getAttribute("aria-label") || node.getAttribute("title"))).length,
+      unnamedActions: actions.filter((node) => !(
+        node.textContent?.trim()
+        || node.getAttribute("aria-label")
+        || node.getAttribute("aria-labelledby")
+        || node.getAttribute("title")
+        || node.querySelector("img[alt]")?.getAttribute("alt")?.trim()
+      )).length,
       unlabelledControls: controls.filter((node) => !(node.labels?.length || node.getAttribute("aria-label") || node.getAttribute("aria-labelledby"))).length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       body: document.body.innerText,

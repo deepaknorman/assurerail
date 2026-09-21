@@ -18,6 +18,7 @@ test("remediation persistence retains tenant, source-run, evidence and reassessm
 test("reassessment routes retain participant authority, step-up and automated Initial Assessment boundary",()=>{
   assert.match(controller,/engagements\/:engagementId\/runs/);assert.match(controller,/Get\)\("remediation"\)/);assert.match(controller,/remediation\/:itemId\/plan/);
   assert.match(service,/ENGAGEMENT_REMEDIATION_PLAN/);assert.match(service,/this\.engagements\.evidenceAuthority\(actor,\s*true\)/);
+  assert.doesNotMatch(service,/this\.engagements\.participant\(actor,\s*true\)/);
   assert.match(service,/three included reassessments have been used/);assert.match(service,/included reassessment window has ended/);
   assert.match(service,/Initial Assessment is automatically released without expert review/);
   assert.match(service,/accepted scope has changed or was not confirmed; obtain a new quote/);

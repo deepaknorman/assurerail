@@ -8,15 +8,20 @@ export type UxAccount = {
 };
 
 type AccountDocument = {
-  accounts: Record<string, UxAccount>;
+  institutionId?: string;
+  accounts: Record<string, UxAccount | Omit<UxAccount, "institutionId">>;
 };
 
 function loadAccount(name: string): UxAccount {
   const path = process.env.ARAIL_UX_ACCOUNTS_FILE ?? process.env.ARAIL_E2E_ACCOUNTS_FILE;
   if (!path) throw new Error("Run the authenticated UX preflight before Playwright");
-  const account = (JSON.parse(readFileSync(path, "utf8")) as AccountDocument).accounts?.[name];
+  const document = JSON.parse(readFileSync(path, "utf8")) as AccountDocument;
+  const account = document.accounts?.[name]
+    ?? (name === "participantOrgAdminA" ? document.accounts?.sellerCommercialAdmin : undefined);
   if (!account) throw new Error(`UX account ${name} is not present in the private account file`);
-  return account;
+  const institutionId = "institutionId" in account ? account.institutionId : document.institutionId;
+  if (!institutionId) throw new Error(`UX account ${name} has no institution scope`);
+  return { ...account, institutionId };
 }
 
 export const test = base.extend<{ participantAdmin: UxAccount }>({

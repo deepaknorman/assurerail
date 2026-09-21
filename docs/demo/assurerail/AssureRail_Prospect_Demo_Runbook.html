@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>AssureRail prospect demonstration runbook</title>
+  <style>
+    :root{--ink:#0e2836;--body:#425765;--muted:#6e7f87;--line:#d7e3e5;--paper:#f7faf9;--teal:#157a63;--blue:#0c6477;--amber:#a96314;--red:#a43939}*{box-sizing:border-box}body{margin:0;color:var(--body);background:#eef4f3;font:16px/1.55 Inter,Aptos,"Segoe UI",system-ui,sans-serif}header{padding:42px max(28px,calc((100vw - 1160px)/2));background:linear-gradient(130deg,#fff,#edf6f3);border-bottom:1px solid var(--line)}header img{width:230px}header h1{font-size:44px;line-height:1.08;letter-spacing:-.025em;color:var(--ink);margin:28px 0 12px}header p{font-size:20px;max-width:780px;margin:0}.badge{display:inline-flex;margin-top:18px;border:1px solid #bad7d0;border-radius:999px;padding:7px 12px;color:var(--teal);font-weight:800;font-size:12px;letter-spacing:.08em}main{max-width:1160px;margin:0 auto;padding:36px 28px 80px;background:#fff}nav{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:30px}nav a{padding:9px 13px;border:1px solid var(--line);border-radius:9px;color:var(--blue);text-decoration:none;font-weight:700}h2,h3{color:var(--ink);line-height:1.22}h2{font-size:30px;margin:46px 0 18px;padding-top:8px;border-top:1px solid var(--line)}h3{font-size:21px;margin:27px 0 12px}p,li{max-width:90ch}.callout{border:1px solid #c8dfda;background:#f1f8f6;border-radius:14px;padding:18px 20px;margin:18px 0}.callout strong{color:var(--ink)}.warn{border-color:#ecd2a7;background:#fff8ed}.blocked{border-color:#edc9c9;background:#fff5f5}code{background:#eef3f3;border-radius:5px;padding:2px 5px;color:var(--ink)}pre{background:var(--ink);color:#eff8f6;border-radius:12px;padding:17px 19px;overflow:auto;white-space:pre-wrap}.table-wrap{overflow:auto;margin:18px 0}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border:1px solid var(--line);padding:11px 12px;text-align:left;vertical-align:top}th{color:var(--ink);background:var(--paper)}td strong{color:var(--ink)}.time{white-space:nowrap;color:var(--teal);font-weight:850}.pass{color:var(--teal);font-weight:800}.hold{color:var(--red);font-weight:800}.steps{counter-reset:item;padding:0;list-style:none}.steps>li{position:relative;padding:0 0 25px 56px;min-height:54px}.steps>li:before{counter-increment:item;content:counter(item);position:absolute;left:0;top:-3px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:var(--teal);color:#fff;font-weight:900}.steps>li:after{content:"";position:absolute;left:17px;top:38px;bottom:3px;border-left:2px solid #d4e5e1}.steps>li:last-child:after{display:none}.steps b{color:var(--ink)}a{color:var(--blue)}footer{max-width:1160px;margin:auto;padding:22px 28px 40px;color:var(--muted);font-size:13px}@media print{body{background:#fff}header,main,footer{padding-left:0;padding-right:0}nav{display:none}.callout,th{print-color-adjust:exact}.steps>li{break-inside:avoid}h2{break-after:avoid}}
+  </style>
+</head>
+<body>
+<header>
+  <img src="mini-demo/logo.svg" alt="AssureRail">
+  <h1>Prospect demonstration runbook</h1>
+  <p>A controlled 25-minute walkthrough of the paid Initial Assessment journey using invented EV-loan data.</p>
+  <span class="badge">INTERNAL • SYNTHETIC DATA ONLY</span>
+</header>
+<main>
+  <nav><a href="#readiness">Readiness</a><a href="#credentials">Logins</a><a href="#preflight">Preflight</a><a href="#flow">Step-by-step flow</a><a href="#recovery">Recovery</a><a href="#video">Mini-demo</a></nav>
+
+  <section id="readiness">
+    <h2>Readiness gate</h2>
+    <div class="callout"><strong>Packaged and checked:</strong> four private synthetic identities, a 12-pair EV tape with one controlled defect, a corrected second version, a secure credential helper, this presenter script, and a 55-second 1080p captioned mini-demo.</div>
+    <div class="callout blocked"><strong>Live customer walkthrough gate:</strong> the private workspace is deliberately hidden in the current public runtime and returns 404 while <code>ASSURERAIL_PRIVATE_UI_ENABLED</code> is inactive. Activate the approved shadow profile, rebuild with the engagement workspace enabled, refresh the synthetic identities and require a green deployed browser run before showing a live customer journey. Use the recorded mini-demo or deterministic <code>/sandbox</code> fallback until then.</div>
+    <p>The demonstration ends at the decision to enter Portfolio Preparation. Initial Assessment is automated and unsigned. Qualified expert review and sign-off start in Portfolio Preparation.</p>
+  </section>
+
+  <section id="credentials">
+    <h2>Private identities</h2>
+    <p>The credentials live outside the repository at <code>/Users/DNorman/.assurerail-demo/prospect-demo-accounts.json</code>, restricted to the local owner. Never paste passwords or authenticator seeds into chat, email, screenshots or source control.</p>
+    <div class="table-wrap"><table><thead><tr><th>Role</th><th>Email</th><th>Use in demonstration</th></tr></thead><tbody>
+      <tr><td>Seller Commercial Admin</td><td><code>rail-demo-seller-admin@example.test</code></td><td>Scope, quote, terms and commercial status</td></tr>
+      <tr><td>Seller Data Preparer</td><td><code>rail-demo-data-preparer@example.test</code></td><td>Evidence upload, remediation and reassessment</td></tr>
+      <tr><td>Invoice Preparer</td><td><code>rail-demo-invoice-maker@example.test</code></td><td>Private operator control; no customer browser demonstration</td></tr>
+      <tr><td>Invoice Checker</td><td><code>rail-demo-invoice-checker@example.test</code></td><td>Independent private operator control; no customer browser demonstration</td></tr>
+    </tbody></table></div>
+    <p>List the roles without secrets:</p>
+    <pre>npm run demo:prospect:credentials -- --list</pre>
+    <p>Reveal one login and its current TOTP in your own terminal immediately before use:</p>
+    <pre>npm run demo:prospect:credentials -- --role sellerCommercialAdmin</pre>
+  </section>
+
+  <section id="preflight">
+    <h2>Thirty-minute preflight</h2>
+    <ol class="steps">
+      <li><b>Run the local integrity check.</b><pre>npm run demo:prospect:preflight</pre></li>
+      <li><b>Confirm public availability without exposing credentials.</b><pre>npm run demo:prospect:preflight -- --remote</pre></li>
+      <li><b>Run the authenticated browser gate.</b> Use the adapted private fixture and require a completely green result before a live customer walkthrough.<pre>ARAIL_UX_AUTHORISED=yes \
+ARAIL_UX_WEB_URL=https://assurerail.com \
+ARAIL_UX_API_URL=https://api.assurerail.com \
+ARAIL_UX_ACCOUNTS_FILE=/Users/DNorman/.assurerail-demo/prospect-demo-accounts.json \
+npm run ux:e2e</pre></li>
+      <li><b>Open two separate browser profiles.</b> Keep the Commercial Admin and Data Preparer sessions separate. Keep invoice operator identities private.</li>
+      <li><b>Pre-stage the governed middle.</b> Use a synthetic engagement whose quote and terms are accepted, whose invoice has been prepared and independently issued through the API control, and whose Razorpay test payment is reconciled.</li>
+      <li><b>Confirm intake dependencies.</b> Private object storage, ClamAV, the certified upload profile and the processing worker must all be healthy. Keep the AI provider in the approved shadow configuration.</li>
+      <li><b>Open the fallback.</b> Keep the mini-demo and <code>https://assurerail.com/sandbox</code> ready in separate tabs. The sandbox is a deterministic no-write product showcase.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Exact synthetic case</h2>
+    <div class="table-wrap"><table><tbody>
+      <tr><th>Institution</th><td>AssureRail Synthetic EV Finance NBFC</td><th>Book reference</th><td><code>AR-DEMO-EV-001</code></td></tr>
+      <tr><th>Asset family</th><td>Vehicle / EV</td><th>As-of date</th><td>15 September 2026</td></tr>
+      <tr><th>Unique loan × borrower pairs</th><td>12</td><th>Separate linked parties</th><td>0</td></tr>
+      <tr><th>Proposed consideration</th><td>₹1.085 crore</td><th>Route</th><td>Standalone Initial Assessment</td></tr>
+      <tr><th>Standard fee</th><td>₹3.12 lakh before GST</td><th>Example total with 18% GST</th><td>₹3,68,160</td></tr>
+    </tbody></table></div>
+    <p>For the approved design-partner illustration, the invoice applies the 30% credit: ₹3,12,000 gross fee less ₹93,600 credit, yielding ₹2,18,400 taxable value, ₹39,312 GST and ₹2,57,712 payable. Describe this at invoice stage; the initial quote remains the frozen standard amount.</p>
+  </section>
+
+  <section id="flow">
+    <h2>Step-by-step prospect flow</h2>
+    <div class="table-wrap"><table><thead><tr><th>Time</th><th>Presenter action</th><th>Expected evidence</th><th>Talk track</th></tr></thead><tbody>
+      <tr><td class="time">0–2 min</td><td>Open with the mini-demo or the authenticated workspace.</td><td>Synthetic-data label is visible.</td><td>“AssureRail helps find and correct problems before expensive buyer diligence begins.”</td></tr>
+      <tr><td class="time">2–4 min</td><td>Sign in as Seller Commercial Admin and select the synthetic institution.</td><td>Institution-scoped workspace.</td><td>“Commercial decisions and evidence work are governed through scoped access.”</td></tr>
+      <tr><td class="time">4–8 min</td><td>Open <code>/workspace/assessment</code>. Enter 12 pairs, zero linked parties and ₹1.085 crore consideration.</td><td>Count/corpus-aware quote; ₹3.12 lakh before GST.</td><td>“We assess the declared population. Count matters because every loan–borrower pair enters the scope.”</td></tr>
+      <tr><td class="time">8–11 min</td><td>Open the pre-staged engagement and its operations record.</td><td>Accepted scope and terms; issued statement; reconciled Razorpay test payment.</td><td>“Scope, price and authority are recorded before processing. Invoice issue uses an independent maker-checker control.”</td></tr>
+      <tr><td class="time">11–13 min</td><td>Switch to the Seller Data Preparer profile.</td><td>Same institution and engagement.</td><td>“The preparer supplies evidence and addresses findings. Commercial authority remains a separate responsibility.”</td></tr>
+      <tr><td class="time">13–16 min</td><td>Upload <code>loan-tape-v1-with-gap.csv</code> as <code>LOAN_TAPE</code> and request processing.</td><td>Version 1, scan/intake receipt and queued processing.</td><td>“Evidence is versioned and passes controlled intake before automated assessment.”</td></tr>
+      <tr><td class="time">16–19 min</td><td>Open the result and remediation item.</td><td><code>RECORD_EXCEPTIONS</code>; one duplicate; <code>FIX_AND_REASSESS</code>.</td><td>“The exact repeated loan–borrower pair becomes a traceable task, rather than an opaque score.”</td></tr>
+      <tr><td class="time">19–22 min</td><td>Upload <code>loan-tape-v2-corrected.csv</code> as the replacement version, link it to the remediation and request reassessment.</td><td>Version history and comparable scope digest.</td><td>“The seller corrects the source. The earlier evidence is preserved.”</td></tr>
+      <tr><td class="time">22–24 min</td><td>Open the new result.</td><td>Tape <code>MATCHED</code>; duplicate 1→0; 12 pairs retained; principal unchanged.</td><td>“The platform proves what changed and what did not.”</td></tr>
+      <tr><td class="time">24–25 min</td><td>Show the remaining document gaps and stop at Portfolio Preparation.</td><td>Overall <code>FIX_AND_REASSESS</code>; five EV evidence families remain open.</td><td>“Correcting one issue does not manufacture readiness. Portfolio Preparation adds qualified expert review and sign-off when the evidence is complete.”</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section id="recovery">
+    <h2>Recovery cues</h2>
+    <div class="table-wrap"><table><thead><tr><th>Observed issue</th><th>Immediate response</th></tr></thead><tbody>
+      <tr><td>Login or TOTP does not complete</td><td>Use the already authenticated backup profile. Do not troubleshoot identity configuration in front of the prospect.</td></tr>
+      <tr><td>Checkout is unavailable</td><td>Use the pre-staged paid engagement and show its issued statement and server-reconciled payment record.</td></tr>
+      <tr><td>Upload is rejected</td><td>Confirm category <code>LOAN_TAPE</code> and use the exact packaged file. Never bypass scanning or quarantine.</td></tr>
+      <tr><td>Processing remains queued</td><td>Refresh once after 45–60 seconds, then switch to the precomputed result.</td></tr>
+      <tr><td>AI provider is unavailable</td><td>Show the explicit incomplete state and deterministic tape checks. Do not describe the assessment as complete.</td></tr>
+      <tr><td>Corrected result still says <code>FIX_AND_REASSESS</code></td><td>This is expected. Show the resolved duplicate and the five missing EV evidence families separately.</td></tr>
+      <tr><td>Raw error or outage</td><td>Move to the recorded mini-demo or <code>/sandbox</code>. Record the error for repair after the meeting.</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section id="video">
+    <h2>Captioned 1080p mini-demo</h2>
+    <p>The 55-second MP4 contains no audio, so a voiceover can be added without removing an existing track. Captions are burned into the picture and also supplied as an SRT sidecar.</p>
+    <ul>
+      <li><a href="AssureRail_Prospect_Mini_Demo_1080p.mp4">AssureRail Prospect Mini Demo — 1080p MP4</a></li>
+      <li><a href="AssureRail_Prospect_Mini_Demo.srt">Caption file — SRT</a></li>
+      <li><a href="mini-demo/index.html">Source presentation — HTML</a></li>
+    </ul>
+    <p>Regenerate the video with:</p><pre>npm run demo:prospect:record</pre>
+  </section>
+</main>
+<footer>AssureRail internal demonstration control • synthetic data only • verify the deployed browser gate immediately before use.</footer>
+</body>
+</html>

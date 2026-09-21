@@ -9,7 +9,9 @@ environment and must never be presented as a customer book.
 2. Upload `loan-tape-v1-with-gap.csv`. It contains 12 unique seller–loan–borrower pairs and one
    repeated pair, so the assessment returns a traceable duplicate-record gap.
 3. Attach `loan-tape-v2-corrected.csv` as the replacement version of the same loan-tape evidence.
-4. Run a same-scope reassessment and show the gap moving from `RECORD_EXCEPTIONS` to `MATCHED`.
+4. Run a same-scope reassessment and show the tape moving from `RECORD_EXCEPTIONS` to `MATCHED`.
+   The duplicate is resolved; the overall engagement remains `FIX_AND_REASSESS` until the other
+   required EV evidence families are supplied.
 
 The principal total is identical between versions. The correction removes one duplicated record; it
 does not silently change corpus economics.

@@ -41,10 +41,11 @@
 <h2>Synthetic case</h2>
 <ul>
 <li>Asset family: <code>VEHICLE_EV</code>.</li>
-<li>One seller; one quoted unique seller–loan–borrower pair; no linked party.</li>
-<li>First tape: one valid row plus a duplicate of the same seller–loan–borrower pair.</li>
-<li>Corrected tape: one valid row only, uploaded as the next version of the same evidence family.</li>
-<li>Purchase consideration: synthetic ₹1 crore in integer paise.</li>
+<li>One seller; 12 quoted unique loan–borrower pairs; no linked party.</li>
+<li>First tape: 12 unique pairs plus a duplicate of the final loan–borrower pair.</li>
+<li>Corrected tape: the same 12 unique pairs with that duplicate removed, uploaded as the next version</li>
+<p>of the same evidence family.</p>
+<li>Purchase consideration: synthetic ₹1.085 crore in integer paise.</li>
 <li>Expected standard minimum-route Initial Assessment invoice before GST: ₹3.12 lakh. For an</li>
 <p>approved design-partner seller, the same frozen quote shows a 30% credit and ₹2.184 lakh taxable service fee; the system calculates GST on that discounted fee.</p>
 </ul>
@@ -71,7 +72,7 @@
 <li>Upload the corrected tape as a replacement version. Select it, attach it to the remediation item</li>
 <p>with step-up authentication, and include that item in the next reassessment.</p>
 <li>Run the comparable reassessment. Show resolved, continuing and new gaps, before/after data</li>
-<p>quality, the remaining allowance, and the unchanged accepted scope digest.</p>
+<p>quality, the remaining allowance, and the unchanged accepted scope digest. The corrected tape is <code>MATCHED</code>, while the overall result remains <code>FIX_AND_REASSESS</code> because loan agreements, security documents, repayment history, KYC/authority and insurance/collateral evidence are still absent.</p>
 <li>Show that the workspace and upload path remain available after the included allowance. Explain</li>
 <p>that three automated same-scope reassessments are included within 30 days; changed scope is requoted.</p>
 <li>Stop at Portfolio Preparation. Explain that qualified human review and sign-off begin there and</li>

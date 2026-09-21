@@ -27,7 +27,7 @@ export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{s
 export class AssessmentProcessingService {
   constructor(private readonly db:PrismaService,private readonly engagements:AssessmentEngagementService,private readonly store:EvidenceObjectStore,private readonly staff:InternalAccessService,private readonly stepUp:StepUpService,private readonly intake:EvidenceIntakeService) {}
   async upload(actor:ParticipantOpsActor,id:string,stage:string,stream:Readable,metadata:{filename?:unknown;contentType?:unknown;documentType?:unknown;evidenceObjectId?:unknown;requestRef?:unknown}) {
-    await this.engagements.participant(actor,true);
+    await this.engagements.participant(actor);
     await this.engagements.evidenceAuthority(actor,true);
     const {engagement}=await this.engagements.requirePaid(this.db,actor.actingInstitutionId,id,stage);
     const documentType=bounded(metadata.documentType,"documentType");
@@ -51,7 +51,7 @@ export class AssessmentProcessingService {
     return this.db.assessmentRemediationItem.findMany({where:{engagementId:id},orderBy:[{createdAt:"desc"},{gapKey:"asc"}],take:500});
   }
   async planRemediation(actor:ParticipantOpsActor,id:string,itemId:string,body:{ownerRole?:unknown;correctionEvidenceVersionIds?:unknown;stepUpEvidenceId?:unknown}) {
-    await this.engagements.participant(actor,true);await this.engagements.evidenceAuthority(actor,true);
+    await this.engagements.participant(actor);await this.engagements.evidenceAuthority(actor,true);
     if(!isOwnerRole(body.ownerRole))throw new ConflictException("controlled seller remediation owner required");
     const ownerRole=body.ownerRole;
     const ids=body.correctionEvidenceVersionIds;
@@ -73,7 +73,7 @@ export class AssessmentProcessingService {
     });
   }
   async request(actor:ParticipantOpsActor,id:string,body:{stage?:unknown;requestRef?:unknown;evidenceVersionIds?:unknown;scopeDigest?:unknown;baselineRunId?:unknown;remediationItemIds?:unknown;stepUpEvidenceId?:unknown}) {
-    await this.engagements.participant(actor,true);
+    await this.engagements.participant(actor);
     await this.engagements.evidenceAuthority(actor,true);
     const stage=bounded(body.stage,"stage"),requestRef=bounded(body.requestRef,"requestRef");
     const ids=body.evidenceVersionIds;

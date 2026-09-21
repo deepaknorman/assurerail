@@ -59,10 +59,11 @@ adapter flag is required for this journey.
 ## Synthetic case
 
 - Asset family: `VEHICLE_EV`.
-- One seller; one quoted unique seller–loan–borrower pair; no linked party.
-- First tape: one valid row plus a duplicate of the same seller–loan–borrower pair.
-- Corrected tape: one valid row only, uploaded as the next version of the same evidence family.
-- Purchase consideration: synthetic ₹1 crore in integer paise.
+- One seller; 12 quoted unique loan–borrower pairs; no linked party.
+- First tape: 12 unique pairs plus a duplicate of the final loan–borrower pair.
+- Corrected tape: the same 12 unique pairs with that duplicate removed, uploaded as the next version
+  of the same evidence family.
+- Purchase consideration: synthetic ₹1.085 crore in integer paise.
 - Expected standard minimum-route Initial Assessment invoice before GST: ₹3.12 lakh. For an
   approved design-partner seller, the same frozen quote shows a 30% credit and ₹2.184 lakh taxable
   service fee; the system calculates GST on that discounted fee.
@@ -97,7 +98,9 @@ attributable gap and reassessment without improving the economics by changing th
 7. Upload the corrected tape as a replacement version. Select it, attach it to the remediation item
    with step-up authentication, and include that item in the next reassessment.
 8. Run the comparable reassessment. Show resolved, continuing and new gaps, before/after data
-   quality, the remaining allowance, and the unchanged accepted scope digest.
+   quality, the remaining allowance, and the unchanged accepted scope digest. The corrected tape is
+   `MATCHED`, while the overall result remains `FIX_AND_REASSESS` because loan agreements, security
+   documents, repayment history, KYC/authority and insurance/collateral evidence are still absent.
 9. Show that the workspace and upload path remain available after the included allowance. Explain
    that three automated same-scope reassessments are included within 30 days; changed scope is
    requoted.

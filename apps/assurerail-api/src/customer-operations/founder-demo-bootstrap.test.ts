@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { founderDemoUploadProfile, validateFounderDemoConfig } from "./founder-demo-bootstrap";
+import { founderDemoSellerMandates, founderDemoUploadProfile, validateFounderDemoConfig } from "./founder-demo-bootstrap";
 import { loanTapeMetrics } from "./loan-tape-metrics";
 
 const demoRoot = resolve(__dirname, "../../../../demo/assurerail/founder-initial-assessment");
@@ -25,6 +25,15 @@ test("founder demo publishes the exact non-secret assessment upload profile", ()
     schemaVersion: "1.0.0",
     retentionDays: 365,
   });
+});
+
+test("founder demo separates commercial and evidence-management authority", () => {
+  assert.deepEqual(founderDemoSellerMandates("sellerCommercialAdmin"), [
+    "VIEW_CUSTOMER_OPERATIONS", "MANAGE_CUSTOMER_OPERATIONS", "VIEW_EVIDENCE",
+  ]);
+  assert.deepEqual(founderDemoSellerMandates("sellerDataPreparer"), [
+    "VIEW_CUSTOMER_OPERATIONS", "VIEW_EVIDENCE", "MANAGE_EVIDENCE",
+  ]);
 });
 
 test("packaged EV tapes demonstrate one attributable gap and a corrected reassessment", async () => {

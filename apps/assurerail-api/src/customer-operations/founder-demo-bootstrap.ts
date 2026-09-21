@@ -32,6 +32,12 @@ const DEMO_UPLOAD_SCHEMA_VERSION = "1.0.0";
 const DEMO_UPLOAD_RETENTION_DAYS = 365;
 const digest = (value: unknown) => sha256Digest({ marker: SYNTHETIC_MARKER, value });
 
+export function founderDemoSellerMandates(key: "sellerCommercialAdmin" | "sellerDataPreparer") {
+  return key === "sellerCommercialAdmin"
+    ? ["VIEW_CUSTOMER_OPERATIONS", "MANAGE_CUSTOMER_OPERATIONS", "VIEW_EVIDENCE"] as const
+    : ["VIEW_CUSTOMER_OPERATIONS", "VIEW_EVIDENCE", "MANAGE_EVIDENCE"] as const;
+}
+
 export function founderDemoUploadProfile(institutionId: string) {
   return {
     connectorRegistrationId: `demo-connector-assessment-upload-${institutionId}`,
@@ -96,8 +102,11 @@ async function ensureMandate(db: Prisma.TransactionClient, input: { institutionI
   const id = `demo-mandate-${input.memberId}-${input.action.toLowerCase()}`;
   const existing = await db.authorityMandate.findUnique({ where: { memberId_action_scopeType_scopeKey_version: { memberId: input.memberId, action: input.action, scopeType: "INSTITUTION", scopeKey: `INSTITUTION:${input.institutionId}`, version: 1 } } });
   if (existing) {
-    if (existing.id !== id || existing.status !== "ACTIVE" || existing.institutionId !== input.institutionId) throw new Error(`existing mandate conflicts with ${id}`);
-    return existing;
+    if (existing.id !== id || existing.institutionId !== input.institutionId || existing.delegationBasis !== SYNTHETIC_MARKER) throw new Error(`existing mandate conflicts with ${id}`);
+    return db.authorityMandate.update({ where: { id }, data: {
+      status: "ACTIVE", effectiveAt: new Date(Date.now() - 60_000), expiresAt: new Date(Date.now() + 90 * 86_400_000),
+      suspendedAt: null, revokedAt: null,
+    } });
   }
   return db.authorityMandate.create({ data: {
     id, institutionId: input.institutionId, memberId: input.memberId, action: input.action,
@@ -116,6 +125,7 @@ async function ensureInternalAssignment(db: Prisma.TransactionClient, userId: st
   const existing = await db.internalRoleAssignment.findUnique({ where: { userId_role_scopeKey_version: { userId, role, scopeKey: "GLOBAL:*", version: 1 } } });
   if (existing) {
     if (existing.id !== id || existing.status !== "ACTIVE") throw new Error(`existing internal assignment conflicts with ${id}`);
+    await db.internalRoleAssignment.update({ where: { id }, data: { expiresAt: new Date(Date.now() + 90 * 86_400_000) } });
     return;
   }
   await db.internalRoleAssignment.create({ data: {
@@ -172,7 +182,18 @@ export async function seedFounderDemoDatabase(config: FounderDemoConfig, users: 
           acceptedAt: new Date(), effectiveAt: new Date(Date.now() - 60_000), expiresAt: new Date(Date.now() + 90 * 86_400_000),
           bootstrapApprovedDecisionId: "demo-bootstrap-decision", recertificationDueAt: new Date(Date.now() + 60 * 86_400_000),
         }, update: { status: "ACTIVE", expiresAt: new Date(Date.now() + 90 * 86_400_000), recertificationDueAt: new Date(Date.now() + 60 * 86_400_000) } });
-        for (const action of ["VIEW_CUSTOMER_OPERATIONS", "MANAGE_CUSTOMER_OPERATIONS", "VIEW_EVIDENCE", "MANAGE_EVIDENCE"]) await ensureMandate(tx, { institutionId: config.institutionId, memberId, action, userId });
+        const actions = founderDemoSellerMandates(key);
+        for (const action of actions) await ensureMandate(tx, { institutionId: config.institutionId, memberId, action, userId });
+        await tx.authorityMandate.updateMany({
+          where: {
+            institutionId: config.institutionId,
+            memberId,
+            status: "ACTIVE",
+            delegationBasis: SYNTHETIC_MARKER,
+            action: { notIn: [...actions] },
+          },
+          data: { status: "REVOKED", revokedAt: new Date() },
+        });
       }
       await ensureInternalAssignment(tx, "demo-user-invoicePreparer", "MANAGER");
       await ensureInternalAssignment(tx, "demo-user-invoiceChecker", "RISK_COMPLIANCE_OFFICER");

@@ -1,8 +1,9 @@
 # AssureRail authenticated UX gate
 
 This suite checks the customer-facing authentication boundary in an explicitly authorised,
-synthetic pre-production environment. It reuses the SEC-01 private account-file schema and requires
-`participantOrgAdminA`; no password or session state is stored in the repository or test output.
+synthetic pre-production environment. It accepts the SEC-01 `participantOrgAdminA` account or the
+founder-demo `sellerCommercialAdmin` account; no password or session state is stored in the
+repository or test output.
 
 Set:
 
