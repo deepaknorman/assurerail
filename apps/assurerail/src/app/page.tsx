@@ -71,8 +71,8 @@ export default function Home() {
           <div className={styles.heroGlow} aria-hidden="true" />
           <div className={`${styles.container} ${styles.heroGrid}`}>
             <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>Loan portfolio assessment and execution · India</p>
-              <h1>Know what can transfer, what needs work and what cash a loan-book sale could release.</h1>
+              <p className={styles.eyebrow}>Transfer Venue Rail · India</p>
+              <h1>Loan portfolio assessment and execution</h1>
               <p className={styles.lede}>
                 AssureRail gives NBFC finance teams a paid, full-population Initial Assessment, expert-reviewed
                 Portfolio Preparation and coordinated conventional direct-assignment execution.
