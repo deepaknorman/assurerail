@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { documentEvidenceEnvelope, documentInventory, mergeHybridSegments, normaliseInrAmountToMinor, reconcileLoanDocuments, routeDocument } from "./document-review";
+import { extractAndValidateOcr, modelTierConfiguration } from "./ocr.adapter";
 
 test("structured loan tapes stay on the bounded native-library rung",()=>{
   const route=routeDocument({contentType:"text/csv",evidenceType:"LOAN_TAPE",segments:[{locator:"row:1",text:'["loan_id"]'}],exceptions:[]});
@@ -54,4 +55,63 @@ test("document review persistence is additive, restrictive and append-only",()=>
   assert.match(migration,/freeze_assessment_document_review BEFORE UPDATE OR DELETE/);
   assert.match(migration,/freeze_assessment_document_attempt BEFORE UPDATE OR DELETE/);
   assert.doesNotMatch(migration,/ON DELETE CASCADE/);
+});
+
+test("[REVIEW] a misspelled model tier stops processing instead of silently keeping the default", () => {
+  assert.throws(
+    () => modelTierConfiguration({ ASSURERAIL_AI_MODEL_TIERS_JSON: JSON.stringify({ visual_defalut: { provider: "openai", model: "gpt-5.6-luna" } }) } as NodeJS.ProcessEnv),
+    /INVALID_AI_MODEL_TIER_CONFIGURATION/,
+  );
+  assert.throws(
+    () => modelTierConfiguration({ ASSURERAIL_AI_MODEL_TIERS_JSON: JSON.stringify([{ provider: "openai" }]) } as NodeJS.ProcessEnv),
+    /INVALID_AI_MODEL_TIER_CONFIGURATION/,
+  );
+  // A correctly named tier still applies, and a swapped provider is still refused.
+  assert.equal(
+    modelTierConfiguration({ ASSURERAIL_AI_MODEL_TIERS_JSON: JSON.stringify({ visual_default: { provider: "openai", model: "approved-vision-1" } }) } as NodeJS.ProcessEnv).visual_default.model,
+    "approved-vision-1",
+  );
+  assert.throws(
+    () => modelTierConfiguration({ ASSURERAIL_AI_MODEL_TIERS_JSON: JSON.stringify({ visual_default: { provider: "gemini", model: "gemini-3-flash-preview" } }) } as NodeJS.ProcessEnv),
+    /INVALID_AI_MODEL_TIER_CONFIGURATION/,
+  );
+});
+
+test("[REVIEW] an oversized second OCR pass is recorded, not thrown away with the first call", async () => {
+  const page = { page: 1, text: "x".repeat(29_000), uncertain: false };
+  const pages = [1, 2, 3, 4, 5].map((number) => ({ ...page, page: number }));
+  let calls = 0;
+  const http = (async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ pages }) }] }], usage: { total_tokens: 10 } }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as unknown as typeof fetch;
+
+  const previous = { ...process.env };
+  Object.assign(process.env, { ASSURERAIL_OPENAI_DATA_PROCESSING_APPROVED: "true", ASSURERAIL_OPENAI_API_KEY: "k".repeat(24) });
+  try {
+    const result = await extractAndValidateOcr({ bytes: Buffer.from("pdf"), contentType: "application/pdf" }, [1, 2, 3, 4, 5], http);
+    assert.equal(calls, 1, "the second pass must not be attempted when its input cannot fit the budget");
+    assert.equal(result.validation, null);
+    assert.equal(result.validationSkippedReason, "VALIDATION_INPUT_BUDGET_EXCEEDED");
+    assert.equal(result.changedOnValidation, false);
+    assert.equal(result.pages.length, 5, "the completed first-pass transcription is still returned");
+    assert.equal(result.qualification, "MODEL_TRANSCRIPTION_REQUIRES_HUMAN_REVIEW");
+  } finally {
+    for (const key of Object.keys(process.env)) if (!(key in previous)) delete process.env[key];
+    Object.assign(process.env, previous);
+  }
+});
+
+test("[REVIEW] principal reconciliation is counted by rule id, not list position", () => {
+  const result = reconcileLoanDocuments(
+    [{ loanId: "L1", principalMinor: "100000" }],
+    [{ evidenceVersionId: "ev1", documentType: "LOAN_AGREEMENT", fields: [
+      { fieldPath: "$.loan_id", valueState: "observed", values: ["L1"] },
+      { fieldPath: "$.current_position.principal_outstanding", valueState: "observed", values: ["1000.00"] },
+    ] }],
+  );
+  assert.equal(result.principalReconciledLoanCount, 1);
+  assert.equal(result.status, "RECONCILED");
+  const rule = result.loans[0].validationResults.find((entry) => entry.ruleId === "LOAN-TAPE-PRINCIPAL-001");
+  assert.equal(rule?.result, "pass");
 });

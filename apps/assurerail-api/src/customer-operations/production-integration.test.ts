@@ -82,7 +82,7 @@ test("Luna OCR uses a separate validation pass and records corrections",async()=
  const old={...process.env};try{
  process.env.ASSURERAIL_OPENAI_DATA_PROCESSING_APPROVED="true";process.env.ASSURERAIL_OPENAI_API_KEY="test".repeat(8);let calls=0;
  const http=async(_url:unknown,init?:RequestInit)=>{const body=JSON.parse(init!.body as string);assert.equal(body.model,"gpt-5.6-luna");assert.equal(body.store,false);assert.equal(body.input[0].content[1].type,"input_file");calls++;return new Response(JSON.stringify({status:"completed",output:[{type:"message",content:[{type:"output_text",text:JSON.stringify({pages:[{page:1,text:calls===1?"1000":"100.0",uncertain:true}]})}]}],usage:{input_tokens:100,output_tokens:30}}));};
- const r=await extractAndValidateOcr({bytes:Buffer.from("synthetic PDF"),contentType:"application/pdf"},1,http as typeof fetch);assert.equal(calls,2);assert.equal(r.changedOnValidation,true);assert.equal(r.validation.model,"gpt-5.6-luna");assert.equal(r.pages[0].uncertain,true);
+ const r=await extractAndValidateOcr({bytes:Buffer.from("synthetic PDF"),contentType:"application/pdf"},1,http as typeof fetch);assert.equal(calls,2);assert.equal(r.changedOnValidation,true);assert.equal(r.validation?.model,"gpt-5.6-luna");assert.equal(r.pages[0].uncertain,true);
  }finally{process.env=old;}
 });
 test("Gemini fallback occurs for availability failure, never for refusal or invalid output",async()=>{

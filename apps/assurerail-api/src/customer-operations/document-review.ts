@@ -143,7 +143,8 @@ export function reconcileLoanDocuments(tapeLoans:{loanId:string;principalMinor:s
   });
   const extraLoanIds=[...byLoan.keys()].filter(loanId=>!tapeByLoan.has(loanId)).sort();
   const documentedLoanCount=loans.filter(loan=>loan.documentEvidenceVersionIds.length).length;
-  const principalReconciledLoanCount=loans.filter(loan=>loan.validationResults[1].result==="pass").length;
+  const ruleResult=(loan:typeof loans[number],ruleId:string)=>loan.validationResults.find(result=>result.ruleId===ruleId)?.result;
+  const principalReconciledLoanCount=loans.filter(loan=>ruleResult(loan,"LOAN-TAPE-PRINCIPAL-001")==="pass").length;
   const unresolvedPrincipalMinor=loans.filter(loan=>loan.validationResults.some(result=>result.result!=="pass")).reduce((sum,loan)=>sum+BigInt(loan.tapePrincipalMinor),0n).toString();
   return {policyVersion:DOCUMENT_REVIEW_POLICY_VERSION,coveragePolicy:"EVERY_ADMITTED_TAPE_LOAN",tapeLoanCount:tapeLoans.length,documentedLoanCount,principalReconciledLoanCount,coveragePercent:tapeLoans.length?Number(((BigInt(documentedLoanCount)*10000n)/BigInt(tapeLoans.length)))/100:0,unresolvedPrincipalMinor,unallocatedEvidenceVersionIds:[...new Set(unallocatedEvidenceVersionIds)].sort(),extraDocumentLoanIds:extraLoanIds,status:tapeLoans.length>0&&documentedLoanCount===tapeLoans.length&&principalReconciledLoanCount===tapeLoans.length&&!extraLoanIds.length?"RECONCILED" as const:"EXCEPTIONS" as const,loans};
 }

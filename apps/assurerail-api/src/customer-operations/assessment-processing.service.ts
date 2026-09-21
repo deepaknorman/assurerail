@@ -162,6 +162,9 @@ export class AssessmentProcessingService {
           visualProvenance=provenance;
           ocrProvenance.push({evidenceVersionId:entry.versionId,...provenance});
           for(const [method,pass] of [["VISUAL_MODEL",ocr.extraction],["VISUAL_VALIDATION",ocr.validation]] as const){
+            // The validation pass is skipped when its input cannot fit the model input budget;
+            // the skip is recorded on the review provenance rather than as a completed attempt.
+            if(!pass)continue;
             if(pass.fallbackUsed)attemptRows.push({method,status:"FAILED_AVAILABILITY",provider:"openai",model:pass.primaryModel,modelTier:pass.primaryTier,promptVersion:"rail-ocr-1",requestedLocators:routing.visualRequiredLocators,failureCode:pass.primaryFailure});
             attemptRows.push({method,status:"COMPLETED",provider:pass.provider,model:pass.model,modelTier:pass.modelTier,promptVersion:"rail-ocr-1",requestedLocators:routing.visualRequiredLocators,usage:pass.usage,resultDigest:method==="VISUAL_VALIDATION"?sha256Digest(ocr.pages):undefined});
           }
