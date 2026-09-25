@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { expect, test as base, type Page } from "@playwright/test";
 
+// Apply inside each worker as well as the config loader process.
+process.env.PLAYWRIGHT_NO_COPY_PROMPT = "1";
+
 export type UxAccount = {
   email: string;
   password: string;
