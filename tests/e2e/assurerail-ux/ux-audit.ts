@@ -28,7 +28,7 @@ export async function auditPage(page: Page): Promise<void> {
       return style.visibility !== "hidden" && style.display !== "none" && box.width > 0 && box.height > 0;
     };
     const actions = [...document.querySelectorAll("a,button")].filter(visible);
-    const controls = [...document.querySelectorAll("input,select,textarea")]
+    const controls = [...document.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input,select,textarea")]
       .filter((element) => (element as HTMLInputElement).type !== "hidden" && visible(element));
     return {
       headings: [...document.querySelectorAll("h1")].filter(visible).map((node) => node.textContent?.trim() ?? ""),

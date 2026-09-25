@@ -15,10 +15,12 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [register, setRegister] = useState(false);
   const [busyAction, setBusyAction] = useState<LoginAction>("");
+  const [interactive, setInteractive] = useState(false);
   const busy = busyAction !== "";
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("mode") === "register") setRegister(true);
+    setInteractive(true);
   }, []);
 
   useEffect(() => {
@@ -67,20 +69,20 @@ export default function Login() {
           <p className="auth-sub">{register ? "Create the account that will hold your organisation's assessment application and onboarding record." : "Access your institution's assessments, preparation work and transaction cases."}</p>
           <FeedbackBanner error={error} id="auth-feedback" />
 
-          <button className="btn btn-google" type="button" disabled={busy} aria-busy={busyAction === "google"} onClick={() => void go("google", loginGoogle)}>
+          <button className="btn btn-google" type="button" disabled={!interactive || busy} aria-busy={busyAction === "google"} onClick={() => void go("google", loginGoogle)}>
             {busyAction === "google" ? "Connecting to Google…" : "Continue with Google"}
           </button>
           <div className="auth-or"><span>or</span></div>
 
-          <form className="auth-form" onSubmit={submitEmail} aria-busy={busyAction === "email"}>
-            <label className="lbl">Email<input className="field" type="email" autoComplete="email" required value={email} onChange={(e) => { setEmail(e.target.value); clearError(); }} /></label>
-            <label className="lbl">Password<input className="field" type="password" autoComplete={register ? "new-password" : "current-password"} required minLength={6} aria-describedby={register ? "password-guidance" : undefined} value={password} onChange={(e) => { setPassword(e.target.value); clearError(); }} /></label>
+          <form className="auth-form" onSubmit={submitEmail} aria-busy={!interactive || busyAction === "email"}>
+            <label className="lbl">Email<input className="field" type="email" autoComplete="email" required disabled={!interactive} value={email} onChange={(e) => { setEmail(e.target.value); clearError(); }} /></label>
+            <label className="lbl">Password<input className="field" type="password" autoComplete={register ? "new-password" : "current-password"} required disabled={!interactive} minLength={6} aria-describedby={register ? "password-guidance" : undefined} value={password} onChange={(e) => { setPassword(e.target.value); clearError(); }} /></label>
             {register && <p className="auth-guidance" id="password-guidance">Use at least 6 characters. A longer, unique password is safer.</p>}
-            <button className="btn btn-primary" type="submit" disabled={busy || !email || !password} aria-busy={busyAction === "email"}>
+            <button className="btn btn-primary" type="submit" disabled={!interactive || busy || !email || !password} aria-busy={busyAction === "email"}>
               {busyAction === "email" ? (register ? "Creating account…" : "Signing in…") : register ? "Create account" : "Sign in"}
             </button>
           </form>
-          <button className="linkish" type="button" disabled={busy} onClick={changeMode}>{register ? "Have an account? Sign in" : "New here? Create an account"}</button>
+          <button className="linkish" type="button" disabled={!interactive || busy} onClick={changeMode}>{register ? "Have an account? Sign in" : "New here? Create an account"}</button>
 
           <p className="auth-fine">Protected by reCAPTCHA Enterprise. Sandbox / design stage — institutional &amp; professional counterparties only.</p>
         </div>
