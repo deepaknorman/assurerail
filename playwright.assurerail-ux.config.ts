@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Playwright's automatic failure prompt includes password input values in its ARIA snapshot.
+// This must remain disabled even when traces, screenshots and videos are already off.
+process.env.PLAYWRIGHT_NO_COPY_PROMPT = "1";
+
 /**
  * Authenticated customer-experience release gate. It targets only an explicitly authorised,
  * synthetic pre-production environment. Credential-bearing traces, screenshots and videos stay

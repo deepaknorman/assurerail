@@ -30,6 +30,9 @@ Run `npm run ux:e2e -- --project=ux-firefox-desktop` for the presenter's browser
 uses its own Firefox runtime and fresh contexts; it does not touch the presenter's Firefox profile.
 Install that runtime with `npx playwright install firefox` if needed.
 
+Automatic failure-prompt ARIA snapshots are disabled with `PLAYWRIGHT_NO_COPY_PROMPT`, because
+they can retain password-field values even with screenshots, video and tracing disabled.
+
 The suite does not yet register an account, complete identity onboarding, create/accept an
 engagement, pay, upload, run/reassess evidence, release expert preparation or onboard a buyer.
 See `docs/demo/assurerail/Hetzner_Demo_Readiness_Plan.md` for the remaining acceptance milestones.
