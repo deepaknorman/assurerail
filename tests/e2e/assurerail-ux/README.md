@@ -21,5 +21,15 @@ and videos are disabled deliberately.
 The current foundation covers anonymous redirects, safe authentication errors, sign-in/register
 state transitions, keyboard reachability, provisioned sign-in, refresh persistence, accessible
 names and labels, duplicate IDs, horizontal overflow and common technical-error leakage on desktop
-Chromium and mobile WebKit. It does not yet register a new account, complete identity onboarding,
-or exercise seller assessment, payment, uploads, reassessment or buyer onboarding.
+Chromium, desktop Firefox and mobile WebKit. The seller-readiness spec additionally verifies a real
+API quote changes with submitted scope, refresh persistence and separate commercial/data sessions.
+It requires the founder-demo `sellerCommercialAdmin` and `sellerDataPreparer` identities and the
+assessment workspace to be enabled. Quote preview creates no engagement or payment.
+
+Run `npm run ux:e2e -- --project=ux-firefox-desktop` for the presenter's browser family. Playwright
+uses its own Firefox runtime and fresh contexts; it does not touch the presenter's Firefox profile.
+Install that runtime with `npx playwright install firefox` if needed.
+
+The suite does not yet register an account, complete identity onboarding, create/accept an
+engagement, pay, upload, run/reassess evidence, release expert preparation or onboard a buyer.
+See `docs/demo/assurerail/Hetzner_Demo_Readiness_Plan.md` for the remaining acceptance milestones.

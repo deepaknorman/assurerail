@@ -12,7 +12,7 @@ type AccountDocument = {
   accounts: Record<string, UxAccount | Omit<UxAccount, "institutionId">>;
 };
 
-function loadAccount(name: string): UxAccount {
+export function loadAccount(name: string): UxAccount {
   const path = process.env.ARAIL_UX_ACCOUNTS_FILE ?? process.env.ARAIL_E2E_ACCOUNTS_FILE;
   if (!path) throw new Error("Run the authenticated UX preflight before Playwright");
   const document = JSON.parse(readFileSync(path, "utf8")) as AccountDocument;
@@ -20,7 +20,7 @@ function loadAccount(name: string): UxAccount {
     ?? (name === "participantOrgAdminA" ? document.accounts?.sellerCommercialAdmin : undefined);
   if (!account) throw new Error(`UX account ${name} is not present in the private account file`);
   const institutionId = "institutionId" in account ? account.institutionId : document.institutionId;
-  if (!institutionId) throw new Error(`UX account ${name} has no institution scope`);
+  if (typeof institutionId !== "string" || !institutionId) throw new Error(`UX account ${name} has no institution scope`);
   return { ...account, institutionId };
 }
 
@@ -31,7 +31,8 @@ export const test = base.extend<{ participantAdmin: UxAccount }>({
 export { expect };
 
 export async function signIn(page: Page, account: UxAccount): Promise<void> {
-  await page.goto("/login");
+  const response = await page.goto("/login", { waitUntil: "domcontentloaded" });
+  expect(response?.status(), "login entry must be available before entering credentials").toBe(200);
   await page.evaluate((institutionId) => {
     localStorage.setItem("arail-active-institution", institutionId);
   }, account.institutionId);
