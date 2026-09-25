@@ -32,6 +32,8 @@ Install that runtime with `npx playwright install firefox` if needed.
 
 Automatic failure-prompt ARIA snapshots are disabled with `PLAYWRIGHT_NO_COPY_PROMPT`, because
 they can retain password-field values even with screenshots, video and tracing disabled.
+The sign-in redirect assertion polls the URL string; page matchers can attach their own ARIA
+snapshot independently of that flag and must not be used while real credentials remain in a form.
 
 The suite does not yet register an account, complete identity onboarding, create/accept an
 engagement, pay, upload, run/reassess evidence, release expert preparation or onboard a buyer.

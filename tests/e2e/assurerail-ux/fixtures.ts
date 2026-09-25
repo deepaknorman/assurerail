@@ -42,5 +42,8 @@ export async function signIn(page: Page, account: UxAccount): Promise<void> {
   await page.getByLabel("Email").fill(account.email);
   await page.getByLabel("Password").fill(account.password);
   await page.getByLabel("Password").press("Enter");
-  await expect(page).toHaveURL(/\/(?:console|workspace|institutions|internal)(?:[/?#]|$)/);
+  // Page matchers attach their own ARIA snapshot, independently of NO_COPY_PROMPT.
+  // Poll only the URL so a failed login never attaches the populated password field.
+  await expect.poll(() => page.url(), { message: "sign-in must reach an authenticated route" })
+    .toMatch(/\/(?:console|workspace|institutions|internal)(?:[/?#]|$)/);
 }
