@@ -143,10 +143,11 @@ function totp(seed) {
     }
     assert.equal(invoice.status, 'ISSUED_SHADOW');
 
-    let readiness = await preparer.api(`${participantBase}/engagements/${engagementId}/stages/PREPARATION/readiness`);
+    const seller = await login('sellerCommercialAdmin', true);
+    let readiness = await seller.api(`${participantBase}/engagements/${engagementId}/stages/PREPARATION/readiness`);
     if (!readiness.readyForShadowProcessing) {
       stage = 'select_preparation_neft';
-      const selection = await preparer.api(`${participantBase}/engagements/${engagementId}/stages/PREPARATION/bank-transfer`, {});
+      const selection = await seller.api(`${participantBase}/engagements/${engagementId}/stages/PREPARATION/bank-transfer`, {});
       assert(selection.transferRails.includes('NEFT')); assert(selection.transferRails.includes('IMPS')); assert.equal(selection.amountMinor, invoice.netFeeMinor);
       const advice = Buffer.from(['synthetic_marker,transfer_rail,bank_transfer_ref,amount_minor,currency,invoice_id',
         `ASSURERAIL_FOUNDER_DEMO_V1,NEFT,SYNNEFT202609270002,${invoice.netFeeMinor},INR,${invoice.id}`].join('\n') + '\n');
@@ -177,7 +178,7 @@ function totp(seed) {
         stepUpEvidenceId: await checker.proof('INTERNAL_PAYMENT_RECEIPT_REVIEW'),
       });
       assert.equal(reviewed.status, 'VERIFIED_SHADOW');
-      readiness = await preparer.api(`${participantBase}/engagements/${engagementId}/stages/PREPARATION/readiness`);
+      readiness = await seller.api(`${participantBase}/engagements/${engagementId}/stages/PREPARATION/readiness`);
     }
     assert.equal(readiness.readyForShadowProcessing, true); assert.equal(readiness.liveStageUnlock, false);
     report({ result: 'PASS', invoiceId: invoice.id, transferRail: 'NEFT', paidShadowOnly: true, livePaymentClaimed: false });
