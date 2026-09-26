@@ -144,7 +144,15 @@ def write_pack(tape: Path, master: Path, output: Path) -> dict[str, object]:
         "schemaVersion": 1, "syntheticOnly": True, "syntheticMarker": SYNTHETIC_MARKER,
         "bookRef": BOOK_REF, "asOfDate": "2026-09-15", "loanCount": len(selected),
         "documentCount": len(documents), "coverageClaim": f"{len(selected)}/1200",
-        "selection": {"states": sorted({row["state"] for row in selected}), "repaymentStates": ["ARREARS", "ON_TIME"], "loanIds": SELECTED_LOAN_IDS},
+        "selection": {
+            "states": sorted({row["state"] for row in selected}),
+            "repaymentStates": ["ARREARS", "ON_TIME"],
+            "loanIds": SELECTED_LOAN_IDS,
+            "selectedLoans": [{
+                "loanId": row["loan_id"], "state": row["state"],
+                "repaymentState": "ARREARS" if int(row["days_past_due"]) else "ON_TIME",
+            } for row in selected],
+        },
         "deliberateDefects": [{"code": "PRINCIPAL_OUTSTANDING_MISMATCH", "loanId": PLANTED_MISMATCH_LOAN_ID, "documentType": "REPAYMENT_HISTORY", "tapePrincipalMinor": mismatch["principal_minor"], "documentPrincipalMinor": str(int(mismatch["principal_minor"]) + PLANTED_MISMATCH_MINOR), "differenceMinor": str(PLANTED_MISMATCH_MINOR)}],
         "documents": documents,
     }

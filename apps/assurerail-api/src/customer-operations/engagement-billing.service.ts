@@ -13,7 +13,7 @@ import { invoicePaymentPosition, validateReceiptReview } from "./payment-reconci
 import type { InternalOpsActor, ParticipantOpsActor } from "./customer-operations.service";
 
 type Tx = Prisma.TransactionClient;
-const TRANSFER_RAILS = ["NEFT", "RTGS", "IMPS"] as const;
+const TRANSFER_RAILS = ["NEFT", "IMPS"] as const;
 function ref(value: unknown, name: string, max = 160) {
   if (typeof value !== "string" || !value.trim() || value.trim().length > max) throw new BadRequestException(`${name} required (maximum ${max} characters)`);
   return value.trim();
@@ -23,7 +23,7 @@ function enabled() {
 }
 function transferRail(value: unknown): (typeof TRANSFER_RAILS)[number] {
   if (typeof value !== "string" || !TRANSFER_RAILS.includes(value as (typeof TRANSFER_RAILS)[number])) {
-    throw new BadRequestException("transferRail must be NEFT, RTGS or IMPS");
+    throw new BadRequestException("transferRail must be NEFT or IMPS");
   }
   return value as (typeof TRANSFER_RAILS)[number];
 }

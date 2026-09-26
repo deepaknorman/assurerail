@@ -44,19 +44,18 @@ test("bank receipts require an explicit supported transfer rail",async()=>{
   try {
     process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE="shadow";process.env.ARAIL_CUSTOMER_OPERATIONS_V1="shadow";process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS="collection-demo";
     const service=new EngagementBillingService({} as never,{} as never,{require:async()=>({})} as never,{} as never);
-    await assert.rejects(()=>service.proposeReceipt({actorUserId:"maker",actorSessionId:"s"},"a","i",{collectionAccountRef:"collection-demo",transferRail:"UPI"}),/NEFT, RTGS or IMPS/);
+    await assert.rejects(()=>service.proposeReceipt({actorUserId:"maker",actorSessionId:"s"},"a","i",{collectionAccountRef:"collection-demo",transferRail:"UPI"}),/NEFT or IMPS/);
+    await assert.rejects(()=>service.proposeReceipt({actorUserId:"maker",actorSessionId:"s"},"a","i",{collectionAccountRef:"collection-demo",transferRail:"RTGS"}),/NEFT or IMPS/);
   } finally {
     if(oldMode===undefined)delete process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE;else process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE=oldMode;
     if(oldOps===undefined)delete process.env.ARAIL_CUSTOMER_OPERATIONS_V1;else process.env.ARAIL_CUSTOMER_OPERATIONS_V1=oldOps;
     if(oldRefs===undefined)delete process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS;else process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS=oldRefs;
   }
 });
-test("NEFT and RTGS UTRs and IMPS RRNs have rail-specific canonical shapes",()=>{
+test("NEFT UTRs and IMPS RRNs have rail-specific canonical shapes",()=>{
   assert.equal(validateBankTransferReference("NEFT","SYNNEFT202609270001"),"SYNNEFT202609270001");
-  assert.equal(validateBankTransferReference("RTGS","SYNRTGS202609270001"),"SYNRTGS202609270001");
   assert.equal(validateBankTransferReference("IMPS","260927000001"),"260927000001");
   assert.throws(()=>validateBankTransferReference("NEFT","NEFT-SYN-1"),/UTR/);
-  assert.throws(()=>validateBankTransferReference("RTGS","123"),/UTR/);
   assert.throws(()=>validateBankTransferReference("IMPS","SYN260927001"),/RRN/);
 });
 test("document evidence digests use the canonical API form",()=>{

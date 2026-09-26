@@ -77,7 +77,7 @@ export class EngagementCheckoutService {
     }
     const collectionAccountRefs = (process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS ?? "").split(",").map(value=>value.trim()).filter(Boolean);
     if (!collectionAccountRefs.length) throw new ServiceUnavailableException("bank-transfer collection account is not configured");
-    return { status: "AWAITING_BANK_TRANSFER", transferRails: ["NEFT","RTGS","IMPS"], amountMinor: invoice.netFeeMinor, currency: invoice.currency, collectionAccountRefs, remittanceReference: invoice.id, liveStageUnlock: false };
+    return { status: "AWAITING_BANK_TRANSFER", transferRails: ["NEFT","IMPS"], amountMinor: invoice.netFeeMinor, currency: invoice.currency, collectionAccountRefs, remittanceReference: invoice.id, liveStageUnlock: false };
   }
 
   async refresh(actor: ParticipantOpsActor, engagementId: string, stage: string) {

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { EngagementCheckoutService } from "./engagement-checkout.service";
 
-test("bank transfer selection supports NEFT, RTGS and IMPS without creating a gateway checkout",async()=>{
+test("bank transfer selection supports NEFT and IMPS without creating a gateway checkout",async()=>{
   const prior=process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS;
   process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS="collection-demo";
   try {
@@ -13,7 +13,7 @@ test("bank transfer selection supports NEFT, RTGS and IMPS without creating a ga
   };
   const service=new EngagementCheckoutService(db as never,engagements as never);
   const result=await service.selectBankTransfer({actorUserId:"seller",actorSessionId:"session",actingInstitutionId:"nbfc"},"engagement-1","INITIAL");
-  assert.deepEqual(result.transferRails,["NEFT","RTGS","IMPS"]);
+  assert.deepEqual(result.transferRails,["NEFT","IMPS"]);
   assert.equal(result.amountMinor,"36816000");
   assert.equal(result.status,"AWAITING_BANK_TRANSFER");
   assert.equal(result.liveStageUnlock,false);

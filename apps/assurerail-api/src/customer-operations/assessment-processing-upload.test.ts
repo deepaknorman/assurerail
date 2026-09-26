@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { assessmentEvidenceDigest, assessmentRetentionUntil } from "./assessment-processing.service";
+import { assessmentEvidenceDigest, assessmentRetentionUntil, assessmentUploadQualifications } from "./assessment-processing.service";
 
 test("assessment upload retention is stable across exact request replays",()=>{
   const createdAt=new Date("2026-09-27T00:00:00.000Z");
@@ -16,4 +16,12 @@ test("assessment manifests canonicalise document-intake digests before worker ve
   assert.equal(assessmentEvidenceDigest(hex),`sha256:${hex}`);
   assert.equal(assessmentEvidenceDigest(`sha256:${hex}`),`sha256:${hex}`);
   assert.throws(()=>assessmentEvidenceDigest("invalid"),/INVALID_EVIDENCE_DIGEST/);
+});
+
+test("demo-institution assessment inputs carry a server-owned limitation",()=>{
+  assert.deepEqual(assessmentUploadQualifications("demo-nbfc-ev-001"),[{
+    code:"SYNTHETIC_DEMO_ASSESSMENT_INPUT",severity:"LIMITATION",
+    text:"Synthetic demonstration input; not customer evidence or professional sign-off.",
+  }]);
+  assert.deepEqual(assessmentUploadQualifications("customer-nbfc-001"),[]);
 });

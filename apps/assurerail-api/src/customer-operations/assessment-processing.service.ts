@@ -18,6 +18,14 @@ import { documentEvidenceEnvelope, documentInventory, mergeHybridSegments, recon
 import { preparationReviewDisclosure } from "./preparation-review-disclosure";
 import { canonicalEvidenceDigest } from "./evidence-digest";
 type Manifest = {versionId:string;evidenceObjectId:string;digest:string;contentType:string;sizeBytes:number;evidenceType:string}[];
+const SYNTHETIC_DEMO_INPUT_QUALIFICATION = [{
+  code:"SYNTHETIC_DEMO_ASSESSMENT_INPUT",
+  severity:"LIMITATION",
+  text:"Synthetic demonstration input; not customer evidence or professional sign-off.",
+}] as const;
+export function assessmentUploadQualifications(institutionId:string) {
+  return institutionId.startsWith("demo-") ? SYNTHETIC_DEMO_INPUT_QUALIFICATION : [];
+}
 export function assessmentRetentionUntil(createdAt:Date,retentionDays:number,now=new Date()) {
   const retentionUntilAt=new Date(createdAt.getTime()+retentionDays*86400000);
   if(!Number.isFinite(retentionUntilAt.getTime())||retentionUntilAt<=now)throw new ConflictException("engagement evidence-retention window has ended; obtain a revised order");
@@ -47,7 +55,7 @@ export class AssessmentProcessingService {
     const profile=profiles[actor.actingInstitutionId];
     if(!profile||!Number.isInteger(profile.retentionDays)||profile.retentionDays<1||profile.retentionDays>3650)throw new ConflictException("approved document intake profile and retention period must be configured for this institution");
     if(metadata.evidenceObjectId){const prior=await this.db.evidenceObject.findUnique({where:{id:bounded(metadata.evidenceObjectId,"evidenceObjectId")}});if(!prior||prior.institutionId!==actor.actingInstitutionId||prior.purpose!==`ASSESSMENT:${id}`)throw new NotFoundException("document not found in this engagement");}
-    return this.intake.ingestDocument(actor.actorUserId,actor.actingInstitutionId,stream,{...profile,profileRef:"assurerail.neutral-intake.v1",filename:bounded(metadata.filename,"filename",240),contentType:bounded(metadata.contentType,"contentType"),title:documentType,documentType,evidenceType:documentType,classification:"RESTRICTED",purpose:`ASSESSMENT:${id}`,retentionUntilAt:assessmentRetentionUntil(engagement.createdAt,profile.retentionDays),sourceAsOfAt:new Date((engagement.scope as {asOfDate:string}).asOfDate).toISOString(),idempotencyKey:bounded(metadata.requestRef,"requestRef"),evidenceObjectId:metadata.evidenceObjectId?bounded(metadata.evidenceObjectId,"evidenceObjectId"):null});
+    return this.intake.ingestDocument(actor.actorUserId,actor.actingInstitutionId,stream,{...profile,profileRef:"assurerail.neutral-intake.v1",filename:bounded(metadata.filename,"filename",240),contentType:bounded(metadata.contentType,"contentType"),title:documentType,documentType,evidenceType:documentType,classification:"RESTRICTED",purpose:`ASSESSMENT:${id}`,retentionUntilAt:assessmentRetentionUntil(engagement.createdAt,profile.retentionDays),sourceAsOfAt:new Date((engagement.scope as {asOfDate:string}).asOfDate).toISOString(),idempotencyKey:bounded(metadata.requestRef,"requestRef"),evidenceObjectId:metadata.evidenceObjectId?bounded(metadata.evidenceObjectId,"evidenceObjectId"):null,qualifications:assessmentUploadQualifications(actor.actingInstitutionId)});
   }
   private scopeDigest(engagement:{scope:unknown;quoteDigest:string}) { return sha256Digest({scope:engagement.scope,quoteDigest:engagement.quoteDigest}); }
   async policy(actor:ParticipantOpsActor,id:string) {
