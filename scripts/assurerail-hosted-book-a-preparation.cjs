@@ -214,12 +214,12 @@ function totp(seed) {
     assert(initial); const tape = initial.result.manifest.find(item => item.evidenceType === 'LOAN_TAPE'); assert(tape?.versionId);
     stage = 'request_preparation_processing';
     const requested = await preparer.api(runsPath, {
-      stage: 'PREPARATION', requestRef: 'synthetic-book-a-preparation-run-20260927-v2',
+      stage: 'PREPARATION', requestRef: 'synthetic-book-a-preparation-run-20260927-v3',
       evidenceVersionIds: [tape.versionId, ...uploadedVersionIds],
       stepUpEvidenceId: await preparer.proof('ENGAGEMENT_PROCESSING_REQUEST'),
     });
     let pending;
-    for (let attempt = 0; attempt < 72; attempt += 1) {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
       pending = (await preparer.api(runsPath)).find(run => run.id === requested.id);
       if (pending && ['REVIEW_REQUIRED', 'RELEASED', 'FAILED'].includes(pending.status)) break;
       await wait(5000);
