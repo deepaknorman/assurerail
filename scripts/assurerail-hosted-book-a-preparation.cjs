@@ -169,7 +169,7 @@ function totp(seed) {
       const receipt = await maker.api(`/v1/rail/internal/engagement-billing/institutions/${institutionId}/invoices/${invoice.id}/receipts`, {
         collectionAccountRef: refs[0], transferRail: 'NEFT', syntheticOnly: true, bankTransferRef: 'SYNNEFT202609270002',
         amountMinor: invoice.netFeeMinor, evidenceRef: evidence.evidenceObjectId, evidenceDigest: adviceDigest,
-        receivedAt: '2026-09-27T00:00:00.000Z', stepUpEvidenceId: await maker.proof('INTERNAL_PAYMENT_RECEIPT_PROPOSE'),
+        receivedAt: '2026-09-26T00:00:00.000Z', stepUpEvidenceId: await maker.proof('INTERNAL_PAYMENT_RECEIPT_PROPOSE'),
       });
       const checker = await login('invoiceChecker', false);
       stage = 'preparation_receipt_review';
@@ -246,7 +246,7 @@ function totp(seed) {
         evidenceType: 'ASSESSMENT_REVIEW_SIGNOFF', classification: 'RESTRICTED', purpose: `ASSESSMENT_REVIEW:${requested.id}:${restricted.resultDigest}`,
         retentionUntilAt: '2027-09-27T00:00:00.000Z', title: 'Synthetic Preparation review decision packet',
         documentType: 'ASSESSMENT_REVIEW_SIGNOFF', filename: 'synthetic-preparation-review.csv', contentType: 'text/csv',
-        schemaId: 'assurerail.neutral-intake', schemaVersion: '1.0.0', sourceAsOfAt: '2026-09-27T00:00:00.000Z',
+        schemaId: 'assurerail.neutral-intake', schemaVersion: '1.0.0', sourceAsOfAt: '2026-09-26T00:00:00.000Z',
         signatureStatus: 'NOT_PROVIDED', result: 'REVIEW_REQUIRED', profileRef: 'assurerail.neutral-intake.v1',
         qualifications: [{ code: 'SYNTHETIC_DEMO_REVIEW_EVIDENCE', severity: 'LIMITATION' }],
       });
