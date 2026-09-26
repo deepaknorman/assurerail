@@ -10,6 +10,46 @@ Use provider test environments for external integrations. An unavailable depende
 
 Initial Assessment is automated and unsigned in the current Rail implementation. Expert review and sign-off belong to Portfolio Preparation. The older AssurePool assessment is a separate product workflow; do not present two disconnected assessment records as one integrated case.
 
+## Current execution queue — reconciled 27 September 2026
+
+The founder’s later requests added scale fixtures and a Step-3 comparison view; they did not
+cancel the original hosted seller/buyer proof or decommissioning work. Keep one queue here,
+and reconcile it against the shared brain before status reports. Local tests, provisioning,
+provider smoke checks and recordings are not substitutes for the complete hosted journey.
+
+Completed foundations: working alternate hostname/reCAPTCHA, dedicated AI key activation and
+provider smoke check, login/quote authority fixes, Rail-owned evidence storage and scanner
+health, nine distinct demo identities, reviewer read permission and visible synthetic
+qualification, and the validated 3,000-loan / INR 55 crore input pack. Claude’s 27 September
+release notice reports main and box at `107834ad1`; the last runtime change is `6bc3f5afb`.
+
+| Priority | Outstanding work | Completion evidence still required |
+|---|---|---|
+| 1 | Hosted seller acceptance, finance maker/checker invoice, test payment and Book A intake (R1–R3) | Persisted engagement, actual test-payment reconciliation, uploaded/scanned evidence and a real processing job with its honest outcome/coverage reason |
+| 2 | Assessment processing at scale and supporting documents (R3) | Keep loan tapes entirely out of the model; deterministic full-tape checks; persisted/resumable bounded document-review attempts; explicit reviewed/unreviewed coverage and costs. Supply fictional supporting evidence, rather than treating clean tapes as complete portfolios |
+| 3 | Correction, reassessment and reviewed Portfolio Preparation, including seller offer preparation (R4) | Original run retained, changed evidence changes outputs, current synthetic reviewer qualification, report-bound evidence and fresh MFA, independently released preparation and recorded seller-offer membership |
+| 4 | NBFC 2 and buyer access/onboarding (R5) | Separate admitted NBFC 2; guarded membership/authority; accepted MSA, valid signed evidence and independent workspace propose/verify; separated buyer approvals; released synthetic pool visible to authorised buyer |
+| 5 | Portfolio progression and clickable final-offer cohort view | Implement the approved versioned membership, shared visibility checks, allocation overlap protection, projection and accessible drill-down; bind all displayed values to actual assessed/presented/selected records |
+| 6 | Buyer review and closing rehearsal (R6) | Actual case decisions/authority, computed fees/net proceeds and negative tests for short funding, reversal and missing receipt; no assertion that shadow evidence means money moved |
+| 7 | Repeatable Firefox proof and recordings (R7) | Two repeatable clean rehearsals, presenter/reset instructions, Book A seller re-recording after hosted proof, buyer recording after released-pool gate |
+| Alongside relevant slices | Known correctness/security follow-ups | Reviewer-read InternalAccessEvent; explicit preparer-cannot-sign regression; investigate /cases institution selector; reduce synthetic MinIO application credential scope |
+| After replacement proof | Legacy decommissioning and supporting demos | Retire superseded presenter/deployment paths with dependency checks and rollback; separately verify Lens/CLA supporting demonstrations |
+
+The original document-review gaps also remain open: page-only locators, empty document-level
+fields/fieldAssessments/contradictions, page rendering/events and golden-corpus evaluation.
+Treat each as a separately evidenced capability; do not conceal them behind an overall green
+assessment label. The canonical assurerail.com Cloudflare issue remains separate from the
+working demo hostname and is not a reason to ask the founder to repeat completed key/domain work.
+
+INR 55 crore across two NBFCs is demonstration scale only. It does not replace the separate
+live INR 48 crore opportunity, commercial policy, pricing tests or deck figures. The product
+quotes per engagement; manual billing-cohort allocation must remain distinct from chart
+presentation membership and seller-specific closing groups.
+
+Immediate next hosted proof is Book A’s real acceptance/payment/upload/processing path, reporting
+the current AI budget skip if encountered. Runtime scale remediation and the approved chart
+implementation remain separate deliverables, followed by the complete R4–R6 evidence chain.
+
 ## Milestones and exit criteria
 
 | ID | Work | Exit evidence | Status |
@@ -17,11 +57,11 @@ Initial Assessment is automated and unsigned in the current Rail implementation.
 | R0 | Establish deployed baseline and dependencies | Exact revisions, live gates, identity status, dependency checks and reproducible browser command | In progress |
 | R1 | Seller scope, quote and accepted engagement | Firefox login; API-calculated quote; MFA-bound acceptance; persisted engagement survives refresh | Quote/session checks passed on 95d62d192; acceptance pending |
 | R2 | Invoice and test payment | Distinct maker/checker; issued statement; provider test checkout and verified reconciliation; unpaid work remains blocked | Pending |
-| R3 | Evidence intake and automated assessment | Real object storage/encryption, malware scan, extraction and configured analysis; run persisted with source digests and qualified outcome | Pending |
-| R4 | Correction, reassessment and expert-reviewed preparation | Changed evidence changes results; missing evidence remains missing; original report retained; distinct qualified reviewer releases preparation | Pending |
-| R5 | Buyer workspace and authorised handoff | Synthetic buyer MSA/authority setup; separate credit/legal/operations approvals; scoped released evidence; real mapped login handoff if used | Pending |
+| R3 | Evidence intake and automated assessment | Real object storage/encryption, malware scan, extraction and configured analysis; run persisted with source digests and qualified outcome | Local full-tape checks pass; hosted proof and AI scale remediation pending |
+| R4 | Correction, reassessment and expert-reviewed preparation | Changed evidence changes results; missing evidence remains missing; original report retained; distinct qualified reviewer releases preparation | Reviewer access/disclosure fixes deployed; workflow proof pending |
+| R5 | Buyer workspace and authorised handoff | Synthetic buyer MSA/authority setup; separate credit/legal/operations approvals; scoped released evidence; real mapped login handoff if used | Four identities provisioned; onboarding, authority and released-pool proof pending |
 | R6 | Buyer review and closing rehearsal | Buyer accepts/rejects actual case evidence; case-specific authority; code-computed fees/net proceeds; evidence reconciler detects short funding/reversal/missing receipt | Second priority |
-| R7 | Repeatable presentation | Two clean rehearsals; Firefox sessions labelled; fresh run references; recoverable failures; presenter URLs and reset procedure | Pending |
+| R7 | Repeatable presentation | Two clean rehearsals; Firefox sessions labelled; fresh run references; recoverable failures; presenter URLs and reset procedure | Seller sizing/navigation recording delivered; full-journey proof and buyer recording pending |
 
 First priority is R1–R5, ending with a clearly labelled code-driven closing-evidence illustration if the integrated R6 workflow is not ready. Second priority completes buyer review and close. The illustration cannot count as R6 acceptance.
 
@@ -29,7 +69,7 @@ First priority is R1–R5, ending with a clearly labelled code-driven closing-ev
 
 - Isolated implementation branch: `codex/hetzner-demo-readiness`, based on deployed Rail revision `5a691050b` to preserve its newer document-review fixes.
 - Hetzner Rail checkout: `/home/deploy/assurerail`; monorepo checkout is separate. Do not deploy the older feature worktree over Rail.
-- Four synthetic Firebase/venue identities are active, allowlisted, consistently bound and MFA-enrolled. No password rotation was performed.
+- Nine synthetic Firebase/venue identities are provisioned and MFA-enrolled per Claude’s DB verification: four original seller/finance identities, an independent preparation reviewer and four buyers. Existing credentials were preserved; buyer identities have no seeded membership, mandates or active workspace.
 - Synthetic seller `demo-nbfc-ev-001` is active/admitted, with current memberships, an accepted `ACTIVE_SHADOW` contract and certified upload connector.
 - API is configured for SHADOW, engagement billing/document processing are shadow, checkout is Razorpay test. Configuration presence is not a completed provider transaction.
 - PM2 sets `ASSURERAIL_PRIVATE_UI_ENABLED=yes` for Rail web. Both `/workspace/assessment` and the institution buyer route return HTTP 200 internally. This corrects the earlier conclusion based on missing file-level flags; an HTTP 200 is not proof of authenticated functionality.
@@ -52,11 +92,11 @@ Existing reserved-domain logins are synthetic identifiers; they are not mailboxe
 | Finance — Maker | `rail-demo-invoice-maker@example.test` | Propose the invoice; internal operator screen/API | Verified existing |
 | Finance — Checker | `rail-demo-invoice-checker@example.test` | Independently review/issue the invoice | Verified existing |
 | Preparation — Preparer | Reuse Seller — Data | Preparation on the selected synthetic case | Roster approved; real preparation pending |
-| Preparation — Reviewer | To provision | Independent preparation review; synthetic qualification clearly labelled | Pending implementation/permission check |
-| Buyer — Desk | To provision | Prepare requirements and review disclosed case evidence | Pending |
-| Buyer — Credit | To provision | Credit-profile approval; separately scoped transaction authority | Pending |
-| Buyer — Legal | To provision | Legal-profile approval; separately scoped transaction authority | Pending |
-| Buyer — Operations | To provision | Operations-profile approval and closing-evidence review | Pending |
+| Preparation — Reviewer | `rail-demo-preparation-reviewer@example.test` | Independent preparation review; synthetic qualification clearly labelled | Provisioned, institution-scoped; qualification configuration and real release proof pending |
+| Buyer — Desk | `rail-demo-buyer-desk@example.test` | Prepare requirements and review disclosed case evidence | Identity provisioned; onboarding/authority pending |
+| Buyer — Credit | `rail-demo-buyer-credit@example.test` | Credit-profile approval; separately scoped transaction authority | Identity provisioned; onboarding/authority pending |
+| Buyer — Legal | `rail-demo-buyer-legal@example.test` | Legal-profile approval; separately scoped transaction authority | Identity provisioned; onboarding/authority pending |
+| Buyer — Operations | `rail-demo-buyer-operations@example.test` | Operations-profile approval and closing-evidence review | Identity provisioned; onboarding/authority pending |
 
 The roster has nine distinct identities: the seller workflow separates commercial acceptance from evidence preparation, and Data Preparer also requests preparation. Claude approved one separate reviewer and four buyers. The optional guarded bootstrap extension provisions those identities; buyer onboarding and scoped approval mandates remain application workflows. Do not add broad administrator rights to make a failing path work. Buyer-profile approval does not itself authorise a purchase or closing. Scope and expire new grants; preserve existing grants unless a reviewed change requires adjustment.
 
