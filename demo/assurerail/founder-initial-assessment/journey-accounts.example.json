@@ -1,0 +1,32 @@
+{
+  "preparationReviewer": {
+    "email": "rail-demo-preparation-reviewer@example.test",
+    "password": "REPLACE_OUTSIDE_REPOSITORY",
+    "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+    "displayName": "Demo Preparation Reviewer"
+  },
+  "buyerDesk": {
+    "email": "rail-demo-buyer-desk@example.test",
+    "password": "REPLACE_OUTSIDE_REPOSITORY",
+    "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+    "displayName": "Demo Buyer Desk"
+  },
+  "buyerCredit": {
+    "email": "rail-demo-buyer-credit@example.test",
+    "password": "REPLACE_OUTSIDE_REPOSITORY",
+    "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+    "displayName": "Demo Buyer Credit"
+  },
+  "buyerLegal": {
+    "email": "rail-demo-buyer-legal@example.test",
+    "password": "REPLACE_OUTSIDE_REPOSITORY",
+    "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+    "displayName": "Demo Buyer Legal"
+  },
+  "buyerOperations": {
+    "email": "rail-demo-buyer-operations@example.test",
+    "password": "REPLACE_OUTSIDE_REPOSITORY",
+    "totpSecret": "REPLACE_OUTSIDE_REPOSITORY",
+    "displayName": "Demo Buyer Operations"
+  }
+}

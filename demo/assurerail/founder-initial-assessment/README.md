@@ -16,7 +16,7 @@ environment and must never be presented as a customer book.
 The principal total is identical between versions. The correction removes one duplicated record; it
 does not silently change corpus economics.
 
-## Four test identities
+## Base test identities
 
 Copy `accounts.example.json` to an absolute path outside the repository, replace all four passwords
 and base32 TOTP secrets, and set file mode `600`. Add each secret to the presenter's authenticator or
@@ -57,6 +57,27 @@ JSON above in the API environment, and restart the API before the founder walkth
 `FIREBASE_ADMIN_CONFIG` and `DATABASE_URL` must come from the approved demo-box secret path. The
 bootstrap never prints passwords or TOTP secrets. Use `rotateExistingDemoPasswords: true` only for
 an intentional password/TOTP rotation of identities that the bootstrap previously created.
+
+## Optional reviewer and buyer identities
+
+Keep the existing four accounts and their credentials. Add the object in
+`journey-accounts.example.json` as the private account file's `journeyAccounts` property,
+replacing its placeholders outside Git. The extension requires all five roles and checks
+unique email addresses and Firebase identities across all nine accounts. Existing four-account
+files still work. Reuse Seller Data Preparer for preparation requests.
+
+The preparation reviewer receives an expiring internal risk-review assignment scoped to the
+synthetic seller institution. This does not establish a professional qualification or release
+any report. Configure an approved synthetic reviewer qualification and expose its synthetic
+label on the released output before demonstrating sign-off; report-bound evidence and fresh
+MFA remain required.
+
+Buyer Desk, Credit, Legal and Operations are separate authenticated identities only at this
+stage. Bootstrap grants them no institutional membership, mandate or internal staff role and
+creates no buyer contract, profile or workspace. Complete admission, membership/authority,
+contract acceptance, signed-MSA evidence and independent workspace propose/verify through the
+application's guarded APIs. Then give each role only its corresponding buyer-profile authority.
+An identity provisioned successfully is not a completed or recordable buyer journey.
 
 The local database rehearsal uses fake Firebase identifiers and no network:
 

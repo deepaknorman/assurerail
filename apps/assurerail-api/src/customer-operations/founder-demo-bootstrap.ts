@@ -13,7 +13,12 @@ export const FOUNDER_DEMO_ACCOUNT_KEYS = [
   "invoicePreparer",
   "invoiceChecker",
 ] as const;
-type AccountKey = (typeof FOUNDER_DEMO_ACCOUNT_KEYS)[number];
+export const FOUNDER_DEMO_JOURNEY_ACCOUNT_KEYS = [
+  "preparationReviewer", "buyerDesk", "buyerCredit", "buyerLegal", "buyerOperations",
+] as const;
+type BaseAccountKey = (typeof FOUNDER_DEMO_ACCOUNT_KEYS)[number];
+type JourneyAccountKey = (typeof FOUNDER_DEMO_JOURNEY_ACCOUNT_KEYS)[number];
+type AccountKey = BaseAccountKey | JourneyAccountKey;
 type DemoAccount = { email: string; password: string; totpSecret: string; displayName: string };
 type DemoFirebaseUser = Pick<UserRecord, "uid">;
 export type FounderDemoConfig = {
@@ -21,7 +26,8 @@ export type FounderDemoConfig = {
   firebaseProjectId: string;
   institutionId: string;
   rotateExistingDemoPasswords: boolean;
-  accounts: Record<AccountKey, DemoAccount>;
+  accounts: Record<BaseAccountKey, DemoAccount>;
+  journeyAccounts?: Record<JourneyAccountKey, DemoAccount>;
 };
 
 const DEMO_LEGAL_NAME = "AssureRail Synthetic EV Finance NBFC";
@@ -59,9 +65,8 @@ export function validateFounderDemoConfig(value: unknown): FounderDemoConfig {
   const institutionId = required(input.institutionId, "institutionId", 160);
   if (!/^demo-[a-z0-9-]+$/.test(institutionId)) throw new Error("institutionId must use a demo-* synthetic identifier");
   const emails = new Set<string>();
-  const accounts = {} as Record<AccountKey, DemoAccount>;
-  for (const key of FOUNDER_DEMO_ACCOUNT_KEYS) {
-    const raw = input.accounts[key] as DemoAccount | undefined;
+  const accounts = {} as Record<BaseAccountKey, DemoAccount>;
+  function account(key: AccountKey, raw: DemoAccount | undefined): DemoAccount {
     const email = required(raw?.email, `accounts.${key}.email`, 254).toLowerCase();
     const password = required(raw?.password, `accounts.${key}.password`, 200);
     const totpSecret = required(raw?.totpSecret, `accounts.${key}.totpSecret`, 200).replace(/\s/g, "").toUpperCase();
@@ -71,9 +76,26 @@ export function validateFounderDemoConfig(value: unknown): FounderDemoConfig {
     if (password.includes("REPLACE_") || password.length < 16) throw new Error(`${key} requires a non-placeholder password of at least 16 characters`);
     if (totpSecret.includes("REPLACE_") || !/^[A-Z2-7]{16,128}$/.test(totpSecret)) throw new Error(`${key} requires a non-placeholder base32 TOTP secret`);
     emails.add(email);
-    accounts[key] = { email, password, totpSecret, displayName };
+    return { email, password, totpSecret, displayName };
   }
-  return { schemaVersion: 1, firebaseProjectId, institutionId, rotateExistingDemoPasswords: input.rotateExistingDemoPasswords === true, accounts };
+  for (const key of FOUNDER_DEMO_ACCOUNT_KEYS) accounts[key] = account(key, input.accounts[key]);
+  let journeyAccounts: FounderDemoConfig["journeyAccounts"];
+  if (input.journeyAccounts !== undefined) {
+    if (!input.journeyAccounts || typeof input.journeyAccounts !== "object" || Array.isArray(input.journeyAccounts)
+      || Object.keys(input.journeyAccounts).some(key => !(FOUNDER_DEMO_JOURNEY_ACCOUNT_KEYS as readonly string[]).includes(key))) {
+      throw new Error("journeyAccounts must contain exactly the five approved journey roles");
+    }
+    journeyAccounts = {} as Record<JourneyAccountKey, DemoAccount>;
+    for (const key of FOUNDER_DEMO_JOURNEY_ACCOUNT_KEYS) journeyAccounts[key] = account(key, input.journeyAccounts[key]);
+  }
+  return { schemaVersion: 1, firebaseProjectId, institutionId, rotateExistingDemoPasswords: input.rotateExistingDemoPasswords === true, accounts, ...(journeyAccounts ? { journeyAccounts } : {}) };
+}
+
+export function configuredFounderDemoAccounts(config: FounderDemoConfig): [AccountKey, DemoAccount][] {
+  return [
+    ...FOUNDER_DEMO_ACCOUNT_KEYS.map(key => [key, config.accounts[key]] as [AccountKey, DemoAccount]),
+    ...(config.journeyAccounts ? FOUNDER_DEMO_JOURNEY_ACCOUNT_KEYS.map(key => [key, config.journeyAccounts![key]] as [AccountKey, DemoAccount]) : []),
+  ];
 }
 
 export function readFounderDemoConfig(path: string): FounderDemoConfig {
@@ -120,25 +142,33 @@ async function ensureMandate(db: Prisma.TransactionClient, input: { institutionI
   } });
 }
 
-async function ensureInternalAssignment(db: Prisma.TransactionClient, userId: string, role: "MANAGER" | "RISK_COMPLIANCE_OFFICER") {
-  const id = `demo-internal-${role.toLowerCase()}-${userId}`;
-  const existing = await db.internalRoleAssignment.findUnique({ where: { userId_role_scopeKey_version: { userId, role, scopeKey: "GLOBAL:*", version: 1 } } });
+async function ensureInternalAssignment(db: Prisma.TransactionClient, userId: string, role: "MANAGER" | "RISK_COMPLIANCE_OFFICER", institutionId?: string) {
+  const scopeType = institutionId ? "INSTITUTION" : "GLOBAL";
+  const scopeRef = institutionId ?? null;
+  const scopeKey = institutionId ? `INSTITUTION:${institutionId}` : "GLOBAL:*";
+  const id = `demo-internal-${role.toLowerCase()}-${userId}${institutionId ? `-${institutionId}` : ""}`;
+  const existing = await db.internalRoleAssignment.findUnique({ where: { userId_role_scopeKey_version: { userId, role, scopeKey, version: 1 } } });
   if (existing) {
-    if (existing.id !== id || existing.status !== "ACTIVE") throw new Error(`existing internal assignment conflicts with ${id}`);
+    if (existing.id !== id || existing.status !== "ACTIVE" || existing.scopeType !== scopeType || existing.scopeRef !== scopeRef) throw new Error(`existing internal assignment conflicts with ${id}`);
     await db.internalRoleAssignment.update({ where: { id }, data: { expiresAt: new Date(Date.now() + 90 * 86_400_000) } });
     return;
   }
   await db.internalRoleAssignment.create({ data: {
-    id, userId, role, scopeType: "GLOBAL", scopeRef: null, scopeKey: "GLOBAL:*", status: "ACTIVE", version: 1,
+    id, userId, role, scopeType, scopeRef, scopeKey, status: "ACTIVE", version: 1,
     reason: "Synthetic founder demonstration only", evidenceRef: "demo://founder-initial-assessment/bootstrap",
-    proposalDigest: digest({ userId, role, scopeKey: "GLOBAL:*" }), proposedByUserId: "demo-bootstrap-maker",
+    proposalDigest: digest({ userId, role, scopeKey }), proposedByUserId: "demo-bootstrap-maker",
     proposalStepUpId: "demo-bootstrap-stepup", approvedByUserId: "demo-bootstrap-checker",
     approvalStepUpId: "demo-bootstrap-review", approvalReason: "Synthetic founder demonstration only",
     effectiveAt: new Date(Date.now() - 60_000), expiresAt: new Date(Date.now() + 90 * 86_400_000),
   } });
 }
 
-export async function seedFounderDemoDatabase(config: FounderDemoConfig, users: Record<AccountKey, DemoFirebaseUser>) {
+export async function seedFounderDemoDatabase(config: FounderDemoConfig, users: Record<BaseAccountKey, DemoFirebaseUser> & Partial<Record<JourneyAccountKey, DemoFirebaseUser>>) {
+  const configuredAccounts = configuredFounderDemoAccounts(config);
+  const uids = configuredAccounts.map(([key]) => users[key]?.uid);
+  if (uids.some(uid => typeof uid !== "string" || !uid.trim()) || new Set(uids).size !== uids.length) {
+    throw new Error("each demo role requires a distinct Firebase identity");
+  }
   const db = new PrismaService();
   await db.$connect();
   try {
@@ -153,12 +183,12 @@ export async function seedFounderDemoDatabase(config: FounderDemoConfig, users: 
         update: { status: "ADMITTED", effectiveAt: new Date(Date.now() - 60_000), expiresAt: new Date(Date.now() + 90 * 86_400_000), decisionReason: "Synthetic founder demonstration only" },
       });
 
-      for (const key of FOUNDER_DEMO_ACCOUNT_KEYS) {
-        const account = config.accounts[key], firebase = users[key], id = `demo-user-${key}`;
+      for (const [key, account] of configuredAccounts) {
+        const firebase = users[key]!, id = `demo-user-${key}`;
         const existing = await tx.venueUser.findUnique({ where: { email: account.email } });
         if (existing && existing.id !== id) throw new Error(`refusing to reuse existing venue account ${account.email}`);
         const existingId = await tx.venueUser.findUnique({ where: { id } });
-        const expectedRole = key.startsWith("seller") ? "ISSUER" : "DESK";
+        const expectedRole = key.startsWith("seller") ? "ISSUER" : key.startsWith("buyer") ? "INVESTOR" : "DESK";
         if (existingId && (existingId.email !== account.email || existingId.role !== expectedRole || (existingId.firebaseUid && existingId.firebaseUid !== firebase.uid))) throw new Error(`existing venue identity conflicts with ${id}`);
         await tx.venueUser.upsert({ where: { id }, create: {
           id, firebaseUid: firebase.uid, email: account.email, displayName: account.displayName,
@@ -197,6 +227,11 @@ export async function seedFounderDemoDatabase(config: FounderDemoConfig, users: 
       }
       await ensureInternalAssignment(tx, "demo-user-invoicePreparer", "MANAGER");
       await ensureInternalAssignment(tx, "demo-user-invoiceChecker", "RISK_COMPLIANCE_OFFICER");
+      if (config.journeyAccounts) {
+        await ensureInternalAssignment(tx, "demo-user-preparationReviewer", "RISK_COMPLIANCE_OFFICER", config.institutionId);
+        // Buyer identities deliberately have no seeded institution membership, mandates,
+        // contract, profile or workspace. Drive their actual onboarding and approval APIs.
+      }
 
       const uploadProfile = founderDemoUploadProfile(config.institutionId);
       const providerId = `demo-provider-assessment-upload-${config.institutionId}`;
@@ -310,9 +345,9 @@ export async function bootstrapFounderDemo() {
   const appName = "assurerail-founder-demo-bootstrap";
   const app = getApps().find(candidate => candidate.name === appName) ?? initializeApp({ credential: cert({ projectId: creds.projectId, clientEmail: creds.clientEmail, privateKey: creds.privateKey }), projectId: creds.projectId }, appName);
   const auth = getAuth(app), users = {} as Record<AccountKey, UserRecord>;
-  for (const key of FOUNDER_DEMO_ACCOUNT_KEYS) users[key] = await firebaseUser(auth, key, config.accounts[key], config.rotateExistingDemoPasswords);
+  for (const [key, account] of configuredFounderDemoAccounts(config)) users[key] = await firebaseUser(auth, key, account, config.rotateExistingDemoPasswords);
   await seedFounderDemoDatabase(config, users);
-  return { status: "READY", classification: "SYNTHETIC_ONLY", firebaseProjectId: config.firebaseProjectId, institutionId: config.institutionId, assessmentUploadProfile: { [config.institutionId]: founderDemoUploadProfile(config.institutionId) }, accounts: FOUNDER_DEMO_ACCOUNT_KEYS.map(key => ({ role: key, email: config.accounts[key].email, firebaseUid: users[key].uid })), passwordsPrinted: false, liveAuthorityGranted: false };
+  return { status: "READY", classification: "SYNTHETIC_ONLY", firebaseProjectId: config.firebaseProjectId, institutionId: config.institutionId, assessmentUploadProfile: { [config.institutionId]: founderDemoUploadProfile(config.institutionId) }, accounts: configuredFounderDemoAccounts(config).map(([key, account]) => ({ role: key, email: account.email, firebaseUid: users[key].uid })), ...(config.journeyAccounts ? { buyerOnboarding: "REQUIRED_VIA_GUARDED_APIS", preparationQualification: "REQUIRES_LABELLED_SYNTHETIC_QUALIFICATION" } : {}), passwordsPrinted: false, liveAuthorityGranted: false };
 }
 
 if (require.main === module) void bootstrapFounderDemo().then(result => console.log(JSON.stringify(result, null, 2))).catch(error => { console.error(`[FOUNDER-DEMO-BOOTSTRAP] FAILED: ${(error as Error).message}`); process.exitCode = 1; });

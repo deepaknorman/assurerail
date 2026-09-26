@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PrismaService } from "../store/prisma.service";
-import { FOUNDER_DEMO_ACCOUNT_KEYS, founderDemoUploadProfile, seedFounderDemoDatabase, validateFounderDemoConfig } from "./founder-demo-bootstrap";
+import { FOUNDER_DEMO_ACCOUNT_KEYS, FOUNDER_DEMO_JOURNEY_ACCOUNT_KEYS, configuredFounderDemoAccounts, founderDemoUploadProfile, seedFounderDemoDatabase, validateFounderDemoConfig } from "./founder-demo-bootstrap";
 
 async function main() {
   if (process.env.ASSURERAIL_DISPOSABLE_FOUNDER_DEMO_REHEARSAL !== "true" || !process.env.DATABASE_URL?.includes("127.0.0.1")) throw new Error("disposable local founder-demo rehearsal required");
@@ -43,6 +43,38 @@ async function main() {
     assert.equal(connector?.certifications.length, 1);
     assert.equal(connector?.certifications[0]?.status, "APPROVED");
     assert.equal(connector?.certifications[0]?.operatingMode, "SHADOW");
+    const journeyAccounts = Object.fromEntries(FOUNDER_DEMO_JOURNEY_ACCOUNT_KEYS.map((key, index) => [key, {
+      email: `rail-demo-${key.toLowerCase()}@example.test`, password: `Synthetic-Only-${index + 4}-Password!`,
+      totpSecret: `JBSWY3DPEHPK3PX${String.fromCharCode(69 + index)}`, displayName: `Synthetic ${key}`,
+    }]));
+    const extended = validateFounderDemoConfig({ ...config, journeyAccounts });
+    const extendedUsers = Object.fromEntries(configuredFounderDemoAccounts(extended).map(([key]) => [key, { uid: `firebase-${key}` }])) as Parameters<typeof seedFounderDemoDatabase>[1];
+    await seedFounderDemoDatabase(extended, extendedUsers);
+    await seedFounderDemoDatabase(extended, extendedUsers);
+    assert.equal(await db.venueUser.count({ where: { id: { startsWith: "demo-user-" } } }), 9);
+    assert.equal(await db.mfaEnrollment.count({ where: { firebaseUid: { startsWith: "firebase-" }, verified: true } }), 9);
+    const reviewerAssignments = await db.internalRoleAssignment.findMany({ where: { userId: "demo-user-preparationReviewer" } });
+    assert.equal(reviewerAssignments.length, 1);
+    assert.equal(reviewerAssignments[0].scopeType, "INSTITUTION");
+    assert.equal(reviewerAssignments[0].scopeRef, config.institutionId);
+    assert.equal(reviewerAssignments[0].role, "RISK_COMPLIANCE_OFFICER");
+    const buyerIds = FOUNDER_DEMO_JOURNEY_ACCOUNT_KEYS.filter(key => key.startsWith("buyer")).map(key => `demo-user-${key}`);
+    assert.equal(await db.venueUser.count({ where: { id: { in: buyerIds }, role: "INVESTOR", isAdmin: false, platformRole: null } }), 4);
+    assert.equal(await db.institutionMember.count({ where: { userId: { in: buyerIds } } }), 0);
+    assert.equal(await db.internalRoleAssignment.count({ where: { userId: { in: buyerIds } } }), 0);
+    assert.equal(await db.buyerWorkspace.count(), 0);
+    assert.equal(await db.buyerRequirementsProfile.count(), 0);
+    assert.equal(await db.customerContract.count(), 1);
+    assert.equal(await db.institution.count(), 1);
+    assert.equal(await db.assessmentProcessingJob.count(), 0);
+    const persistedBase = await db.venueUser.findMany({ where: { id: { in: venueUsers.map(user => user.id) } } });
+    for (const original of venueUsers) {
+      const persisted = persistedBase.find(user => user.id === original.id)!;
+      assert.equal(persisted.email, original.email);
+      assert.equal(persisted.firebaseUid, original.firebaseUid);
+      assert.equal(persisted.role, original.role);
+    }
+    console.log("[FOUNDER-DEMO-DB] PASS optional journey roster twice: nine unique identities, institution-scoped reviewer, no seeded buyer authority/workspace/results; original identities preserved");
     console.log("[FOUNDER-DEMO-DB] PASS identities, separated commercial/evidence mandates, invoice roles, active contract/rate card and certified synthetic upload profile; second run idempotent");
   } finally { await db.$disconnect(); }
 }
