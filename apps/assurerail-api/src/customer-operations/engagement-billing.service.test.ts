@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { EngagementBillingService, validateBankTransferReference } from "./engagement-billing.service";
+import { canonicalEvidenceDigest, EngagementBillingService, validateBankTransferReference } from "./engagement-billing.service";
 import { EngagementBillingParticipantController, EngagementBillingInternalController } from "./engagement-billing.controllers";
 
 test("new billing refuses activation without both shadow flags",async()=>{
@@ -57,4 +57,10 @@ test("NEFT and RTGS UTRs and IMPS RRNs have rail-specific canonical shapes",()=>
   assert.throws(()=>validateBankTransferReference("NEFT","NEFT-SYN-1"),/UTR/);
   assert.throws(()=>validateBankTransferReference("RTGS","123"),/UTR/);
   assert.throws(()=>validateBankTransferReference("IMPS","SYN260927001"),/RRN/);
+});
+test("document evidence digests use the canonical API form",()=>{
+  const hex="a".repeat(64);
+  assert.equal(canonicalEvidenceDigest(hex),`sha256:${hex}`);
+  assert.equal(canonicalEvidenceDigest(`sha256:${hex}`),`sha256:${hex}`);
+  assert.equal(canonicalEvidenceDigest("sha256:not-a-digest"),null);
 });

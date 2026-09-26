@@ -32,6 +32,11 @@ export function validateBankTransferReference(rail: (typeof TRANSFER_RAILS)[numb
   if (!valid) throw new BadRequestException(rail === "IMPS" ? "IMPS RRN must be exactly 12 digits" : `${rail} UTR must be 16 to 22 uppercase letters or digits`);
   return reference;
 }
+export function canonicalEvidenceDigest(value: string): string | null {
+  if (/^sha256:[a-f0-9]{64}$/.test(value)) return value;
+  if (/^[a-f0-9]{64}$/.test(value)) return `sha256:${value}`;
+  return null;
+}
 
 @Injectable()
 export class EngagementBillingService {
@@ -111,7 +116,7 @@ export class EngagementBillingService {
   private async evidence(tx: Tx, institutionId: string, evidenceRef: string, digest: string) {
     const e = await tx.evidenceObject.findUnique({ where: { id: evidenceRef }, include: { versions: true } });
     const v = e?.versions.find(x => x.version === e.currentVersion);
-    if (!e || e.institutionId !== institutionId || e.status !== "AVAILABLE" || e.evidenceType !== "BANK_RECEIPT" || e.purpose !== "CUSTOMER_BILLING" || !v || v.validationStatus !== "VALID" || v.payloadDigest !== digest || (v.expiresAt && v.expiresAt <= new Date())) throw new ForbiddenException("current validated bank-receipt evidence for this institution required");
+    if (!e || e.institutionId !== institutionId || e.status !== "AVAILABLE" || e.evidenceType !== "BANK_RECEIPT" || e.purpose !== "CUSTOMER_BILLING" || !v || v.validationStatus !== "VALID" || canonicalEvidenceDigest(v.payloadDigest) !== digest || (v.expiresAt && v.expiresAt <= new Date())) throw new ForbiddenException("current validated bank-receipt evidence for this institution required");
   }
 
   private async transaction<T>(fn: (tx: Tx) => Promise<T>) {
