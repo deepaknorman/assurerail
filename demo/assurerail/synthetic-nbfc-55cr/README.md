@@ -45,7 +45,7 @@ NBFC 2 still needs its own institution/admission/access setup on the demo host. 
 Books C/D under NBFC 1's account. Both sellers deliberately reuse the same book references:
 the presentation cohort key must be **seller institution + loanbook**, not loanbook alone.
 
-## Expected checks and current processing boundary
+## Expected checks and processing boundary
 
 | Book | Starting tape result | Deliberate defects |
 |---|---|---|
@@ -56,8 +56,10 @@ the presentation cohort key must be **seller institution + loanbook**, not loanb
 
 All corrected reference tapes return MATCHED and retain the exact same principal totals.
 All books still lack the five supporting families: loan agreements, security documents,
-repayment histories, KYC/authority and insurance/collateral evidence. A matched tape alone
-does not establish portfolio readiness.
+repayment histories, KYC/authority and insurance/collateral evidence. A matched tape can enter
+Portfolio Preparation, but it does not establish document completeness, buyer approval or sale
+readiness. Those open families and the loan-file coverage count are disclosed and digest-bound
+when the seller accepts Preparation.
 
 Full-record extraction and deterministic metrics pass for all eight CSVs. However, the
 current assessment worker feeds tape rows into a 120,000-character AI input guard. Even the
@@ -70,11 +72,13 @@ shortest possible annotated full-tape payload exceeds that guard for every book 
 | C | 37,994 | 187,922 |
 | D | 25,344 | 125,322 |
 
-The current worker therefore skips AI with `AI_INPUT_BUDGET_EXCEEDED`; complete automated
-analysis must not be claimed. The approved runtime follow-up is deterministic-only tape
-processing, then bounded, resumable supporting-document review with explicit coverage.
-No cap was raised and no rows were sampled away to make this fixture pass. Local validation
-does not claim hosted uploads, malware scans, provider calls or a complete assessment run.
+Loan tapes stay entirely outside model review. The worker checks every tape row with
+deterministic code and a tape-only run records
+`NOT_APPLICABLE / NO_UNSTRUCTURED_DOCUMENTS_SELECTED`. Supporting documents use the bounded
+review path with explicit admitted, reviewed and unreviewed coverage. No cap was raised and no
+rows were sampled away to make this fixture pass. Local fixture validation does not by itself
+claim hosted uploads, malware scans, provider calls or a complete assessment run; hosted proof
+is recorded separately under `docs/demo/assurerail/evidence/`.
 
 ## Exact totals and reproducibility
 
