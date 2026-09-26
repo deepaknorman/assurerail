@@ -1,0 +1,483 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "codeCommit": "28e1438ccfa13d6918e953a63a723f3f3b941cdd",
+  "generatedAt": "2026-09-26T14:05:12.902Z",
+  "classification": "SYNTHETIC_ONLY",
+  "hostedAssessmentRun": false,
+  "sellerPrincipalMinor": {
+    "demo-nbfc-ev-001": "35000000000",
+    "demo-nbfc-ev-002": "20000000000"
+  },
+  "checks": [
+    {
+      "file": "upload-step1/book-a-initial.csv",
+      "sha256": "eb660bdea2874464e0f1d537b1e0dd2a1e1326200c2013d69c7e31d23e65017e",
+      "fileBytes": 76333,
+      "extractionMs": 309.9,
+      "metricsMs": 23.21,
+      "extractedSegments": 1633,
+      "extractionCompletedWithinWorkerLimits": true,
+      "status": "RECORD_EXCEPTIONS",
+      "expectedPrimaryPairCount": 1500,
+      "parsedPrimaryPairCount": 1500,
+      "expectedLinkedPartyCount": 120,
+      "parsedLinkedPartyCount": 120,
+      "expectedUniqueLoanCount": 1500,
+      "parsedUniqueLoanCount": 1500,
+      "parsedUniqueLoanCountActual": 1200,
+      "invalidRecords": 0,
+      "duplicateRecords": 12,
+      "recordIssues": [
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1622,
+          "loanId": "SYN-A-LN-0001",
+          "partyId": "SYN-A-BR-0001",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1623,
+          "loanId": "SYN-A-LN-0002",
+          "partyId": "SYN-A-BR-0002",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1624,
+          "loanId": "SYN-A-LN-0003",
+          "partyId": "SYN-A-BR-0003",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1625,
+          "loanId": "SYN-A-LN-0004",
+          "partyId": "SYN-A-BR-0004",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1626,
+          "loanId": "SYN-A-LN-0005",
+          "partyId": "SYN-A-BR-0005",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1627,
+          "loanId": "SYN-A-LN-0006",
+          "partyId": "SYN-A-BR-0006",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1628,
+          "loanId": "SYN-A-LN-0007",
+          "partyId": "SYN-A-BR-0007",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1629,
+          "loanId": "SYN-A-LN-0008",
+          "partyId": "SYN-A-BR-0008",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1630,
+          "loanId": "SYN-A-LN-0009",
+          "partyId": "SYN-A-BR-0009",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1631,
+          "loanId": "SYN-A-LN-0010",
+          "partyId": "SYN-A-BR-0010",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1632,
+          "loanId": "SYN-A-LN-0011",
+          "partyId": "SYN-A-BR-0011",
+          "partyRole": "BORROWER"
+        },
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 1633,
+          "loanId": "SYN-A-LN-0012",
+          "partyId": "SYN-A-BR-0012",
+          "partyRole": "BORROWER"
+        }
+      ],
+      "parsedPrincipalMinor": "20000000000",
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": false,
+      "loanRecordsDigest": "7ca1f53384a19e715729fa850dd3216a57c02d3c299699267d09439306a7f79d",
+      "analysisBudget": {
+        "characterLimit": 120000,
+        "annotatedSourceCharactersLowerBound": 378965,
+        "guaranteedSkipForFullTape": true
+      }
+    },
+    {
+      "file": "reference-for-step2/book-a-corrected.csv",
+      "sha256": "6ad252df5f1b05565a8a8435dbfa110c87100ef024376aca49570a2d5b327a4a",
+      "fileBytes": 75782,
+      "extractionMs": 275.81,
+      "metricsMs": 5.93,
+      "extractedSegments": 1621,
+      "extractionCompletedWithinWorkerLimits": true,
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 1500,
+      "parsedPrimaryPairCount": 1500,
+      "expectedLinkedPartyCount": 120,
+      "parsedLinkedPartyCount": 120,
+      "expectedUniqueLoanCount": 1500,
+      "parsedUniqueLoanCount": 1500,
+      "parsedUniqueLoanCountActual": 1200,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "20000000000",
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true,
+      "loanRecordsDigest": "7ca1f53384a19e715729fa850dd3216a57c02d3c299699267d09439306a7f79d",
+      "analysisBudget": {
+        "characterLimit": 120000,
+        "annotatedSourceCharactersLowerBound": 376182,
+        "guaranteedSkipForFullTape": true
+      }
+    },
+    {
+      "file": "upload-step1/book-b-initial.csv",
+      "sha256": "f17c8805ef1faad680b2659e3190752f11eecd681d7e763814d7c671df4c84ed",
+      "fileBytes": 50620,
+      "extractionMs": 311.69,
+      "metricsMs": 4.08,
+      "extractedSegments": 1081,
+      "extractionCompletedWithinWorkerLimits": true,
+      "status": "RECORD_EXCEPTIONS",
+      "expectedPrimaryPairCount": 1000,
+      "parsedPrimaryPairCount": 992,
+      "expectedLinkedPartyCount": 80,
+      "parsedLinkedPartyCount": 72,
+      "expectedUniqueLoanCount": 1000,
+      "parsedUniqueLoanCount": 992,
+      "parsedUniqueLoanCountActual": 800,
+      "invalidRecords": 16,
+      "duplicateRecords": 0,
+      "recordIssues": [
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 3,
+          "loanId": "SYN-B-LN-0001",
+          "partyId": "SYN-B-CO-0001",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 4,
+          "loanId": "SYN-B-LN-0001",
+          "partyId": "SYN-B-GU-0001",
+          "partyRole": null
+        },
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 6,
+          "loanId": "SYN-B-LN-0002",
+          "partyId": "SYN-B-CO-0002",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 7,
+          "loanId": "SYN-B-LN-0002",
+          "partyId": "SYN-B-GU-0002",
+          "partyRole": null
+        },
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 9,
+          "loanId": "SYN-B-LN-0003",
+          "partyId": "SYN-B-CO-0003",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 10,
+          "loanId": "SYN-B-LN-0003",
+          "partyId": "SYN-B-GU-0003",
+          "partyRole": null
+        },
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 12,
+          "loanId": "SYN-B-LN-0004",
+          "partyId": "SYN-B-CO-0004",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 13,
+          "loanId": "SYN-B-LN-0004",
+          "partyId": "SYN-B-GU-0004",
+          "partyRole": null
+        },
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 15,
+          "loanId": "SYN-B-LN-0005",
+          "partyId": "SYN-B-CO-0005",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 16,
+          "loanId": "SYN-B-LN-0005",
+          "partyId": "SYN-B-GU-0005",
+          "partyRole": null
+        },
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 18,
+          "loanId": "SYN-B-LN-0006",
+          "partyId": "SYN-B-CO-0006",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 19,
+          "loanId": "SYN-B-LN-0006",
+          "partyId": "SYN-B-GU-0006",
+          "partyRole": null
+        },
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 21,
+          "loanId": "SYN-B-LN-0007",
+          "partyId": "SYN-B-CO-0007",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 22,
+          "loanId": "SYN-B-LN-0007",
+          "partyId": "SYN-B-GU-0007",
+          "partyRole": null
+        },
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 24,
+          "loanId": "SYN-B-LN-0008",
+          "partyId": "SYN-B-CO-0008",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 25,
+          "loanId": "SYN-B-LN-0008",
+          "partyId": "SYN-B-GU-0008",
+          "partyRole": null
+        }
+      ],
+      "parsedPrincipalMinor": "15000000000",
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": false,
+      "loanRecordsDigest": "b81c12f319a89f89448881c6bd85206548b1d3598b59b3c88cdaee51969dc664",
+      "analysisBudget": {
+        "characterLimit": 120000,
+        "annotatedSourceCharactersLowerBound": 250580,
+        "guaranteedSkipForFullTape": true
+      }
+    },
+    {
+      "file": "reference-for-step2/book-b-corrected.csv",
+      "sha256": "69411d922d9fb5aeb9377430a9e1d3991f4e5c005890413c7bbd8bc8103890e8",
+      "fileBytes": 50644,
+      "extractionMs": 340.93,
+      "metricsMs": 2.21,
+      "extractedSegments": 1081,
+      "extractionCompletedWithinWorkerLimits": true,
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 1000,
+      "parsedPrimaryPairCount": 1000,
+      "expectedLinkedPartyCount": 80,
+      "parsedLinkedPartyCount": 80,
+      "expectedUniqueLoanCount": 1000,
+      "parsedUniqueLoanCount": 1000,
+      "parsedUniqueLoanCountActual": 800,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "15000000000",
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true,
+      "loanRecordsDigest": "b81c12f319a89f89448881c6bd85206548b1d3598b59b3c88cdaee51969dc664",
+      "analysisBudget": {
+        "characterLimit": 120000,
+        "annotatedSourceCharactersLowerBound": 250604,
+        "guaranteedSkipForFullTape": true
+      }
+    },
+    {
+      "file": "upload-step1/book-c-initial.csv",
+      "sha256": "37d406212a1f499043766f5605c4aaef22b71b45906290531612e8d4c4d58230",
+      "fileBytes": 37994,
+      "extractionMs": 266.51,
+      "metricsMs": 1.96,
+      "extractedSegments": 811,
+      "extractionCompletedWithinWorkerLimits": true,
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 750,
+      "parsedPrimaryPairCount": 750,
+      "expectedLinkedPartyCount": 60,
+      "parsedLinkedPartyCount": 60,
+      "expectedUniqueLoanCount": 750,
+      "parsedUniqueLoanCount": 750,
+      "parsedUniqueLoanCountActual": 600,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "12000000000",
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true,
+      "loanRecordsDigest": "c08461d0b13519a225b422683f9143819ef17abd3badf73739234c23c50dd608",
+      "analysisBudget": {
+        "characterLimit": 120000,
+        "annotatedSourceCharactersLowerBound": 187922,
+        "guaranteedSkipForFullTape": true
+      }
+    },
+    {
+      "file": "reference-for-step2/book-c-corrected.csv",
+      "sha256": "37d406212a1f499043766f5605c4aaef22b71b45906290531612e8d4c4d58230",
+      "fileBytes": 37994,
+      "extractionMs": 268.21,
+      "metricsMs": 3.15,
+      "extractedSegments": 811,
+      "extractionCompletedWithinWorkerLimits": true,
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 750,
+      "parsedPrimaryPairCount": 750,
+      "expectedLinkedPartyCount": 60,
+      "parsedLinkedPartyCount": 60,
+      "expectedUniqueLoanCount": 750,
+      "parsedUniqueLoanCount": 750,
+      "parsedUniqueLoanCountActual": 600,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "12000000000",
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true,
+      "loanRecordsDigest": "c08461d0b13519a225b422683f9143819ef17abd3badf73739234c23c50dd608",
+      "analysisBudget": {
+        "characterLimit": 120000,
+        "annotatedSourceCharactersLowerBound": 187922,
+        "guaranteedSkipForFullTape": true
+      }
+    },
+    {
+      "file": "upload-step1/book-d-initial.csv",
+      "sha256": "71d4e1baf58cd01105eb4e6f8ba0d0c67c1b406f3994c1392d3a2b12e24e2117",
+      "fileBytes": 25344,
+      "extractionMs": 298.7,
+      "metricsMs": 1.14,
+      "extractedSegments": 541,
+      "extractionCompletedWithinWorkerLimits": true,
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 500,
+      "parsedPrimaryPairCount": 500,
+      "expectedLinkedPartyCount": 40,
+      "parsedLinkedPartyCount": 40,
+      "expectedUniqueLoanCount": 500,
+      "parsedUniqueLoanCount": 500,
+      "parsedUniqueLoanCountActual": 400,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "8000000000",
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true,
+      "loanRecordsDigest": "f63a301836feb2a53dac9efc0d8b3797e3562a5782d1715701215bf90b844489",
+      "analysisBudget": {
+        "characterLimit": 120000,
+        "annotatedSourceCharactersLowerBound": 125322,
+        "guaranteedSkipForFullTape": true
+      }
+    },
+    {
+      "file": "reference-for-step2/book-d-corrected.csv",
+      "sha256": "71d4e1baf58cd01105eb4e6f8ba0d0c67c1b406f3994c1392d3a2b12e24e2117",
+      "fileBytes": 25344,
+      "extractionMs": 262.21,
+      "metricsMs": 1.27,
+      "extractedSegments": 541,
+      "extractionCompletedWithinWorkerLimits": true,
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 500,
+      "parsedPrimaryPairCount": 500,
+      "expectedLinkedPartyCount": 40,
+      "parsedLinkedPartyCount": 40,
+      "expectedUniqueLoanCount": 500,
+      "parsedUniqueLoanCount": 500,
+      "parsedUniqueLoanCountActual": 400,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "8000000000",
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true,
+      "loanRecordsDigest": "f63a301836feb2a53dac9efc0d8b3797e3562a5782d1715701215bf90b844489",
+      "analysisBudget": {
+        "characterLimit": 120000,
+        "annotatedSourceCharactersLowerBound": 125322,
+        "guaranteedSkipForFullTape": true
+      }
+    }
+  ],
+  "workbook": {
+    "file": "AssureRail_Synthetic_NBFC_55Cr_Step1.xlsx",
+    "fileBytes": 394457,
+    "extractionMs": 1329.64,
+    "extractedSegments": 73540,
+    "automaticTapeMapping": "TAPE_MAPPING_REQUIRED",
+    "sha256": "4a176d5e3d2da4e4de83330c07cea09165d119fa8e9faf06e0117ea6a8b1bb09"
+  },
+  "documentInventory": {
+    "policyVersion": "ev-secured-term-da-1.0.0",
+    "status": "EXCEPTIONS",
+    "required": [
+      "LOAN_TAPE",
+      "LOAN_AGREEMENT",
+      "SECURITY_DOCUMENT",
+      "REPAYMENT_HISTORY",
+      "KYC_AUTHORITY",
+      "INSURANCE_COLLATERAL"
+    ],
+    "received": [
+      "LOAN_TAPE"
+    ],
+    "missing": [
+      "LOAN_AGREEMENT",
+      "SECURITY_DOCUMENT",
+      "REPAYMENT_HISTORY",
+      "KYC_AUTHORITY",
+      "INSURANCE_COLLATERAL"
+    ],
+    "reason": "REQUIRED_DOCUMENT_FAMILIES_MISSING"
+  }
+}
