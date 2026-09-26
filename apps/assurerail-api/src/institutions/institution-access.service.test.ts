@@ -52,6 +52,43 @@ test("[PR03][ACCESS] suspension is seen on every evaluation even when no mandate
   })).code, "INSTITUTION_NOT_ACTIVE");
 });
 
+function scopedService(scopeType = "INSTITUTION", scopeRef: string | null = "inst-1") {
+  const institution = activeInstitution();
+  const member = institution.members[0];
+  return new InstitutionAccessService({
+    institution: { findUnique: async () => ({
+      ...institution,
+      members: [{ ...member, mandates: [{ ...member.mandates[0], scopeType, scopeRef }] }],
+    }) },
+  } as never);
+}
+
+const institutionRequest = { userId: "user-1", institutionId: "inst-1", action: "ADMINISTER_MEMBERS" as const, now };
+
+test("[DEMO][ACCESS] an institution request defaults its reference to that institution", async () => {
+  const service = scopedService();
+  assert.equal((await service.evaluateHuman(institutionRequest)).code, "AUTHORISED");
+  assert.equal((await service.evaluateHuman({ ...institutionRequest, scopeType: "INSTITUTION" })).code, "AUTHORISED");
+});
+
+test("[DEMO][ACCESS] explicit foreign or null institution references remain denied", async () => {
+  const service = scopedService();
+  for (const scopeRef of ["inst-2", null]) {
+    assert.equal((await service.evaluateHuman({ ...institutionRequest, scopeRef })).code, "SCOPE_REFERENCE_MISMATCH");
+  }
+  assert.equal((await scopedService("INSTITUTION", "inst-2").evaluateHuman(institutionRequest)).code, "SCOPE_REFERENCE_MISMATCH");
+});
+
+test("[DEMO][ACCESS] institution defaults do not invent references for child resources", async () => {
+  const service = scopedService("TRANSACTION_CASE", "case-1");
+  const request = { ...institutionRequest, scopeType: "TRANSACTION_CASE" };
+  assert.equal((await service.evaluateHuman(request)).code, "SCOPE_REFERENCE_MISMATCH");
+  assert.equal((await service.evaluateHuman({ ...request, scopeRef: "case-2" })).code, "SCOPE_REFERENCE_MISMATCH");
+  assert.equal((await service.evaluateHuman({ ...request, scopeRef: "case-1" })).code, "AUTHORISED");
+  assert.equal((await service.evaluateHuman(institutionRequest)).code, "SCOPE_TYPE_MISMATCH");
+  assert.equal((await scopedService().evaluateHuman({ ...request, scopeRef: "case-1" })).code, "SCOPE_TYPE_MISMATCH");
+});
+
 test("[PR03][ACCESS] route comparison requires active admission and an exact active entitlement", async () => {
   const route = {
     transactionRoute: "PTC",

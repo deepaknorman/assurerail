@@ -43,6 +43,11 @@ export class InstitutionAccessService {
     const member = institution.members[0];
     const now = input.now ?? new Date();
     const scopeType = input.scopeType ?? "INSTITUTION";
+    // An omitted institution reference identifies the institution already selected above.
+    // Keep explicit references/null and child-resource requests unchanged and fail-closed.
+    const scopeRef = scopeType === "INSTITUTION" && input.scopeRef === undefined
+      ? input.institutionId
+      : input.scopeRef;
     const candidates = member?.mandates ?? [];
     let last: PolicyDecision = { allowed: false, code: "MANDATE_NOT_FOUND" };
     if (candidates.length === 0) {
@@ -63,7 +68,7 @@ export class InstitutionAccessService {
         mandateScopeRef: null,
         requestedAction: input.action,
         requestedScopeType: scopeType,
-        requestedScopeRef: input.scopeRef,
+        requestedScopeRef: scopeRef,
       });
     }
     for (const mandate of candidates) {
@@ -84,7 +89,7 @@ export class InstitutionAccessService {
         mandateScopeRef: mandate.scopeRef,
         requestedAction: input.action,
         requestedScopeType: scopeType,
-        requestedScopeRef: input.scopeRef,
+        requestedScopeRef: scopeRef,
       });
       if (last.allowed) return { ...last, memberId: member.id, mandateId: mandate.id };
     }
