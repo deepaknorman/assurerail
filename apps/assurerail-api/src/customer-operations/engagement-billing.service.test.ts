@@ -29,10 +29,10 @@ test("invoice position is scoped, and approved receipts never unlock live stages
   const oldMode=process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE,oldOps=process.env.ARAIL_CUSTOMER_OPERATIONS_V1;
   try {
     process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE="shadow";process.env.ARAIL_CUSTOMER_OPERATIONS_V1="shadow";
-    const db={customerInvoiceStatement:{findUnique:async()=>({id:"i",customerContract:{institutionId:"a"},status:"ISSUED_SHADOW",currency:"INR",currencyScale:2,netFeeMinor:"100"})},customerPaymentReceipt:{findMany:async(args:{select?:unknown})=>args.select?[{transferRail:"NEFT",bankTransferRef:"SYNNEFT202609270001",amountMinor:"100",status:"VERIFIED_SHADOW",reviewedByUserId:"checker",reviewedAt:new Date(),syntheticOnly:true}]:[{amountMinor:"100"}]},engagementCheckout:{findUnique:async()=>null},customerPaymentAdjustment:{count:async()=>0}};
+    const db={customerInvoiceStatement:{findUnique:async()=>({id:"i",customerContract:{institutionId:"a"},status:"ISSUED_SHADOW",currency:"INR",currencyScale:2,netFeeMinor:"100"})},customerPaymentReceipt:{findMany:async(args:{select?:unknown})=>args.select?[{transferRail:"NEFT",bankTransferRef:"SYNNEFT202609270001",amountMinor:"100",status:"VERIFIED_SHADOW",reviewedAt:new Date(),syntheticOnly:true}]:[{amountMinor:"100"}]},engagementCheckout:{findUnique:async()=>null},customerPaymentAdjustment:{count:async()=>0}};
     const service=new EngagementBillingService(db as never,{requireHuman:async()=>({})} as never,{} as never,{} as never);
     const actor={actorUserId:"u",actorSessionId:"s",actingInstitutionId:"a"};
-    const r=await service.paymentPosition(actor,"i");assert.equal(r.fullyReconciled,true);assert.equal(r.liveStageUnlock,false);assert.deepEqual(r.bankTransferRails,["NEFT"]);
+    const r=await service.paymentPosition(actor,"i");assert.equal(r.fullyReconciled,true);assert.equal(r.liveStageUnlock,false);assert.deepEqual(r.bankTransferRails,["NEFT"]);assert.equal(r.bankReceipts[0].verifiedBy,"INDEPENDENT_FINANCE_REVIEWER");assert.equal("reviewedByUserId" in r.bankReceipts[0],false);
     await assert.rejects(()=>service.paymentPosition({...actor,actingInstitutionId:"b"},"i"),/not found/);
   } finally {
     if(oldMode===undefined)delete process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE;else process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE=oldMode;

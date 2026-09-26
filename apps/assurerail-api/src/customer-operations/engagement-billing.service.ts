@@ -53,7 +53,8 @@ export class EngagementBillingService {
     const captured=checkout?.status==="PAID_TEST"&&checkout.mode==="TEST"&&checkout.checkedAt&&checkout.checkedAt.getTime()>Date.now()-5*60000?checkout.verifiedPaidMinor:"0";
     const position=invoicePaymentPosition(invoice.netFeeMinor,[...receipts,...(captured!=="0"?[captured]:[])]);
     const pending=await this.db.customerPaymentAdjustment.count({where:{receipt:{invoiceStatementId:invoice.id},status:"PROPOSED"}});
-    const bankReceipts = await this.db.customerPaymentReceipt.findMany({ where: { invoiceStatementId: invoice.id, status: "VERIFIED_SHADOW" }, select: { transferRail: true, bankTransferRef: true, amountMinor: true, status: true, reviewedByUserId: true, reviewedAt: true, syntheticOnly: true } });
+    const verifiedReceipts = await this.db.customerPaymentReceipt.findMany({ where: { invoiceStatementId: invoice.id, status: "VERIFIED_SHADOW" }, select: { transferRail: true, bankTransferRef: true, amountMinor: true, status: true, reviewedAt: true, syntheticOnly: true } });
+    const bankReceipts=verifiedReceipts.map(receipt=>({...receipt,verifiedBy:receipt.reviewedAt?"INDEPENDENT_FINANCE_REVIEWER" as const:null}));
     return { invoiceId, operatingMode: "SHADOW", liveStageUnlock: false, ...position, bankReceiptsMinor:receipts.reduce((sum,v)=>sum+BigInt(v),0n).toString(),bankTransferRails:[...new Set(bankReceipts.map(row=>row.transferRail))],bankReceipts,gatewayCapturedMinor:captured,checkoutStatus:checkout?.status??null,fullyReconciled:position.fullyReconciled&&!pending&&checkout?.status!=="HOLD",reconciliationRequired:position.reconciliationRequired||Boolean(pending)||checkout?.status==="HOLD" };
   }
 
