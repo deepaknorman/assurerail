@@ -1,0 +1,294 @@
+{
+  "profile": "55cr",
+  "workbookFile": "AssureRail_Synthetic_NBFC_55Cr_Step1.xlsx",
+  "portfolioPrincipalMinor": "55000000000",
+  "sellerPrincipalMinor": {
+    "demo-nbfc-ev-001": "35000000000",
+    "demo-nbfc-ev-002": "20000000000"
+  },
+  "schemaVersion": 1,
+  "classification": "SYNTHETIC_ONLY",
+  "purpose": "STEP_1_AUTOMATIC_READINESS_INPUTS",
+  "asOfDate": "2026-09-15",
+  "books": [
+    {
+      "key": [
+        "demo-nbfc-ev-001",
+        "SYN-EV-2W-2025"
+      ],
+      "label": "Book A",
+      "sellerInstitutionId": "demo-nbfc-ev-001",
+      "sellerName": "AssureRail Synthetic EV Finance NBFC",
+      "bookRef": "SYN-EV-2W-2025",
+      "assetFamily": "VEHICLE_EV",
+      "asOfDate": "2026-09-15",
+      "loanCount": 1200,
+      "primaryPairCount": 1500,
+      "linkedPartyCount": 120,
+      "sellerProposedConsiderationMinor": "20000000000",
+      "aggregateProgrammeConsiderationMinor": "55000000000",
+      "considerationBasis": "SYNTHETIC_PAR_DECLARATION_NOT_VALUATION",
+      "principalMinor": "20000000000",
+      "initialFile": "upload-step1/book-a-initial.csv",
+      "referenceFile": "reference-for-step2/book-a-corrected.csv",
+      "initialExpectedStatus": "RECORD_EXCEPTIONS",
+      "referenceExpectedStatus": "MATCHED",
+      "deliberateDefects": [
+        {
+          "csvRow": 1622,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0001",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1623,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0002",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1624,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0003",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1625,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0004",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1626,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0005",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1627,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0006",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1628,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0007",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1629,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0008",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1630,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0009",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1631,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0010",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1632,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0011",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        },
+        {
+          "csvRow": 1633,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0012",
+          "description": "Borrower pair appears twice; principal must not be counted twice."
+        }
+      ],
+      "hostedInstitutionAvailableAtPreparation": true
+    },
+    {
+      "key": [
+        "demo-nbfc-ev-001",
+        "SYN-EV-3W-2025"
+      ],
+      "label": "Book B",
+      "sellerInstitutionId": "demo-nbfc-ev-001",
+      "sellerName": "AssureRail Synthetic EV Finance NBFC",
+      "bookRef": "SYN-EV-3W-2025",
+      "assetFamily": "VEHICLE_EV",
+      "asOfDate": "2026-09-15",
+      "loanCount": 800,
+      "primaryPairCount": 1000,
+      "linkedPartyCount": 80,
+      "sellerProposedConsiderationMinor": "15000000000",
+      "aggregateProgrammeConsiderationMinor": "55000000000",
+      "considerationBasis": "SYNTHETIC_PAR_DECLARATION_NOT_VALUATION",
+      "principalMinor": "15000000000",
+      "initialFile": "upload-step1/book-b-initial.csv",
+      "referenceFile": "reference-for-step2/book-b-corrected.csv",
+      "initialExpectedStatus": "RECORD_EXCEPTIONS",
+      "referenceExpectedStatus": "MATCHED",
+      "deliberateDefects": [
+        {
+          "csvRow": 3,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0001",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 6,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0002",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 9,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0003",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 12,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0004",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 15,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0005",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 18,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0006",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 21,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0007",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 24,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0008",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 4,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0001",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        },
+        {
+          "csvRow": 7,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0002",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        },
+        {
+          "csvRow": 10,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0003",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        },
+        {
+          "csvRow": 13,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0004",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        },
+        {
+          "csvRow": 16,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0005",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        },
+        {
+          "csvRow": 19,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0006",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        },
+        {
+          "csvRow": 22,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0007",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        },
+        {
+          "csvRow": 25,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0008",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        }
+      ],
+      "hostedInstitutionAvailableAtPreparation": true
+    },
+    {
+      "key": [
+        "demo-nbfc-ev-002",
+        "SYN-EV-2W-2025"
+      ],
+      "label": "Book C",
+      "sellerInstitutionId": "demo-nbfc-ev-002",
+      "sellerName": "Synthetic Summit Vehicle Finance NBFC",
+      "bookRef": "SYN-EV-2W-2025",
+      "assetFamily": "VEHICLE_EV",
+      "asOfDate": "2026-09-15",
+      "loanCount": 600,
+      "primaryPairCount": 750,
+      "linkedPartyCount": 60,
+      "sellerProposedConsiderationMinor": "12000000000",
+      "aggregateProgrammeConsiderationMinor": "55000000000",
+      "considerationBasis": "SYNTHETIC_PAR_DECLARATION_NOT_VALUATION",
+      "principalMinor": "12000000000",
+      "initialFile": "upload-step1/book-c-initial.csv",
+      "referenceFile": "reference-for-step2/book-c-corrected.csv",
+      "initialExpectedStatus": "MATCHED",
+      "referenceExpectedStatus": "MATCHED",
+      "deliberateDefects": [],
+      "hostedInstitutionAvailableAtPreparation": false
+    },
+    {
+      "key": [
+        "demo-nbfc-ev-002",
+        "SYN-EV-3W-2025"
+      ],
+      "label": "Book D",
+      "sellerInstitutionId": "demo-nbfc-ev-002",
+      "sellerName": "Synthetic Summit Vehicle Finance NBFC",
+      "bookRef": "SYN-EV-3W-2025",
+      "assetFamily": "VEHICLE_EV",
+      "asOfDate": "2026-09-15",
+      "loanCount": 400,
+      "primaryPairCount": 500,
+      "linkedPartyCount": 40,
+      "sellerProposedConsiderationMinor": "8000000000",
+      "aggregateProgrammeConsiderationMinor": "55000000000",
+      "considerationBasis": "SYNTHETIC_PAR_DECLARATION_NOT_VALUATION",
+      "principalMinor": "8000000000",
+      "initialFile": "upload-step1/book-d-initial.csv",
+      "referenceFile": "reference-for-step2/book-d-corrected.csv",
+      "initialExpectedStatus": "MATCHED",
+      "referenceExpectedStatus": "MATCHED",
+      "deliberateDefects": [],
+      "hostedInstitutionAvailableAtPreparation": false
+    }
+  ],
+  "missingEvidenceFamilies": [
+    "LOAN_AGREEMENT",
+    "SECURITY_DOCUMENT",
+    "REPAYMENT_HISTORY",
+    "KYC_AUTHORITY",
+    "INSURANCE_COLLATERAL"
+  ],
+  "assessmentResultsIncluded": false,
+  "finalOffersIncluded": false
+}
