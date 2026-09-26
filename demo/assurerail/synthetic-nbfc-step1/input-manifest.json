@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "classification": "SYNTHETIC_ONLY",
+  "purpose": "STEP_1_AUTOMATIC_READINESS_INPUTS",
+  "asOfDate": "2026-09-15",
+  "books": [
+    {
+      "key": [
+        "demo-nbfc-ev-001",
+        "SYN-EV-2W-2025"
+      ],
+      "label": "Book A",
+      "sellerInstitutionId": "demo-nbfc-ev-001",
+      "sellerName": "AssureRail Synthetic EV Finance NBFC",
+      "bookRef": "SYN-EV-2W-2025",
+      "assetFamily": "VEHICLE_EV",
+      "asOfDate": "2026-09-15",
+      "loanCount": 24,
+      "primaryPairCount": 30,
+      "linkedPartyCount": 3,
+      "sellerProposedConsiderationMinor": "376927335",
+      "aggregateProgrammeConsiderationMinor": "376927335",
+      "considerationBasis": "SYNTHETIC_PAR_DECLARATION_NOT_VALUATION",
+      "principalMinor": "376927335",
+      "initialFile": "upload-step1/book-a-initial.csv",
+      "referenceFile": "reference-for-step2/book-a-corrected.csv",
+      "initialExpectedStatus": "RECORD_EXCEPTIONS",
+      "referenceExpectedStatus": "MATCHED",
+      "deliberateDefects": [
+        {
+          "csvRow": 35,
+          "code": "DUPLICATE_PAIR",
+          "loanId": "SYN-A-LN-0001",
+          "description": "One borrower pair appears twice; principal must not be counted twice."
+        }
+      ],
+      "hostedInstitutionAvailableAtPreparation": true
+    },
+    {
+      "key": [
+        "demo-nbfc-ev-001",
+        "SYN-EV-3W-2025"
+      ],
+      "label": "Book B",
+      "sellerInstitutionId": "demo-nbfc-ev-001",
+      "sellerName": "AssureRail Synthetic EV Finance NBFC",
+      "bookRef": "SYN-EV-3W-2025",
+      "assetFamily": "VEHICLE_EV",
+      "asOfDate": "2026-09-15",
+      "loanCount": 18,
+      "primaryPairCount": 22,
+      "linkedPartyCount": 2,
+      "sellerProposedConsiderationMinor": "372741195",
+      "aggregateProgrammeConsiderationMinor": "372741195",
+      "considerationBasis": "SYNTHETIC_PAR_DECLARATION_NOT_VALUATION",
+      "principalMinor": "372741195",
+      "initialFile": "upload-step1/book-b-initial.csv",
+      "referenceFile": "reference-for-step2/book-b-corrected.csv",
+      "initialExpectedStatus": "RECORD_EXCEPTIONS",
+      "referenceExpectedStatus": "MATCHED",
+      "deliberateDefects": [
+        {
+          "csvRow": 3,
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "loanId": "SYN-B-LN-0001",
+          "description": "Co-borrower repeats this loan's outstanding balance with a deliberate INR 100 mismatch."
+        },
+        {
+          "csvRow": 4,
+          "code": "INVALID_RECORD",
+          "loanId": "SYN-B-LN-0001",
+          "description": "Unmapped source role GUARANTOR; canonical input requires LINKED_PARTY."
+        }
+      ],
+      "hostedInstitutionAvailableAtPreparation": true
+    },
+    {
+      "key": [
+        "demo-nbfc-ev-002",
+        "SYN-EV-2W-2025"
+      ],
+      "label": "Book C",
+      "sellerInstitutionId": "demo-nbfc-ev-002",
+      "sellerName": "Synthetic Summit Vehicle Finance NBFC",
+      "bookRef": "SYN-EV-2W-2025",
+      "assetFamily": "VEHICLE_EV",
+      "asOfDate": "2026-09-15",
+      "loanCount": 20,
+      "primaryPairCount": 25,
+      "linkedPartyCount": 3,
+      "sellerProposedConsiderationMinor": "498948468",
+      "aggregateProgrammeConsiderationMinor": "498948468",
+      "considerationBasis": "SYNTHETIC_PAR_DECLARATION_NOT_VALUATION",
+      "principalMinor": "498948468",
+      "initialFile": "upload-step1/book-c-initial.csv",
+      "referenceFile": "reference-for-step2/book-c-corrected.csv",
+      "initialExpectedStatus": "MATCHED",
+      "referenceExpectedStatus": "MATCHED",
+      "deliberateDefects": [],
+      "hostedInstitutionAvailableAtPreparation": false
+    }
+  ],
+  "missingEvidenceFamilies": [
+    "LOAN_AGREEMENT",
+    "SECURITY_DOCUMENT",
+    "REPAYMENT_HISTORY",
+    "KYC_AUTHORITY",
+    "INSURANCE_COLLATERAL"
+  ],
+  "assessmentResultsIncluded": false,
+  "finalOffersIncluded": false
+}
