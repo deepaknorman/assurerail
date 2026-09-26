@@ -32,6 +32,11 @@ NBFC 1 and INR 2 lakh for NBFC 2; individual amounts vary.
   upload replacements or substitutes for supporting legal documents.
 - `reference-for-step2/`: corrected versions for later evidence replacement and reassessment.
   Do not upload an original and its corrected tape together as two current loan tapes.
+- `scripts/assurerail-synthetic-preparation-inputs.py`: generates the bounded Book A
+  Preparation corpus after acceptance: ten deliberately selected loans across all three states
+  and both repayment states, ten one-page text PDFs plus forty CSVs, and one manifest-declared
+  INR 100 repayment-principal mismatch. The batch proves real review controls while continuing
+  to disclose that 1,190 of 1,200 loans lack supporting-document coverage.
 - `validation-results.json`: actual code-generated checks, totals, hashes, sizes and timings.
 
 Start with Book A under the existing synthetic seller `demo-nbfc-ev-001`: `VEHICLE_EV`,
@@ -92,6 +97,10 @@ Fees and penalty interest are excluded from this synthetic model.
 python3 scripts/assurerail-synthetic-nbfc-inputs.py --profile 55cr --output-dir demo/assurerail/synthetic-nbfc-55cr
 npm run build --workspace=@assurerail/api
 node scripts/assurerail-synthetic-nbfc-check.cjs demo/assurerail/synthetic-nbfc-55cr
+python3 scripts/assurerail-synthetic-preparation-inputs.py \
+  --tape demo/assurerail/synthetic-nbfc-55cr/reference-for-step2/book-a-corrected.csv \
+  --loan-master demo/assurerail/synthetic-nbfc-55cr/reference-loan-master.csv \
+  --output-dir /tmp/assurerail-book-a-preparation
 ```
 
 The original 62-loan pack remains a small regression fixture. This pack supersedes it for
