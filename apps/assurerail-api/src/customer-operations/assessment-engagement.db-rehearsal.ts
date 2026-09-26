@@ -38,7 +38,7 @@ async function main(){
  let creates=0,paid=false,reference="";
  globalThis.fetch=(async(url:unknown,init?:RequestInit)=>{
   const path=String(url);
-  if(path.includes("api.openai.com"))return new Response(JSON.stringify({status:"completed",output:[{type:"message",content:[{type:"output_text",text:'{"findings":[]}'}]}],usage:{input_tokens:10,output_tokens:5}}));
+  if(path.includes("api.openai.com"))return new Response(JSON.stringify({status:"completed",output:[{type:"message",content:[{type:"output_text",text:'{"findings":[],"documents":[]}'}]}],usage:{input_tokens:10,output_tokens:5}}));
   if(init?.method==="POST"){creates++;reference=JSON.parse(init.body as string).reference_id;}
   const link={id:"plink_Synthetic",reference_id:reference,amount:Number(invoice.netFeeMinor),amount_paid:paid?Number(invoice.netFeeMinor):0,currency:"INR",status:paid?"paid":"created",short_url:"https://rzp.io/i/synthetic",payments:paid?[{payment_id:"pay_Synthetic",amount:Number(invoice.netFeeMinor),status:"captured"}]:[]};
   return new Response(JSON.stringify(path.includes("/payments/")?{id:"pay_Synthetic",amount:Number(invoice.netFeeMinor),currency:"INR",status:"captured",captured:true,amount_refunded:0,refund_status:null}:link));
@@ -53,15 +53,15 @@ async function main(){
  const processing=new AssessmentProcessingService(db,engagements,{get:async()=>({body:Readable.from([bytes])})} as never,staff as never,step as never,{} as never);
  process.env.ASSURERAIL_DOCUMENT_PROCESSING_MODE="shadow";process.env.ASSURERAIL_AI_ENABLED="true";process.env.ASSURERAIL_OPENAI_DATA_PROCESSING_APPROVED="true";process.env.ASSURERAIL_OPENAI_API_KEY="synthetic-key-"+"x".repeat(32);
  const queued=await processing.request(actor,offer.id,{stage:"INITIAL",requestRef:"synthetic-run-0",evidenceVersionIds:[version.id],stepUpEvidenceId:"synthetic-step"});
- await processing.runNext();const report=await db.assessmentProcessingJob.findUniqueOrThrow({where:{id:queued.id}});assert.equal(report.status,"AUTO_RELEASED");
+ await processing.runNext();const report=await db.assessmentProcessingJob.findUniqueOrThrow({where:{id:queued.id}});assert.equal(report.status,"AUTO_RELEASED",JSON.stringify({status:report.status,errorCode:report.errorCode}));
  assert.equal((report.automatedReleaseSnapshot as any).engine,"ASSURERAIL_INITIAL_AUTOMATION");
  assert.equal(report.reviewedByUserId,null);assert.equal(report.reviewEvidenceRef,null);
  assert.equal((await processing.list(actor,offer.id)).find(r=>r.id===queued.id)?.status,"AUTO_RELEASED");
  assert.equal((await processing.policy(actor,offer.id)).remainingIncludedReassessments,3);
  await assert.rejects(()=>processing.review(checker,actor.actingInstitutionId,offer.id,report.id,{decision:"RELEASE",resultDigest:report.resultDigest,reviewEvidenceRef:"unused",stepUpEvidenceId:"unused"}),/automatically released/);
- await engagements.choosePreparation(actor,offer.id,{route:"COMMITTED",quoteDigest:offer.quoteDigest,mandateAndTopUpAccepted:true,stepUpEvidenceId:"prep-step"});
+ await assert.rejects(()=>engagements.choosePreparation(actor,offer.id,{route:"COMMITTED",quoteDigest:offer.quoteDigest,mandateAndTopUpAccepted:true,stepUpEvidenceId:"prep-step"}),/resolve the automated Initial Assessment outcome/);
  await assert.rejects(()=>engagements.requirePaid(db,actor.actingInstitutionId,offer.id,"PREPARATION"),/invoiced stage/);
- console.log("[ENGAGEMENT-DB] PASS clean versioned evidence -> local CSV extraction -> unsigned automated Initial Assessment release; three reassessments remain; preparation requires another paid invoice (scanner and identity are synthetic fixtures)");
+ console.log("[ENGAGEMENT-DB] PASS clean versioned evidence -> local CSV extraction -> unsigned automated Initial Assessment release; open evidence outcome blocks preparation and three reassessments remain (scanner and identity are synthetic fixtures)");
  const raw=Buffer.from(JSON.stringify({account_id:"acc_Synthetic",event:"payment_link.paid",payload:{payment_link:{entity:{id:"plink_Synthetic"}},payment:{entity:{id:"pay_Synthetic"}}}})),sig=createHmac("sha256","w".repeat(32)).update(raw).digest("hex");
  assert.equal((await checkout.webhook(raw,sig,"synthetic-event")).replay,false);assert.equal((await checkout.webhook(raw,sig,"synthetic-event")).replay,true);
  await assert.rejects(()=>checkout.webhook(raw,"a".repeat(64),"bad-signature"),/signature/);

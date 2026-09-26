@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { EngagementBillingService } from "./engagement-billing.service";
+import { EngagementBillingService, validateBankTransferReference } from "./engagement-billing.service";
 import { EngagementBillingParticipantController, EngagementBillingInternalController } from "./engagement-billing.controllers";
 
 test("new billing refuses activation without both shadow flags",async()=>{
@@ -28,13 +28,33 @@ test("invoice position is scoped, and approved receipts never unlock live stages
   const oldMode=process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE,oldOps=process.env.ARAIL_CUSTOMER_OPERATIONS_V1;
   try {
     process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE="shadow";process.env.ARAIL_CUSTOMER_OPERATIONS_V1="shadow";
-    const db={customerInvoiceStatement:{findUnique:async()=>({id:"i",customerContract:{institutionId:"a"},status:"ISSUED_SHADOW",currency:"INR",currencyScale:2,netFeeMinor:"100"})},customerPaymentReceipt:{findMany:async()=>[{amountMinor:"100"}]},engagementCheckout:{findUnique:async()=>null},customerPaymentAdjustment:{count:async()=>0}};
+    const db={customerInvoiceStatement:{findUnique:async()=>({id:"i",customerContract:{institutionId:"a"},status:"ISSUED_SHADOW",currency:"INR",currencyScale:2,netFeeMinor:"100"})},customerPaymentReceipt:{findMany:async(args:{select?:unknown})=>args.select?[{transferRail:"NEFT",bankTransferRef:"SYNNEFT202609270001",amountMinor:"100",status:"VERIFIED_SHADOW",reviewedByUserId:"checker",reviewedAt:new Date(),syntheticOnly:true}]:[{amountMinor:"100"}]},engagementCheckout:{findUnique:async()=>null},customerPaymentAdjustment:{count:async()=>0}};
     const service=new EngagementBillingService(db as never,{requireHuman:async()=>({})} as never,{} as never,{} as never);
     const actor={actorUserId:"u",actorSessionId:"s",actingInstitutionId:"a"};
-    const r=await service.paymentPosition(actor,"i");assert.equal(r.fullyReconciled,true);assert.equal(r.liveStageUnlock,false);
+    const r=await service.paymentPosition(actor,"i");assert.equal(r.fullyReconciled,true);assert.equal(r.liveStageUnlock,false);assert.deepEqual(r.bankTransferRails,["NEFT"]);
     await assert.rejects(()=>service.paymentPosition({...actor,actingInstitutionId:"b"},"i"),/not found/);
   } finally {
     if(oldMode===undefined)delete process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE;else process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE=oldMode;
     if(oldOps===undefined)delete process.env.ARAIL_CUSTOMER_OPERATIONS_V1;else process.env.ARAIL_CUSTOMER_OPERATIONS_V1=oldOps;
   }
+});
+test("bank receipts require an explicit supported transfer rail",async()=>{
+  const oldMode=process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE,oldOps=process.env.ARAIL_CUSTOMER_OPERATIONS_V1,oldRefs=process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS;
+  try {
+    process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE="shadow";process.env.ARAIL_CUSTOMER_OPERATIONS_V1="shadow";process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS="collection-demo";
+    const service=new EngagementBillingService({} as never,{} as never,{require:async()=>({})} as never,{} as never);
+    await assert.rejects(()=>service.proposeReceipt({actorUserId:"maker",actorSessionId:"s"},"a","i",{collectionAccountRef:"collection-demo",transferRail:"UPI"}),/NEFT, RTGS or IMPS/);
+  } finally {
+    if(oldMode===undefined)delete process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE;else process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE=oldMode;
+    if(oldOps===undefined)delete process.env.ARAIL_CUSTOMER_OPERATIONS_V1;else process.env.ARAIL_CUSTOMER_OPERATIONS_V1=oldOps;
+    if(oldRefs===undefined)delete process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS;else process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS=oldRefs;
+  }
+});
+test("NEFT and RTGS UTRs and IMPS RRNs have rail-specific canonical shapes",()=>{
+  assert.equal(validateBankTransferReference("NEFT","SYNNEFT202609270001"),"SYNNEFT202609270001");
+  assert.equal(validateBankTransferReference("RTGS","SYNRTGS202609270001"),"SYNRTGS202609270001");
+  assert.equal(validateBankTransferReference("IMPS","260927000001"),"260927000001");
+  assert.throws(()=>validateBankTransferReference("NEFT","NEFT-SYN-1"),/UTR/);
+  assert.throws(()=>validateBankTransferReference("RTGS","123"),/UTR/);
+  assert.throws(()=>validateBankTransferReference("IMPS","SYN260927001"),/RRN/);
 });

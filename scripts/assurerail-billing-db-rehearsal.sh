@@ -12,6 +12,7 @@ PG_PORT="$((65510 + ($$ % 10)))"
 PG_USER="$(id -un)"
 FRESH_DB="assurerail_billing_fresh"
 RESTORE_DB="assurerail_billing_restore"
+GUARD_DB="assurerail_billing_guard"
 case "$TEST_ROOT" in */assurerail-billing.*) ;; *) echo "unsafe scratch path" >&2; exit 1 ;; esac
 for item in initdb pg_ctl createdb psql pg_dump pg_restore npx; do command -v "$item" >/dev/null || { echo "missing $item" >&2; exit 1; }; done
 cleanup() {
@@ -26,6 +27,13 @@ db_url() { printf 'postgresql://%s@127.0.0.1:%s/%s' "$PG_USER" "$PG_PORT" "$1"; 
 psql_db() { local database="$1"; shift; psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$database" "$@"; }
 
 echo "[BILLING-DB] fresh migration deploy"
+createdb -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" "$GUARD_DB"
+psql_db "$GUARD_DB" -c 'CREATE TABLE "CustomerPaymentReceipt" (status TEXT NOT NULL); INSERT INTO "CustomerPaymentReceipt" VALUES ($$VERIFIED_LIVE$$);' >/dev/null
+if sed -n '/^DO \$\$$/,/^END \$\$;/p' "$RAIL_DIR/prisma/migrations/20260927013000_neft_imps_payment_rail/migration.sql" | psql_db "$GUARD_DB" >/dev/null 2>&1; then
+  echo "payment-rail migration guard accepted a non-shadow receipt" >&2
+  exit 1
+fi
+echo "[BILLING-DB] PASS payment-rail migration refuses non-shadow receipts"
 createdb -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" "$FRESH_DB"
 (cd "$RAIL_DIR"; DATABASE_URL="$(db_url "$FRESH_DB")" npx prisma migrate deploy --schema=prisma/schema.prisma)
 
@@ -65,17 +73,18 @@ psql_db "$FRESH_DB" -c '
 
 echo "[BILLING-DB] schema parity, backup and restore"
 psql_db "$FRESH_DB" <<'SQL'
-INSERT INTO "CustomerPaymentReceipt" ("id","invoiceStatementId","collectionAccountRef","bankTransferRef","amountMinor","currency","evidenceRef","evidenceDigest","receivedAt","proposedByUserId","proposalStepUpId") VALUES
-('receipt-1','invoice-pr20','synthetic-company-account','SYNTHETIC-UTR-1','10000','INR','synthetic-bank-evidence','sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',now(),'maker','step-receipt');
+INSERT INTO "CustomerPaymentReceipt" ("id","invoiceStatementId","collectionAccountRef","transferRail","syntheticOnly","bankTransferRef","amountMinor","currency","evidenceRef","evidenceDigest","receivedAt","proposedByUserId","proposalStepUpId") VALUES
+('receipt-1','invoice-pr20','synthetic-company-account','NEFT',TRUE,'SYNNEFT202609270001','10000','INR','synthetic-bank-evidence','sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',now(),'maker','step-receipt');
 DO $x$ BEGIN
  BEGIN
-  INSERT INTO "CustomerPaymentReceipt" ("id","invoiceStatementId","collectionAccountRef","bankTransferRef","amountMinor","currency","evidenceRef","evidenceDigest","receivedAt","proposedByUserId","proposalStepUpId") VALUES
-  ('receipt-duplicate','invoice-pr20','synthetic-company-account','SYNTHETIC-UTR-1','10000','INR','synthetic-bank-evidence','sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',now(),'maker','step-receipt');
+  INSERT INTO "CustomerPaymentReceipt" ("id","invoiceStatementId","collectionAccountRef","transferRail","syntheticOnly","bankTransferRef","amountMinor","currency","evidenceRef","evidenceDigest","receivedAt","proposedByUserId","proposalStepUpId") VALUES
+  ('receipt-duplicate','invoice-pr20','synthetic-company-account','NEFT',TRUE,'SYNNEFT202609270001','10000','INR','synthetic-bank-evidence','sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',now(),'maker','step-receipt');
   RAISE EXCEPTION 'duplicate bank receipt accepted';
  EXCEPTION WHEN unique_violation THEN NULL; END;
  BEGIN UPDATE "CustomerPaymentReceipt" SET "reviewedByUserId"='maker' WHERE id='receipt-1'; RAISE EXCEPTION 'self review accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
  BEGIN UPDATE "CustomerPaymentReceipt" SET status='VERIFIED_SHADOW' WHERE id='receipt-1'; RAISE EXCEPTION 'incomplete review accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
  BEGIN UPDATE "CustomerPaymentReceipt" SET "amountMinor"='-1' WHERE id='receipt-1'; RAISE EXCEPTION 'negative amount accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+ BEGIN UPDATE "CustomerPaymentReceipt" SET "transferRail"='IMPS' WHERE id='receipt-1'; RAISE EXCEPTION 'receipt rail mutation accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
 END $x$;
 UPDATE "CustomerPaymentReceipt" SET status='VERIFIED_SHADOW',"reviewedByUserId"='checker',"reviewStepUpId"='step-review',"reviewedAt"=now(),"reviewReason"='Synthetic bank receipt review' WHERE id='receipt-1';
 SQL

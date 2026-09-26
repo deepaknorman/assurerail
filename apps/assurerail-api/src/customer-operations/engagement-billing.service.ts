@@ -12,12 +12,25 @@ import { invoicePaymentPosition, validateReceiptReview } from "./payment-reconci
 import type { InternalOpsActor, ParticipantOpsActor } from "./customer-operations.service";
 
 type Tx = Prisma.TransactionClient;
+const TRANSFER_RAILS = ["NEFT", "RTGS", "IMPS"] as const;
 function ref(value: unknown, name: string, max = 160) {
   if (typeof value !== "string" || !value.trim() || value.trim().length > max) throw new BadRequestException(`${name} required (maximum ${max} characters)`);
   return value.trim();
 }
 function enabled() {
   if (process.env.ASSURERAIL_ENGAGEMENT_BILLING_MODE !== "shadow" || inspectPersistenceFlags(process.env).customerOperations !== "shadow") throw new ForbiddenException("engagement billing is disabled");
+}
+function transferRail(value: unknown): (typeof TRANSFER_RAILS)[number] {
+  if (typeof value !== "string" || !TRANSFER_RAILS.includes(value as (typeof TRANSFER_RAILS)[number])) {
+    throw new BadRequestException("transferRail must be NEFT, RTGS or IMPS");
+  }
+  return value as (typeof TRANSFER_RAILS)[number];
+}
+export function validateBankTransferReference(rail: (typeof TRANSFER_RAILS)[number], value: unknown): string {
+  const reference = ref(value, "bankTransferRef").toUpperCase();
+  const valid = rail === "IMPS" ? /^\d{12}$/.test(reference) : /^[A-Z0-9]{16,22}$/.test(reference);
+  if (!valid) throw new BadRequestException(rail === "IMPS" ? "IMPS RRN must be exactly 12 digits" : `${rail} UTR must be 16 to 22 uppercase letters or digits`);
+  return reference;
 }
 
 @Injectable()
@@ -40,7 +53,8 @@ export class EngagementBillingService {
     const captured=checkout?.status==="PAID_TEST"&&checkout.mode==="TEST"&&checkout.checkedAt&&checkout.checkedAt.getTime()>Date.now()-5*60000?checkout.verifiedPaidMinor:"0";
     const position=invoicePaymentPosition(invoice.netFeeMinor,[...receipts,...(captured!=="0"?[captured]:[])]);
     const pending=await this.db.customerPaymentAdjustment.count({where:{receipt:{invoiceStatementId:invoice.id},status:"PROPOSED"}});
-    return { invoiceId, operatingMode: "SHADOW", liveStageUnlock: false, ...position, bankReceiptsMinor:receipts.reduce((sum,v)=>sum+BigInt(v),0n).toString(),gatewayCapturedMinor:captured,checkoutStatus:checkout?.status??null,fullyReconciled:position.fullyReconciled&&!pending&&checkout?.status!=="HOLD",reconciliationRequired:position.reconciliationRequired||Boolean(pending)||checkout?.status==="HOLD" };
+    const bankReceipts = await this.db.customerPaymentReceipt.findMany({ where: { invoiceStatementId: invoice.id, status: "VERIFIED_SHADOW" }, select: { transferRail: true, bankTransferRef: true, amountMinor: true, status: true, reviewedByUserId: true, reviewedAt: true, syntheticOnly: true } });
+    return { invoiceId, operatingMode: "SHADOW", liveStageUnlock: false, ...position, bankReceiptsMinor:receipts.reduce((sum,v)=>sum+BigInt(v),0n).toString(),bankTransferRails:[...new Set(bankReceipts.map(row=>row.transferRail))],bankReceipts,gatewayCapturedMinor:captured,checkoutStatus:checkout?.status??null,fullyReconciled:position.fullyReconciled&&!pending&&checkout?.status!=="HOLD",reconciliationRequired:position.reconciliationRequired||Boolean(pending)||checkout?.status==="HOLD" };
   }
 
   private async netReceipts(tx: Tx, invoiceId: string) {
@@ -106,15 +120,16 @@ export class EngagementBillingService {
   }
 
   async proposeReceipt(actor: InternalOpsActor, institutionId: string, invoiceId: string, body: {
-    collectionAccountRef?: unknown; bankTransferRef?: unknown; amountMinor?: unknown; evidenceRef?: unknown;
+    collectionAccountRef?: unknown; transferRail?: unknown; syntheticOnly?: unknown; bankTransferRef?: unknown; amountMinor?: unknown; evidenceRef?: unknown;
     evidenceDigest?: unknown; receivedAt?: unknown; stepUpEvidenceId?: unknown;
   }) {
     enabled(); await this.staff.require({ userId: actor.actorUserId, permission: "COMMERCIAL_INVOICE_PREPARE", scopeType: "GLOBAL", scopeRef: null });
     const collectionAccountRef = ref(body.collectionAccountRef, "collectionAccountRef");
+    const rail = transferRail(body.transferRail);
+    if (body.syntheticOnly !== true) throw new BadRequestException("shadow receipt must be labelled syntheticOnly");
     const allowed = (process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS ?? "").split(",").map(x => x.trim()).filter(Boolean);
     if (!allowed.includes(collectionAccountRef)) throw new ForbiddenException("collection account must be configured by the platform");
-    const bankTransferRef = ref(body.bankTransferRef, "bankTransferRef").toUpperCase();
-    if (!/^[A-Z0-9-]{6,100}$/.test(bankTransferRef)) throw new BadRequestException("canonical bank transfer reference required");
+    const bankTransferRef = validateBankTransferReference(rail, body.bankTransferRef);
     let amountMinor: string;
     try { amountMinor = exactMinor(body.amountMinor, "amountMinor", false); } catch (e) { throw new BadRequestException((e as Error).message); }
     const evidenceRef = ref(body.evidenceRef, "evidenceRef"), evidenceDigest = ref(body.evidenceDigest, "evidenceDigest", 80);
@@ -123,9 +138,20 @@ export class EngagementBillingService {
     if (!Number.isFinite(receivedAt.getTime()) || receivedAt > new Date()) throw new BadRequestException("valid non-future receipt date required");
     return this.transaction(async tx => {
       await this.invoice(tx, institutionId, invoiceId);
+      const checkout = await tx.engagementCheckout.findUnique({ where: { invoiceId } });
+      if (checkout && checkout.status !== "CANCELLED") throw new ConflictException("gateway checkout must be cancelled before recording a bank transfer");
       await this.evidence(tx, institutionId, evidenceRef, evidenceDigest);
+      const existing = await tx.customerPaymentReceipt.findUnique({ where: { collectionAccountRef_bankTransferRef: { collectionAccountRef, bankTransferRef } } });
+      if (existing) {
+        const same = existing.invoiceStatementId === invoiceId && existing.transferRail === rail && existing.syntheticOnly
+          && existing.amountMinor === amountMinor && existing.currency === "INR" && existing.evidenceRef === evidenceRef
+          && existing.evidenceDigest === evidenceDigest && existing.receivedAt.getTime() === receivedAt.getTime()
+          && existing.proposedByUserId === actor.actorUserId;
+        if (!same) throw new ConflictException("bank transfer reference was already recorded with different facts");
+        return existing;
+      }
       await this.stepUp.consume({ evidenceId: ref(body.stepUpEvidenceId, "stepUpEvidenceId"), userId: actor.actorUserId, sessionId: actor.actorSessionId, purpose: "INTERNAL_PAYMENT_RECEIPT_PROPOSE", institutionId: null }, tx);
-      return tx.customerPaymentReceipt.create({ data: { id: `pay_${randomUUID()}`, invoiceStatementId: invoiceId, collectionAccountRef, bankTransferRef, amountMinor, currency: "INR", evidenceRef, evidenceDigest, receivedAt, proposedByUserId: actor.actorUserId, proposalStepUpId: ref(body.stepUpEvidenceId, "stepUpEvidenceId") } });
+      return tx.customerPaymentReceipt.create({ data: { id: `pay_${randomUUID()}`, invoiceStatementId: invoiceId, collectionAccountRef, transferRail: rail, syntheticOnly: true, bankTransferRef, amountMinor, currency: "INR", evidenceRef, evidenceDigest, receivedAt, proposedByUserId: actor.actorUserId, proposalStepUpId: ref(body.stepUpEvidenceId, "stepUpEvidenceId") } });
     });
   }
 

@@ -2,11 +2,11 @@
 /* Hosted synthetic acceptance, using real Firefox login, MFA and guarded APIs.
  * Run from the deployed repository as deploy, with ASSURERAIL_HOSTED_DEMO_WRITE=yes.
  * Credentials stay in memory; no screenshots, traces, videos or raw errors are emitted.
- * This stops at provider checkout: an OPEN checkout is not evidence of payment.
+ * Payment uses synthetic NEFT advice through the real evidence/reconciliation controls.
  */
 process.env.PLAYWRIGHT_NO_COPY_PROMPT = '1';
 const { readFileSync, statSync } = require('node:fs');
-const { createHmac } = require('node:crypto');
+const { createHash, createHmac } = require('node:crypto');
 const assert = require('node:assert/strict');
 const { firefox } = require(process.cwd() + '/node_modules/playwright');
 const baseURL = 'https://arail.assurelocker.com';
@@ -77,11 +77,24 @@ function totp(seed) {
         }
         return response.body;
       }
+      async function apiRaw(path, bytes, metadata) {
+        const response = await page.evaluate(async ({ url, authorization, institution, encoded, bytesBase64 }) => {
+          const raw = atob(bytesBase64); const bytes = Uint8Array.from(raw, c => c.charCodeAt(0));
+          const r = await fetch(url, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(45000),
+            headers: { authorization, 'Content-Type': 'application/octet-stream',
+              'x-assurerail-document-metadata': encoded,
+              ...(institution ? { 'x-assurerail-institution-id': institution } : {}) }, body: bytes });
+          return { ok: r.ok, status: r.status, body: await r.json().catch(() => ({})) };
+        }, { url: apiOrigin + path, authorization, institution: participant ? institutionId : null,
+          encoded: Buffer.from(JSON.stringify(metadata)).toString('base64url'), bytesBase64: bytes.toString('base64') });
+        if (!response.ok) { report({ result: 'HTTP_ERROR', http: response.status, reason: 'RAW_API_REJECTED' }); throw new Error('API_REJECTED'); }
+        return response.body;
+      }
       async function proof(purpose) {
         const result = await api('/venue/auth/mfa/verify/totp', { code: totp(account.totpSecret), purpose, institutionId: participant ? institutionId : null });
         assert(result.stepUp?.id); return result.stepUp.id;
       }
-      report({ result: 'PASS' }); return { page, api, proof };
+      report({ result: 'PASS' }); return { page, api, apiRaw, proof };
     }
     const seller = await login('sellerCommercialAdmin', true);
     stage = 'book_a_scope';
@@ -133,11 +146,55 @@ function totp(seed) {
     await seller.page.getByLabel('Choose a book').selectOption(id);
     await seller.page.getByRole('table', { name: 'Accepted-scope stage pricing' }).waitFor();
     report({ result: 'PASS', engagementId: id, invoiceId: invoice.id, invoiceStatus: invoice.status });
-    stage = 'test_checkout';
-    let checkout = await seller.api(`${participantBase}/engagements/${id}/stages/INITIAL/checkout`, {});
-    assert.equal(checkout.mode, 'TEST');
-    if (checkout.status === 'UNKNOWN') checkout = await seller.api(`${participantBase}/engagements/${id}/stages/INITIAL/checkout/reconcile`, {});
-    assert(['OPEN', 'PAID_TEST'].includes(checkout.status));
-    report({ result: 'PASS', checkoutId: checkout.id, status: checkout.status, paymentProven: checkout.status === 'PAID_TEST' });
+    let readiness = await seller.api(`${participantBase}/engagements/${id}/stages/INITIAL/readiness`);
+    if (!readiness.readyForShadowProcessing) {
+      stage = 'select_neft';
+      const selection = await seller.api(`${participantBase}/engagements/${id}/stages/INITIAL/bank-transfer`, {});
+      assert.equal(selection.status, 'AWAITING_BANK_TRANSFER'); assert(selection.transferRails.includes('NEFT'));
+      report({ result: 'PASS', transferRail: 'NEFT', amountMinor: selection.amountMinor, livePaymentClaimed: false });
+
+      const advice = Buffer.from([
+        'synthetic_marker,transfer_rail,bank_transfer_ref,amount_minor,currency,invoice_id',
+        `ASSURERAIL_FOUNDER_DEMO_V1,NEFT,SYNNEFT202609270001,${invoice.netFeeMinor},INR,${invoice.id}`,
+      ].join('\n') + '\n');
+      const adviceDigest = `sha256:${createHash('sha256').update(advice).digest('hex')}`;
+      const preparer = await login('sellerDataPreparer', true);
+      stage = 'neft_bank_advice_intake';
+      const evidence = await preparer.apiRaw(`${participantBase}/evidence/documents`, advice, {
+        idempotencyKey: 'synthetic-neft-book-a-20260927-v1',
+        connectorRegistrationId: `demo-connector-assessment-upload-${institutionId}`,
+        evidenceType: 'BANK_RECEIPT', classification: 'INSTITUTION_CONFIDENTIAL', purpose: 'CUSTOMER_BILLING',
+        retentionUntilAt: '2027-09-27T00:00:00.000Z', title: 'Synthetic NEFT bank advice — Book A',
+        documentType: 'BANK_TRANSACTION_ADVICE', filename: 'synthetic-neft-book-a.csv', contentType: 'text/csv',
+        schemaId: 'assurerail.neutral-intake', schemaVersion: '1.0.0', sourceAsOfAt: '2026-09-26T00:00:00.000Z',
+        signatureStatus: 'NOT_PROVIDED', result: 'REVIEW_REQUIRED', profileRef: 'assurerail.neutral-intake.v1',
+        qualifications: [{ code: 'SYNTHETIC_DEMO_PAYMENT_EVIDENCE', severity: 'LIMITATION' }],
+      });
+      assert.equal(evidence.validationStatus, 'VALID');
+      report({ result: 'PASS', evidenceObjectId: evidence.evidenceObjectId, validationStatus: evidence.validationStatus, synthetic: true });
+
+      const collectionRefs = (process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS || '').split(',').map(value => value.trim()).filter(Boolean);
+      assert.equal(collectionRefs.length, 1, 'hosted demo requires exactly one configured collection-account reference');
+      const maker = await login('invoicePreparer', false);
+      stage = 'neft_receipt_proposal';
+      const receipt = await maker.api(`/v1/rail/internal/engagement-billing/institutions/${institutionId}/invoices/${invoice.id}/receipts`, {
+        collectionAccountRef: collectionRefs[0], transferRail: 'NEFT', syntheticOnly: true, bankTransferRef: 'SYNNEFT202609270001',
+        amountMinor: invoice.netFeeMinor, evidenceRef: evidence.evidenceObjectId, evidenceDigest: adviceDigest,
+        receivedAt: '2026-09-26T00:00:00.000Z', stepUpEvidenceId: await maker.proof('INTERNAL_PAYMENT_RECEIPT_PROPOSE'),
+      });
+      assert.equal(receipt.status, 'PROPOSED'); report({ result: 'PASS', receiptId: receipt.id, transferRail: receipt.transferRail });
+
+      const checker = await login('invoiceChecker', false);
+      stage = 'independent_neft_review';
+      const reviewed = await checker.api(`/v1/rail/internal/engagement-billing/institutions/${institutionId}/receipts/${receipt.id}/review`, {
+        decision: 'APPROVE', reason: 'Synthetic NEFT advice matches the issued Book A invoice, exact paise amount and configured collection account.',
+        stepUpEvidenceId: await checker.proof('INTERNAL_PAYMENT_RECEIPT_REVIEW'),
+      });
+      assert.equal(reviewed.status, 'VERIFIED_SHADOW'); report({ result: 'PASS', receiptId: receipt.id, independentReviewer: true, livePaymentClaimed: false });
+      readiness = await seller.api(`${participantBase}/engagements/${id}/stages/INITIAL/readiness`);
+    }
+    stage = 'bank_payment_readiness';
+    assert.equal(readiness.readyForShadowProcessing, true); assert.equal(readiness.liveStageUnlock, false);
+    report({ result: 'PASS', reason: readiness.reason, transferRail: 'NEFT', shadowOnly: true });
   } finally { await browser.close(); }
 })().catch(error => { report({ result: 'FAIL', errorType: error.name }); process.exitCode = 1; });

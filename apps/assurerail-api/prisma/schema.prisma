@@ -1322,6 +1322,8 @@ model CustomerPaymentReceipt {
   invoiceStatementId String
   invoiceStatement   CustomerInvoiceStatement @relation(fields: [invoiceStatementId], references: [id], onDelete: Restrict)
   collectionAccountRef String
+  transferRail       String
+  syntheticOnly      Boolean
   bankTransferRef    String
   amountMinor       String
   currency          String

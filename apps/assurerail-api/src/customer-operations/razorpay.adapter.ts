@@ -43,6 +43,7 @@ export class RazorpayAdapter {
     if (!Number.isSafeInteger(amount) || amount <= 0 || !/^[a-zA-Z0-9_-]{1,40}$/.test(input.reference)) throw new Error("INVALID_CHECKOUT_INPUT");
     return this.call<RazorpayLink>("payment_links",{ amount, currency: "INR", reference_id: input.reference, accept_partial: false, description: "AssureRail professional services", notify: { sms:false,email:false }, reminder_enable:false, expire_by: Math.floor(Date.now()/1000)+7*86400 });
   }
+  cancel(id: string) { if (!/^plink_[A-Za-z0-9]+$/.test(id)) throw new Error("INVALID_LINK_ID"); return this.call<RazorpayLink>(`payment_links/${id}/cancel`,{}); }
   link(id: string) { if (!/^plink_[A-Za-z0-9]+$/.test(id)) throw new Error("INVALID_LINK_ID"); return this.call<RazorpayLink>(`payment_links/${id}`); }
   payment(id: string) { if (!/^pay_[A-Za-z0-9]+$/.test(id)) throw new Error("INVALID_PAYMENT_ID"); return this.call<RazorpayPayment>(`payments/${id}`); }
   async find(reference: string) {

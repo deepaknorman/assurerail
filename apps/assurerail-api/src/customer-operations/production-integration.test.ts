@@ -55,6 +55,12 @@ test("Razorpay API create disables notifications, partial payments and credentia
  let request:RequestInit|undefined;const http=async(url:unknown,init?:RequestInit)=>{assert.equal(url,"https://api.razorpay.com/v1/payment_links");request=init;return new Response(JSON.stringify(link));};
  await new RazorpayAdapter("rzp_test_Synthetic","s".repeat(32),http as typeof fetch).create({reference:"ar_test",amountMinor:"100"});const body=JSON.parse(request!.body as string);assert.equal(body.accept_partial,false);assert.deepEqual(body.notify,{sms:false,email:false});assert.equal(request!.redirect,"error");assert.throws(()=>new RazorpayAdapter("rzp_live_Synthetic","s".repeat(32)),/TEST/);
 });
+test("Razorpay cancellation is a bounded POST to the existing payment link",async()=>{
+ const cancelled={...link,status:"cancelled",amount_paid:0,payments:[]};let request:RequestInit|undefined;
+ const http=async(url:unknown,init?:RequestInit)=>{assert.equal(url,"https://api.razorpay.com/v1/payment_links/plink_Synthetic/cancel");request=init;return new Response(JSON.stringify(cancelled));};
+ const result=await new RazorpayAdapter("rzp_test_Synthetic","s".repeat(32),http as typeof fetch).cancel("plink_Synthetic");
+ assert.equal(result.status,"cancelled");assert.equal(request!.method,"POST");assert.equal(request!.body,"{}");assert.equal(request!.redirect,"error");
+});
 test("AI findings need exact text at the cited document and location",()=>{
  const source={evidenceVersionId:"v1",digest:"sha256:x",locator:"page:1",text:"Insurance expires on 2026-01-01."};const finding={category:"DOCUMENTATION",severity:"HIGH",description:"Check insurance renewal",evidenceVersionId:"v1",locator:"page:1",quote:"Insurance expires"};assert.equal(validateFindings({findings:[finding]},[source]).length,1);
  for(const change of [{quote:"Insurance is valid"},{evidenceVersionId:"other"},{locator:"page:2"}])assert.throws(()=>validateFindings({findings:[{...finding,...change}]},[source]),/CITATION/);

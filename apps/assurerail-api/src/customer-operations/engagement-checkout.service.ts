@@ -54,6 +54,32 @@ export class EngagementCheckoutService {
   }
   private publicCheckout(row: { id:string;status:string;checkoutUrl:string|null;mode:string }) { return { id:row.id,status:row.status,checkoutUrl:row.status === "OPEN" ? row.checkoutUrl : null,mode:row.mode,liveStageUnlock:false }; }
 
+  async selectBankTransfer(actor: ParticipantOpsActor, engagementId: string, stage: string) {
+    await this.engagements.participant(actor,true);
+    const e = await this.engagements.scoped(this.db,actor.actingInstitutionId,engagementId);
+    const invoice = e.stages.find(item => item.stage === stage)?.invoice;
+    if (e.status !== "ACCEPTED_SHADOW" || !invoice || invoice.status !== "ISSUED_SHADOW") throw new ConflictException("current accepted engagement and issued invoice required");
+    const checkout = await this.db.engagementCheckout.findUnique({ where: { invoiceId: invoice.id } });
+    if (checkout) {
+      if (checkout.status === "PAID_TEST") throw new ConflictException("gateway payment is already recorded");
+      if (["HOLD","CREATING","UNKNOWN"].includes(checkout.status)) throw new ConflictException("gateway checkout requires reconciliation before bank transfer selection");
+      if (checkout.status !== "CANCELLED") {
+        if (!checkout.providerLinkId) throw new ConflictException("gateway checkout has no cancellable provider reference");
+        const { account, adapter } = this.config();
+        if (checkout.merchantAccountRef !== account) throw new ConflictException("merchant mismatch");
+        let link = validatePaymentLink(await adapter.link(checkout.providerLinkId),checkout);
+        if (link.status === "created") link = validatePaymentLink(await adapter.cancel(checkout.providerLinkId),checkout);
+        if (link.status !== "cancelled" || link.amount_paid !== 0 || link.payments?.length) throw new ConflictException("gateway checkout could not be safely cancelled");
+        const checkedAt = new Date();
+        const changed = await this.db.engagementCheckout.updateMany({ where: { id: checkout.id, status: "OPEN" }, data: { status: "CANCELLED", checkoutUrl: null, checkedAt, reconciliationDigest: sha256Digest({ linkId: link.id, status: "cancelled", checkedAt: checkedAt.toISOString() }) } });
+        if (changed.count !== 1) throw new ConflictException("checkout changed while bank transfer was selected");
+      }
+    }
+    const collectionAccountRefs = (process.env.ASSURERAIL_BILLING_COLLECTION_ACCOUNT_REFS ?? "").split(",").map(value=>value.trim()).filter(Boolean);
+    if (!collectionAccountRefs.length) throw new ServiceUnavailableException("bank-transfer collection account is not configured");
+    return { status: "AWAITING_BANK_TRANSFER", transferRails: ["NEFT","RTGS","IMPS"], amountMinor: invoice.netFeeMinor, currency: invoice.currency, collectionAccountRefs, remittanceReference: invoice.id, liveStageUnlock: false };
+  }
+
   async refresh(actor: ParticipantOpsActor, engagementId: string, stage: string) {
     await this.engagements.participant(actor,true);
     const e = await this.engagements.scoped(this.db,actor.actingInstitutionId,engagementId);
@@ -81,7 +107,7 @@ export class EngagementCheckoutService {
         verifiedPaidMinor = capturedPaymentAmount(link,payment,row.amountMinor);
       }
       const adverse=providerPaymentId?await this.db.paymentWebhookInbox.count({where:{merchantAccountRef:account,providerPaymentId,OR:[{eventType:{startsWith:"refund."}},{eventType:{startsWith:"payment.dispute."}}]}}):0;
-      const status = adverse ? "HOLD" : verifiedPaidMinor !== "0" ? "PAID_TEST" : link.status === "created" ? "OPEN" : "HOLD";
+      const status = adverse ? "HOLD" : verifiedPaidMinor !== "0" ? "PAID_TEST" : link.status === "created" ? "OPEN" : link.status === "cancelled" && link.amount_paid === 0 ? "CANCELLED" : "HOLD";
       if(adverse)verifiedPaidMinor="0";
       await this.db.engagementCheckout.updateMany({where:{id,status:{not:"HOLD"},OR:[{checkedAt:null},{checkedAt:{lte:started}}]},data:{providerLinkId:link.id,checkoutUrl:link.short_url,providerPaymentId,verifiedPaidMinor,status,checkedAt:started,reconciliationDigest:sha256Digest({linkId:link.id,providerPaymentId,verifiedPaidMinor,checkedAt:started.toISOString()})}});
       return this.publicCheckout(await this.db.engagementCheckout.findUniqueOrThrow({where:{id}}));

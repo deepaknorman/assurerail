@@ -11,6 +11,8 @@ export class EngagementCheckoutController {
   create(@Req() req:Request,@Param("institutionId") id:string,@Param("engagementId") e:string,@Param("stage") s:string) { return this.service.create(billingActor(req,id),e,s); }
   @Post("checkout/reconcile") @Header("Cache-Control","no-store")
   refresh(@Req() req:Request,@Param("institutionId") id:string,@Param("engagementId") e:string,@Param("stage") s:string) { return this.service.refresh(billingActor(req,id),e,s); }
+  @Post("bank-transfer") @Header("Cache-Control","no-store")
+  bankTransfer(@Req() req:Request,@Param("institutionId") id:string,@Param("engagementId") e:string,@Param("stage") s:string) { return this.service.selectBankTransfer(billingActor(req,id),e,s); }
 }
 @Controller("v1/rail/payment-webhooks")
 export class EngagementPaymentWebhookController {
