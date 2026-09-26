@@ -68,9 +68,14 @@ files still work. Reuse Seller Data Preparer for preparation requests.
 
 The preparation reviewer receives an expiring internal risk-review assignment scoped to the
 synthetic seller institution. This does not establish a professional qualification or release
-any report. Configure an approved synthetic reviewer qualification and expose its synthetic
-label on the released output before demonstrating sign-off; report-bound evidence and fresh
-MFA remain required.
+any report. Configure an approved synthetic reviewer qualification before demonstrating sign-off;
+report-bound evidence and fresh MFA remain required. In `ASSURERAIL_QUALIFIED_REVIEWERS_JSON`,
+use `userId: "demo-user-preparationReviewer"`, `assetFamilies: ["VEHICLE_EV"]`, a current
+bounded `expiresAt`, `qualificationRef: "demo://founder-preparation/reviewer"` and
+`syntheticDemoOnly: true`. This is a demonstration qualification, not a real professional
+credential. The released report displays that limitation from its stored review snapshot;
+changing the current configuration cannot relabel an old sign-off. Missing or mismatched
+review metadata is displayed as unavailable rather than implying a qualified review.
 
 Buyer Desk, Credit, Legal and Operations are separate authenticated identities only at this
 stage. Bootstrap grants them no institutional membership, mandate or internal staff role and

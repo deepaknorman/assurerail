@@ -15,6 +15,7 @@ import { loanTapeMetrics } from "./loan-tape-metrics";
 import { createInitialAssessmentReceipt } from "../ai-assurance/assessment-ai-receipt";
 import { deriveRemediationGaps, initialReassessmentAllowance, isOwnerRole, remediationChangeSummary, type RemediationGap } from "./assessment-remediation";
 import { documentEvidenceEnvelope, documentInventory, mergeHybridSegments, reconcileLoanDocuments, routeDocument, SUPPORTED_ASSESSMENT_DOCUMENT_TYPES } from "./document-review";
+import { preparationReviewDisclosure } from "./preparation-review-disclosure";
 type Manifest = {versionId:string;evidenceObjectId:string;digest:string;contentType:string;sizeBytes:number;evidenceType:string}[];
 export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{status:string};exceptions:{code:string}[];analysis:{provider:string;findings?:{severity:string}[]};documentInventory?:{status:string};loanReconciliation?:{status:string}}) {
   if(input.assetFamily==="OTHER")return "OUTSIDE_CURRENT_SCOPE" as const;
@@ -120,7 +121,7 @@ export class AssessmentProcessingService {
   private validateSource(v:any,institutionId:string,engagementId:string) {
     if(v.evidenceObject.institutionId!==institutionId || v.evidenceObject.purpose!==`ASSESSMENT:${engagementId}` || v.evidenceObject.status!=="AVAILABLE" || v.evidenceObject.currentVersion!==v.version || v.validationStatus!=="VALID" || (v.expiresAt&&v.expiresAt<=new Date()) || !v.documentVersion || v.documentVersion.malwareStatus!=="CLEAN")throw new ForbiddenException("current clean evidence scoped to this engagement required");
   }
-  private publicJob(job:any) { return {id:job.id,stage:job.stage,status:job.status,createdAt:job.createdAt,releasedAt:job.releasedAt,reviewedAt:job.reviewedAt,errorCode:job.errorCode,...(["AUTO_RELEASED","RELEASED"].includes(job.status)?{result:job.result,resultDigest:job.resultDigest}:{}),liveDecisionAuthority:false}; }
+  private publicJob(job:any) { return {id:job.id,stage:job.stage,status:job.status,createdAt:job.createdAt,releasedAt:job.releasedAt,reviewedAt:job.reviewedAt,review:preparationReviewDisclosure(job),errorCode:job.errorCode,...(["AUTO_RELEASED","RELEASED"].includes(job.status)?{result:job.result,resultDigest:job.resultDigest}:{}),liveDecisionAuthority:false}; }
   async list(actor:ParticipantOpsActor,id:string) {await this.engagements.participant(actor);await this.engagements.evidenceAuthority(actor);await this.engagements.scoped(this.db,actor.actingInstitutionId,id);return (await this.db.assessmentProcessingJob.findMany({where:{engagementId:id},orderBy:{createdAt:"desc"}})).map(j=>this.publicJob(j));}
   async internalReport(actor:InternalOpsActor,institutionId:string,id:string,jobId:string) {
     engagementEnabled();await this.staff.require({userId:actor.actorUserId,permission:"CASE_TASK_PREPARE",scopeType:"INSTITUTION",scopeRef:institutionId});
@@ -228,7 +229,7 @@ export class AssessmentProcessingService {
       if(job.stage!=="PREPARATION")throw new ConflictException("Initial Assessment is automatically released without expert review; only Portfolio Preparation accepts a qualified sign-off");
       if(job.status!=="REVIEW_REQUIRED"||job.resultDigest!==body.resultDigest)throw new ConflictException("matching pending preparation report required");
       if(job.requestedByUserId===actor.actorUserId)throw new ForbiddenException("independent reviewer required");
-      const credentials=JSON.parse(process.env.ASSURERAIL_QUALIFIED_REVIEWERS_JSON??"[]") as {userId:string;expiresAt:string;assetFamilies:string[];qualificationRef:string}[];
+      const credentials=JSON.parse(process.env.ASSURERAIL_QUALIFIED_REVIEWERS_JSON??"[]") as {userId:string;expiresAt:string;assetFamilies:string[];qualificationRef:string;syntheticDemoOnly?:boolean}[];
       const credential=credentials.find(c=>c.userId===actor.actorUserId&&new Date(c.expiresAt)>new Date()&&c.assetFamilies.includes((e.scope as {assetFamily:string}).assetFamily)&&c.qualificationRef);
       if(!credential)throw new ForbiddenException("current platform-approved reviewer qualification for this asset family required");
       if(decision==="RELEASE"){
