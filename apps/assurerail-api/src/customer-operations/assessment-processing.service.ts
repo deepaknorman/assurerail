@@ -17,6 +17,11 @@ import { deriveRemediationGaps, initialReassessmentAllowance, isOwnerRole, remed
 import { documentEvidenceEnvelope, documentInventory, mergeHybridSegments, reconcileLoanDocuments, routeDocument, SUPPORTED_ASSESSMENT_DOCUMENT_TYPES } from "./document-review";
 import { preparationReviewDisclosure } from "./preparation-review-disclosure";
 type Manifest = {versionId:string;evidenceObjectId:string;digest:string;contentType:string;sizeBytes:number;evidenceType:string}[];
+export function assessmentRetentionUntil(createdAt:Date,retentionDays:number,now=new Date()) {
+  const retentionUntilAt=new Date(createdAt.getTime()+retentionDays*86400000);
+  if(!Number.isFinite(retentionUntilAt.getTime())||retentionUntilAt<=now)throw new ConflictException("engagement evidence-retention window has ended; obtain a revised order");
+  return retentionUntilAt.toISOString();
+}
 export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{status:string};exceptions:{code:string}[];analysis:{provider:string;findings?:{severity:string}[]};documentInventory?:{status:string};loanReconciliation?:{status:string}}) {
   if(input.assetFamily==="OTHER")return "OUTSIDE_CURRENT_SCOPE" as const;
   if(!["openai","gemini"].includes(input.analysis.provider))return "AUTOMATED_ANALYSIS_INCOMPLETE" as const;
@@ -37,7 +42,7 @@ export class AssessmentProcessingService {
     const profile=profiles[actor.actingInstitutionId];
     if(!profile||!Number.isInteger(profile.retentionDays)||profile.retentionDays<1||profile.retentionDays>3650)throw new ConflictException("approved document intake profile and retention period must be configured for this institution");
     if(metadata.evidenceObjectId){const prior=await this.db.evidenceObject.findUnique({where:{id:bounded(metadata.evidenceObjectId,"evidenceObjectId")}});if(!prior||prior.institutionId!==actor.actingInstitutionId||prior.purpose!==`ASSESSMENT:${id}`)throw new NotFoundException("document not found in this engagement");}
-    return this.intake.ingestDocument(actor.actorUserId,actor.actingInstitutionId,stream,{...profile,profileRef:"assurerail.neutral-intake.v1",filename:bounded(metadata.filename,"filename",240),contentType:bounded(metadata.contentType,"contentType"),title:documentType,documentType,evidenceType:documentType,classification:"RESTRICTED",purpose:`ASSESSMENT:${id}`,retentionUntilAt:new Date(Date.now()+profile.retentionDays*86400000).toISOString(),sourceAsOfAt:new Date((engagement.scope as {asOfDate:string}).asOfDate).toISOString(),idempotencyKey:bounded(metadata.requestRef,"requestRef"),evidenceObjectId:metadata.evidenceObjectId?bounded(metadata.evidenceObjectId,"evidenceObjectId"):null});
+    return this.intake.ingestDocument(actor.actorUserId,actor.actingInstitutionId,stream,{...profile,profileRef:"assurerail.neutral-intake.v1",filename:bounded(metadata.filename,"filename",240),contentType:bounded(metadata.contentType,"contentType"),title:documentType,documentType,evidenceType:documentType,classification:"RESTRICTED",purpose:`ASSESSMENT:${id}`,retentionUntilAt:assessmentRetentionUntil(engagement.createdAt,profile.retentionDays),sourceAsOfAt:new Date((engagement.scope as {asOfDate:string}).asOfDate).toISOString(),idempotencyKey:bounded(metadata.requestRef,"requestRef"),evidenceObjectId:metadata.evidenceObjectId?bounded(metadata.evidenceObjectId,"evidenceObjectId"):null});
   }
   private scopeDigest(engagement:{scope:unknown;quoteDigest:string}) { return sha256Digest({scope:engagement.scope,quoteDigest:engagement.quoteDigest}); }
   async policy(actor:ParticipantOpsActor,id:string) {

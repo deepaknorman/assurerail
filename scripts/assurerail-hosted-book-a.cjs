@@ -196,5 +196,60 @@ function totp(seed) {
     stage = 'bank_payment_readiness';
     assert.equal(readiness.readyForShadowProcessing, true); assert.equal(readiness.liveStageUnlock, false);
     report({ result: 'PASS', reason: readiness.reason, transferRail: 'NEFT', shadowOnly: true });
+
+    stage = 'seller_bank_receipt_render';
+    await seller.page.goto('/workspace/assessment', { waitUntil: 'load' });
+    await seller.page.getByLabel('Choose a book').selectOption(id);
+    await seller.page.getByRole('button', { name: 'Check bank transfer' }).click();
+    await seller.page.getByRole('table', { name: 'Reconciled bank transfer' }).waitFor();
+    await seller.page.getByText('SYNTHETIC ONLY', { exact: true }).waitFor();
+    report({ result: 'PASS', transferRail: 'NEFT', syntheticLabelRendered: true });
+
+    const tapePath = '/home/deploy/assurerail/demo/assurerail/synthetic-nbfc-55cr/upload-step1/book-a-initial.csv';
+    const tape = readFileSync(tapePath);
+    assert.equal(createHash('sha256').update(tape).digest('hex'), 'eb660bdea2874464e0f1d537b1e0dd2a1e1326200c2013d69c7e31d23e65017e');
+    const dataPreparer = await login('sellerDataPreparer', true);
+    const runsPath = `${participantBase}/engagements/${id}/runs`;
+    stage = 'book_a_tape_intake';
+    const uploaded = await dataPreparer.apiRaw(`${runsPath}/upload/INITIAL`, tape, {
+      filename: 'book-a-initial.csv', contentType: 'text/csv', documentType: 'LOAN_TAPE',
+      requestRef: 'synthetic-book-a-initial-upload-20260927-v1',
+    });
+    assert.equal(uploaded.validationStatus, 'VALID'); assert.equal(uploaded.malwareStatus, 'CLEAN');
+    report({ result: 'PASS', evidenceObjectId: uploaded.evidenceObjectId, evidenceVersionId: uploaded.evidenceVersionId, replay: uploaded.replay, validationStatus: uploaded.validationStatus, malwareStatus: uploaded.malwareStatus });
+
+    stage = 'book_a_processing_request';
+    const run = await dataPreparer.api(runsPath, {
+      stage: 'INITIAL', requestRef: 'synthetic-book-a-initial-run-20260927-v1',
+      evidenceVersionIds: [uploaded.evidenceVersionId], stepUpEvidenceId: await dataPreparer.proof('ENGAGEMENT_PROCESSING_REQUEST'),
+    });
+    assert.match(run.id, /^aprocess_[a-f0-9-]+$/);
+    let completed;
+    for (let attempt = 0; attempt < 36; attempt += 1) {
+      completed = (await dataPreparer.api(runsPath)).find(candidate => candidate.id === run.id);
+      if (completed && ['AUTO_RELEASED', 'FAILED'].includes(completed.status)) break;
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+    assert.equal(completed?.status, 'AUTO_RELEASED');
+    assert.equal(completed.result.dataQuality.status, 'RECORD_EXCEPTIONS');
+    assert.equal(completed.result.dataQuality.parsedPrimaryPairCount, 1500);
+    assert.equal(completed.result.dataQuality.parsedLinkedPartyCount, 120);
+    assert.equal(completed.result.dataQuality.duplicateRecords, 12);
+    assert.equal(completed.result.dataQuality.parsedPrincipalMinor, '20000000000');
+    assert.equal(completed.result.analysis.provider, 'NOT_RUN');
+    assert.equal(completed.result.analysis.qualification, 'AI_INPUT_BUDGET_EXCEEDED');
+    assert.equal(completed.result.release.method, 'AUTOMATED_UNSIGNED');
+    assert.equal(completed.result.release.expertReviewed, false);
+    assert.equal(completed.result.release.professionalSignoff, false);
+    report({ result: 'PASS', runId: run.id, status: completed.status, dataQuality: completed.result.dataQuality.status,
+      duplicateRecords: completed.result.dataQuality.duplicateRecords, parsedPrimaryPairCount: completed.result.dataQuality.parsedPrimaryPairCount,
+      parsedLinkedPartyCount: completed.result.dataQuality.parsedLinkedPartyCount, parsedPrincipalMinor: completed.result.dataQuality.parsedPrincipalMinor,
+      aiQualification: completed.result.analysis.qualification, automatedUnsigned: true });
+
+    stage = 'book_a_result_render';
+    await dataPreparer.page.goto(`/workspace/assessment/${id}`, { waitUntil: 'load' });
+    await dataPreparer.page.getByText(/12 duplicates/).waitFor({ timeout: 30000 });
+    await dataPreparer.page.getByText(/AI INPUT BUDGET EXCEEDED/).waitFor();
+    report({ result: 'PASS', runId: run.id, resultRendered: true });
   } finally { await browser.close(); }
 })().catch(error => { report({ result: 'FAIL', errorType: error.name }); process.exitCode = 1; });
