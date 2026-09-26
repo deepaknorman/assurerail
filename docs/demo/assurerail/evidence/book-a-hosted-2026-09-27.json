@@ -1,43 +1,71 @@
 {
-  "schemaVersion": 1,
-  "harnessCommit": "33aac7f292330e3542e3cd74c6c89816b237c1a2",
-  "deployedRevisionReportedByClaude": "c362917c0",
-  "recordedAt": "2026-09-26T14:26:11.257317+00:00",
+  "schemaVersion": 2,
+  "harnessCommit": "0b11191145e710dc23d6d0c06108dc0148c8d9e5",
+  "deployedRevision": "0b11191145e710dc23d6d0c06108dc0148c8d9e5",
+  "recordedAt": "2026-09-26T15:45:17Z",
   "target": "https://arail.assurelocker.com",
-  "result": "BLOCKED",
+  "classification": "SYNTHETIC_ONLY",
+  "result": "PASS",
+  "engagementId": "eng_b8544dc2-ad64-44d7-8f1c-597a004eea07",
+  "invoiceId": "inv_cbc8e58e-7cfc-4fe3-98c6-3f05b2eaa84e",
+  "receipt": {
+    "id": "pay_ba0bbc7a-2593-449f-bdec-a552bb86fc91",
+    "rail": "NEFT",
+    "reference": "SYNNEFT202609270001",
+    "amountMinor": "36816000",
+    "currency": "INR",
+    "status": "VERIFIED_SHADOW",
+    "syntheticOnly": true,
+    "independentReview": true,
+    "evidenceObjectId": "evo_c21e6c65-556e-485f-a4c1-34c455bd1d62",
+    "evidenceDigest": "sha256:60172d15c7d8115e51889760c20ef02e058379e070cd7b8689ee1a4d24ebdaf7"
+  },
+  "assessment": {
+    "runId": "aprocess_6fe46327-3c6a-49f2-90e9-e9c3ea6380d8",
+    "status": "AUTO_RELEASED",
+    "resultDigest": "sha256:f6c818713c7d6c8f026a4d3e5d7901cf274d48803608ddb8175c37309279e0d5",
+    "sourceEvidenceObjectId": "evo_32227895-4e32-4a5e-957d-7418fa3ad9d6",
+    "sourceEvidenceVersionId": "evv_d37de8e5-c593-4d57-b2ae-0374eb3a5a26",
+    "sourceDigest": "sha256:eb660bdea2874464e0f1d537b1e0dd2a1e1326200c2013d69c7e31d23e65017e",
+    "malwareStatus": "CLEAN",
+    "validationStatus": "VALID",
+    "dataQuality": "RECORD_EXCEPTIONS",
+    "duplicateRecords": 12,
+    "parsedPrimaryPairCount": 1500,
+    "parsedLinkedPartyCount": 120,
+    "parsedPrincipalMinor": "20000000000",
+    "analysisProvider": "NOT_RUN",
+    "analysisQualification": "AI_INPUT_BUDGET_EXCEEDED",
+    "releaseMethod": "AUTOMATED_UNSIGNED",
+    "releaseOutcome": "AUTOMATED_ANALYSIS_INCOMPLETE",
+    "expertReviewed": false,
+    "professionalSignoff": false
+  },
   "checks": [
-    {
-      "stage": "login_sellerCommercialAdmin",
-      "result": "PASS"
-    },
-    {
-      "stage": "book_a_scope",
-      "result": "PASS",
-      "engagementId": "eng_b8544dc2-ad64-44d7-8f1c-597a004eea07",
-      "quoteDigest": "sha256:300ff5c477fe68e4d6100e07728b5fc24f88eeb99002e6db7dcca0787d25bf5b",
-      "initialTotalMinor": "36816000"
-    },
-    {
-      "stage": "seller_workspace_render",
-      "result": "PASS",
-      "engagementId": "eng_b8544dc2-ad64-44d7-8f1c-597a004eea07",
-      "invoiceId": "inv_cbc8e58e-7cfc-4fe3-98c6-3f05b2eaa84e",
-      "invoiceStatus": "ISSUED_SHADOW"
-    },
-    {
-      "stage": "test_checkout",
-      "result": "HTTP_ERROR",
-      "http": 503,
-      "json": true,
-      "reason": "stable Razorpay merchant account identity required"
-    },
-    {
-      "stage": "test_checkout",
-      "result": "FAIL",
-      "errorType": "Error"
-    }
+    { "stage": "seller_scope_and_invoice_render", "result": "PASS" },
+    { "stage": "synthetic_neft_selection_and_advice_intake", "result": "PASS" },
+    { "stage": "finance_maker_checker_and_reconciliation", "result": "PASS" },
+    { "stage": "seller_payment_position_render", "result": "PASS" },
+    { "stage": "book_a_tape_intake_scan_and_storage", "result": "PASS" },
+    { "stage": "book_a_automatic_processing", "result": "PASS" },
+    { "stage": "book_a_result_render", "result": "PASS" }
   ],
-  "paymentProven": false,
-  "uploadProven": false,
-  "processingProven": false
+  "paymentProven": true,
+  "uploadProven": true,
+  "processingProven": true,
+  "resultRenderingProven": true,
+  "livePaymentClaimed": false,
+  "limitations": [
+    "All payment and loan records are labelled synthetic demonstration evidence.",
+    "The initial tape intentionally contains 12 duplicate loan-party rows and requires correction and reassessment.",
+    "The document-analysis input exceeded the current per-run AI budget, so no model analysis ran and Portfolio Preparation remains locked."
+  ],
+  "retainedFailureEvidence": [
+    {
+      "runId": "aprocess_7f2b8a9e-3708-41a8-b790-b1ac26852f13",
+      "status": "FAILED",
+      "errorCode": "PROCESSING_FAILED_REVIEW_REQUIRED",
+      "disposition": "Retained immutable pre-fix worker attempt; superseded by the successful v2 request."
+    }
+  ]
 }

@@ -59,18 +59,24 @@ reference and does not create another engagement on rerun.
 
 - Engagement: `eng_b8544dc2-ad64-44d7-8f1c-597a004eea07`.
 - Invoice: `inv_cbc8e58e-7cfc-4fe3-98c6-3f05b2eaa84e`, `ISSUED_SHADOW`, INR 368,160 including tax.
-- Checkout: application HTTP 503, `stable Razorpay merchant account identity required`.
-  Effective runtime inspection found `ASSURERAIL_RAZORPAY_ACCOUNT_ID` missing/invalid;
-  test-key shape and secret presence passed. No checkout row or payment was created.
-- Claude has the exact configuration blocker in the brain. Payment, upload, scanning and
-  processing remain unproven; this checkpoint is not a passing seller-journey gate.
+- Synthetic NEFT receipt: `pay_ba0bbc7a-2593-449f-bdec-a552bb86fc91`, INR 368,160,
+  `VERIFIED_SHADOW` after independent finance review. The seller UI renders the rail,
+  reference, amount, reviewer state and `SYNTHETIC ONLY`; no live payment is claimed.
+- Automatic assessment: `aprocess_6fe46327-3c6a-49f2-90e9-e9c3ea6380d8`,
+  `AUTO_RELEASED`. The real upload, object store, malware scan, extractor, worker and result UI
+  found the intended 12 duplicate rows while reconciling 1,500 primary pairs, 120 linked
+  parties and INR 20 crore principal. The report is automated and unsigned.
+- Model analysis did not run because the current per-run input budget was exceeded. The result
+  says `AUTOMATED_ANALYSIS_INCOMPLETE`; correction, reassessment and analysis remediation are
+  required before Portfolio Preparation can be accepted.
 
 Machine-emitted rerun results: [hosted evidence](evidence/book-a-hosted-2026-09-27.json).
-Harness: `scripts/assurerail-hosted-book-a.cjs` at `33aac7f29`. From the deployed repository,
+Harness: `scripts/assurerail-hosted-book-a.cjs` at `0b1119114`. From the deployed repository,
 as `deploy`, run `ASSURERAIL_HOSTED_DEMO_WRITE=yes node scripts/assurerail-hosted-book-a.cjs`.
 It uses the existing private account file and separate Firefox contexts, keeps secrets out of
-output, and stops at test checkout. Guarded API calls execute inside the browser: the same
-calls made with Node's APIRequestContext received a non-JSON CDN 403.
+output, and exercises synthetic NEFT reconciliation through the automatic result. Guarded API
+calls execute inside the browser: the same calls made with Node's APIRequestContext received a
+non-JSON CDN 403.
 
 ## Milestones and exit criteria
 
@@ -78,8 +84,8 @@ calls made with Node's APIRequestContext received a non-JSON CDN 403.
 |---|---|---|---|
 | R0 | Establish deployed baseline and dependencies | Exact revisions, live gates, identity status, dependency checks and reproducible browser command | In progress |
 | R1 | Seller scope, quote and accepted engagement | Firefox login; API-calculated quote; MFA-bound acceptance; persisted engagement survives refresh | Book A MFA acceptance and persisted UI verified; see hosted checkpoint above |
-| R2 | Invoice and test payment | Distinct maker/checker; issued statement; provider test checkout and verified reconciliation; unpaid work remains blocked | Book A maker/checker invoice issued; checkout blocked by merchant account configuration |
-| R3 | Evidence intake and automated assessment | Real object storage/encryption, malware scan, extraction and configured analysis; run persisted with source digests and qualified outcome | Local full-tape checks pass; hosted proof and AI scale remediation pending |
+| R2 | Invoice and test payment | Distinct maker/checker; issued statement; bank-transfer evidence and verified reconciliation; unpaid work remains blocked | Complete for Book A with synthetic NEFT and independently verified shadow reconciliation |
+| R3 | Evidence intake and automated assessment | Real object storage/encryption, malware scan, extraction and configured analysis; run persisted with source digests and qualified outcome | Hosted intake, scan, extraction, automatic release and UI render pass; AI input-budget remediation pending |
 | R4 | Correction, reassessment and expert-reviewed preparation | Changed evidence changes results; missing evidence remains missing; original report retained; distinct qualified reviewer releases preparation | Reviewer access/disclosure fixes deployed; workflow proof pending |
 | R5 | Buyer workspace and authorised handoff | Synthetic buyer MSA/authority setup; separate credit/legal/operations approvals; scoped released evidence; real mapped login handoff if used | Four identities provisioned; onboarding, authority and released-pool proof pending |
 | R6 | Buyer review and closing rehearsal | Buyer accepts/rejects actual case evidence; case-specific authority; code-computed fees/net proceeds; evidence reconciler detects short funding/reversal/missing receipt | Second priority |
