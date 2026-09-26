@@ -1,0 +1,684 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "codeCommit": "7efbb70f75e54ceaa4695d11ca103fcd4791ee8e",
+  "generatedAt": "2026-09-26T13:56:29.763Z",
+  "classification": "SYNTHETIC_ONLY",
+  "hostedAssessmentRun": false,
+  "checks": [
+    {
+      "file": "upload-step1/book-a-initial.csv",
+      "sha256": "2e56f8d24479175e9e254037820b17f47c00a002aeea58a11ceed1355a499635",
+      "status": "RECORD_EXCEPTIONS",
+      "expectedPrimaryPairCount": 30,
+      "parsedPrimaryPairCount": 30,
+      "expectedLinkedPartyCount": 3,
+      "parsedLinkedPartyCount": 3,
+      "expectedUniqueLoanCount": 30,
+      "parsedUniqueLoanCount": 30,
+      "parsedUniqueLoanCountActual": 24,
+      "invalidRecords": 0,
+      "duplicateRecords": 1,
+      "recordIssues": [
+        {
+          "code": "DUPLICATE_PAIR",
+          "rowNumber": 35,
+          "loanId": "SYN-A-LN-0001",
+          "partyId": "SYN-A-BR-0001",
+          "partyRole": "BORROWER"
+        }
+      ],
+      "parsedPrincipalMinor": "376927335",
+      "loanRecords": [
+        {
+          "loanId": "SYN-A-LN-0001",
+          "principalMinor": "11954707"
+        },
+        {
+          "loanId": "SYN-A-LN-0002",
+          "principalMinor": "10906794"
+        },
+        {
+          "loanId": "SYN-A-LN-0003",
+          "principalMinor": "15297669"
+        },
+        {
+          "loanId": "SYN-A-LN-0004",
+          "principalMinor": "14275811"
+        },
+        {
+          "loanId": "SYN-A-LN-0005",
+          "principalMinor": "18436645"
+        },
+        {
+          "loanId": "SYN-A-LN-0006",
+          "principalMinor": "18946065"
+        },
+        {
+          "loanId": "SYN-A-LN-0007",
+          "principalMinor": "22275503"
+        },
+        {
+          "loanId": "SYN-A-LN-0008",
+          "principalMinor": "21632946"
+        },
+        {
+          "loanId": "SYN-A-LN-0009",
+          "principalMinor": "10681557"
+        },
+        {
+          "loanId": "SYN-A-LN-0010",
+          "principalMinor": "9305789"
+        },
+        {
+          "loanId": "SYN-A-LN-0011",
+          "principalMinor": "13507199"
+        },
+        {
+          "loanId": "SYN-A-LN-0012",
+          "principalMinor": "14163621"
+        },
+        {
+          "loanId": "SYN-A-LN-0013",
+          "principalMinor": "16980584"
+        },
+        {
+          "loanId": "SYN-A-LN-0014",
+          "principalMinor": "16016537"
+        },
+        {
+          "loanId": "SYN-A-LN-0015",
+          "principalMinor": "20228399"
+        },
+        {
+          "loanId": "SYN-A-LN-0016",
+          "principalMinor": "19470390"
+        },
+        {
+          "loanId": "SYN-A-LN-0017",
+          "principalMinor": "24183168"
+        },
+        {
+          "loanId": "SYN-A-LN-0018",
+          "principalMinor": "8564628"
+        },
+        {
+          "loanId": "SYN-A-LN-0019",
+          "principalMinor": "12188432"
+        },
+        {
+          "loanId": "SYN-A-LN-0020",
+          "principalMinor": "10764143"
+        },
+        {
+          "loanId": "SYN-A-LN-0021",
+          "principalMinor": "15121765"
+        },
+        {
+          "loanId": "SYN-A-LN-0022",
+          "principalMinor": "14113558"
+        },
+        {
+          "loanId": "SYN-A-LN-0023",
+          "principalMinor": "18721526"
+        },
+        {
+          "loanId": "SYN-A-LN-0024",
+          "principalMinor": "19189899"
+        }
+      ],
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": false
+    },
+    {
+      "file": "reference-for-step2/book-a-corrected.csv",
+      "sha256": "7381454f0226e178d31c23872a74d3da0b62fd54e2e340bf57715fc48d8cc121",
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 30,
+      "parsedPrimaryPairCount": 30,
+      "expectedLinkedPartyCount": 3,
+      "parsedLinkedPartyCount": 3,
+      "expectedUniqueLoanCount": 30,
+      "parsedUniqueLoanCount": 30,
+      "parsedUniqueLoanCountActual": 24,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "376927335",
+      "loanRecords": [
+        {
+          "loanId": "SYN-A-LN-0001",
+          "principalMinor": "11954707"
+        },
+        {
+          "loanId": "SYN-A-LN-0002",
+          "principalMinor": "10906794"
+        },
+        {
+          "loanId": "SYN-A-LN-0003",
+          "principalMinor": "15297669"
+        },
+        {
+          "loanId": "SYN-A-LN-0004",
+          "principalMinor": "14275811"
+        },
+        {
+          "loanId": "SYN-A-LN-0005",
+          "principalMinor": "18436645"
+        },
+        {
+          "loanId": "SYN-A-LN-0006",
+          "principalMinor": "18946065"
+        },
+        {
+          "loanId": "SYN-A-LN-0007",
+          "principalMinor": "22275503"
+        },
+        {
+          "loanId": "SYN-A-LN-0008",
+          "principalMinor": "21632946"
+        },
+        {
+          "loanId": "SYN-A-LN-0009",
+          "principalMinor": "10681557"
+        },
+        {
+          "loanId": "SYN-A-LN-0010",
+          "principalMinor": "9305789"
+        },
+        {
+          "loanId": "SYN-A-LN-0011",
+          "principalMinor": "13507199"
+        },
+        {
+          "loanId": "SYN-A-LN-0012",
+          "principalMinor": "14163621"
+        },
+        {
+          "loanId": "SYN-A-LN-0013",
+          "principalMinor": "16980584"
+        },
+        {
+          "loanId": "SYN-A-LN-0014",
+          "principalMinor": "16016537"
+        },
+        {
+          "loanId": "SYN-A-LN-0015",
+          "principalMinor": "20228399"
+        },
+        {
+          "loanId": "SYN-A-LN-0016",
+          "principalMinor": "19470390"
+        },
+        {
+          "loanId": "SYN-A-LN-0017",
+          "principalMinor": "24183168"
+        },
+        {
+          "loanId": "SYN-A-LN-0018",
+          "principalMinor": "8564628"
+        },
+        {
+          "loanId": "SYN-A-LN-0019",
+          "principalMinor": "12188432"
+        },
+        {
+          "loanId": "SYN-A-LN-0020",
+          "principalMinor": "10764143"
+        },
+        {
+          "loanId": "SYN-A-LN-0021",
+          "principalMinor": "15121765"
+        },
+        {
+          "loanId": "SYN-A-LN-0022",
+          "principalMinor": "14113558"
+        },
+        {
+          "loanId": "SYN-A-LN-0023",
+          "principalMinor": "18721526"
+        },
+        {
+          "loanId": "SYN-A-LN-0024",
+          "principalMinor": "19189899"
+        }
+      ],
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true
+    },
+    {
+      "file": "upload-step1/book-b-initial.csv",
+      "sha256": "e5bf4f38c75083cda2cc4caa106fd7f4312b1a468cabbb2ad55fabd60822eee0",
+      "status": "RECORD_EXCEPTIONS",
+      "expectedPrimaryPairCount": 22,
+      "parsedPrimaryPairCount": 21,
+      "expectedLinkedPartyCount": 2,
+      "parsedLinkedPartyCount": 1,
+      "expectedUniqueLoanCount": 22,
+      "parsedUniqueLoanCount": 21,
+      "parsedUniqueLoanCountActual": 18,
+      "invalidRecords": 2,
+      "duplicateRecords": 0,
+      "recordIssues": [
+        {
+          "code": "INCONSISTENT_LOAN_BALANCE",
+          "rowNumber": 3,
+          "loanId": "SYN-B-LN-0001",
+          "partyId": "SYN-B-CO-0001",
+          "partyRole": "CO_BORROWER"
+        },
+        {
+          "code": "INVALID_RECORD",
+          "rowNumber": 4,
+          "loanId": "SYN-B-LN-0001",
+          "partyId": "SYN-B-GU-0001",
+          "partyRole": null
+        }
+      ],
+      "parsedPrincipalMinor": "372741195",
+      "loanRecords": [
+        {
+          "loanId": "SYN-B-LN-0001",
+          "principalMinor": "16669239"
+        },
+        {
+          "loanId": "SYN-B-LN-0002",
+          "principalMinor": "14822054"
+        },
+        {
+          "loanId": "SYN-B-LN-0003",
+          "principalMinor": "20336901"
+        },
+        {
+          "loanId": "SYN-B-LN-0004",
+          "principalMinor": "18620623"
+        },
+        {
+          "loanId": "SYN-B-LN-0005",
+          "principalMinor": "23651049"
+        },
+        {
+          "loanId": "SYN-B-LN-0006",
+          "principalMinor": "23950686"
+        },
+        {
+          "loanId": "SYN-B-LN-0007",
+          "principalMinor": "27795097"
+        },
+        {
+          "loanId": "SYN-B-LN-0008",
+          "principalMinor": "26680633"
+        },
+        {
+          "loanId": "SYN-B-LN-0009",
+          "principalMinor": "15354738"
+        },
+        {
+          "loanId": "SYN-B-LN-0010",
+          "principalMinor": "12975677"
+        },
+        {
+          "loanId": "SYN-B-LN-0011",
+          "principalMinor": "18355937"
+        },
+        {
+          "loanId": "SYN-B-LN-0012",
+          "principalMinor": "18829285"
+        },
+        {
+          "loanId": "SYN-B-LN-0013",
+          "principalMinor": "22148588"
+        },
+        {
+          "loanId": "SYN-B-LN-0014",
+          "principalMinor": "20546467"
+        },
+        {
+          "loanId": "SYN-B-LN-0015",
+          "principalMinor": "25571750"
+        },
+        {
+          "loanId": "SYN-B-LN-0016",
+          "principalMinor": "24294912"
+        },
+        {
+          "loanId": "SYN-B-LN-0017",
+          "principalMinor": "29825907"
+        },
+        {
+          "loanId": "SYN-B-LN-0018",
+          "principalMinor": "12311652"
+        }
+      ],
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": false
+    },
+    {
+      "file": "reference-for-step2/book-b-corrected.csv",
+      "sha256": "da39526816e1d9d35e62d07c3428de80a10ca6f29e009cd0b3026ba2574c03ba",
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 22,
+      "parsedPrimaryPairCount": 22,
+      "expectedLinkedPartyCount": 2,
+      "parsedLinkedPartyCount": 2,
+      "expectedUniqueLoanCount": 22,
+      "parsedUniqueLoanCount": 22,
+      "parsedUniqueLoanCountActual": 18,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "372741195",
+      "loanRecords": [
+        {
+          "loanId": "SYN-B-LN-0001",
+          "principalMinor": "16669239"
+        },
+        {
+          "loanId": "SYN-B-LN-0002",
+          "principalMinor": "14822054"
+        },
+        {
+          "loanId": "SYN-B-LN-0003",
+          "principalMinor": "20336901"
+        },
+        {
+          "loanId": "SYN-B-LN-0004",
+          "principalMinor": "18620623"
+        },
+        {
+          "loanId": "SYN-B-LN-0005",
+          "principalMinor": "23651049"
+        },
+        {
+          "loanId": "SYN-B-LN-0006",
+          "principalMinor": "23950686"
+        },
+        {
+          "loanId": "SYN-B-LN-0007",
+          "principalMinor": "27795097"
+        },
+        {
+          "loanId": "SYN-B-LN-0008",
+          "principalMinor": "26680633"
+        },
+        {
+          "loanId": "SYN-B-LN-0009",
+          "principalMinor": "15354738"
+        },
+        {
+          "loanId": "SYN-B-LN-0010",
+          "principalMinor": "12975677"
+        },
+        {
+          "loanId": "SYN-B-LN-0011",
+          "principalMinor": "18355937"
+        },
+        {
+          "loanId": "SYN-B-LN-0012",
+          "principalMinor": "18829285"
+        },
+        {
+          "loanId": "SYN-B-LN-0013",
+          "principalMinor": "22148588"
+        },
+        {
+          "loanId": "SYN-B-LN-0014",
+          "principalMinor": "20546467"
+        },
+        {
+          "loanId": "SYN-B-LN-0015",
+          "principalMinor": "25571750"
+        },
+        {
+          "loanId": "SYN-B-LN-0016",
+          "principalMinor": "24294912"
+        },
+        {
+          "loanId": "SYN-B-LN-0017",
+          "principalMinor": "29825907"
+        },
+        {
+          "loanId": "SYN-B-LN-0018",
+          "principalMinor": "12311652"
+        }
+      ],
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true
+    },
+    {
+      "file": "upload-step1/book-c-initial.csv",
+      "sha256": "6f9337e39529fbbcfac5afab56f6ea00b5d18fa5a6e00753b4a56e4202ae3b3b",
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 25,
+      "parsedPrimaryPairCount": 25,
+      "expectedLinkedPartyCount": 3,
+      "parsedLinkedPartyCount": 3,
+      "expectedUniqueLoanCount": 25,
+      "parsedUniqueLoanCount": 25,
+      "parsedUniqueLoanCountActual": 20,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "498948468",
+      "loanRecords": [
+        {
+          "loanId": "SYN-C-LN-0001",
+          "principalMinor": "21383771"
+        },
+        {
+          "loanId": "SYN-C-LN-0002",
+          "principalMinor": "18737313"
+        },
+        {
+          "loanId": "SYN-C-LN-0003",
+          "principalMinor": "25376133"
+        },
+        {
+          "loanId": "SYN-C-LN-0004",
+          "principalMinor": "22965435"
+        },
+        {
+          "loanId": "SYN-C-LN-0005",
+          "principalMinor": "28865454"
+        },
+        {
+          "loanId": "SYN-C-LN-0006",
+          "principalMinor": "28955308"
+        },
+        {
+          "loanId": "SYN-C-LN-0007",
+          "principalMinor": "33314690"
+        },
+        {
+          "loanId": "SYN-C-LN-0008",
+          "principalMinor": "31728321"
+        },
+        {
+          "loanId": "SYN-C-LN-0009",
+          "principalMinor": "20027919"
+        },
+        {
+          "loanId": "SYN-C-LN-0010",
+          "principalMinor": "16645566"
+        },
+        {
+          "loanId": "SYN-C-LN-0011",
+          "principalMinor": "23204676"
+        },
+        {
+          "loanId": "SYN-C-LN-0012",
+          "principalMinor": "23494948"
+        },
+        {
+          "loanId": "SYN-C-LN-0013",
+          "principalMinor": "27316592"
+        },
+        {
+          "loanId": "SYN-C-LN-0014",
+          "principalMinor": "25076397"
+        },
+        {
+          "loanId": "SYN-C-LN-0015",
+          "principalMinor": "30915101"
+        },
+        {
+          "loanId": "SYN-C-LN-0016",
+          "principalMinor": "29119433"
+        },
+        {
+          "loanId": "SYN-C-LN-0017",
+          "principalMinor": "35468646"
+        },
+        {
+          "loanId": "SYN-C-LN-0018",
+          "principalMinor": "16058677"
+        },
+        {
+          "loanId": "SYN-C-LN-0019",
+          "principalMinor": "21801843"
+        },
+        {
+          "loanId": "SYN-C-LN-0020",
+          "principalMinor": "18492245"
+        }
+      ],
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true
+    },
+    {
+      "file": "reference-for-step2/book-c-corrected.csv",
+      "sha256": "6f9337e39529fbbcfac5afab56f6ea00b5d18fa5a6e00753b4a56e4202ae3b3b",
+      "status": "MATCHED",
+      "expectedPrimaryPairCount": 25,
+      "parsedPrimaryPairCount": 25,
+      "expectedLinkedPartyCount": 3,
+      "parsedLinkedPartyCount": 3,
+      "expectedUniqueLoanCount": 25,
+      "parsedUniqueLoanCount": 25,
+      "parsedUniqueLoanCountActual": 20,
+      "invalidRecords": 0,
+      "duplicateRecords": 0,
+      "recordIssues": [],
+      "parsedPrincipalMinor": "498948468",
+      "loanRecords": [
+        {
+          "loanId": "SYN-C-LN-0001",
+          "principalMinor": "21383771"
+        },
+        {
+          "loanId": "SYN-C-LN-0002",
+          "principalMinor": "18737313"
+        },
+        {
+          "loanId": "SYN-C-LN-0003",
+          "principalMinor": "25376133"
+        },
+        {
+          "loanId": "SYN-C-LN-0004",
+          "principalMinor": "22965435"
+        },
+        {
+          "loanId": "SYN-C-LN-0005",
+          "principalMinor": "28865454"
+        },
+        {
+          "loanId": "SYN-C-LN-0006",
+          "principalMinor": "28955308"
+        },
+        {
+          "loanId": "SYN-C-LN-0007",
+          "principalMinor": "33314690"
+        },
+        {
+          "loanId": "SYN-C-LN-0008",
+          "principalMinor": "31728321"
+        },
+        {
+          "loanId": "SYN-C-LN-0009",
+          "principalMinor": "20027919"
+        },
+        {
+          "loanId": "SYN-C-LN-0010",
+          "principalMinor": "16645566"
+        },
+        {
+          "loanId": "SYN-C-LN-0011",
+          "principalMinor": "23204676"
+        },
+        {
+          "loanId": "SYN-C-LN-0012",
+          "principalMinor": "23494948"
+        },
+        {
+          "loanId": "SYN-C-LN-0013",
+          "principalMinor": "27316592"
+        },
+        {
+          "loanId": "SYN-C-LN-0014",
+          "principalMinor": "25076397"
+        },
+        {
+          "loanId": "SYN-C-LN-0015",
+          "principalMinor": "30915101"
+        },
+        {
+          "loanId": "SYN-C-LN-0016",
+          "principalMinor": "29119433"
+        },
+        {
+          "loanId": "SYN-C-LN-0017",
+          "principalMinor": "35468646"
+        },
+        {
+          "loanId": "SYN-C-LN-0018",
+          "principalMinor": "16058677"
+        },
+        {
+          "loanId": "SYN-C-LN-0019",
+          "principalMinor": "21801843"
+        },
+        {
+          "loanId": "SYN-C-LN-0020",
+          "principalMinor": "18492245"
+        }
+      ],
+      "currency": "INR",
+      "currencyScale": 2,
+      "coverageEstablished": true
+    }
+  ],
+  "workbook": {
+    "file": "AssureRail_Synthetic_NBFC_Step1.xlsx",
+    "extractedSegments": 2249,
+    "automaticTapeMapping": "TAPE_MAPPING_REQUIRED",
+    "sha256": "b144aef6ed79fdb6679d579bb0a9ff3b7b2c161e9993dbf5816ee562396f3e6e"
+  },
+  "documentInventory": {
+    "policyVersion": "ev-secured-term-da-1.0.0",
+    "status": "EXCEPTIONS",
+    "required": [
+      "LOAN_TAPE",
+      "LOAN_AGREEMENT",
+      "SECURITY_DOCUMENT",
+      "REPAYMENT_HISTORY",
+      "KYC_AUTHORITY",
+      "INSURANCE_COLLATERAL"
+    ],
+    "received": [
+      "LOAN_TAPE"
+    ],
+    "missing": [
+      "LOAN_AGREEMENT",
+      "SECURITY_DOCUMENT",
+      "REPAYMENT_HISTORY",
+      "KYC_AUTHORITY",
+      "INSURANCE_COLLATERAL"
+    ],
+    "reason": "REQUIRED_DOCUMENT_FAMILIES_MISSING"
+  }
+}
