@@ -41,6 +41,12 @@ function totp(seed) {
   const institutionId = profile.institutionId;
   const participantBase = `/v1/rail/institutions/${institutionId}`;
   const runsPath = `${participantBase}/engagements/${engagementId}/runs`;
+  const extractorPython = process.env.ASSURERAIL_EXTRACTOR_PYTHON ?? '/usr/bin/python3';
+  assert.equal(extractorPython.startsWith('/'), true);
+  const extractorReady = spawnSync(extractorPython, ['-I', '-c', 'import pypdf'], {
+    encoding: 'utf8', timeout: 10000, env: { PATH: '/usr/bin:/bin', LANG: 'C.UTF-8' },
+  });
+  assert.equal(extractorReady.status, 0, 'pinned PDF extractor dependency is unavailable');
   const scratch = mkdtempSync(join(tmpdir(), 'assurerail-preparation.'));
   const corpusPath = join(scratch, 'corpus');
   const generated = spawnSync('/usr/bin/python3', [
@@ -208,7 +214,7 @@ function totp(seed) {
     assert(initial); const tape = initial.result.manifest.find(item => item.evidenceType === 'LOAN_TAPE'); assert(tape?.versionId);
     stage = 'request_preparation_processing';
     const requested = await preparer.api(runsPath, {
-      stage: 'PREPARATION', requestRef: 'synthetic-book-a-preparation-run-20260927-v1',
+      stage: 'PREPARATION', requestRef: 'synthetic-book-a-preparation-run-20260927-v2',
       evidenceVersionIds: [tape.versionId, ...uploadedVersionIds],
       stepUpEvidenceId: await preparer.proof('ENGAGEMENT_PROCESSING_REQUEST'),
     });
