@@ -6,6 +6,7 @@ import { InstitutionAccessService } from "../institutions/institution-access.ser
 import { InternalAccessService } from "../internal-access/internal-access.service";
 import { StepUpService } from "../institutions/step-up.service";
 import { inspectPersistenceFlags } from "../persistence/feature-flags";
+import { canonicalEvidenceDigest } from "./evidence-digest";
 import { engagementQuote, type EngagementQuoteInput } from "./engagement-pricing";
 import { exactMinor } from "./fee-calculation";
 import { invoicePaymentPosition, validateReceiptReview } from "./payment-reconciliation";
@@ -32,12 +33,6 @@ export function validateBankTransferReference(rail: (typeof TRANSFER_RAILS)[numb
   if (!valid) throw new BadRequestException(rail === "IMPS" ? "IMPS RRN must be exactly 12 digits" : `${rail} UTR must be 16 to 22 uppercase letters or digits`);
   return reference;
 }
-export function canonicalEvidenceDigest(value: string): string | null {
-  if (/^sha256:[a-f0-9]{64}$/.test(value)) return value;
-  if (/^[a-f0-9]{64}$/.test(value)) return `sha256:${value}`;
-  return null;
-}
-
 @Injectable()
 export class EngagementBillingService {
   constructor(private readonly db: PrismaService, private readonly access: InstitutionAccessService, private readonly staff: InternalAccessService, private readonly stepUp: StepUpService) {}

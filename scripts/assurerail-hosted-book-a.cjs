@@ -220,7 +220,7 @@ function totp(seed) {
 
     stage = 'book_a_processing_request';
     const run = await dataPreparer.api(runsPath, {
-      stage: 'INITIAL', requestRef: 'synthetic-book-a-initial-run-20260927-v1',
+      stage: 'INITIAL', requestRef: 'synthetic-book-a-initial-run-20260927-v2',
       evidenceVersionIds: [uploaded.evidenceVersionId], stepUpEvidenceId: await dataPreparer.proof('ENGAGEMENT_PROCESSING_REQUEST'),
     });
     assert.match(run.id, /^aprocess_[a-f0-9-]+$/);

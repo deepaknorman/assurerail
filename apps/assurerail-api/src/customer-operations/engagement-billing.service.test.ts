@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canonicalEvidenceDigest, EngagementBillingService, validateBankTransferReference } from "./engagement-billing.service";
+import { EngagementBillingService, validateBankTransferReference } from "./engagement-billing.service";
+import { canonicalEvidenceDigest } from "./evidence-digest";
 import { EngagementBillingParticipantController, EngagementBillingInternalController } from "./engagement-billing.controllers";
 
 test("new billing refuses activation without both shadow flags",async()=>{

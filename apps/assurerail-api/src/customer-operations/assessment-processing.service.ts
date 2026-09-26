@@ -16,6 +16,7 @@ import { createInitialAssessmentReceipt } from "../ai-assurance/assessment-ai-re
 import { deriveRemediationGaps, initialReassessmentAllowance, isOwnerRole, remediationChangeSummary, type RemediationGap } from "./assessment-remediation";
 import { documentEvidenceEnvelope, documentInventory, mergeHybridSegments, reconcileLoanDocuments, routeDocument, SUPPORTED_ASSESSMENT_DOCUMENT_TYPES } from "./document-review";
 import { preparationReviewDisclosure } from "./preparation-review-disclosure";
+import { canonicalEvidenceDigest } from "./evidence-digest";
 type Manifest = {versionId:string;evidenceObjectId:string;digest:string;contentType:string;sizeBytes:number;evidenceType:string}[];
 export function assessmentRetentionUntil(createdAt:Date,retentionDays:number,now=new Date()) {
   const retentionUntilAt=new Date(createdAt.getTime()+retentionDays*86400000);
@@ -90,7 +91,7 @@ export class AssessmentProcessingService {
       if(versions.length!==ids.length)throw new NotFoundException("evidence version not found");
       for(const v of versions) this.validateSource(v,actor.actingInstitutionId,id);
       if(versions.reduce((sum,v)=>sum+v.documentVersion!.sizeBytes,0)>40*1024*1024)throw new ConflictException("per-run document budget exceeded; split the approved scope");
-      const manifest:Manifest=versions.map(v=>({versionId:v.id,evidenceObjectId:v.evidenceObjectId,digest:v.payloadDigest,contentType:v.documentVersion!.detectedContentType,sizeBytes:v.documentVersion!.sizeBytes,evidenceType:v.evidenceObject.evidenceType})).sort((a,b)=>a.versionId.localeCompare(b.versionId));
+      const manifest:Manifest=versions.map(v=>({versionId:v.id,evidenceObjectId:v.evidenceObjectId,digest:assessmentEvidenceDigest(v.payloadDigest),contentType:v.documentVersion!.detectedContentType,sizeBytes:v.documentVersion!.sizeBytes,evidenceType:v.evidenceObject.evidenceType})).sort((a,b)=>a.versionId.localeCompare(b.versionId));
       const expectedScopeDigest=this.scopeDigest(engagement);
       const remediationItemIds=Array.isArray(body.remediationItemIds)?[...body.remediationItemIds].sort():body.remediationItemIds??[];
       const requestDigest=sha256Digest({id,stage,manifest,scopeDigest:expectedScopeDigest,baselineRunId:body.baselineRunId??null,remediationItemIds});
@@ -269,4 +270,10 @@ export class AssessmentProcessingService {
       return {jobId,status:decision==="RELEASE"?"RELEASED":"REJECTED",qualificationRef:credential.qualificationRef,liveDecisionAuthority:false};
     });
   }
+}
+
+export function assessmentEvidenceDigest(value:string):string {
+  const digest=canonicalEvidenceDigest(value);
+  if(!digest)throw new Error("INVALID_EVIDENCE_DIGEST");
+  return digest;
 }
