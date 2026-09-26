@@ -124,7 +124,10 @@ export class AssessmentProcessingService {
   private publicJob(job:any) { return {id:job.id,stage:job.stage,status:job.status,createdAt:job.createdAt,releasedAt:job.releasedAt,reviewedAt:job.reviewedAt,review:preparationReviewDisclosure(job),errorCode:job.errorCode,...(["AUTO_RELEASED","RELEASED"].includes(job.status)?{result:job.result,resultDigest:job.resultDigest}:{}),liveDecisionAuthority:false}; }
   async list(actor:ParticipantOpsActor,id:string) {await this.engagements.participant(actor);await this.engagements.evidenceAuthority(actor);await this.engagements.scoped(this.db,actor.actingInstitutionId,id);return (await this.db.assessmentProcessingJob.findMany({where:{engagementId:id},orderBy:{createdAt:"desc"}})).map(j=>this.publicJob(j));}
   async internalReport(actor:InternalOpsActor,institutionId:string,id:string,jobId:string) {
-    engagementEnabled();await this.staff.require({userId:actor.actorUserId,permission:"CASE_TASK_PREPARE",scopeType:"INSTITUTION",scopeRef:institutionId});
+    engagementEnabled();
+    const scope={userId:actor.actorUserId,scopeType:"INSTITUTION" as const,scopeRef:institutionId};
+    const preparer=await this.staff.evaluate({...scope,permission:"CASE_TASK_PREPARE"});
+    if(!preparer.allowed)await this.staff.require({...scope,permission:"RISK_EXCEPTION_REVIEW"});
     await this.engagements.scoped(this.db,institutionId,id);const job=await this.db.assessmentProcessingJob.findUnique({where:{id:jobId},include:{documentReviews:{include:{attempts:{orderBy:{ordinal:"asc"}}}}}});if(!job||job.engagementId!==id)throw new NotFoundException("run not found");return job;
   }
   async runNext() {
