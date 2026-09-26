@@ -1,9 +1,21 @@
 import { createHash } from "node:crypto";
+import { sha256Digest } from "../contracts/v1";
 
 export const REMEDIATION_OWNER_ROLES=["SELLER_DATA","SELLER_OPERATIONS","SELLER_CREDIT","SELLER_LEGAL","SELLER_COMPLIANCE"] as const;
 export type RemediationOwnerRole=typeof REMEDIATION_OWNER_ROLES[number];
 export type AffectedPair={sellerInstitutionId:string;loanId:string;partyId:string;partyRole:string};
 export type RemediationGap={gapKey:string;category:string;severity:string;summary:string;affectedScope:"PAIRS"|"PORTFOLIO";affectedPairs:AffectedPair[];unresolvedRecordCount:number;defaultOwnerRole:RemediationOwnerRole;requiredEvidenceTypes:string[]};
+
+export function preparationRemediationDisclosure(input:{runId:string;scopeDigest:string;gaps:RemediationGap[];inventory:{status:string;required:string[];received:string[];missing:string[]};loanReconciliation:{status:string;tapeLoanCount:number;documentedLoanCount:number;principalReconciledLoanCount:number;coveragePercent:number;unresolvedPrincipalMinor:string}}) {
+  const disclosure={
+    runId:input.runId,
+    scopeDigest:input.scopeDigest,
+    openGaps:input.gaps.map(gap=>({gapKey:gap.gapKey,category:gap.category,severity:gap.severity,summary:gap.summary,affectedScope:gap.affectedScope,affectedPairCount:gap.affectedPairs.length,unresolvedRecordCount:gap.unresolvedRecordCount,requiredEvidenceTypes:gap.requiredEvidenceTypes})),
+    inventory:input.inventory,
+    loanReconciliation:input.loanReconciliation,
+  };
+  return {...disclosure,disclosureDigest:sha256Digest(disclosure)};
+}
 
 type DataQuality={
   status:string;

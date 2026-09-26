@@ -1361,6 +1361,7 @@ model AssessmentEngagement {
   acceptedByUserId   String?
   acceptanceStepUpId String?
   acceptedAt         DateTime?
+  preparationRemediationScopeDigest String?
   preparationAcceptedBy String?
   preparationStepUpId String?
   preparationAcceptedAt DateTime?

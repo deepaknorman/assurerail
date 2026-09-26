@@ -13,7 +13,7 @@ import type { InternalOpsActor, ParticipantOpsActor } from "./customer-operation
 import { extractAndValidateOcr, type AiDocument } from "./ocr.adapter";
 import { loanTapeMetrics } from "./loan-tape-metrics";
 import { createInitialAssessmentReceipt } from "../ai-assurance/assessment-ai-receipt";
-import { deriveRemediationGaps, initialReassessmentAllowance, isOwnerRole, remediationChangeSummary, type RemediationGap } from "./assessment-remediation";
+import { deriveRemediationGaps, initialReassessmentAllowance, isOwnerRole, preparationRemediationDisclosure, remediationChangeSummary, type RemediationGap } from "./assessment-remediation";
 import { documentEvidenceEnvelope, documentInventory, mergeHybridSegments, reconcileLoanDocuments, routeDocument, SUPPORTED_ASSESSMENT_DOCUMENT_TYPES } from "./document-review";
 import { preparationReviewDisclosure } from "./preparation-review-disclosure";
 import { canonicalEvidenceDigest } from "./evidence-digest";
@@ -23,11 +23,15 @@ export function assessmentRetentionUntil(createdAt:Date,retentionDays:number,now
   if(!Number.isFinite(retentionUntilAt.getTime())||retentionUntilAt<=now)throw new ConflictException("engagement evidence-retention window has ended; obtain a revised order");
   return retentionUntilAt.toISOString();
 }
-export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{status:string};exceptions:{code:string}[];analysis:{provider:string;findings?:{severity:string}[]};documentInventory?:{status:string};loanReconciliation?:{status:string}}) {
+export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{status:string};exceptions:{code:string}[];analysis:{provider:string;qualification?:string;findings?:{severity:string}[]};documentInventory?:{status:string};loanReconciliation?:{status:string}}) {
   if(input.assetFamily==="OTHER")return "OUTSIDE_CURRENT_SCOPE" as const;
-  if(!["openai","gemini"].includes(input.analysis.provider))return "AUTOMATED_ANALYSIS_INCOMPLETE" as const;
-  if(input.dataQuality.status!=="MATCHED"||input.exceptions.length||input.documentInventory&&input.documentInventory.status!=="COMPLETE"||input.loanReconciliation&&input.loanReconciliation.status!=="RECONCILED"||input.analysis.findings?.some(f=>f.severity==="CRITICAL"))return "FIX_AND_REASSESS" as const;
+  if(input.dataQuality.status!=="MATCHED"||input.exceptions.length||input.analysis.findings?.some(f=>f.severity==="CRITICAL"))return "FIX_AND_REASSESS" as const;
+  const tapeOnly=input.analysis.provider==="NOT_APPLICABLE"&&input.analysis.qualification==="NO_UNSTRUCTURED_DOCUMENTS_SELECTED";
+  if(!tapeOnly&&!["openai","gemini"].includes(input.analysis.provider))return "AUTOMATED_ANALYSIS_INCOMPLETE" as const;
   return "READY_FOR_PORTFOLIO_PREPARATION" as const;
+}
+export function modelReviewSources(sources:SourceSegment[]):SourceSegment[] {
+  return sources.filter(source=>source.evidenceType!=="LOAN_TAPE");
 }
 
 @Injectable()
@@ -206,8 +210,15 @@ export class AssessmentProcessingService {
         for(const s of extracted.segments)sources.push({...s,evidenceVersionId:entry.versionId,digest:entry.digest,evidenceType:entry.evidenceType});
         exceptions.push(...extracted.exceptions.map(x=>({...x,evidenceVersionId:entry.versionId})));
       }
-      // Bounded AI input; extraction covers all supplied files. A budget skip is explicit in the report.
-      const analysis=JSON.stringify(sources).length<=120000?await analyseSources(sources):{provider:"NOT_RUN",model:null,findings:[],documentExtractions:[],qualification:"AI_INPUT_BUDGET_EXCEEDED"};
+      // Loan tapes are structured payloads governed by deterministic metrics and reconciliation.
+      // The model reviews supporting documents only; missing documents remain visible preparation work.
+      const reviewSources=modelReviewSources(sources);
+      const documentIds=[...new Set(reviewSources.map(source=>source.evidenceVersionId))];
+      const analysis=reviewSources.length===0
+        ? {provider:"NOT_APPLICABLE",model:null,findings:[],documentExtractions:[],qualification:"NO_UNSTRUCTURED_DOCUMENTS_SELECTED",aiCoverage:{documentsAdmitted:0,documentsReviewed:0,unreviewed:[]}}
+        : JSON.stringify(reviewSources).length<=120000
+          ? {...await analyseSources(reviewSources),aiCoverage:{documentsAdmitted:documentIds.length,documentsReviewed:documentIds.length,unreviewed:[]}}
+          : {provider:"NOT_RUN",model:null,findings:[],documentExtractions:[],qualification:"AI_INPUT_BUDGET_EXCEEDED",aiCoverage:{documentsAdmitted:documentIds.length,documentsReviewed:0,unreviewed:documentIds.map(evidenceVersionId=>({evidenceVersionId,reason:"BUDGET"}))}};
       const scope=job.engagement.scope as {primaryPairCount?:number;linkedPartyCount?:number;uniqueLoanCount?:number};
       const quotedPrimaryPairs=scope.primaryPairCount ?? scope.uniqueLoanCount;
       if (!quotedPrimaryPairs) throw new Error("ENGAGEMENT_PRIMARY_PAIR_COUNT_MISSING");
@@ -226,7 +237,9 @@ export class AssessmentProcessingService {
       const baseline=job.baselineRunId?await this.db.assessmentProcessingJob.findUnique({where:{id:job.baselineRunId}}):null;
       const previousDataQuality=(baseline?.result as {dataQuality?:Parameters<typeof remediationChangeSummary>[2]}|null)?.dataQuality;
       const changeSummary=job.stage==="INITIAL"?remediationChangeSummary(previousGaps,remediationGaps,previousDataQuality,dataQuality):null;
-      const remediation=job.stage==="INITIAL"?{scopeDigest:job.scopeDigest,reassessmentOrdinal:job.reassessmentOrdinal,gaps:remediationGaps,changeSummary}:null;
+      if(job.stage==="INITIAL"&&!job.scopeDigest)throw new Error("INITIAL_ASSESSMENT_SCOPE_DIGEST_MISSING");
+      const disclosure=job.stage==="INITIAL"?preparationRemediationDisclosure({runId:job.id,scopeDigest:job.scopeDigest!,gaps:remediationGaps,inventory,loanReconciliation}):null;
+      const remediation=job.stage==="INITIAL"?{scopeDigest:job.scopeDigest,reassessmentOrdinal:job.reassessmentOrdinal,gaps:remediationGaps,changeSummary,disclosure}:null;
       const result={manifest,dataQuality,documentReview,extraction,analysis,release,aiRunReceipt,remediation,qualifications:["PRELIMINARY_PREPARATION_INSIGHTS_ONLY","NOT_BUYER_APPROVAL","NOT_AN_ASSURANCE_OR_PROFESSIONAL_OPINION","NO_AUTOMATIC_LEGAL_OR_CREDIT_OPINION"],sources};
       const resultDigest=sha256Digest(result);
       if(job.stage==="INITIAL"){

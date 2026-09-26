@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {deriveRemediationGaps,initialReassessmentAllowance,isOwnerRole,remediationChangeSummary} from "./assessment-remediation";
+import {deriveRemediationGaps,initialReassessmentAllowance,isOwnerRole,preparationRemediationDisclosure,remediationChangeSummary} from "./assessment-remediation";
 
 test("remediation plan binds record gaps to unique seller-loan-party pairs",()=>{
   const gaps=deriveRemediationGaps({sellerInstitutionId:"seller-1",dataQuality:{status:"RECORD_EXCEPTIONS",recordIssues:[
@@ -52,4 +52,14 @@ test("three reassessments are included only within thirty days while the workspa
   assert.equal(available.completedReassessments,1);assert.equal(available.remainingIncludedReassessments,2);assert.equal(available.canRequestIncluded,true);
   const boundary=initialReassessmentAllowance([first],new Date("2026-10-01T00:00:00.000Z"));assert.equal(boundary.withinIncludedWindow,false);assert.equal(boundary.canRequestIncluded,false);
   const exhausted=initialReassessmentAllowance([first,first,first,first],new Date("2026-09-10T00:00:00.000Z"));assert.equal(exhausted.remainingIncludedReassessments,0);assert.equal(exhausted.canRequestIncluded,false);
+});
+
+test("preparation disclosure binds the exact run, open gaps, inventory and coverage",()=>{
+  const gap=deriveRemediationGaps({sellerInstitutionId:"seller",dataQuality:{status:"MATCHED"},manifest:[],extraction:{exceptions:[]},analysis:{findings:[]},documentReview:{inventory:{missing:["KYC_AUTHORITY"]},loanReconciliation:{tapeLoanCount:10,documentedLoanCount:0,principalReconciledLoanCount:0}}})[0];
+  assert.ok(gap);
+  const input={runId:"run-1",scopeDigest:`sha256:${"a".repeat(64)}`,gaps:[gap],inventory:{status:"EXCEPTIONS",required:["LOAN_TAPE","KYC_AUTHORITY"],received:["LOAN_TAPE"],missing:["KYC_AUTHORITY"]},loanReconciliation:{status:"EXCEPTIONS",tapeLoanCount:10,documentedLoanCount:0,principalReconciledLoanCount:0,coveragePercent:0,unresolvedPrincipalMinor:"100000"}};
+  const first=preparationRemediationDisclosure(input),repeat=preparationRemediationDisclosure(input);
+  assert.match(first.disclosureDigest,/^sha256:[0-9a-f]{64}$/);assert.equal(first.disclosureDigest,repeat.disclosureDigest);
+  assert.notEqual(first.disclosureDigest,preparationRemediationDisclosure({...input,runId:"run-2"}).disclosureDigest);
+  assert.notEqual(first.disclosureDigest,preparationRemediationDisclosure({...input,loanReconciliation:{...input.loanReconciliation,documentedLoanCount:1}}).disclosureDigest);
 });

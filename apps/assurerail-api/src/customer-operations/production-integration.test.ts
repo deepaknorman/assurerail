@@ -8,7 +8,7 @@ import {extractAndValidateOcr,modelTierConfiguration,structuredDocumentCall,vali
 import {validateBankFile,validateBankAcknowledgement,sftpArgs,type BankFileConfig} from "../integrations/bank-file.adapter";
 import {escrowInstruction,reconcileEscrow} from "../settlement/escrow-settlement-contract";
 import {loanTapeMetrics} from "./loan-tape-metrics";
-import {automatedInitialOutcome} from "./assessment-processing.service";
+import {automatedInitialOutcome,modelReviewSources} from "./assessment-processing.service";
 
 test("loan tape reconciles quoted scope, rejects duplicates and does not silently fill missing balances",()=>{
  const tape={contentType:"text/csv",segments:[{text:'["loan_id","party_id","party_role","principal_minor"]'},{text:'["001","B1","BORROWER","100"]'},{text:'["001","B2","CO_BORROWER","100"]'},{text:'["001","G1","LINKED_PARTY","100"]'},{text:'["002","B3","BORROWER","200"]'}]};
@@ -22,9 +22,17 @@ test("Initial Assessment outcome is automated, conservative and never an expert 
  assert.equal(automatedInitialOutcome({...good,analysis:{provider:"openai",findings:[{severity:"CRITICAL"}]}}),"FIX_AND_REASSESS");
  assert.equal(automatedInitialOutcome({...good,analysis:{provider:"DISABLED",findings:[]}}),"AUTOMATED_ANALYSIS_INCOMPLETE");
  assert.equal(automatedInitialOutcome({...good,analysis:{provider:"NOT_RUN",findings:[]}}),"AUTOMATED_ANALYSIS_INCOMPLETE");
- assert.equal(automatedInitialOutcome({...good,documentInventory:{status:"EXCEPTIONS"}}),"FIX_AND_REASSESS");
- assert.equal(automatedInitialOutcome({...good,loanReconciliation:{status:"EXCEPTIONS"}}),"FIX_AND_REASSESS");
+ assert.equal(automatedInitialOutcome({...good,analysis:{provider:"NOT_APPLICABLE",qualification:"NO_UNSTRUCTURED_DOCUMENTS_SELECTED",findings:[]}}),"READY_FOR_PORTFOLIO_PREPARATION");
+ assert.equal(automatedInitialOutcome({...good,documentInventory:{status:"EXCEPTIONS"}}),"READY_FOR_PORTFOLIO_PREPARATION");
+ assert.equal(automatedInitialOutcome({...good,loanReconciliation:{status:"EXCEPTIONS"}}),"READY_FOR_PORTFOLIO_PREPARATION");
+ assert.equal(automatedInitialOutcome({...good,exceptions:[{code:"OCR_REQUIRED"}]}),"FIX_AND_REASSESS");
  assert.equal(automatedInitialOutcome({...good,assetFamily:"OTHER"}),"OUTSIDE_CURRENT_SCOPE");
+});
+
+test("loan tapes stay outside model review at any portfolio size",()=>{
+ const sources=[{evidenceVersionId:"tape",digest:"sha256:tape",evidenceType:"LOAN_TAPE",locator:"row:1",text:"structured row"},{evidenceVersionId:"agreement",digest:"sha256:agreement",evidenceType:"LOAN_AGREEMENT",locator:"page:1",text:"document text"}];
+ assert.deepEqual(modelReviewSources(sources),[sources[1]]);
+ assert.deepEqual(modelReviewSources(Array.from({length:3000},(_,index)=>({...sources[0],locator:`row:${index+1}`}))),[]);
 });
 
 const tax={feeBasis:"NOTIONAL_BASIS_POINTS",rateValue:"1800",roundingMode:"HALF_UP"} as const;

@@ -59,9 +59,13 @@ async function main(){
  assert.equal((await processing.list(actor,offer.id)).find(r=>r.id===queued.id)?.status,"AUTO_RELEASED");
  assert.equal((await processing.policy(actor,offer.id)).remainingIncludedReassessments,3);
  await assert.rejects(()=>processing.review(checker,actor.actingInstitutionId,offer.id,report.id,{decision:"RELEASE",resultDigest:report.resultDigest,reviewEvidenceRef:"unused",stepUpEvidenceId:"unused"}),/automatically released/);
- await assert.rejects(()=>engagements.choosePreparation(actor,offer.id,{route:"COMMITTED",quoteDigest:offer.quoteDigest,mandateAndTopUpAccepted:true,stepUpEvidenceId:"prep-step"}),/resolve the automated Initial Assessment outcome/);
+ const releasedResult=report.result as any,remediationScopeDigest=releasedResult.remediation.disclosure.disclosureDigest;
+ assert.equal(releasedResult.release.outcome,"READY_FOR_PORTFOLIO_PREPARATION");assert.equal(releasedResult.analysis.qualification,"NO_UNSTRUCTURED_DOCUMENTS_SELECTED");
+ await assert.rejects(()=>engagements.choosePreparation(actor,offer.id,{route:"COMMITTED",quoteDigest:offer.quoteDigest,mandateAndTopUpAccepted:true,stepUpEvidenceId:"prep-step"}),/remediation scope/);
+ await assert.rejects(()=>engagements.choosePreparation(actor,offer.id,{route:"COMMITTED",quoteDigest:offer.quoteDigest,remediationScopeDigest:`sha256:${"0".repeat(64)}`,mandateAndTopUpAccepted:true,stepUpEvidenceId:"prep-step"}),/remediation scope/);
+ const preparation=await engagements.choosePreparation(actor,offer.id,{route:"COMMITTED",quoteDigest:offer.quoteDigest,remediationScopeDigest,mandateAndTopUpAccepted:true,stepUpEvidenceId:"prep-step"});assert.equal(preparation.preparationRemediationScopeDigest,remediationScopeDigest);
  await assert.rejects(()=>engagements.requirePaid(db,actor.actingInstitutionId,offer.id,"PREPARATION"),/invoiced stage/);
- console.log("[ENGAGEMENT-DB] PASS clean versioned evidence -> local CSV extraction -> unsigned automated Initial Assessment release; open evidence outcome blocks preparation and three reassessments remain (scanner and identity are synthetic fixtures)");
+ console.log("[ENGAGEMENT-DB] PASS clean versioned tape -> deterministic unsigned Initial Assessment -> READY; stale or absent remediation disclosure is refused and the exact open scope is persisted on preparation acceptance (scanner and identity are synthetic fixtures)");
  const raw=Buffer.from(JSON.stringify({account_id:"acc_Synthetic",event:"payment_link.paid",payload:{payment_link:{entity:{id:"plink_Synthetic"}},payment:{entity:{id:"pay_Synthetic"}}}})),sig=createHmac("sha256","w".repeat(32)).update(raw).digest("hex");
  assert.equal((await checkout.webhook(raw,sig,"synthetic-event")).replay,false);assert.equal((await checkout.webhook(raw,sig,"synthetic-event")).replay,true);
  await assert.rejects(()=>checkout.webhook(raw,"a".repeat(64),"bad-signature"),/signature/);

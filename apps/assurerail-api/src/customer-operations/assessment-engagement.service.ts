@@ -161,7 +161,7 @@ export class AssessmentEngagementService {
     });
   }
 
-  async choosePreparation(actor: ParticipantOpsActor, id: string, body: { route?: unknown; quoteDigest?: unknown; mandateAndTopUpAccepted?: unknown; stepUpEvidenceId?: unknown }) {
+  async choosePreparation(actor: ParticipantOpsActor, id: string, body: { route?: unknown; quoteDigest?: unknown; remediationScopeDigest?: unknown; mandateAndTopUpAccepted?: unknown; stepUpEvidenceId?: unknown }) {
     await this.participant(actor, true);
     if (body.route !== "COMMITTED" && body.route !== "STANDALONE") throw new BadRequestException("preparation route required");
     if (body.route === "COMMITTED" && body.mandateAndTopUpAccepted !== true) throw new BadRequestException("committed route requires explicit mandate and voluntary-withdrawal top-up acceptance");
@@ -172,7 +172,10 @@ export class AssessmentEngagementService {
       await this.requirePaid(tx, actor.actingInstitutionId, id, "INITIAL");
       const report = await tx.assessmentProcessingJob.findFirst({ where: { engagementId: id, stage: "INITIAL" }, orderBy: { createdAt: "desc" } });
       if (!report || report.status !== "AUTO_RELEASED") throw new ConflictException("latest automated Initial Assessment must be complete before preparation");
-      if ((report.result as {release?:{outcome?:string}} | null)?.release?.outcome !== "READY_FOR_PORTFOLIO_PREPARATION") throw new ConflictException("resolve the automated Initial Assessment outcome before accepting preparation");
+      const releasedResult=report.result as {release?:{outcome?:string};remediation?:{disclosure?:{disclosureDigest?:string}}} | null;
+      if (releasedResult?.release?.outcome !== "READY_FOR_PORTFOLIO_PREPARATION") throw new ConflictException("resolve the automated Initial Assessment outcome before accepting preparation");
+      const remediationScopeDigest=releasedResult.remediation?.disclosure?.disclosureDigest;
+      if (!remediationScopeDigest || body.remediationScopeDigest !== remediationScopeDigest) throw new ConflictException("current remediation scope must be disclosed and accepted before preparation");
       for (const source of report.sourceManifest as {versionId:string}[]) {
         const v = await tx.evidenceVersion.findUnique({where:{id:source.versionId},include:{evidenceObject:true,documentVersion:true}});
         if (!v || v.evidenceObject.institutionId !== actor.actingInstitutionId || v.evidenceObject.purpose !== `ASSESSMENT:${id}` || v.evidenceObject.status !== "AVAILABLE" || v.evidenceObject.currentVersion !== v.version || v.validationStatus !== "VALID" || (v.expiresAt && v.expiresAt <= new Date()) || v.documentVersion?.malwareStatus !== "CLEAN") throw new ConflictException("initial report evidence has changed; reassess before preparation");
@@ -181,7 +184,7 @@ export class AssessmentEngagementService {
       const step = bounded(body.stepUpEvidenceId, "stepUpEvidenceId");
       await this.stepUp.consume({ evidenceId: step, userId: actor.actorUserId, sessionId: actor.actorSessionId, institutionId: actor.actingInstitutionId, purpose: "ENGAGEMENT_PREPARATION_ACCEPT" }, tx);
       await tx.assessmentEngagementStage.create({ data: { id: `est_${randomUUID()}`, engagementId: id, stage: "PREPARATION", expectedMinor: stageAmount(e.quote as unknown as Quote, "PREPARATION", route).totalMinor } });
-      return tx.assessmentEngagement.update({ where: { id }, data: { route, preparationAcceptedBy: actor.actorUserId, preparationStepUpId: step, preparationAcceptedAt: new Date() } });
+      return tx.assessmentEngagement.update({ where: { id }, data: { route, preparationRemediationScopeDigest: remediationScopeDigest, preparationAcceptedBy: actor.actorUserId, preparationStepUpId: step, preparationAcceptedAt: new Date() } });
     });
   }
 
