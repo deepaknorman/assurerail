@@ -8,7 +8,7 @@ import { InternalAccessService } from "../internal-access/internal-access.servic
 import { StepUpService } from "../institutions/step-up.service";
 import { sha256Digest } from "../contracts/v1";
 import { AssessmentEngagementService, asJson, bounded, engagementEnabled } from "./assessment-engagement.service";
-import { analyseSources, extractDocument, type SourceSegment } from "./document-analysis";
+import { analyseSources, extractDocument, type ModelReviewBatchRecord, type SourceSegment } from "./document-analysis";
 import type { InternalOpsActor, ParticipantOpsActor } from "./customer-operations.service";
 import { extractAndValidateOcr, type AiDocument } from "./ocr.adapter";
 import { loanTapeMetrics } from "./loan-tape-metrics";
@@ -147,6 +147,11 @@ export class AssessmentProcessingService {
   private validateSource(v:any,institutionId:string,engagementId:string) {
     if(v.evidenceObject.institutionId!==institutionId || v.evidenceObject.purpose!==`ASSESSMENT:${engagementId}` || v.evidenceObject.status!=="AVAILABLE" || v.evidenceObject.currentVersion!==v.version || v.validationStatus!=="VALID" || (v.expiresAt&&v.expiresAt<=new Date()) || !v.documentVersion || v.documentVersion.malwareStatus!=="CLEAN")throw new ForbiddenException("current clean evidence scoped to this engagement required");
   }
+  private async persistModelBatch(client:Pick<PrismaService,"assessmentDocumentExtractionAttempt">,reviewIdByVersion:Map<string,string>,record:ModelReviewBatchRecord) {
+    const documentReviewId=reviewIdByVersion.get(record.evidenceVersionIds[0]);if(!documentReviewId)throw new Error("MODEL_BATCH_DOCUMENT_REVIEW_MISSING");
+    const maximum=await client.assessmentDocumentExtractionAttempt.aggregate({where:{documentReviewId},_max:{ordinal:true}});
+    await client.assessmentDocumentExtractionAttempt.create({data:{id:`adattempt_${randomUUID()}`,documentReviewId,ordinal:(maximum._max.ordinal??0)+1,method:"LANGUAGE_MODEL",status:record.status,provider:record.provider,model:record.model,modelTier:record.modelTier,promptVersion:"rail-document-review-2",preprocessingVersion:"rail-preprocess-1",requestedLocators:asJson([]),usage:record.usage===undefined?undefined:asJson(record.usage),failureCode:record.failureCode,resultDigest:record.resultDigest,batchIndex:record.batchIndex,batchDigest:record.batchDigest,batchEvidenceVersionIds:asJson(record.evidenceVersionIds),inputCharacters:record.inputCharacters,documentCount:record.documentCount,requestCount:record.requestCount,fallbackUsed:record.fallbackUsed,result:record.result===null?undefined:asJson(record.result)}});
+  }
   private publicJob(job:any) { return {id:job.id,stage:job.stage,status:job.status,createdAt:job.createdAt,releasedAt:job.releasedAt,reviewedAt:job.reviewedAt,review:preparationReviewDisclosure(job),errorCode:job.errorCode,...(["AUTO_RELEASED","RELEASED"].includes(job.status)?{result:job.result,resultDigest:job.resultDigest}:{}),liveDecisionAuthority:false}; }
   async list(actor:ParticipantOpsActor,id:string) {await this.engagements.participant(actor);await this.engagements.evidenceAuthority(actor);await this.engagements.scoped(this.db,actor.actingInstitutionId,id);return (await this.db.assessmentProcessingJob.findMany({where:{engagementId:id},orderBy:{createdAt:"desc"}})).map(j=>this.publicJob(j));}
   async internalReport(actor:InternalOpsActor,institutionId:string,id:string,jobId:string) {
@@ -173,17 +178,20 @@ export class AssessmentProcessingService {
   async runNext() {
     if(process.env.ASSURERAIL_DOCUMENT_PROCESSING_MODE!=="shadow")return;
     engagementEnabled();
-    // An abandoned run is never reported as successful or retried invisibly against an AI budget.
-    await this.db.assessmentProcessingJob.updateMany({where:{status:"RUNNING",startedAt:{lt:new Date(Date.now()-10*60000)}},data:{status:"FAILED",errorCode:"WORKER_INTERRUPTED_REVIEW_REQUIRED"}});
+    // A stale worker may resume because completed model batches are immutable and replay-skipped.
+    await this.db.assessmentProcessingJob.updateMany({where:{status:"RUNNING",startedAt:{lt:new Date(Date.now()-10*60000)}},data:{status:"QUEUED",startedAt:null,errorCode:"WORKER_RESUME_PENDING"}});
     const job=await this.db.assessmentProcessingJob.findFirst({where:{status:"QUEUED"},orderBy:{createdAt:"asc"},include:{engagement:{include:{customerContract:true}}}});
     if(!job)return;
-    const claimed=await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"QUEUED"},data:{status:"RUNNING",startedAt:new Date()}});if(claimed.count!==1)return;
+    const claimed=await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"QUEUED"},data:{status:"RUNNING",startedAt:new Date(),completedAt:null,errorCode:null}});if(claimed.count!==1)return;
     try{
       await this.engagements.requirePaid(this.db,job.engagement.customerContract.institutionId,job.engagementId,job.stage);
       const sources:SourceSegment[]=[],exceptions:{evidenceVersionId:string;locator:string;code:string}[]=[],ocrProvenance:unknown[]=[],documentEnvelopes:unknown[]=[];
       let extractedCharacters=0;
       const tapes:{contentType:string;segments:{text:string}[]}[]=[];
       const manifest=job.sourceManifest as unknown as Manifest;
+      const priorReviews=await this.db.assessmentDocumentReview.findMany({where:{processingJobId:job.id},include:{attempts:{orderBy:{ordinal:"asc"}}}});
+      const priorReviewByVersion=new Map(priorReviews.map(review=>[review.evidenceVersionId,review]));
+      const reviewIdByVersion=new Map<string,string>();
       for(const entry of manifest){
         const v=await this.db.evidenceVersion.findUniqueOrThrow({where:{id:entry.versionId},include:{evidenceObject:true,documentVersion:true}});
         this.validateSource(v,job.engagement.customerContract.institutionId,job.engagementId);
@@ -217,9 +225,16 @@ export class AssessmentProcessingService {
           extracted={...extracted,exceptions:[...extracted.exceptions,...routing.visualRequiredLocators.filter(locator=>!existing.has(`${locator}:OCR_REQUIRED`)).map(locator=>({locator,code:"VISUAL_EXTRACTION_REQUIRED_AI_DISABLED"}))]};
         }
         const envelope=documentEvidenceEnvelope({evidenceVersionId:entry.versionId,evidenceObjectId:entry.evidenceObjectId,documentType:entry.evidenceType,sourceDigest:entry.digest,contentType:entry.contentType,routing,extractorVersion:extracted.extractorVersion,segments:extracted.segments,exceptions:extracted.exceptions,visualProvenance});
-        documentEnvelopes.push(envelope);
-        const reviewId=`adreview_${randomUUID()}`;
-        await this.db.assessmentDocumentReview.create({data:{id:reviewId,processingJobId:job.id,evidenceVersionId:entry.versionId,evidenceObjectId:entry.evidenceObjectId,documentType:entry.evidenceType,sourceDigest:entry.digest,policyVersion:routing.policyVersion,schemaVersion:envelope.schemaVersion,route:routing.route,routingReasons:asJson(routing.reasons),status:envelope.status==="accepted"?"ACCEPTED":"EXCEPTION",envelope:asJson(envelope),envelopeDigest:envelope.envelopeDigest,attempts:{create:attemptRows.map((attempt,index)=>({id:`adattempt_${randomUUID()}`,ordinal:index+1,method:attempt.method,status:attempt.status,provider:attempt.provider,model:attempt.model,modelTier:attempt.modelTier,extractorVersion:attempt.extractorVersion,promptVersion:attempt.promptVersion,preprocessingVersion:"rail-preprocess-1",requestedLocators:asJson(attempt.requestedLocators),usage:attempt.usage===undefined?undefined:asJson(attempt.usage),failureCode:attempt.failureCode,resultDigest:attempt.resultDigest}))}}});
+        const priorReview=priorReviewByVersion.get(entry.versionId);
+        if(priorReview){
+          const nativeDigest=attemptRows[0].resultDigest,nativeAttempt=priorReview.attempts.find(attempt=>attempt.method==="NATIVE_LIBRARY");
+          if(priorReview.evidenceObjectId!==entry.evidenceObjectId||priorReview.documentType!==entry.evidenceType||priorReview.sourceDigest!==entry.digest||priorReview.policyVersion!==routing.policyVersion||priorReview.route!==routing.route||nativeAttempt?.resultDigest!==nativeDigest)throw new Error("PERSISTED_DOCUMENT_EXTRACTION_MISMATCH");
+          reviewIdByVersion.set(entry.versionId,priorReview.id);documentEnvelopes.push(priorReview.envelope);
+        }else{
+          const reviewId=`adreview_${randomUUID()}`;
+          await this.db.assessmentDocumentReview.create({data:{id:reviewId,processingJobId:job.id,evidenceVersionId:entry.versionId,evidenceObjectId:entry.evidenceObjectId,documentType:entry.evidenceType,sourceDigest:entry.digest,policyVersion:routing.policyVersion,schemaVersion:envelope.schemaVersion,route:routing.route,routingReasons:asJson(routing.reasons),status:envelope.status==="accepted"?"ACCEPTED":"EXCEPTION",envelope:asJson(envelope),envelopeDigest:envelope.envelopeDigest,attempts:{create:attemptRows.map((attempt,index)=>({id:`adattempt_${randomUUID()}`,ordinal:index+1,method:attempt.method,status:attempt.status,provider:attempt.provider,model:attempt.model,modelTier:attempt.modelTier,extractorVersion:attempt.extractorVersion,promptVersion:attempt.promptVersion,preprocessingVersion:"rail-preprocess-1",requestedLocators:asJson(attempt.requestedLocators),usage:attempt.usage===undefined?undefined:asJson(attempt.usage),failureCode:attempt.failureCode,resultDigest:attempt.resultDigest}))}}});
+          reviewIdByVersion.set(entry.versionId,reviewId);documentEnvelopes.push(envelope);
+        }
         extractedCharacters+=extracted.segments.reduce((sum,s)=>sum+s.text.length,0);
         if(extractedCharacters>4000000)throw new Error("EXTRACTION_RUN_BUDGET_EXCEEDED");
         if(v.evidenceObject.evidenceType==="LOAN_TAPE")tapes.push({contentType:entry.contentType,segments:extracted.segments});
@@ -229,12 +244,15 @@ export class AssessmentProcessingService {
       // Loan tapes are structured payloads governed by deterministic metrics and reconciliation.
       // The model reviews supporting documents only; missing documents remain visible preparation work.
       const reviewSources=modelReviewSources(sources);
-      const documentIds=[...new Set(reviewSources.map(source=>source.evidenceVersionId))];
+      const existingBatches:ModelReviewBatchRecord[]=priorReviews.flatMap(review=>review.attempts.filter(attempt=>attempt.method==="LANGUAGE_MODEL"&&attempt.status==="COMPLETED").map(attempt=>({
+        batchIndex:attempt.batchIndex!,batchDigest:attempt.batchDigest!,evidenceVersionIds:attempt.batchEvidenceVersionIds as string[],inputCharacters:attempt.inputCharacters!,documentCount:attempt.documentCount!,status:attempt.status as ModelReviewBatchRecord["status"],provider:attempt.provider,model:attempt.model,modelTier:attempt.modelTier,fallbackUsed:attempt.fallbackUsed===true,requestCount:attempt.requestCount!,usage:attempt.usage??undefined,failureCode:attempt.failureCode as ModelReviewBatchRecord["failureCode"],result:attempt.result as ModelReviewBatchRecord["result"],resultDigest:attempt.resultDigest,
+      })));
+      const incompleteBatches:ModelReviewBatchRecord[]=[];
       const analysis=reviewSources.length===0
         ? {provider:"NOT_APPLICABLE",model:null,findings:[],documentExtractions:[],qualification:"NO_UNSTRUCTURED_DOCUMENTS_SELECTED",aiCoverage:{documentsAdmitted:0,documentsReviewed:0,unreviewed:[]}}
-        : JSON.stringify(reviewSources).length<=120000
-          ? {...await analyseSources(reviewSources),aiCoverage:{documentsAdmitted:documentIds.length,documentsReviewed:documentIds.length,unreviewed:[]}}
-          : {provider:"NOT_RUN",model:null,findings:[],documentExtractions:[],qualification:"AI_INPUT_BUDGET_EXCEEDED",aiCoverage:{documentsAdmitted:documentIds.length,documentsReviewed:0,unreviewed:documentIds.map(evidenceVersionId=>({evidenceVersionId,reason:"BUDGET"}))}};
+        : await analyseSources(reviewSources,fetch,{existing:existingBatches,persist:async record=>{
+          if(record.status==="INCOMPLETE")incompleteBatches.push(record);else await this.persistModelBatch(this.db,reviewIdByVersion,record);
+        }});
       const scope=job.engagement.scope as {primaryPairCount?:number;linkedPartyCount?:number;uniqueLoanCount?:number};
       const quotedPrimaryPairs=scope.primaryPairCount ?? scope.uniqueLoanCount;
       if (!quotedPrimaryPairs) throw new Error("ENGAGEMENT_PRIMARY_PAIR_COUNT_MISSING");
@@ -260,6 +278,7 @@ export class AssessmentProcessingService {
       const resultDigest=sha256Digest(result);
       if(job.stage==="INITIAL"){
         await this.db.$transaction(async tx=>{
+          for(const batch of incompleteBatches)await this.persistModelBatch(tx,reviewIdByVersion,batch);
           const changed=await tx.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING",stage:"INITIAL"},data:{status:"AUTO_RELEASED",result:asJson(result),resultDigest,automatedReleaseSnapshot:asJson({engine:"ASSURERAIL_INITIAL_AUTOMATION",engineVersion:"1",resultDigest,aiRunReceiptId:aiRunReceipt?.receiptId,aiRunReceiptDigest:aiRunReceipt?.integrity.payloadDigest,analysisProvider:analysis.provider,analysisModel:"model" in analysis?analysis.model:null,outcome}),completedAt,releasedAt:completedAt}});
           if(changed.count!==1)throw new Error("PROCESSING_JOB_STATE_CHANGED");
           const currentKeys=new Set(remediationGaps.map(gap=>gap.gapKey));
@@ -267,7 +286,11 @@ export class AssessmentProcessingService {
           for(const gap of remediationGaps)await tx.assessmentRemediationItem.create({data:{id:`arem_${randomUUID()}`,engagementId:job.engagementId,sourceRunId:job.id,gapKey:gap.gapKey,category:gap.category,severity:gap.severity,summary:gap.summary,affectedScope:gap.affectedScope,affectedPairs:asJson(gap.affectedPairs),affectedPairCount:gap.affectedPairs.length,unresolvedRecordCount:gap.unresolvedRecordCount,defaultOwnerRole:gap.defaultOwnerRole,requiredEvidenceTypes:asJson(gap.requiredEvidenceTypes),correctionEvidenceVersionIds:asJson([])}});
         });
       }else{
-        await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING",stage:"PREPARATION"},data:{status:"REVIEW_REQUIRED",result:asJson(result),resultDigest,completedAt}});
+        await this.db.$transaction(async tx=>{
+          for(const batch of incompleteBatches)await this.persistModelBatch(tx,reviewIdByVersion,batch);
+          const changed=await tx.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING",stage:"PREPARATION"},data:{status:"REVIEW_REQUIRED",result:asJson(result),resultDigest,completedAt}});
+          if(changed.count!==1)throw new Error("PROCESSING_JOB_STATE_CHANGED");
+        });
       }
     }catch(error){await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING"},data:{status:"FAILED",errorCode:processingFailureCode(error),completedAt:new Date()}});}
   }

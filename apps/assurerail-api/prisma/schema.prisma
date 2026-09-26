@@ -1551,10 +1551,19 @@ model AssessmentDocumentExtractionAttempt {
   usage               Json?
   failureCode         String?
   resultDigest        String?
+  batchIndex          Int?
+  batchDigest         String?
+  batchEvidenceVersionIds Json?
+  inputCharacters     Int?
+  documentCount       Int?
+  requestCount        Int?
+  fallbackUsed       Boolean?
+  result              Json?
   createdAt           DateTime @default(now())
 
   @@unique([documentReviewId, ordinal], map: "AssessmentDocumentExtractionAttempt_review_ordinal_key")
   @@index([provider, model, status])
+  @@index([batchDigest, status], map: "AssessmentDocumentExtractionAttempt_batch_status_idx")
 }
 
 model AssessmentRemediationItem {

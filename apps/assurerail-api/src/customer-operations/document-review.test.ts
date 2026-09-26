@@ -57,6 +57,16 @@ test("document review persistence is additive, restrictive and append-only",()=>
   assert.doesNotMatch(migration,/ON DELETE CASCADE/);
 });
 
+test("model batch provenance is closed, bounded and remains append-only",()=>{
+  const migration=readFileSync(resolve(process.cwd(),"prisma/migrations/20260927043000_model_review_batches/migration.sql"),"utf8");
+  assert.match(migration,/"method"='LANGUAGE_MODEL'/);
+  assert.match(migration,/"requestCount" > 0 AND "requestCount" <= 3/);
+  assert.match(migration,/MODEL_RATE_LIMITED/);
+  assert.match(migration,/BATCH_MEMBERSHIP_MISMATCH/);
+  assert.match(migration,/CREATE UNIQUE INDEX "AssessmentDocumentExtractionAttempt_review_batch_key"/);
+  assert.doesNotMatch(migration,/DROP TRIGGER|DROP TABLE|ON DELETE CASCADE/);
+});
+
 test("[REVIEW] a misspelled model tier stops processing instead of silently keeping the default", () => {
   assert.throws(
     () => modelTierConfiguration({ ASSURERAIL_AI_MODEL_TIERS_JSON: JSON.stringify({ visual_defalut: { provider: "openai", model: "gpt-5.6-luna" } }) } as NodeJS.ProcessEnv),
