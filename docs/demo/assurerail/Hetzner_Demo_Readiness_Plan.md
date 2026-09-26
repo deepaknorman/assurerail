@@ -21,13 +21,13 @@ Completed foundations: working alternate hostname/reCAPTCHA, dedicated AI key ac
 provider smoke check, login/quote authority fixes, Rail-owned evidence storage and scanner
 health, nine distinct demo identities, reviewer read permission and visible synthetic
 qualification, and the validated 3,000-loan / INR 55 crore input pack. Claude’s 27 September
-release notice reports main and box at `c362917c0`; the last runtime change is `6bc3f5afb`.
+release notice reports main and box at `0824ea34a`, with API 511/511 passing on the host.
 
 | Priority | Outstanding work | Completion evidence still required |
 |---|---|---|
-| 1 | Hosted seller acceptance, finance maker/checker invoice, test payment and Book A intake (R1–R3) | Persisted engagement, actual test-payment reconciliation, uploaded/scanned evidence and a real processing job with its honest outcome/coverage reason |
-| 2 | Assessment processing at scale and supporting documents (R3) | Keep loan tapes entirely out of the model; deterministic full-tape checks; persisted/resumable bounded document-review attempts; explicit reviewed/unreviewed coverage and costs. Supply fictional supporting evidence, rather than treating clean tapes as complete portfolios |
-| 3 | Correction, reassessment and reviewed Portfolio Preparation, including seller offer preparation (R4) | Original run retained, changed evidence changes outputs, current synthetic reviewer qualification, report-bound evidence and fresh MFA, independently released preparation and recorded seller-offer membership |
+| 1 | Hosted seller acceptance, finance maker/checker invoice, test payment and Book A intake (R1–R3) | **Complete for Book A:** persisted engagement, synthetic NEFT reconciliation, scanned evidence and retained automatic result |
+| 2 | Assessment processing at scale and supporting documents (R3) | Full corrected tape now passes deterministic reassessment outside the model. Next: bounded 10-loan / 50-document Preparation batch, persisted review attempts and explicit 10/1,200 coverage |
+| 3 | Correction, reassessment and reviewed Portfolio Preparation, including seller offer preparation (R4) | **Correction and acceptance complete:** original run retained, changed tape produced MATCHED, seven open gaps were digest-bound to COMMITTED Preparation. Invoice/payment, document run and independent reviewer release remain |
 | 4 | NBFC 2 and buyer access/onboarding (R5) | Separate admitted NBFC 2; guarded membership/authority; accepted MSA, valid signed evidence and independent workspace propose/verify; separated buyer approvals; released synthetic pool visible to authorised buyer |
 | 5 | Portfolio progression and clickable final-offer cohort view | Implement the approved versioned membership, shared visibility checks, allocation overlap protection, projection and accessible drill-down; bind all displayed values to actual assessed/presented/selected records |
 | 6 | Buyer review and closing rehearsal (R6) | Actual case decisions/authority, computed fees/net proceeds and negative tests for short funding, reversal and missing receipt; no assertion that shadow evidence means money moved |
@@ -46,9 +46,9 @@ live INR 48 crore opportunity, commercial policy, pricing tests or deck figures.
 quotes per engagement; manual billing-cohort allocation must remain distinct from chart
 presentation membership and seller-specific closing groups.
 
-Immediate next hosted proof is Book A’s real acceptance/payment/upload/processing path, reporting
-the current AI budget skip if encountered. Runtime scale remediation and the approved chart
-implementation remain separate deliverables, followed by the complete R4–R6 evidence chain.
+Immediate next hosted proof is Book A’s Preparation invoice/payment, bounded supporting-document
+batch, real model review and independent qualified release. The approved chart implementation
+remains a separate deliverable, followed by the complete R4–R6 evidence chain.
 
 ## Hosted Book A checkpoint — 27 September 2026
 
@@ -66,17 +66,29 @@ reference and does not create another engagement on rerun.
   `AUTO_RELEASED`. The real upload, object store, malware scan, extractor, worker and result UI
   found the intended 12 duplicate rows while reconciling 1,500 primary pairs, 120 linked
   parties and INR 20 crore principal. The report is automated and unsigned.
-- Model analysis did not run because the current per-run input budget was exceeded. The result
-  says `AUTOMATED_ANALYSIS_INCOMPLETE`; correction, reassessment and analysis remediation are
-  required before Portfolio Preparation can be accepted.
+- In this retained initial run, the superseded worker attempted to admit the tape to model review,
+  hit its input budget and recorded `AUTOMATED_ANALYSIS_INCOMPLETE`. The immutable history remains
+  visible; current code keeps loan tapes on the deterministic path.
+
+The guarded continuation then uploaded the corrected tape as a new current version and ran a
+comparable reassessment. Run `aprocess_c13d83c6-1d9a-423a-a380-ea2d66933779` is
+`AUTO_RELEASED`: `MATCHED`, zero invalid or duplicate rows, 1,500 primary pairs, 120 linked
+parties and INR 20 crore. The tape stayed on the deterministic path with
+`NOT_APPLICABLE / NO_UNSTRUCTURED_DOCUMENTS_SELECTED`; one gap resolved, seven continue and no
+new gap appeared. The seller UI rendered the change summary and the exact five missing evidence
+families with 0/1,200 loan-document coverage. The seller accepted COMMITTED Preparation with
+disclosure digest `sha256:4673c659185a04ec5d491d88ba54aada66998e8efb32e12b992bc4d519e84c40`,
+and the same digest is persisted on the engagement acceptance record.
 
 Machine-emitted rerun results: [hosted evidence](evidence/book-a-hosted-2026-09-27.json).
-Harness: `scripts/assurerail-hosted-book-a.cjs` at `0b1119114`. From the deployed repository,
+Initial harness: `scripts/assurerail-hosted-book-a.cjs` at `0b1119114`. From the deployed repository,
 as `deploy`, run `ASSURERAIL_HOSTED_DEMO_WRITE=yes node scripts/assurerail-hosted-book-a.cjs`.
 It uses the existing private account file and separate Firefox contexts, keeps secrets out of
 output, and exercises synthetic NEFT reconciliation through the automatic result. Guarded API
 calls execute inside the browser: the same calls made with Node's APIRequestContext received a
 non-JSON CDN 403.
+Continuation harness: `scripts/assurerail-hosted-book-a-reassessment.cjs` at `fe9a4e7a3`, guarded
+by `ASSURERAIL_HOSTED_REASSESSMENT_WRITE=yes`.
 
 ## Milestones and exit criteria
 
@@ -85,8 +97,8 @@ non-JSON CDN 403.
 | R0 | Establish deployed baseline and dependencies | Exact revisions, live gates, identity status, dependency checks and reproducible browser command | In progress |
 | R1 | Seller scope, quote and accepted engagement | Firefox login; API-calculated quote; MFA-bound acceptance; persisted engagement survives refresh | Book A MFA acceptance and persisted UI verified; see hosted checkpoint above |
 | R2 | Invoice and test payment | Distinct maker/checker; issued statement; bank-transfer evidence and verified reconciliation; unpaid work remains blocked | Complete for Book A with synthetic NEFT and independently verified shadow reconciliation |
-| R3 | Evidence intake and automated assessment | Real object storage/encryption, malware scan, extraction and configured analysis; run persisted with source digests and qualified outcome | Hosted intake, scan, extraction, automatic release and UI render pass; AI input-budget remediation pending |
-| R4 | Correction, reassessment and expert-reviewed preparation | Changed evidence changes results; missing evidence remains missing; original report retained; distinct qualified reviewer releases preparation | Reviewer access/disclosure fixes deployed; workflow proof pending |
+| R3 | Evidence intake and automated assessment | Real object storage/encryption, malware scan, extraction and configured analysis; run persisted with source digests and qualified outcome | Hosted intake, scan, full-tape deterministic processing, corrected reassessment and UI render pass; bounded supporting-document model review pending |
+| R4 | Correction, reassessment and expert-reviewed preparation | Changed evidence changes results; missing evidence remains missing; original report retained; distinct qualified reviewer releases preparation | Correction/reassessment and disclosure-bound Preparation acceptance complete; invoice/payment, supporting-document run and reviewer release pending |
 | R5 | Buyer workspace and authorised handoff | Synthetic buyer MSA/authority setup; separate credit/legal/operations approvals; scoped released evidence; real mapped login handoff if used | Four identities provisioned; onboarding, authority and released-pool proof pending |
 | R6 | Buyer review and closing rehearsal | Buyer accepts/rejects actual case evidence; case-specific authority; code-computed fees/net proceeds; evidence reconciler detects short funding/reversal/missing receipt | Second priority |
 | R7 | Repeatable presentation | Two clean rehearsals; Firefox sessions labelled; fresh run references; recoverable failures; presenter URLs and reset procedure | Seller sizing/navigation recording delivered; full-journey proof and buyer recording pending |

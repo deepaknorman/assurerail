@@ -1,8 +1,9 @@
 {
-  "schemaVersion": 2,
-  "harnessCommit": "0b11191145e710dc23d6d0c06108dc0148c8d9e5",
-  "deployedRevision": "0b11191145e710dc23d6d0c06108dc0148c8d9e5",
-  "recordedAt": "2026-09-26T15:45:17Z",
+  "schemaVersion": 3,
+  "initialHarnessCommit": "0b11191145e710dc23d6d0c06108dc0148c8d9e5",
+  "continuationHarnessCommit": "fe9a4e7a3999f664f25eb35e075d9e03d4680c8d",
+  "deployedRevision": "0824ea34a527b33d7817769c6ea1e36e1b5b8a94",
+  "recordedAt": "2026-09-26T16:09:41Z",
   "target": "https://arail.assurelocker.com",
   "classification": "SYNTHETIC_ONLY",
   "result": "PASS",
@@ -41,6 +42,44 @@
     "expertReviewed": false,
     "professionalSignoff": false
   },
+  "reassessment": {
+    "runId": "aprocess_c13d83c6-1d9a-423a-a380-ea2d66933779",
+    "baselineRunId": "aprocess_6fe46327-3c6a-49f2-90e9-e9c3ea6380d8",
+    "reassessmentOrdinal": 1,
+    "status": "AUTO_RELEASED",
+    "resultDigest": "sha256:32de2669a660358a57721b94348bc809b4c65f6fcc77e0710273c95663d1671a",
+    "correctedEvidenceVersionId": "evv_35965203-2615-401f-bae1-f94f998158d8",
+    "correctedSourceDigest": "sha256:6ad252df5f1b05565a8a8435dbfa110c87100ef024376aca49570a2d5b327a4a",
+    "dataQuality": "MATCHED",
+    "invalidRecords": 0,
+    "duplicateRecords": 0,
+    "parsedPrimaryPairCount": 1500,
+    "parsedLinkedPartyCount": 120,
+    "parsedPrincipalMinor": "20000000000",
+    "analysisProvider": "NOT_APPLICABLE",
+    "analysisQualification": "NO_UNSTRUCTURED_DOCUMENTS_SELECTED",
+    "aiCoverage": { "documentsAdmitted": 0, "documentsReviewed": 0, "unreviewed": [] },
+    "releaseOutcome": "READY_FOR_PORTFOLIO_PREPARATION",
+    "resolvedGapCount": 1,
+    "continuingGapCount": 7,
+    "newGapCount": 0,
+    "openGapCount": 7,
+    "missingEvidenceFamilies": [
+      "LOAN_AGREEMENT",
+      "SECURITY_DOCUMENT",
+      "REPAYMENT_HISTORY",
+      "KYC_AUTHORITY",
+      "INSURANCE_COLLATERAL"
+    ],
+    "loanDocumentCoverage": { "documentedLoans": 0, "tapeLoans": 1200 }
+  },
+  "preparationAcceptance": {
+    "route": "COMMITTED",
+    "preparationStageCreated": true,
+    "remediationScopeDigest": "sha256:4673c659185a04ec5d491d88ba54aada66998e8efb32e12b992bc4d519e84c40",
+    "persistedDigestMatchesReleasedDisclosure": true,
+    "liveDecisionAuthority": false
+  },
   "checks": [
     { "stage": "seller_scope_and_invoice_render", "result": "PASS" },
     { "stage": "synthetic_neft_selection_and_advice_intake", "result": "PASS" },
@@ -48,17 +87,25 @@
     { "stage": "seller_payment_position_render", "result": "PASS" },
     { "stage": "book_a_tape_intake_scan_and_storage", "result": "PASS" },
     { "stage": "book_a_automatic_processing", "result": "PASS" },
-    { "stage": "book_a_result_render", "result": "PASS" }
+    { "stage": "book_a_result_render", "result": "PASS" },
+    { "stage": "book_a_corrected_tape_intake", "result": "PASS" },
+    { "stage": "book_a_comparable_reassessment", "result": "PASS" },
+    { "stage": "book_a_reassessment_render", "result": "PASS" },
+    { "stage": "book_a_preparation_disclosure_render", "result": "PASS" },
+    { "stage": "book_a_preparation_acceptance", "result": "PASS" }
   ],
   "paymentProven": true,
   "uploadProven": true,
   "processingProven": true,
   "resultRenderingProven": true,
+  "reassessmentProven": true,
+  "preparationAcceptanceProven": true,
   "livePaymentClaimed": false,
   "limitations": [
     "All payment and loan records are labelled synthetic demonstration evidence.",
-    "The initial tape intentionally contains 12 duplicate loan-party rows and requires correction and reassessment.",
-    "The document-analysis input exceeded the current per-run AI budget, so no model analysis ran and Portfolio Preparation remains locked."
+    "The retained initial run contains the intended 12 duplicate loan-party rows; the corrected reassessment resolved that gap without rewriting history.",
+    "The corrected tape stayed on the deterministic path and therefore did not require model review.",
+    "Five supporting evidence families and 1,200-loan document coverage remain open work in Portfolio Preparation; this acceptance does not claim portfolio completeness or buyer approval."
   ],
   "retainedFailureEvidence": [
     {
