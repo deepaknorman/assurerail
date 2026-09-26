@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import {createHash,createHmac} from "node:crypto";
 import {acceptedPricing,billingProfile,paidStageReadiness} from "./engagement-workflow";
 import {capturedPaymentAmount,RazorpayAdapter,validatePaymentLink,verifyRazorpayWebhook} from "./razorpay.adapter";
-import {validateDocumentExtractions,validateFindings} from "./document-analysis";
+import {analyseSources,validateDocumentExtractions,validateFindings} from "./document-analysis";
 import {extractAndValidateOcr,modelTierConfiguration,structuredDocumentCall,validateOcrPages} from "./ocr.adapter";
 import {validateBankFile,validateBankAcknowledgement,sftpArgs,type BankFileConfig} from "../integrations/bank-file.adapter";
 import {escrowInstruction,reconcileEscrow} from "../settlement/escrow-settlement-contract";
 import {loanTapeMetrics} from "./loan-tape-metrics";
-import {automatedInitialOutcome,modelReviewSources} from "./assessment-processing.service";
+import {automatedInitialOutcome,modelReviewSources,processingFailureCode} from "./assessment-processing.service";
 
 test("loan tape reconciles quoted scope, rejects duplicates and does not silently fill missing balances",()=>{
  const tape={contentType:"text/csv",segments:[{text:'["loan_id","party_id","party_role","principal_minor"]'},{text:'["001","B1","BORROWER","100"]'},{text:'["001","B2","CO_BORROWER","100"]'},{text:'["001","G1","LINKED_PARTY","100"]'},{text:'["002","B3","BORROWER","200"]'}]};
@@ -80,6 +80,20 @@ test("AI document fields preserve evidence states and exact same-document citati
  assert.throws(()=>validateDocumentExtractions({documents:[{...output.documents[0],fields:[{...field,valueState:"observed",citations:[]}]}]},[source]),/FIELD_STATE/);
  assert.throws(()=>validateDocumentExtractions({documents:[{...output.documents[0],fields:[{...field,citations:[{...field.citations[0],quote:"invented"}]}]}]},[source]),/CITATION/);
  assert.throws(()=>validateDocumentExtractions({documents:[{...output.documents[0],documentType:"SECURITY_DOCUMENT"}]},[source]),/UNSCOPED/);
+});
+test("document review batches complete evidence versions and rejects partial model coverage",async()=>{
+ const old={...process.env};try{
+ process.env.ASSURERAIL_AI_ENABLED="true";process.env.ASSURERAIL_OPENAI_DATA_PROCESSING_APPROVED="true";process.env.ASSURERAIL_OPENAI_API_KEY="o".repeat(32);delete process.env.ASSURERAIL_AI_MODEL_TIERS_JSON;
+ const sources=Array.from({length:12},(_,index)=>({evidenceVersionId:`v${index+1}`,evidenceType:"LOAN_AGREEMENT",digest:`sha256:${index}`,locator:"page:1",text:`Loan ID L${index+1}`}));let calls=0;
+ const http=async(_url:unknown,init?:RequestInit)=>{calls++;const body=JSON.parse(init!.body as string);const batch=JSON.parse(body.input[0].content[0].text) as typeof sources;const ids=[...new Set(batch.map(source=>source.evidenceVersionId))];assert(ids.length<=10);const documents=ids.map(evidenceVersionId=>({evidenceVersionId,documentType:"LOAN_AGREEMENT",fields:[]}));return new Response(JSON.stringify({status:"completed",output:[{type:"message",content:[{type:"output_text",text:JSON.stringify({findings:[],documents})}]}],usage:{input_tokens:100,output_tokens:30}}));};
+ const result=await analyseSources(sources,http as typeof fetch);assert.equal(calls,2);assert.equal(result.provider,"openai");assert.equal(result.documentExtractions.length,12);assert(result.usage);assert.equal(result.usage.batchCount,2);
+ await assert.rejects(()=>analyseSources([sources[0]],(async()=>new Response(JSON.stringify({status:"completed",output:[{type:"message",content:[{type:"output_text",text:JSON.stringify({findings:[],documents:[]})}]}],usage:{}}))) as typeof fetch),/COVERAGE_MISMATCH/);
+ }finally{process.env=old;}
+});
+test("processing records bounded model failure categories without reflecting arbitrary errors",()=>{
+ assert.equal(processingFailureCode(new Error("AI_NETWORK_UNAVAILABLE")),"AI_PROVIDER_UNAVAILABLE_REVIEW_REQUIRED");
+ assert.equal(processingFailureCode(new Error("INVALID_AI_DOCUMENT_EXTRACTIONS")),"AI_RESULT_VALIDATION_FAILED_REVIEW_REQUIRED");
+ assert.equal(processingFailureCode(new Error("borrower text")),"PROCESSING_FAILED_REVIEW_REQUIRED");
 });
 test("OCR validates every expected page, unique page numbers and uncertainty type",()=>{
  assert.equal(validateOcrPages({pages:[{page:1,text:"Loan A",uncertain:true}]},1).length,1);assert.throws(()=>validateOcrPages({pages:[]},1),/COVERAGE/);assert.throws(()=>validateOcrPages({pages:[{page:1,text:"A",uncertain:false},{page:1,text:"B",uncertain:false}]},2),/INVALID/);

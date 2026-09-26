@@ -41,6 +41,14 @@ export function automatedInitialOutcome(input:{assetFamily:string;dataQuality:{s
 export function modelReviewSources(sources:SourceSegment[]):SourceSegment[] {
   return sources.filter(source=>source.evidenceType!=="LOAN_TAPE");
 }
+export function processingFailureCode(error:unknown) {
+  const code=error instanceof Error?error.message:"";
+  if(code==="AI_NETWORK_UNAVAILABLE"||/^AI_HTTP_(408|429|5\d\d)$/.test(code))return "AI_PROVIDER_UNAVAILABLE_REVIEW_REQUIRED";
+  if(code==="AI_REQUEST_REJECTED")return "AI_REQUEST_REJECTED_REVIEW_REQUIRED";
+  if(code==="AI_REQUEST_BUDGET_EXCEEDED")return "AI_INPUT_BUDGET_REVIEW_REQUIRED";
+  if(/^(INVALID_AI_|UNSUPPORTED_AI_|AI_DOCUMENT_COVERAGE_MISMATCH$|AI_FINDING_LIMIT_EXCEEDED$|AI_RESPONSE_)/.test(code))return "AI_RESULT_VALIDATION_FAILED_REVIEW_REQUIRED";
+  return "PROCESSING_FAILED_REVIEW_REQUIRED";
+}
 
 @Injectable()
 export class AssessmentProcessingService {
@@ -261,7 +269,7 @@ export class AssessmentProcessingService {
       }else{
         await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING",stage:"PREPARATION"},data:{status:"REVIEW_REQUIRED",result:asJson(result),resultDigest,completedAt}});
       }
-    }catch{await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING"},data:{status:"FAILED",errorCode:"PROCESSING_FAILED_REVIEW_REQUIRED",completedAt:new Date()}});}
+    }catch(error){await this.db.assessmentProcessingJob.updateMany({where:{id:job.id,status:"RUNNING"},data:{status:"FAILED",errorCode:processingFailureCode(error),completedAt:new Date()}});}
   }
   async review(actor:InternalOpsActor,institutionId:string,id:string,jobId:string,body:{decision?:unknown;resultDigest?:unknown;reviewEvidenceRef?:unknown;stepUpEvidenceId?:unknown}) {
     engagementEnabled();await this.staff.require({userId:actor.actorUserId,permission:"RISK_EXCEPTION_REVIEW",scopeType:"INSTITUTION",scopeRef:institutionId});
