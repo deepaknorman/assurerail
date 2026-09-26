@@ -402,8 +402,11 @@ export class EvidenceIntakeService {
     let databaseCommitted = false;
     try {
       const spool = await this.spool(input, path);
+      const canonicalPayloadDigest = assertSha256Digest(`sha256:${spool.payloadDigestHex}`, "document payload digest");
       const detectedContentType = detectContentType(spool.header, filename, claimedContentType);
-      const requestDigest = sha256Digest({ institutionId, metadata, payloadDigest: spool.payloadDigest });
+      // Retain the historical request-digest shape so completed commands replay exactly; only the
+      // persisted evidence contract changes from internal object-store hex to canonical SHA-256.
+      const requestDigest = sha256Digest({ institutionId, metadata, payloadDigest: spool.payloadDigestHex });
       const started = await this.persistence.beginIdempotentCommand({
         scope: `evidence-document:${institutionId}`, key: idempotencyKey, requestDigest, institutionId,
       });
@@ -415,13 +418,13 @@ export class EvidenceIntakeService {
       const scan = await this.scanner.scan(path);
       let stored: { storageRef: string; objectVersionRef: string | null } | null = null;
       if (scan.status === "CLEAN") {
-        const objectKey = `evidence/${institutionId}/${new Date().getUTCFullYear()}/${randomUUID()}-${spool.payloadDigest.slice(0, 16)}`;
-        stored = await this.objects.put({ key: objectKey, path, size: spool.size, contentType: detectedContentType, digestHex: spool.payloadDigest });
+        const objectKey = `evidence/${institutionId}/${new Date().getUTCFullYear()}/${randomUUID()}-${spool.payloadDigestHex.slice(0, 16)}`;
+        stored = await this.objects.put({ key: objectKey, path, size: spool.size, contentType: detectedContentType, digestHex: spool.payloadDigestHex });
         storedRef = stored.storageRef;
       }
       const response = await this.persistDocumentEvidence({
         actorUserId, institutionId, metadata, connectorProviderReferenceId: connector.providerReferenceId!,
-        filename, detectedContentType, size: spool.size, payloadDigest: spool.payloadDigest,
+        filename, detectedContentType, size: spool.size, payloadDigest: canonicalPayloadDigest,
         retentionUntilAt, sourceAsOfAt, expiresAt, scan, stored,
       });
       databaseCommitted = true;
@@ -720,7 +723,7 @@ export class EvidenceIntakeService {
     });
   }
 
-  private async spool(input: Readable, path: string): Promise<{ size: number; payloadDigest: string; header: Buffer }> {
+  private async spool(input: Readable, path: string): Promise<{ size: number; payloadDigestHex: string; header: Buffer }> {
     let size = 0;
     const digest = createHash("sha256");
     const headers: Buffer[] = [];
@@ -739,7 +742,7 @@ export class EvidenceIntakeService {
     });
     await pipeline(input, inspect, createWriteStream(path, { flags: "wx", mode: 0o600 }));
     if (size === 0) throw new BadRequestException("document body is empty");
-    return { size, payloadDigest: digest.digest("hex"), header: Buffer.concat(headers) };
+    return { size, payloadDigestHex: digest.digest("hex"), header: Buffer.concat(headers) };
   }
 
   private async authoriseRead(actorUserId: string, actingInstitutionId: string, evidenceObjectId: string) {
