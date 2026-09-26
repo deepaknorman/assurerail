@@ -127,8 +127,22 @@ export class AssessmentProcessingService {
     engagementEnabled();
     const scope={userId:actor.actorUserId,scopeType:"INSTITUTION" as const,scopeRef:institutionId};
     const preparer=await this.staff.evaluate({...scope,permission:"CASE_TASK_PREPARE"});
-    if(!preparer.allowed)await this.staff.require({...scope,permission:"RISK_EXCEPTION_REVIEW"});
-    await this.engagements.scoped(this.db,institutionId,id);const job=await this.db.assessmentProcessingJob.findUnique({where:{id:jobId},include:{documentReviews:{include:{attempts:{orderBy:{ordinal:"asc"}}}}}});if(!job||job.engagementId!==id)throw new NotFoundException("run not found");return job;
+    const authority=preparer.allowed?preparer:await this.staff.require({...scope,permission:"RISK_EXCEPTION_REVIEW"});
+    const permission=preparer.allowed?"CASE_TASK_PREPARE":"RISK_EXCEPTION_REVIEW";
+    await this.engagements.scoped(this.db,institutionId,id);
+    const job=await this.db.assessmentProcessingJob.findUnique({where:{id:jobId},include:{documentReviews:{include:{attempts:{orderBy:{ordinal:"asc"}}}}}});
+    if(!job||job.engagementId!==id)throw new NotFoundException("run not found");
+    // Record access before returning restricted report contents; audit failure fails closed.
+    await this.db.internalAccessEvent.create({data:{
+      id:`iae_${randomUUID()}`,userId:actor.actorUserId,
+      internalRoleAssignmentId:authority.assignmentId??null,privilegedAccessRequestId:authority.elevationId??null,
+      eventType:"ASSESSMENT_REPORT_READ",permission,scopeType:"INSTITUTION",scopeRef:institutionId,
+      requestId:job.id,reason:"Internal assessment report inspection",
+      payloadDigest:sha256Digest({userId:actor.actorUserId,sessionId:actor.actorSessionId,institutionId,
+        engagementId:id,processingJobId:job.id,resultDigest:job.resultDigest,permission,
+        assignmentId:authority.assignmentId??null,elevationId:authority.elevationId??null}),
+    }});
+    return job;
   }
   async runNext() {
     if(process.env.ASSURERAIL_DOCUMENT_PROCESSING_MODE!=="shadow")return;
