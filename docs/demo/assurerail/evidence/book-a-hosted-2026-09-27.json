@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "harnessCommit": "33aac7f292330e3542e3cd74c6c89816b237c1a2",
+  "deployedRevisionReportedByClaude": "c362917c0",
+  "recordedAt": "2026-09-26T14:26:11.257317+00:00",
+  "target": "https://arail.assurelocker.com",
+  "result": "BLOCKED",
+  "checks": [
+    {
+      "stage": "login_sellerCommercialAdmin",
+      "result": "PASS"
+    },
+    {
+      "stage": "book_a_scope",
+      "result": "PASS",
+      "engagementId": "eng_b8544dc2-ad64-44d7-8f1c-597a004eea07",
+      "quoteDigest": "sha256:300ff5c477fe68e4d6100e07728b5fc24f88eeb99002e6db7dcca0787d25bf5b",
+      "initialTotalMinor": "36816000"
+    },
+    {
+      "stage": "seller_workspace_render",
+      "result": "PASS",
+      "engagementId": "eng_b8544dc2-ad64-44d7-8f1c-597a004eea07",
+      "invoiceId": "inv_cbc8e58e-7cfc-4fe3-98c6-3f05b2eaa84e",
+      "invoiceStatus": "ISSUED_SHADOW"
+    },
+    {
+      "stage": "test_checkout",
+      "result": "HTTP_ERROR",
+      "http": 503,
+      "json": true,
+      "reason": "stable Razorpay merchant account identity required"
+    },
+    {
+      "stage": "test_checkout",
+      "result": "FAIL",
+      "errorType": "Error"
+    }
+  ],
+  "paymentProven": false,
+  "uploadProven": false,
+  "processingProven": false
+}

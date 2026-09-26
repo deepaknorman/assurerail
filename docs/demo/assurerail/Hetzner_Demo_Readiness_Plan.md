@@ -21,7 +21,7 @@ Completed foundations: working alternate hostname/reCAPTCHA, dedicated AI key ac
 provider smoke check, login/quote authority fixes, Rail-owned evidence storage and scanner
 health, nine distinct demo identities, reviewer read permission and visible synthetic
 qualification, and the validated 3,000-loan / INR 55 crore input pack. Claude’s 27 September
-release notice reports main and box at `107834ad1`; the last runtime change is `6bc3f5afb`.
+release notice reports main and box at `c362917c0`; the last runtime change is `6bc3f5afb`.
 
 | Priority | Outstanding work | Completion evidence still required |
 |---|---|---|
@@ -50,13 +50,35 @@ Immediate next hosted proof is Book A’s real acceptance/payment/upload/process
 the current AI budget skip if encountered. Runtime scale remediation and the approved chart
 implementation remain separate deliverables, followed by the complete R4–R6 evidence chain.
 
+## Hosted Book A checkpoint — 27 September 2026
+
+The real hosted seller accepted Book A using MFA. Independent finance maker and checker
+issued its shadow invoice. A fresh Firefox session reloaded the same engagement and invoice,
+with the accepted pricing table visible. The resumable harness reuses its fixed request
+reference and does not create another engagement on rerun.
+
+- Engagement: `eng_b8544dc2-ad64-44d7-8f1c-597a004eea07`.
+- Invoice: `inv_cbc8e58e-7cfc-4fe3-98c6-3f05b2eaa84e`, `ISSUED_SHADOW`, INR 368,160 including tax.
+- Checkout: application HTTP 503, `stable Razorpay merchant account identity required`.
+  Effective runtime inspection found `ASSURERAIL_RAZORPAY_ACCOUNT_ID` missing/invalid;
+  test-key shape and secret presence passed. No checkout row or payment was created.
+- Claude has the exact configuration blocker in the brain. Payment, upload, scanning and
+  processing remain unproven; this checkpoint is not a passing seller-journey gate.
+
+Machine-emitted rerun results: [hosted evidence](evidence/book-a-hosted-2026-09-27.json).
+Harness: `scripts/assurerail-hosted-book-a.cjs` at `33aac7f29`. From the deployed repository,
+as `deploy`, run `ASSURERAIL_HOSTED_DEMO_WRITE=yes node scripts/assurerail-hosted-book-a.cjs`.
+It uses the existing private account file and separate Firefox contexts, keeps secrets out of
+output, and stops at test checkout. Guarded API calls execute inside the browser: the same
+calls made with Node's APIRequestContext received a non-JSON CDN 403.
+
 ## Milestones and exit criteria
 
 | ID | Work | Exit evidence | Status |
 |---|---|---|---|
 | R0 | Establish deployed baseline and dependencies | Exact revisions, live gates, identity status, dependency checks and reproducible browser command | In progress |
-| R1 | Seller scope, quote and accepted engagement | Firefox login; API-calculated quote; MFA-bound acceptance; persisted engagement survives refresh | Quote/session checks passed on 95d62d192; acceptance pending |
-| R2 | Invoice and test payment | Distinct maker/checker; issued statement; provider test checkout and verified reconciliation; unpaid work remains blocked | Pending |
+| R1 | Seller scope, quote and accepted engagement | Firefox login; API-calculated quote; MFA-bound acceptance; persisted engagement survives refresh | Book A MFA acceptance and persisted UI verified; see hosted checkpoint above |
+| R2 | Invoice and test payment | Distinct maker/checker; issued statement; provider test checkout and verified reconciliation; unpaid work remains blocked | Book A maker/checker invoice issued; checkout blocked by merchant account configuration |
 | R3 | Evidence intake and automated assessment | Real object storage/encryption, malware scan, extraction and configured analysis; run persisted with source digests and qualified outcome | Local full-tape checks pass; hosted proof and AI scale remediation pending |
 | R4 | Correction, reassessment and expert-reviewed preparation | Changed evidence changes results; missing evidence remains missing; original report retained; distinct qualified reviewer releases preparation | Reviewer access/disclosure fixes deployed; workflow proof pending |
 | R5 | Buyer workspace and authorised handoff | Synthetic buyer MSA/authority setup; separate credit/legal/operations approvals; scoped released evidence; real mapped login handoff if used | Four identities provisioned; onboarding, authority and released-pool proof pending |
